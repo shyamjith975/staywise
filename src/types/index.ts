@@ -1,3 +1,24 @@
+/**
+ * ============================================================================
+ * STAYWISE PLATFORM — CORE DOMAIN TYPE SYSTEM & DATA SCHEMAS
+ * ============================================================================
+ * This file contains canonical TypeScript definitions for the entire Staywise
+ * multi-asset property management platform.
+ * 
+ * CORE SECTIONS:
+ * 1. User Roles & Access Control (Owner, Tenant, Manager, Admin, Vendor, Estate)
+ * 2. Property & Asset Models (Residential, PG/Co-Living, Commercial, Luxury Villas)
+ * 3. Leases, Tenants & MoveFlow Inspection Data
+ * 4. RentFlow Invoices, Sub-meter Electricity & Double-Entry Ledger Entries
+ * 5. Maintenance Tickets & Vendor Escrow Payouts
+ * 6. Influencer Campaigns, Promo Codes & Referral Commission Models
+ * 
+ * BACKEND DEVELOPERS:
+ * When connecting to a database (PostgreSQL, Supabase, Prisma, etc.), each
+ * interface here directly maps to a database table or relational model.
+ * ============================================================================
+ */
+
 export type UserRole = 
   | 'owner' 
   | 'tenant' 

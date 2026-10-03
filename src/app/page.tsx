@@ -1,5 +1,19 @@
 'use client';
 
+/**
+ * ============================================================================
+ * STAYWISE PLATFORM — MAIN VIEW ORCHESTRATOR & APPLICATION SHELL
+ * ============================================================================
+ * This is the root page component (`/`). It wraps the UI with `AppStateProvider`
+ * and dynamically renders the appropriate dashboard or module view based on:
+ * 1. Current Authentication State (unauthenticated -> LoginView)
+ * 2. Active User Persona (activeRole: 'owner' | 'tenant' | 'admin' | 'manager' | etc.)
+ * 3. Active View (activeView: 'dashboard' | 'properties' | 'rentflow' | 'pg' | etc.)
+ * 
+ * Tenants are strictly confined to tenant-specific views for privacy & isolation.
+ * ============================================================================
+ */
+
 import React from 'react';
 import { AppStateProvider, useAppState } from '../context/AppStateContext';
 import LoginView from '../components/auth/LoginView';

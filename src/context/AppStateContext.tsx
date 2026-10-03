@@ -1,5 +1,26 @@
 'use client';
 
+/**
+ * ============================================================================
+ * STAYWISE PLATFORM — CENTRALIZED STATE MANAGEMENT & BUSINESS LOGIC ENGINE
+ * ============================================================================
+ * This React Context acts as the unified state container for the application.
+ * It simulates a full-stack real-time backend with:
+ * 
+ * 1. Role-Based Auth & Session Switching (Owner, Tenant, Manager, Admin, etc.)
+ * 2. Property Lifecycle: Adding properties sets them to 'PENDING' verification,
+ *    which must be audited and approved by the Super Admin.
+ * 3. RentFlow Financial Settlement: Handles payments, sub-meter split calculations,
+ *    and immutable double-entry ledger bookkeeping.
+ * 4. Influencer Engine: Code generation, affiliate commission rates, and conversion tracking.
+ * 
+ * BACKEND INTEGRATION NOTE:
+ * To migrate to a real API/database (e.g. Supabase, PostgreSQL, REST/GraphQL):
+ * - Replace the useState calls with React Query, SWR, or direct fetch calls.
+ * - Replace array mutations (e.g. setProperties) with API POST/PATCH endpoints.
+ * ============================================================================
+ */
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { 
   UserRole, 
