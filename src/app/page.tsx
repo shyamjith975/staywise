@@ -26,7 +26,6 @@ import LiveActivityTicker from '../components/layout/LiveActivityTicker';
 // Dashboards
 import OwnerDashboard from '../components/dashboards/OwnerDashboard';
 import TenantDashboard from '../components/dashboards/TenantDashboard';
-import AdminDashboard from '../components/dashboards/AdminDashboard';
 
 // Modules
 import PropertyList from '../components/modules/properties/PropertyList';
@@ -123,9 +122,6 @@ function MainAppShell() {
     if (activeView === 'dashboard') {
       switch (activeRole) {
         case 'owner':
-          return <OwnerDashboard />;
-        case 'admin':
-          return <AdminDashboard />;
         default:
           return <OwnerDashboard />;
       }
@@ -163,7 +159,7 @@ function MainAppShell() {
       case 'settings':
         return <SettingsView />;
       default:
-        return activeRole === 'admin' ? <AdminDashboard /> : <OwnerDashboard />;
+        return <OwnerDashboard />;
     }
   };
 

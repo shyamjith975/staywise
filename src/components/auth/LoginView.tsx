@@ -19,7 +19,7 @@ import {
 export default function LoginView() {
   const { login } = useAppState();
 
-  const ALLOWED_LOGIN_ROLES: UserRole[] = ['owner', 'tenant', 'estate_manager', 'admin'];
+  const ALLOWED_LOGIN_ROLES: UserRole[] = ['owner', 'tenant', 'estate_manager'];
 
   const [selectedRole, setSelectedRole] = useState<UserRole>('owner');
   const [email, setEmail] = useState(DEMO_CREDENTIALS.owner.email);
@@ -75,12 +75,12 @@ export default function LoginView() {
           </p>
         </div>
 
-        {/* Role Selector Tabs (Owner, Tenant, EstateOS, Admin) */}
+        {/* Role Selector Tabs (Owner, Tenant, EstateOS) */}
         <div>
           <label className="block text-xs font-bold uppercase tracking-wider text-[#6e7972] mb-2">
             Select Account Type
           </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-1.5 bg-[#f4f3ef] rounded-2xl border border-[#e3e1d8]/80">
+          <div className="grid grid-cols-3 gap-2 p-1.5 bg-[#f4f3ef] rounded-2xl border border-[#e3e1d8]/80">
             {ALLOWED_LOGIN_ROLES.map((role) => {
               const cred = DEMO_CREDENTIALS[role];
               const isSelected = selectedRole === role;
