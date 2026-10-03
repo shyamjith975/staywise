@@ -163,7 +163,16 @@ export const DEMO_CREDENTIALS: Record<UserRole, DemoCredential> = {
 interface AppStateContextType {
   isAuthenticated: boolean;
   currentUser: DemoCredential;
-  login: (role: UserRole) => void;
+  login: (role: UserRole, customUser?: Partial<DemoCredential>) => void;
+  signupUser: (userData: {
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+    role: 'owner' | 'estate_manager';
+    portfolioName?: string;
+    city?: string;
+  }) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   activeRole: UserRole;
   setActiveRole: (role: UserRole) => void;
@@ -352,11 +361,74 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setCurrentUser(DEMO_CREDENTIALS[role] || DEMO_CREDENTIALS.owner);
   };
 
-  const login = (role: UserRole) => {
+  const login = (role: UserRole, customUser?: Partial<DemoCredential>) => {
     setActiveRole(role);
-    setCurrentUser(DEMO_CREDENTIALS[role] || DEMO_CREDENTIALS.owner);
+    if (customUser) {
+      setCurrentUser({
+        role,
+        email: customUser.email || DEMO_CREDENTIALS[role]?.email || 'user@staywise.com',
+        pass: customUser.pass || '******',
+        name: customUser.name || 'Member',
+        roleLabel: customUser.roleLabel || DEMO_CREDENTIALS[role]?.roleLabel || 'Member',
+        avatar: customUser.avatar || DEMO_CREDENTIALS[role]?.avatar || '👤',
+        title: customUser.title || DEMO_CREDENTIALS[role]?.title || 'Portal Member',
+        description: customUser.description || DEMO_CREDENTIALS[role]?.description || 'Active Member'
+      });
+    } else {
+      setCurrentUser(DEMO_CREDENTIALS[role] || DEMO_CREDENTIALS.owner);
+    }
     setIsAuthenticated(true);
     setActiveView('dashboard');
+  };
+
+  const signupUser = async (userData: {
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+    role: 'owner' | 'estate_manager';
+    portfolioName?: string;
+    city?: string;
+  }): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Registration failed' };
+      }
+
+      if (data.property) {
+        setProperties(prev => [data.property, ...prev]);
+        setActivePortfolio(data.property.portfolio || 'all');
+      }
+
+      const newCred: DemoCredential = {
+        role: userData.role,
+        email: data.user.email,
+        pass: userData.password,
+        name: data.user.name,
+        roleLabel: data.user.roleLabel,
+        avatar: data.user.avatar,
+        title: data.user.title,
+        description: data.user.description
+      };
+      login(userData.role, newCred);
+
+      addNotification(
+        'Workspace Initialized!',
+        `Welcome ${data.user.name}! Your ${data.user.roleLabel} portal and starter asset have been created.`,
+        'SYSTEM'
+      );
+
+      return { success: true };
+    } catch (err: any) {
+      console.error('Signup error:', err);
+      return { success: false, error: err.message || 'Connection failed' };
+    }
   };
 
   const logout = () => {
@@ -912,6 +984,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated,
       currentUser,
       login,
+      signupUser,
       logout,
       activeRole,
       setActiveRole: handleRoleChange,

@@ -320,6 +320,17 @@ class DatabaseEngine {
         return user;
       }
       return null;
+    },
+    create: async (payload: Omit<UserAccount, 'id' | 'createdAt'> & { id?: string }): Promise<UserAccount> => {
+      const data = this.readSync();
+      const newUser: UserAccount = {
+        ...payload,
+        id: payload.id || `user-${payload.role}-${Date.now()}`,
+        createdAt: new Date().toISOString()
+      };
+      data.users.push(newUser);
+      this.writeSync(data);
+      return newUser;
     }
   };
 
@@ -547,6 +558,27 @@ class DatabaseEngine {
       offer.status = offer.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
       this.writeSync(data);
       return offer;
+    }
+  };
+
+  // ==========================================
+  // REFERRALS REPOSITORY
+  // ==========================================
+  public referrals = {
+    findMany: async (): Promise<TenantReferralItem[]> => {
+      const data = this.readSync();
+      return data.referrals;
+    },
+    create: async (referral: Omit<TenantReferralItem, 'id' | 'date'> & { id?: string; date?: string }): Promise<TenantReferralItem> => {
+      const data = this.readSync();
+      const newRef: TenantReferralItem = {
+        ...referral,
+        id: referral.id || `ref-${Date.now()}`,
+        date: referral.date || new Date().toISOString().split('T')[0]
+      };
+      data.referrals.unshift(newRef);
+      this.writeSync(data);
+      return newRef;
     }
   };
 

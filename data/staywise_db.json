@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-10-03T19:12:31.360Z",
+  "lastUpdated": "2026-10-03T19:45:36.622Z",
   "users": [
     {
       "id": "user-owner-vikram",
@@ -73,6 +73,18 @@
       "title": "Estate Director & Hospitality Host",
       "description": "4 Luxury Villas • 18 Airbnb & Boutique Hotel Keys • Smart Check-in",
       "createdAt": "2026-10-03T19:07:28.622Z"
+    },
+    {
+      "email": "ananya.sen@estateos.com",
+      "password": "SecretPassword123",
+      "name": "Ananya Sen",
+      "role": "estate_manager",
+      "roleLabel": "EstateOS & Hospitality",
+      "avatar": "🏡",
+      "title": "Heritage Palms Resort Collection Director",
+      "description": "Goa • Registered Asset Workspace • Escrow Bank Account Active",
+      "id": "user-estate_manager-1791056628238",
+      "createdAt": "2026-10-03T19:43:48.239Z"
     }
   ],
   "properties": [
