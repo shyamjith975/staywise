@@ -467,6 +467,30 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Hydrate application state directly from persistent database via /api/bootstrap
+  useEffect(() => {
+    async function loadDatabaseData() {
+      try {
+        const res = await fetch('/api/bootstrap');
+        const json = await res.json();
+        if (json.success && json.data) {
+          const d = json.data;
+          if (Array.isArray(d.properties) && d.properties.length > 0) setProperties(d.properties);
+          if (Array.isArray(d.tenants) && d.tenants.length > 0) setTenants(d.tenants);
+          if (Array.isArray(d.invoices) && d.invoices.length > 0) setInvoices(d.invoices);
+          if (Array.isArray(d.ledger) && d.ledger.length > 0) setLedger(d.ledger);
+          if (Array.isArray(d.depositDisputes) && d.depositDisputes.length > 0) setDepositDisputes(d.depositDisputes);
+          if (Array.isArray(d.influencerOffers) && d.influencerOffers.length > 0) setInfluencerOffers(d.influencerOffers);
+          if (Array.isArray(d.tickets) && d.tickets.length > 0) setTickets(d.tickets);
+          if (Array.isArray(d.electricityBills) && d.electricityBills.length > 0) setElectricityBills(d.electricityBills);
+        }
+      } catch (err) {
+        console.warn('[Staywise Database] Hydrated using local store fallback:', err);
+      }
+    }
+    loadDatabaseData();
+  }, []);
+
   const addNotification = (title: string, message: string, type: NotificationItem['type']) => {
     const newNotif: NotificationItem = {
       id: `notif-${Date.now()}`,
@@ -483,7 +507,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
-  const addProperty = (newPropData: Partial<Property>) => {
+  const addProperty = async (newPropData: Partial<Property>) => {
     const newProp: Property = {
       id: `prop-${Date.now()}`,
       name: newPropData.name || 'New Property',
@@ -506,26 +530,73 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       amenities: newPropData.amenities || ['Parking', 'Security'],
       units: []
     };
+    
+    // Optimistic UI update
     setProperties(prev => [newProp, ...prev]);
     addNotification('Property Submitted for Verification', `${newProp.name} has been added. Pending Admin document audit and approval.`, 'SYSTEM');
+
+    // Persist to database via API
+    try {
+      await fetch('/api/properties', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newProp)
+      });
+    } catch (err) {
+      console.error('[API /api/properties] Persist failed:', err);
+    }
   };
 
-  const approveProperty = (propertyId: string) => {
+  const approveProperty = async (propertyId: string) => {
+    // Optimistic UI update
     setProperties(prev => prev.map(p => p.id === propertyId ? { ...p, verificationStatus: 'APPROVED', status: 'ACTIVE' } : p));
     addNotification('Property Verified & Approved', `Property documents approved. Active across Staywise platform.`, 'SYSTEM');
+
+    // Persist to database via API
+    try {
+      await fetch(`/api/properties/${propertyId}/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'APPROVED' })
+      });
+    } catch (err) {
+      console.error('[API /api/properties/[id]/verify] Verification failed:', err);
+    }
   };
 
-  const updateProperty = (propertyId: string, updates: Partial<Property>) => {
+  const updateProperty = async (propertyId: string, updates: Partial<Property>) => {
+    // Optimistic UI update
     setProperties(prev => prev.map(p => p.id === propertyId ? { ...p, ...updates } : p));
     addNotification('Property Updated', `Property details updated successfully.`, 'SYSTEM');
+
+    // Persist to database via API
+    try {
+      await fetch(`/api/properties/${propertyId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+    } catch (err) {
+      console.error('[API /api/properties/[id]] Update failed:', err);
+    }
   };
 
-  const deleteProperty = (propertyId: string) => {
+  const deleteProperty = async (propertyId: string) => {
+    // Optimistic UI update
     setProperties(prev => prev.filter(p => p.id !== propertyId));
     addNotification('Property Removed', `Property was removed from portfolio.`, 'SYSTEM');
+
+    // Persist to database via API
+    try {
+      await fetch(`/api/properties/${propertyId}`, {
+        method: 'DELETE'
+      });
+    } catch (err) {
+      console.error('[API /api/properties/[id]] Delete failed:', err);
+    }
   };
 
-  const addInfluencerOffer = (data: Omit<InfluencerOffer, 'id' | 'signupsCount' | 'totalCommissionPaid' | 'createdAt'>) => {
+  const addInfluencerOffer = async (data: Omit<InfluencerOffer, 'id' | 'signupsCount' | 'totalCommissionPaid' | 'createdAt'>) => {
     const newOffer: InfluencerOffer = {
       ...data,
       id: `inf-${Date.now()}`,
@@ -533,13 +604,38 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       totalCommissionPaid: 0,
       createdAt: 'Just now'
     };
+    
+    // Optimistic UI update
     setInfluencerOffers(prev => [newOffer, ...prev]);
     addNotification('Influencer Offer Created', `Code "${newOffer.code}" has been generated for ${newOffer.influencerName}.`, 'SYSTEM');
+
+    // Persist to database via API
+    try {
+      await fetch('/api/influencer-offers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } catch (err) {
+      console.error('[API /api/influencer-offers] Create failed:', err);
+    }
   };
 
-  const toggleInfluencerOfferStatus = (offerId: string) => {
+  const toggleInfluencerOfferStatus = async (offerId: string) => {
+    // Optimistic UI update
     setInfluencerOffers(prev => prev.map(o => o.id === offerId ? { ...o, status: o.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE' } : o));
     addNotification('Campaign Status Updated', 'Influencer code status was modified.', 'SYSTEM');
+
+    // Persist to database via API
+    try {
+      await fetch('/api/influencer-offers', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: offerId })
+      });
+    } catch (err) {
+      console.error('[API /api/influencer-offers] Toggle failed:', err);
+    }
   };
 
   // Feature #15: Add Existing Tenant Flow
@@ -642,9 +738,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     addNotification('Tenant Connected', `${data.name} has accepted the digital onboarding invite for Unit ${data.unitNumber}.`, 'RENT');
   };
 
-  const payInvoice = (invoiceId: string, method: 'UPI' | 'Bank Transfer' | 'Card' | 'Autopay' | 'FlexPay') => {
+  const payInvoice = async (invoiceId: string, method: 'UPI' | 'Bank Transfer' | 'Card' | 'Autopay' | 'FlexPay') => {
     const txId = `${method.toUpperCase().replace(/\s+/g, '')}-${Date.now().toString().slice(-8)}`;
     
+    // Optimistic UI updates
     setInvoices(prev => prev.map(inv => {
       if (inv.id === invoiceId) {
         return {
@@ -661,7 +758,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     const targetInv = invoices.find(i => i.id === invoiceId);
     if (targetInv) {
-      // Create immutable Double Ledger record
+      // Create immutable Double Ledger record in UI
       const ledgerRecord: LedgerEntry = {
         id: `ledg-pay-${Date.now()}`,
         timestamp: '2026-10-01 12:00 PM',
@@ -688,6 +785,17 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       }));
 
       addNotification('Payment Cleared', `₹${targetInv.totalAmount.toLocaleString('en-IN')} received via ${method} for Unit ${targetInv.unitNumber}. Receipt generated.`, 'RENT');
+    }
+
+    // Persist payment to database via API
+    try {
+      await fetch(`/api/invoices/${invoiceId}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentMethod: method })
+      });
+    } catch (err) {
+      console.error('[API /api/invoices/[id]/pay] Payment persist failed:', err);
     }
   };
 
