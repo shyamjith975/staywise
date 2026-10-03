@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-10-03T19:07:28.635Z",
+  "lastUpdated": "2026-10-03T19:12:31.360Z",
   "users": [
     {
       "id": "user-owner-vikram",
@@ -76,117 +76,6 @@
     }
   ],
   "properties": [
-    {
-      "id": "prop-beach-road",
-      "name": "Beach Road Apartments",
-      "type": "Apartment",
-      "portfolio": "Kozhikode Coastal",
-      "address": "Beach Road, Near Old Light House",
-      "city": "Kozhikode",
-      "state": "Kerala",
-      "pincode": "673032",
-      "totalUnits": 12,
-      "occupiedUnits": 11,
-      "expectedMonthlyRent": 480000,
-      "collectedRent": 430000,
-      "pendingRent": 50000,
-      "imageUrl": "/images/properties/beach-road.jpg",
-      "status": "ACTIVE",
-      "healthScore": 92,
-      "verificationStatus": "APPROVED",
-      "submittedDocs": [
-        "Title_Deed_Kozhikode_Reg.pdf",
-        "Fire_Safety_NOC_2026.pdf",
-        "Bescom_Tariff_Card.pdf"
-      ],
-      "amenities": [
-        "Sea View",
-        "Covered Parking",
-        "Elevator",
-        "24/7 Security",
-        "Generator Backup",
-        "Rooftop Infinity Deck"
-      ],
-      "units": [
-        {
-          "id": "unit-101",
-          "propertyId": "prop-beach-road",
-          "unitNumber": "101",
-          "floor": 1,
-          "type": "2 BHK",
-          "rentAmount": 25000,
-          "depositAmount": 75000,
-          "status": "OCCUPIED",
-          "currentTenantId": "t-1",
-          "currentTenantName": "Rahul Menon",
-          "leaseEnd": "2027-03-31",
-          "areaSqFt": 1250,
-          "bedrooms": 2,
-          "bathrooms": 2
-        },
-        {
-          "id": "unit-102",
-          "propertyId": "prop-beach-road",
-          "unitNumber": "102",
-          "floor": 1,
-          "type": "2 BHK",
-          "rentAmount": 25000,
-          "depositAmount": 75000,
-          "status": "OCCUPIED",
-          "currentTenantId": "t-2",
-          "currentTenantName": "Ananya Pillai",
-          "leaseEnd": "2027-06-30",
-          "areaSqFt": 1250,
-          "bedrooms": 2,
-          "bathrooms": 2
-        },
-        {
-          "id": "unit-201",
-          "propertyId": "prop-beach-road",
-          "unitNumber": "201",
-          "floor": 2,
-          "type": "3 BHK Sea View",
-          "rentAmount": 38000,
-          "depositAmount": 114000,
-          "status": "OCCUPIED",
-          "currentTenantId": "t-3",
-          "currentTenantName": "Dr. Faisal Ahmed",
-          "leaseEnd": "2026-12-31",
-          "areaSqFt": 1800,
-          "bedrooms": 3,
-          "bathrooms": 3
-        },
-        {
-          "id": "unit-302",
-          "propertyId": "prop-beach-road",
-          "unitNumber": "302",
-          "floor": 3,
-          "type": "2 BHK Luxury",
-          "rentAmount": 25000,
-          "depositAmount": 75000,
-          "status": "OCCUPIED",
-          "currentTenantId": "t-shyam",
-          "currentTenantName": "Shyam Sundar",
-          "leaseEnd": "2027-12-31",
-          "areaSqFt": 1350,
-          "bedrooms": 2,
-          "bathrooms": 2
-        },
-        {
-          "id": "unit-304",
-          "propertyId": "prop-beach-road",
-          "unitNumber": "304",
-          "floor": 3,
-          "type": "2 BHK Sea View",
-          "rentAmount": 26000,
-          "depositAmount": 78000,
-          "status": "VACANT",
-          "areaSqFt": 1300,
-          "bedrooms": 2,
-          "bathrooms": 2
-        }
-      ]
-    },
     {
       "id": "prop-hillview-heights",
       "name": "Hillview Heights Residency",
