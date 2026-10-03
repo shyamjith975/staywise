@@ -1,12 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../../lib/db';
+import { validateLoginPayload } from '../../../../lib/validation';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { email, password, role } = body;
+    const rawBody = await req.json();
 
-    // Check by email and password if provided
+    // 1. Rigorous input validation & sanitization
+    const validation = validateLoginPayload(rawBody);
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: validation.errors[0]?.message || 'Invalid login payload',
+          validationErrors: validation.errors
+        },
+        { status: 400 }
+      );
+    }
+
+    const { email, password, role } = validation.sanitizedData!;
+
+    // 2. Authenticate
     let user = null;
     if (email && password) {
       user = await db.users.authenticate(email, password);
@@ -23,6 +38,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 3. Return sanitized user profile (password stripped)
     return NextResponse.json({
       success: true,
       user: {

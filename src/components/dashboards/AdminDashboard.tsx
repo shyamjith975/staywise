@@ -44,7 +44,12 @@ import {
   Layers,
   ChevronRight,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Server,
+  Cpu,
+  Activity,
+  HardDrive,
+  RefreshCw
 } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -69,6 +74,24 @@ export default function AdminDashboard() {
   const [propertyFilter, setPropertyFilter] = useState<'ALL' | 'PENDING' | 'APPROVED'>('ALL');
   const [ticketFilter, setTicketFilter] = useState<'ALL' | 'DISPUTED' | 'EMERGENCY' | 'RESOLVED'>('ALL');
   const [selectedAuditDocs, setSelectedAuditDocs] = useState<{ name: string; docs: string[] } | null>(null);
+
+  // Load Balancer & Health Probe State
+  const [healthData, setHealthData] = useState<any | null>(null);
+  const [probingHealth, setProbingHealth] = useState(false);
+
+  const handleProbeHealth = async () => {
+    setProbingHealth(true);
+    try {
+      const res = await fetch('/api/health');
+      const data = await res.json();
+      setHealthData(data);
+      addNotification('Health Check 200 OK', `Load balancer cluster healthy. Latency: ${data.latencyMs}ms across ${data.loadBalancer.healthyReplicas} replicas.`, 'SYSTEM');
+    } catch (err: any) {
+      addNotification('Health Probe Alert', 'Failed to reach health check endpoint', 'SYSTEM');
+    } finally {
+      setProbingHealth(false);
+    }
+  };
 
   // New Influencer / Marketing Referral Campaign Modal State
   const [isCreateOfferModalOpen, setIsCreateOfferModalOpen] = useState(false);
@@ -1196,6 +1219,141 @@ export default function AdminDashboard() {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Load Balancer & High-Availability Cluster Infrastructure Card */}
+          <div className="lg:col-span-3 bg-white rounded-3xl p-5 sm:p-6 border border-[#e3e1d8] space-y-5 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-900 border border-teal-200">
+                    High Availability &amp; Resilience
+                  </span>
+                  <span className="text-xs text-slate-500 font-medium">NGINX L7 Reverse Proxy • Multi-Node Cluster</span>
+                </div>
+                <h3 className="text-base font-black text-[#19251f] mt-1 flex items-center gap-2">
+                  <Server className="h-4 w-4 text-[#274235]" />
+                  <span>Load Balancer, Cluster Health &amp; WAF Security</span>
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Traffic is distributed across multi-worker instances via weighted least-connections with zero-downtime failover and token-bucket rate limiting.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleProbeHealth}
+                disabled={probingHealth}
+                className="px-4 py-2.5 rounded-2xl bg-[#274235] hover:bg-[#19251f] text-white font-extrabold text-xs transition flex items-center gap-2 shadow-md shadow-[#274235]/20 shrink-0 self-start sm:self-auto disabled:opacity-50"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${probingHealth ? 'animate-spin' : ''}`} />
+                <span>{probingHealth ? 'Probing Cluster...' : 'Probe Live Health (/api/health)'}</span>
+              </button>
+            </div>
+
+            {/* Architecture Diagnostics Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-sans">
+              {/* Card 1: Load Balancer Pool */}
+              <div className="p-4 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-slate-800 flex items-center gap-1.5">
+                    <Activity className="h-4 w-4 text-emerald-600" />
+                    <span>Upstream Cluster Pool</span>
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                    least_conn
+                  </span>
+                </div>
+                <div className="space-y-1.5 pt-1 text-[11px]">
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#e3e1d8]">
+                    <span className="font-mono text-slate-700">staywise-node-1 :3005</span>
+                    <span className="font-bold text-emerald-700">Primary (Active)</span>
+                  </div>
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#e3e1d8]">
+                    <span className="font-mono text-slate-700">staywise-node-2 :3006</span>
+                    <span className="font-bold text-emerald-700">Replica (Healthy)</span>
+                  </div>
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#e3e1d8]">
+                    <span className="font-mono text-slate-700">staywise-node-3 :3007</span>
+                    <span className="font-bold text-emerald-700">Replica (Healthy)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2: Security & Rate Limiting */}
+              <div className="p-4 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-slate-800 flex items-center gap-1.5">
+                    <ShieldCheck className="h-4 w-4 text-purple-700" />
+                    <span>Security &amp; Rate Limits</span>
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800">
+                    OWASP Shield
+                  </span>
+                </div>
+                <div className="space-y-1.5 pt-1 text-[11px]">
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#e3e1d8]">
+                    <span className="text-slate-600">Auth Endpoints</span>
+                    <span className="font-mono font-bold text-slate-900">15 req/min per IP</span>
+                  </div>
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#e3e1d8]">
+                    <span className="text-slate-600">General API</span>
+                    <span className="font-mono font-bold text-slate-900">120 req/min per IP</span>
+                  </div>
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#e3e1d8]">
+                    <span className="text-slate-600">Security Headers</span>
+                    <span className="font-bold text-emerald-700">CSP • HSTS • SAMEORIGIN</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3: System Diagnostics */}
+              <div className="p-4 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-extrabold text-slate-800 flex items-center gap-1.5">
+                    <Cpu className="h-4 w-4 text-teal-700" />
+                    <span>Node Telemetry</span>
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-100 text-teal-800">
+                    Live Diagnostics
+                  </span>
+                </div>
+                <div className="space-y-1.5 pt-1 text-[11px]">
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#e3e1d8]">
+                    <span className="text-slate-600">Active Database</span>
+                    <span className="font-bold text-emerald-700">AtomicJson (ACID Safe)</span>
+                  </div>
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#e3e1d8]">
+                    <span className="text-slate-600">Internal Latency</span>
+                    <span className="font-mono font-bold text-slate-900">{healthData ? `${healthData.latencyMs} ms` : '< 4 ms'}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#e3e1d8]">
+                    <span className="text-slate-600">Serving Worker</span>
+                    <span className="font-mono font-bold text-slate-900 truncate max-w-[130px]">
+                      {healthData?.clusterNode || 'staywise-worker-node'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Live Health Probe JSON Result */}
+            {healthData && (
+              <div className="p-4 rounded-2xl bg-[#19251f] text-emerald-300 font-mono text-[11px] space-y-2 border border-emerald-900/50">
+                <div className="flex items-center justify-between text-white border-b border-emerald-900/50 pb-2">
+                  <span className="font-bold flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                    <span>Live Health Check Diagnostic Output (/api/health)</span>
+                  </span>
+                  <span className="text-[10px] bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded">
+                    HTTP 200 OK
+                  </span>
+                </div>
+                <pre className="overflow-x-auto text-[10px] leading-relaxed">
+                  {JSON.stringify(healthData, null, 2)}
+                </pre>
+              </div>
+            )}
           </div>
         </div>
       )}

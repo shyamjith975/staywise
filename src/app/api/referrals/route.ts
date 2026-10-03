@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
+import { validateReferralPayload } from '../../../lib/validation';
 
 export async function GET() {
   try {
@@ -20,23 +21,21 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { referralCode, referredName, propertyType, rewardAmount, status } = body;
+    const rawBody = await req.json();
 
-    if (!referralCode || !referredName) {
+    const validation = validateReferralPayload(rawBody);
+    if (!validation.isValid) {
       return NextResponse.json(
-        { success: false, error: 'Referral code and referred person name are required.' },
+        { 
+          success: false, 
+          error: validation.errors[0]?.message || 'Invalid referral payload',
+          validationErrors: validation.errors 
+        },
         { status: 400 }
       );
     }
 
-    const created = await db.referrals.create({
-      referralCode: referralCode.toUpperCase().trim(),
-      referredName: referredName.trim(),
-      propertyType: propertyType || 'Residential Apartment',
-      rewardAmount: Number(rewardAmount) || 2000,
-      status: status || 'Pending'
-    });
+    const created = await db.referrals.create(validation.sanitizedData!);
 
     return NextResponse.json({
       success: true,

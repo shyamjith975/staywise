@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
+import { validatePropertyPayload } from '../../../lib/validation';
 
 export async function GET(req: NextRequest) {
   try {
@@ -17,20 +18,28 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const rawBody = await req.json();
 
-    if (!body.name || !body.address || !body.city) {
+    // 1. Rigorous input validation & sanitization
+    const validation = validatePropertyPayload(rawBody);
+    if (!validation.isValid) {
       return NextResponse.json(
-        { success: false, error: 'Missing required property details (name, address, city)' },
+        {
+          success: false,
+          error: validation.errors[0]?.message || 'Invalid property registration payload.',
+          validationErrors: validation.errors
+        },
         { status: 400 }
       );
     }
 
-    // Owner created property defaults to PENDING verification for admin audit
+    const payload = validation.sanitizedData!;
+
+    // 2. Owner created property defaults to PENDING verification for admin audit
     const newProperty = await db.properties.create({
-      ...body,
+      ...payload,
       verificationStatus: 'PENDING',
-      submittedDocs: body.submittedDocs || [
+      submittedDocs: rawBody.submittedDocs || [
         'Title_Deed_Registry.pdf',
         'Municipal_Building_Permit_2026.pdf',
         'Fire_Safety_NOC.pdf',
@@ -38,7 +47,7 @@ export async function POST(req: NextRequest) {
       ]
     });
 
-    // Record audit event in ledger
+    // 3. Record audit event in ledger
     await db.ledger.create({
       description: `New property registered: "${newProperty.name}" submitted by owner [Pending Legal Audit]`,
       type: 'DEBIT',

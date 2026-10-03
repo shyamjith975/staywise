@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../../../lib/db';
+import { validatePaymentPayload } from '../../../../../lib/validation';
 
 export async function POST(
   req: NextRequest,
@@ -7,13 +8,27 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const body = await req.json();
-    const { paymentMethod, amount } = body;
+    const rawBody = await req.json();
+
+    // 1. Rigorous input validation & sanitization
+    const validation = validatePaymentPayload(rawBody);
+    if (!validation.isValid) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: validation.errors[0]?.message || 'Invalid payment parameters',
+          validationErrors: validation.errors 
+        },
+        { status: 400 }
+      );
+    }
+
+    const { paymentMethod, amount } = validation.sanitizedData!;
 
     const result = await db.invoices.pay(
       id, 
-      paymentMethod || 'UPI', 
-      amount ? Number(amount) : undefined
+      paymentMethod as any, 
+      amount
     );
 
     if (!result) {

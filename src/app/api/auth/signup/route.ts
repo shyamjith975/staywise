@@ -1,33 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../../lib/db';
+import { validateSignupPayload } from '../../../../lib/validation';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { name, email, password, phone, role, portfolioName, city } = body;
+    const rawBody = await req.json();
 
-    // Validate role: strictly Owner or EstateOS
-    if (role !== 'owner' && role !== 'estate_manager') {
+    // 1. Rigorous input validation & sanitization
+    const validation = validateSignupPayload(rawBody);
+    if (!validation.isValid) {
       return NextResponse.json(
         { 
           success: false, 
-          error: 'Registration is restricted strictly to Property Owners and EstateOS Hospitality Directors.' 
+          error: validation.errors[0]?.message || 'Validation failed on registration form.',
+          validationErrors: validation.errors 
         },
-        { status: 403 }
-      );
-    }
-
-    if (!name || !email || !password) {
-      return NextResponse.json(
-        { success: false, error: 'Full name, email address, and password are required.' },
         { status: 400 }
       );
     }
 
-    const trimmedEmail = email.toLowerCase().trim();
+    const { name, email, password, phone, role, portfolioName, city } = validation.sanitizedData!;
 
-    // Check if user already exists
-    const existingUser = await db.users.findByEmail(trimmedEmail);
+    // 2. Check if user already exists
+    const existingUser = await db.users.findByEmail(email);
     if (existingUser) {
       return NextResponse.json(
         { success: false, error: 'An account with this email address already exists. Please sign in.' },
@@ -37,14 +32,14 @@ export async function POST(req: NextRequest) {
 
     const roleLabel = role === 'owner' ? 'Property Owner' : 'EstateOS & Hospitality';
     const avatar = role === 'owner' ? '👨‍💼' : '🏡';
-    const portfolioTitle = portfolioName ? portfolioName.trim() : (role === 'owner' ? `${name}'s Portfolio` : `${name}'s Estate Collection`);
-    const operationalCity = city ? city.trim() : 'Bangalore';
+    const portfolioTitle = portfolioName || (role === 'owner' ? `${name}'s Portfolio` : `${name}'s Estate Collection`);
+    const operationalCity = city || 'Bangalore';
 
-    // 1. Create and persist user account
+    // 3. Create and persist user account
     const user = await db.users.create({
-      email: trimmedEmail,
+      email,
       password,
-      name: name.trim(),
+      name,
       role,
       roleLabel,
       avatar,
@@ -52,7 +47,7 @@ export async function POST(req: NextRequest) {
       description: `${operationalCity} • Registered Asset Workspace • Escrow Bank Account Active`
     });
 
-    // 2. Initialize starter property for this owner/host
+    // 4. Initialize starter property for this owner/host
     const propertyName = role === 'owner' 
       ? `${portfolioTitle} Residency` 
       : `${portfolioTitle} Luxury Villa`;
