@@ -37,9 +37,13 @@ import {
   Clock,
   AlertTriangle,
   Percent,
-  Check,
+  Trash2,
+  Play,
+  HelpCircle,
+  RefreshCw,
+  Key,
   Pencil,
-  Trash2
+  Check
 } from 'lucide-react';
 import { AuthorizedDelegate } from '../../types';
 
@@ -83,6 +87,10 @@ export default function OwnerDashboard() {
     setPropertyToEdit,
     deleteProperty
   } = useAppState();
+
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(true);
+  const [showPropSelectDropdown, setShowPropSelectDropdown] = useState(false);
+  const [selectedPropertyFilter, setSelectedPropertyFilter] = useState('All Properties');
 
   const [selectedMonth, setSelectedMonth] = useState('October 2026');
   const [heatmapFilter, setHeatmapFilter] = useState<'ALL' | 'HIGH_YIELD' | 'STABLE' | 'NEEDS_ATTENTION' | 'VACANT'>('ALL');
@@ -304,6 +312,328 @@ export default function OwnerDashboard() {
   return (
     <div className="space-y-5 sm:space-y-6 pb-12 font-sans">
       
+      {/* ============================================================ */}
+      {/* 1. STAYWISE TOP ONBOARDING BAR (Image 1 Layout)               */}
+      {/* ============================================================ */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 sm:px-5 sm:py-3 rounded-2xl border border-[#e3e1d8] shadow-2xs">
+        {/* Left: Property Selector Dropdown */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowPropSelectDropdown(!showPropSelectDropdown)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#d8d6cd] bg-[#fbfbfa] hover:bg-white text-xs font-bold text-[#19251f] cursor-pointer shadow-2xs transition"
+          >
+            <Building2 className="h-3.5 w-3.5 text-[#274235]" />
+            <span>{selectedPropertyFilter}</span>
+            <ChevronDown className="h-3.5 w-3.5 text-[#6e7972]" />
+          </button>
+
+          {showPropSelectDropdown && (
+            <div className="absolute left-0 mt-2 w-56 rounded-2xl bg-white border border-[#e3e1d8] shadow-xl p-2 z-30 space-y-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedPropertyFilter('All Properties');
+                  setShowPropSelectDropdown(false);
+                }}
+                className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                  selectedPropertyFilter === 'All Properties' ? 'bg-[#eef3f0] text-[#274235]' : 'text-[#4d5a52] hover:bg-[#f4f3ef]'
+                }`}
+              >
+                All Properties
+              </button>
+              {properties.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedPropertyFilter(p.name);
+                    setShowPropSelectDropdown(false);
+                  }}
+                  className={`w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold transition truncate ${
+                    selectedPropertyFilter === p.name ? 'bg-[#eef3f0] text-[#274235]' : 'text-[#4d5a52] hover:bg-[#f4f3ef]'
+                  }`}
+                >
+                  {p.name}
+                </button>
+              ))}
+              <div className="pt-1 border-t border-[#eeece5]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPropSelectDropdown(false);
+                    setIsAddPropertyOpen(true);
+                  }}
+                  className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-bold text-[#274235] hover:bg-[#eef3f0] flex items-center gap-1.5 transition"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>Add New Property</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Setup 0/3 Progress Bar + Avatar SJ + Tour + Help */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-between sm:justify-end">
+          {/* SETUP 0/3 Progress Pill */}
+          <button
+            type="button"
+            onClick={() => setIsAddPropertyOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-[#e3e1d8] bg-[#fbfbfa] hover:border-[#274235]/40 transition text-xs cursor-pointer shadow-2xs"
+            title="Complete your building onboarding"
+          >
+            <span className="text-[10px] font-black uppercase text-[#274235] tracking-wider">
+              SETUP {properties.length > 0 ? '3/3' : '0/3'}
+            </span>
+            <div className="w-14 sm:w-20 h-1.5 rounded-full bg-slate-200 overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all duration-300 ${
+                  properties.length > 0 ? 'w-full bg-[#274235]' : 'w-1/4 bg-[#274235]'
+                }`} 
+              />
+            </div>
+            <ChevronDown className="h-3 w-3 text-[#6e7972]" />
+          </button>
+
+          {/* User Avatar SJ */}
+          <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-[#eef3f0] text-[#274235] border border-[#274235]/20 flex items-center justify-center text-xs font-black shrink-0">
+            SJ
+          </div>
+
+          {/* Tour Button */}
+          <button 
+            type="button"
+            onClick={() => alert('Tour: Welcome to Staywise! Click "Start Setup" to add your property, verify Aadhaar via DigiLocker, and launch digital rent collection.')}
+            className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-xl border border-[#e3e1d8] bg-white hover:bg-[#fbfbfa] text-xs font-bold text-[#4d5a52] cursor-pointer shadow-2xs transition"
+          >
+            <Play className="h-3 w-3 fill-current text-[#4d5a52]" />
+            <span className="text-[11px] sm:text-xs">Tour</span>
+          </button>
+
+          {/* Help Button */}
+          <button 
+            type="button"
+            onClick={() => alert('Support: 24/7 Staywise Onboarding Concierge available at support@staywise.in or +91 80000 12345')}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#274235] hover:bg-[#1e352a] text-white text-xs font-bold cursor-pointer shadow-2xs transition"
+          >
+            <HelpCircle className="h-3.5 w-3.5" />
+            <span className="text-[11px] sm:text-xs">Help</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ============================================================ */}
+      {/* 2. GREETING & QUICK STATUS BADGES                             */}
+      {/* ============================================================ */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-[#19251f] tracking-tight">
+            Good evening, <span className="text-[#274235]">shyam</span>
+          </h1>
+          <p className="text-xs text-[#6e7972] mt-0.5">
+            Sunday, 4 October 2026
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-bold">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Live</span>
+          </span>
+
+          <button
+            type="button"
+            onClick={() => alert('AI Report: All telemetry feeds normal. 0 unresolved tenant tickets across properties.')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#e3e1d8] bg-white hover:bg-[#fbfbfa] text-xs font-bold text-[#19251f] cursor-pointer shadow-2xs transition"
+          >
+            <FileText className="h-3.5 w-3.5 text-[#274235]" />
+            <span>AI Report</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#e3e1d8] bg-white hover:bg-[#fbfbfa] text-xs font-bold text-[#19251f] cursor-pointer shadow-2xs transition"
+          >
+            <RefreshCw className="h-3.5 w-3.5 text-[#6e7972]" />
+            <span>Refresh</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ============================================================ */}
+      {/* 3. WELCOME ONBOARDING BANNER                                  */}
+      {/* ============================================================ */}
+      {showWelcomeBanner && (
+        <div className="p-4 sm:p-5 rounded-3xl bg-white border border-[#e3e1d8] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden animate-in fade-in">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="h-11 w-11 rounded-2xl bg-[#eef3f0] border border-[#274235]/20 flex items-center justify-center text-[#274235] shrink-0 shadow-2xs">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-sm sm:text-base font-black text-[#19251f]">Welcome to Staywise!</h2>
+              <p className="text-xs text-[#6e7972] mt-0.5">
+                Finish your setup to unlock all automated features and start receiving on-time payments.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsAddPropertyOpen(true)}
+              className="px-5 py-2.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow-xs whitespace-nowrap"
+            >
+              <span>Start Setup</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowWelcomeBanner(false)}
+              className="h-8 w-8 rounded-full hover:bg-slate-100 text-[#6e7972] flex items-center justify-center transition cursor-pointer"
+              title="Dismiss"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* 4. PORTFOLIO AT A GLANCE (Image 1)                            */}
+      {/* ============================================================ */}
+      <div className="space-y-2.5">
+        <span className="text-[10px] font-black uppercase tracking-wider text-[#6e7972] block">
+          Portfolio at a glance
+        </span>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {/* Card 1: Total Properties */}
+          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#e3e1d8] space-y-2 shadow-2xs">
+            <div className="h-8 w-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Building2 className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-black text-[#19251f]">{properties.length || 1}</div>
+              <div className="text-xs font-bold text-[#19251f]">Total Properties</div>
+              <div className="text-[10px] text-[#6e7972] truncate mt-0.5">
+                {properties.reduce((acc, p) => acc + (p.totalUnits || 0), 0) || 1} total beds across all
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Occupancy Rate */}
+          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#e3e1d8] space-y-2 shadow-2xs">
+            <div className="h-8 w-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <BedDouble className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-black text-[#19251f]">0%</div>
+              <div className="text-xs font-bold text-[#19251f]">Occupancy Rate</div>
+              <div className="text-[10px] text-[#6e7972] truncate mt-0.5">0 / 1 beds occupied</div>
+            </div>
+          </div>
+
+          {/* Card 3: Rent Collection */}
+          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#e3e1d8] space-y-2 shadow-2xs">
+            <div className="h-8 w-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <Percent className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-black text-[#19251f]">0%</div>
+              <div className="text-xs font-bold text-[#19251f]">Rent Collection</div>
+              <div className="text-[10px] text-[#6e7972] truncate mt-0.5">₹0 of ₹0</div>
+            </div>
+          </div>
+
+          {/* Card 4: Active Leads */}
+          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#e3e1d8] space-y-2 shadow-2xs">
+            <div className="h-8 w-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+              <Users className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-black text-[#19251f]">0</div>
+              <div className="text-xs font-bold text-[#19251f]">Active Leads</div>
+              <div className="text-[10px] text-[#6e7972] truncate mt-0.5">0 new today</div>
+            </div>
+          </div>
+
+          {/* Card 5: Unlocked by Tenants */}
+          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#e3e1d8] space-y-2 shadow-2xs col-span-2 sm:col-span-1">
+            <div className="h-8 w-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+              <Key className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-black text-[#19251f]">0</div>
+              <div className="text-xs font-bold text-[#19251f]">Unlocked by Tenants</div>
+              <div className="text-[10px] text-[#6e7972] truncate mt-0.5">this month: 0 today</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ============================================================ */}
+      {/* 5. BED OCCUPANCY MAP (Image 1)                                */}
+      {/* ============================================================ */}
+      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#e3e1d8] space-y-3.5 shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#eeece5] pb-3">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <BedDouble className="h-4 w-4" />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-[#19251f]">Occupancy Map</h3>
+              <p className="text-[10px] text-[#6e7972]">Live bed status across properties</p>
+            </div>
+          </div>
+
+          {/* Map Status Legends matching Image 1 */}
+          <div className="flex items-center gap-2.5 text-[10px] font-black uppercase tracking-wider flex-wrap">
+            <span className="flex items-center gap-1 text-emerald-600">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              <span>Occupied</span>
+            </span>
+            <span className="flex items-center gap-1 text-rose-600">
+              <span className="h-2 w-2 rounded-full bg-rose-500" />
+              <span>Available</span>
+            </span>
+            <span className="flex items-center gap-1 text-blue-600">
+              <span className="h-2 w-2 rounded-full bg-blue-500" />
+              <span>On Hold</span>
+            </span>
+            <span className="flex items-center gap-1 text-slate-500">
+              <span className="h-2 w-2 rounded-full bg-slate-400" />
+              <span>Blocked</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Live Property Bed Row */}
+        <div className="p-3.5 rounded-2xl bg-[#faf9f6] border border-[#eeece5] space-y-2.5">
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2 font-bold text-[#19251f]">
+              <div className="h-6 w-6 rounded-lg bg-[#eef3f0] text-[#274235] flex items-center justify-center">
+                <Building2 className="h-3.5 w-3.5" />
+              </div>
+              <span>shyam's pg</span>
+            </div>
+            <span className="text-[11px] font-bold text-[#6e7972]">1 beds</span>
+          </div>
+
+          {/* Occupancy Multi-colored Bar matching Image 1 */}
+          <div className="h-2.5 w-full rounded-full bg-slate-200 overflow-hidden flex">
+            <div className="w-full bg-rose-500 rounded-full" title="1 Available" />
+          </div>
+
+          <div className="flex items-center gap-3 text-[10px] text-[#6e7972] font-semibold pt-1">
+            <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> 0 Occupied</span>
+            <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-rose-500" /> 1 Available</span>
+            <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-blue-500" /> 0 On Hold</span>
+            <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-slate-400" /> 0 Blocked</span>
+          </div>
+        </div>
+      </div>
+
       {/* SECTION 53: OWNER DAILY AI BRIEF */}
       <div className="rounded-3xl p-4 sm:p-6 bg-gradient-to-br from-[#19251f] via-[#203429] to-[#274235] text-white shadow-xl relative overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">

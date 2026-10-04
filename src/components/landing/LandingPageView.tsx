@@ -21,7 +21,24 @@ import {
   TrendingUp,
   ArrowUpRight,
   Menu,
-  X
+  X,
+  Phone,
+  MessageSquare,
+  Clock,
+  MapPin,
+  Calendar,
+  ChevronRight,
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  DollarSign,
+  Activity,
+  Bot,
+  UserCheck,
+  FileCheck2,
+  Receipt,
+  Scale,
+  Headphones
 } from 'lucide-react';
 
 interface LandingPageViewProps {
@@ -30,7 +47,6 @@ interface LandingPageViewProps {
 
 /**
  * Instantaneous zero-overhead component wrapper
- * Eliminates layout thrashing, hidden opacities, and IntersectionObserver lag
  */
 function ScrollReveal({
   children,
@@ -54,28 +70,32 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
   const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
   const [selectedPlanForTrial, setSelectedPlanForTrial] = useState<SubscriptionTierId>('growth_pro');
 
-  // Interactive Multi-Asset Tab Showcase
-  const [activeAssetTab, setActiveAssetTab] = useState<'RESIDENTIAL' | 'PG' | 'COMMERCIAL' | 'ESTATE'>('RESIDENTIAL');
+  // Interactive Live Dashboard Showcase Tabs
+  const [activeTab, setActiveTab] = useState<'RENT' | 'BEDS' | 'WHATSAPP' | 'OCR' | 'CRM' | 'MOVEFLOW'>('RENT');
 
   // FAQ Accordion State
   const [expandedFaq, setExpandedFaq] = useState<number | null>(0);
 
   // -------------------------------------------------------------------------
-  // CONTINUOUS FULL-PAGE SMOOTH SCROLL & CINEMATIC PARALLAX ENGINE (LENIS)
-  // - Hardware-synchronized Lenis smooth inertia across all browsers
-  // - Dynamic visible building displacement (+/-110px travel + 3D scale zoom)
-  // - Multi-plane depth across every section from Header to Footer
+  // CONTINUOUS FULL-PAGE SMOOTH SCROLL & PARALLAX ENGINE (LENIS)
+  // - Synchronized Lenis scroll loop across mobile, tablet, and desktop
+  // - Architecture building displacement (+/-110px travel + optical scale)
+  // - Multi-layer parallax depth on pain points, dashboard, features & stats
   // -------------------------------------------------------------------------
   const lenisRef = useRef<Lenis | null>(null);
   const heroBgRef = useRef<HTMLDivElement>(null);
   const heroContentRef = useRef<HTMLDivElement>(null);
+  const painSectionRef = useRef<HTMLDivElement>(null);
+  const painCard1Ref = useRef<HTMLDivElement>(null);
+  const painCard2Ref = useRef<HTMLDivElement>(null);
+  const painCard3Ref = useRef<HTMLDivElement>(null);
   const architectureSectionRef = useRef<HTMLDivElement>(null);
   const buildingParallaxRef = useRef<HTMLDivElement>(null);
   const buildingBadgeRef = useRef<HTMLDivElement>(null);
   const leftCardsParallaxRef = useRef<HTMLDivElement>(null);
   const rightCardsParallaxRef = useRef<HTMLDivElement>(null);
-  const solutionsSectionRef = useRef<HTMLDivElement>(null);
-  const solutionsCardRef = useRef<HTMLDivElement>(null);
+  const dashboardSectionRef = useRef<HTMLDivElement>(null);
+  const dashboardCardRef = useRef<HTMLDivElement>(null);
   const servicesSectionRef = useRef<HTMLDivElement>(null);
   const servicesCol1Ref = useRef<HTMLDivElement>(null);
   const servicesCol3Ref = useRef<HTMLDivElement>(null);
@@ -90,18 +110,56 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
   const faqContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const updateParallax = (scrollY: number) => {
+    const isMobile = window.innerWidth < 768;
+    const lenis = new Lenis({
+      duration: isMobile ? 0.75 : 0.95,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1.15,
+      touchMultiplier: 1.25,
+      autoRaf: false,
+    });
+    lenisRef.current = lenis;
+
+    let rafId: number;
+    function raf(time: number) {
+      lenis.raf(time);
+      rafId = requestAnimationFrame(raf);
+    }
+    rafId = requestAnimationFrame(raf);
+
+    const onScroll = () => {
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
       const windowH = window.innerHeight;
 
-      // 1. Hero Continuous Parallax
-      if (heroBgRef.current && scrollY < windowH * 1.6) {
-        heroBgRef.current.style.transform = `translate3d(0, ${(scrollY * 0.35).toFixed(1)}px, 0) scale(${(1 + scrollY * 0.00016).toFixed(3)})`;
+      // 1. Hero Parallax
+      if (heroBgRef.current) {
+        heroBgRef.current.style.transform = `translate3d(0, ${(scrollY * 0.22).toFixed(1)}px, 0)`;
       }
-      if (heroContentRef.current && scrollY < windowH * 1.6) {
-        heroContentRef.current.style.transform = `translate3d(0, ${(scrollY * -0.09).toFixed(1)}px, 0)`;
+      if (heroContentRef.current) {
+        heroContentRef.current.style.transform = `translate3d(0, ${(scrollY * 0.08).toFixed(1)}px, 0)`;
       }
 
-      // 2. Flagship Architecture Parallax Building (Cinematic +/-110px Travel + 3D Zoom)
+      // 2. Where Owners Lose Time (Pain Points) Parallax
+      if (painSectionRef.current) {
+        const rect = painSectionRef.current.getBoundingClientRect();
+        if (rect.bottom > -100 && rect.top < windowH + 100) {
+          const relY = windowH * 0.5 - (rect.top + rect.height * 0.5);
+          if (painCard1Ref.current) {
+            painCard1Ref.current.style.transform = `translate3d(0, ${(relY * -0.05).toFixed(1)}px, 0)`;
+          }
+          if (painCard2Ref.current) {
+            painCard2Ref.current.style.transform = `translate3d(0, ${(relY * 0.04).toFixed(1)}px, 0)`;
+          }
+          if (painCard3Ref.current) {
+            painCard3Ref.current.style.transform = `translate3d(0, ${(relY * -0.06).toFixed(1)}px, 0)`;
+          }
+        }
+      }
+
+      // 3. Flagship Architectural Parallax Showcase
       if (architectureSectionRef.current) {
         const rect = architectureSectionRef.current.getBoundingClientRect();
         if (rect.bottom > -200 && rect.top < windowH + 200) {
@@ -109,13 +167,9 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           const viewportCenter = windowH * 0.5;
           const relY = viewportCenter - sectionCenter;
 
-          // Prominent building vertical displacement (+/-110px)
           const buildingY = Math.max(-110, Math.min(110, relY * -0.18));
-          // Optical zoom factor: zooms up to 1.05 when centered in viewport
           const proximity = Math.max(0, 1 - Math.abs(relY) / (windowH * 0.85));
           const buildingScale = 0.95 + proximity * 0.09;
-
-          // Counter-gliding flanking cards (+/-70px and +/-80px)
           const cardsY = Math.max(-70, Math.min(70, relY * 0.11));
 
           if (buildingParallaxRef.current) {
@@ -133,19 +187,19 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
         }
       }
 
-      // 3. Universal Asset Solutions Parallax
-      if (solutionsSectionRef.current) {
-        const rect = solutionsSectionRef.current.getBoundingClientRect();
+      // 4. Everything Inside Dashboard Parallax
+      if (dashboardSectionRef.current) {
+        const rect = dashboardSectionRef.current.getBoundingClientRect();
         if (rect.bottom > -150 && rect.top < windowH + 150) {
           const relY = windowH * 0.5 - (rect.top + rect.height * 0.5);
-          const solFloat = Math.max(-35, Math.min(35, relY * -0.06));
-          if (solutionsCardRef.current) {
-            solutionsCardRef.current.style.transform = `translate3d(0, ${solFloat.toFixed(1)}px, 0)`;
+          const floatOffset = Math.max(-35, Math.min(35, relY * -0.06));
+          if (dashboardCardRef.current) {
+            dashboardCardRef.current.style.transform = `translate3d(0, ${floatOffset.toFixed(1)}px, 0)`;
           }
         }
       }
 
-      // 4. Autopilot Services 3-Column Staggered Parallax
+      // 5. Autopilot Services 3-Column Staggered Parallax
       if (servicesSectionRef.current) {
         const rect = servicesSectionRef.current.getBoundingClientRect();
         if (rect.bottom > -150 && rect.top < windowH + 150) {
@@ -160,117 +214,95 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
         }
       }
 
-      // 5. Institutional Reliability Stats & Testimonial Depth
+      // 6. Scale Stats & Testimonial Parallax
       if (statsSectionRef.current) {
         const rect = statsSectionRef.current.getBoundingClientRect();
-        if (rect.bottom > -150 && rect.top < windowH + 150) {
+        if (rect.bottom > -100 && rect.top < windowH + 100) {
           const relY = windowH * 0.5 - (rect.top + rect.height * 0.5);
-          const statShift = Math.max(-30, Math.min(30, relY * 0.05));
+          const boxShift = Math.max(-25, Math.min(25, relY * -0.04));
           if (statsBox1Ref.current) {
-            statsBox1Ref.current.style.transform = `translate3d(0, ${(-statShift).toFixed(1)}px, 0)`;
+            statsBox1Ref.current.style.transform = `translate3d(0, ${boxShift.toFixed(1)}px, 0)`;
           }
           if (statsBox4Ref.current) {
-            statsBox4Ref.current.style.transform = `translate3d(0, ${statShift.toFixed(1)}px, 0)`;
+            statsBox4Ref.current.style.transform = `translate3d(0, ${(-boxShift).toFixed(1)}px, 0)`;
           }
           if (testimonialRef.current) {
-            const testShift = Math.max(-25, Math.min(25, relY * -0.04));
-            testimonialRef.current.style.transform = `translate3d(0, ${testShift.toFixed(1)}px, 0)`;
+            testimonialRef.current.style.transform = `translate3d(0, ${(relY * 0.03).toFixed(1)}px, 0)`;
           }
         }
       }
 
-      // 6. Pricing Featured Card & Guarantee Parallax
+      // 7. Pricing Matrix & Guarantee Box Parallax
       if (pricingSectionRef.current) {
         const rect = pricingSectionRef.current.getBoundingClientRect();
-        if (rect.bottom > -150 && rect.top < windowH + 150) {
+        if (rect.bottom > -100 && rect.top < windowH + 100) {
           const relY = windowH * 0.5 - (rect.top + rect.height * 0.5);
-          const cardFloat = Math.max(-26, Math.min(26, relY * -0.045));
           if (pricingFeaturedCardRef.current) {
-            pricingFeaturedCardRef.current.style.transform = `translate3d(0, ${cardFloat.toFixed(1)}px, 0)`;
+            pricingFeaturedCardRef.current.style.transform = `translate3d(0, ${(relY * -0.04).toFixed(1)}px, 0)`;
           }
           if (pricingGuaranteeRef.current) {
-            const guarFloat = Math.max(-20, Math.min(20, relY * 0.035));
-            pricingGuaranteeRef.current.style.transform = `translate3d(0, ${guarFloat.toFixed(1)}px, 0)`;
+            pricingGuaranteeRef.current.style.transform = `translate3d(0, ${(relY * 0.03).toFixed(1)}px, 0)`;
           }
         }
       }
 
-      // 7. FAQ Accordion Float
+      // 8. FAQ Accordion Parallax
       if (faqSectionRef.current) {
         const rect = faqSectionRef.current.getBoundingClientRect();
-        if (rect.bottom > -150 && rect.top < windowH + 150) {
+        if (rect.bottom > -100 && rect.top < windowH + 100) {
           const relY = windowH * 0.5 - (rect.top + rect.height * 0.5);
-          const faqFloat = Math.max(-22, Math.min(22, relY * -0.035));
           if (faqContainerRef.current) {
-            faqContainerRef.current.style.transform = `translate3d(0, ${faqFloat.toFixed(1)}px, 0)`;
+            faqContainerRef.current.style.transform = `translate3d(0, ${(relY * -0.03).toFixed(1)}px, 0)`;
           }
         }
       }
     };
 
-    // Initialize Lenis smooth scroll engine
-    const lenis = new Lenis({
-      duration: 1.15,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: 'vertical',
-      gestureOrientation: 'vertical',
-      smoothWheel: true,
-      wheelMultiplier: 1.0,
-      touchMultiplier: 1.5,
-    });
-    lenisRef.current = lenis;
-
-    let rafId: number;
-    function raf(time: number) {
-      lenis.raf(time);
-      rafId = requestAnimationFrame(raf);
-    }
-    rafId = requestAnimationFrame(raf);
-
-    lenis.on('scroll', (e: { scroll: number }) => {
-      updateParallax(e.scroll);
-    });
-
-    // Initial update
-    updateParallax(window.scrollY || 0);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
 
     return () => {
+      window.removeEventListener('scroll', onScroll);
       cancelAnimationFrame(rafId);
       lenis.destroy();
-      lenisRef.current = null;
     };
   }, []);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault();
-    if (lenisRef.current) {
-      lenisRef.current.scrollTo(targetId, { offset: -55, duration: 1.2 });
-    } else {
-      document.querySelector(targetId)?.scrollIntoView({ behavior: 'smooth' });
+    const elem = document.querySelector(targetId);
+    if (elem) {
+      if (lenisRef.current) {
+        lenisRef.current.scrollTo(elem as HTMLElement, { offset: -70, duration: 1.1 });
+      } else {
+        elem.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   };
 
-  const handleSignInClick = (e: React.MouseEvent) => {
-    if (onNavigateToLogin) {
-      e.preventDefault();
-      onNavigateToLogin();
-    }
-  };
-
-  const handleOpenTrial = (planId: SubscriptionTierId = 'growth_pro') => {
-    setSelectedPlanForTrial(planId);
+  const handleOpenTrial = (plan: SubscriptionTierId = 'growth_pro') => {
+    setSelectedPlanForTrial(plan);
     setIsTrialModalOpen(true);
   };
 
-  const toggleFaq = (index: number) => {
-    setExpandedFaq(expandedFaq === index ? null : index);
+  const toggleFaq = (idx: number) => {
+    setExpandedFaq(expandedFaq === idx ? null : idx);
+  };
+
+  const handleSignInClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (onNavigateToLogin) {
+      onNavigateToLogin();
+    } else {
+      window.location.href = '/login';
+    }
   };
 
   return (
-    <div className="w-full min-h-screen bg-white text-[#19251f] font-sans selection:bg-[#203a2d]/20 selection:text-[#203a2d] relative overflow-x-hidden p-0 m-0">
+    <div className="min-h-screen bg-[#fdfbf7] text-[#16231c] selection:bg-[#203a2d]/15 selection:text-[#203a2d] font-sans antialiased overflow-x-hidden">
       
       {/* ---------------------------------------------------- */}
-      {/* 1. TOP HEADER NAVIGATION                             */}
+      {/* 1. TOP RESPONSIVE HEADER BAR                         */}
       {/* ---------------------------------------------------- */}
       <header className="w-full px-4 sm:px-8 lg:px-12 py-3 sm:py-3.5 flex items-center justify-between border-b border-[#eeece5] bg-white/95 backdrop-blur-md sticky top-0 z-50 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
         {/* Left: Geometric Emblem + Brand Name */}
@@ -287,14 +319,19 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 <path d="M2 12l10 5 10-5" />
               </svg>
             </div>
-            <span className="font-extrabold text-sm sm:text-base tracking-tight text-[#16231c]">
-              STAYWISE
-            </span>
+            <div className="flex flex-col text-left">
+              <span className="font-extrabold text-sm sm:text-base tracking-tight text-[#16231c] leading-none">
+                STAYWISE
+              </span>
+              <span className="text-[9px] text-[#6e7972] font-semibold tracking-wider uppercase mt-0.5 hidden xs:inline">
+                Operating System
+              </span>
+            </div>
           </a>
         </div>
 
-        {/* Center Navigation Links matching reference design */}
-        <nav className="hidden lg:flex items-center gap-8 text-xs font-medium text-[#4d5a52]">
+        {/* Center Desktop Navigation Links */}
+        <nav className="hidden lg:flex items-center gap-7 text-xs font-semibold text-[#4d5a52]">
           <a 
             href="#overview" 
             onClick={(e) => handleNavClick(e, '#overview')}
@@ -303,26 +340,33 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             Home
           </a>
           <a 
+            href="#pain-points" 
+            onClick={(e) => handleNavClick(e, '#pain-points')}
+            className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
+          >
+            Where Owners Lose Time
+          </a>
+          <a 
             href="#interactive-building" 
             onClick={(e) => handleNavClick(e, '#interactive-building')}
-            className="hover:text-[#19251f] transition-colors duration-100 flex items-center gap-1 font-semibold text-[#203a2d] cursor-pointer"
+            className="hover:text-[#19251f] transition-colors duration-100 flex items-center gap-1 font-bold text-[#203a2d] cursor-pointer"
           >
             <span>Architecture</span>
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
           </a>
           <a 
-            href="#solutions" 
-            onClick={(e) => handleNavClick(e, '#solutions')}
+            href="#everything-inside" 
+            onClick={(e) => handleNavClick(e, '#everything-inside')}
             className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
           >
-            Solutions
+            Everything Inside
           </a>
           <a 
-            href="#services" 
-            onClick={(e) => handleNavClick(e, '#services')}
+            href="#how-it-works" 
+            onClick={(e) => handleNavClick(e, '#how-it-works')}
             className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
           >
-            Services
+            How it Works
           </a>
           <a 
             href="#pricing" 
@@ -332,31 +376,38 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             Pricing
           </a>
           <a 
-            href="#about" 
-            onClick={(e) => handleNavClick(e, '#about')}
-            className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
-          >
-            About us
-          </a>
-          <a 
             href="#faq" 
             onClick={(e) => handleNavClick(e, '#faq')}
             className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
           >
             FAQ
           </a>
+          <a 
+            href="#resources" 
+            onClick={(e) => handleNavClick(e, '#resources')}
+            className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
+          >
+            Resources
+          </a>
         </nav>
 
-        {/* Right Actions: Outlined Sign in button */}
+        {/* Right Actions: Outlined Sign in + CTA + Hamburger Toggle */}
         <div className="flex items-center gap-2 sm:gap-3">
           <a
             href="/login"
             onClick={handleSignInClick}
-            className="px-3.5 sm:px-5 py-1.5 rounded-full border border-[#16231c] text-[11px] sm:text-xs font-bold text-[#16231c] hover:bg-[#16231c] hover:text-white transition-all duration-150 shadow-xs cursor-pointer inline-flex items-center justify-center gap-1.5 group shrink-0"
+            className="px-3.5 sm:px-4 py-1.5 rounded-full border border-[#16231c] text-[11px] sm:text-xs font-bold text-[#16231c] hover:bg-[#16231c] hover:text-white transition-all duration-150 shadow-xs cursor-pointer inline-flex items-center justify-center gap-1.5 group shrink-0"
           >
             <span>Sign in</span>
             <ArrowUpRight className="h-3 w-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-150" />
           </a>
+
+          <button
+            onClick={() => handleOpenTrial('growth_pro')}
+            className="hidden sm:inline-flex px-4 py-1.5 rounded-full bg-[#203a2d] hover:bg-[#172b21] text-white text-xs font-bold shadow-xs transition duration-150 cursor-pointer"
+          >
+            Start Free Trial →
+          </button>
 
           {/* Mobile hamburger menu toggle */}
           <button
@@ -389,6 +440,16 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               Home
             </a>
             <a 
+              href="#pain-points" 
+              onClick={(e) => {
+                handleNavClick(e, '#pain-points');
+                setIsMobileMenuOpen(false);
+              }}
+              className="py-1 hover:text-[#16231c] transition-colors"
+            >
+              Where Owners Lose Time
+            </a>
+            <a 
               href="#interactive-building" 
               onClick={(e) => {
                 handleNavClick(e, '#interactive-building');
@@ -400,24 +461,24 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             </a>
             <a 
-              href="#solutions" 
+              href="#everything-inside" 
               onClick={(e) => {
-                handleNavClick(e, '#solutions');
+                handleNavClick(e, '#everything-inside');
                 setIsMobileMenuOpen(false);
               }}
               className="py-1 hover:text-[#16231c] transition-colors"
             >
-              Solutions
+              Everything Inside
             </a>
             <a 
-              href="#services" 
+              href="#how-it-works" 
               onClick={(e) => {
-                handleNavClick(e, '#services');
+                handleNavClick(e, '#how-it-works');
                 setIsMobileMenuOpen(false);
               }}
               className="py-1 hover:text-[#16231c] transition-colors"
             >
-              Services
+              How it Works
             </a>
             <a 
               href="#pricing" 
@@ -430,16 +491,6 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               Pricing Plans
             </a>
             <a 
-              href="#about" 
-              onClick={(e) => {
-                handleNavClick(e, '#about');
-                setIsMobileMenuOpen(false);
-              }}
-              className="py-1 hover:text-[#16231c] transition-colors"
-            >
-              About us
-            </a>
-            <a 
               href="#faq" 
               onClick={(e) => {
                 handleNavClick(e, '#faq');
@@ -448,6 +499,16 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               className="py-1 hover:text-[#16231c] transition-colors"
             >
               FAQ
+            </a>
+            <a 
+              href="#resources" 
+              onClick={(e) => {
+                handleNavClick(e, '#resources');
+                setIsMobileMenuOpen(false);
+              }}
+              className="py-1 hover:text-[#16231c] transition-colors"
+            >
+              Resources &amp; Cities
             </a>
           </nav>
 
@@ -466,13 +527,13 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       )}
 
       {/* ---------------------------------------------------- */}
-      {/* 2. HERO SECTION WITH OPTIMIZED LIGHTWEIGHT ASSET     */}
+      {/* 2. HERO SECTION: "Stop chasing rent. Start collecting" */}
       {/* ---------------------------------------------------- */}
       <section 
         id="overview"
-        className="relative w-full min-h-[560px] sm:min-h-[660px] lg:min-h-[740px] flex flex-col items-center justify-start pt-8 sm:pt-14 lg:pt-20 px-4 sm:px-6 lg:px-8 text-center overflow-hidden"
+        className="relative w-full min-h-[580px] sm:min-h-[660px] lg:min-h-[740px] flex flex-col items-center justify-start pt-8 sm:pt-14 lg:pt-20 px-4 sm:px-6 lg:px-8 text-center overflow-hidden"
       >
-        {/* Hardware-Accelerated Lightweight Hero Background Image (182KB) */}
+        {/* Hardware-Accelerated Lightweight Hero Background Image */}
         <div 
           ref={heroBgRef}
           className="absolute inset-x-0 -top-10 -bottom-10 bg-cover bg-center bg-no-repeat pointer-events-none transform-gpu will-change-transform"
@@ -481,85 +542,299 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           }}
         />
 
-        {/* Crisp static gradient overlay (No expensive blur = 100% smooth) */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/85 via-white/55 to-white pointer-events-none" />
+        {/* Crisp static gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/60 to-[#fdfbf7] pointer-events-none" />
 
         {/* Floating Pill Announcement */}
         <div className="relative z-10 mb-4 sm:mb-6 animate-in fade-in slide-in-from-top-3 duration-500 w-full flex justify-center px-2">
-          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-white/95 border border-[#c1d3c9] text-[#203a2d] text-[10px] sm:text-xs font-semibold shadow-xs hover:bg-white transition-colors max-w-full text-center">
-            <span>✨ AI-Powered Rental Yield Forecasting &amp; Automated Rent Collection 2.0</span>
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-white/95 border border-[#c1d3c9] text-[#203a2d] text-[10px] sm:text-xs font-bold shadow-xs hover:bg-white transition-colors max-w-full text-center">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span>Built for India • The Property Operating System for PGs, Hostels &amp; Flats</span>
           </div>
         </div>
 
-        {/* Editorial Serif Headline */}
+        {/* Editorial Serif Headline matching ManagR's core proposition */}
         <div ref={heroContentRef} className="relative z-10 max-w-4xl mx-auto space-y-4 sm:space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-600 will-change-transform transform-gpu px-2 sm:px-0">
-          <h1 className="font-editorial text-3xl xs:text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-[#16231c] leading-[1.15] sm:leading-[1.12]">
-            The Premier SaaS Solution <br className="hidden sm:inline" />
-            Tailored for Landlords.
+          <h1 className="font-editorial text-3xl xs:text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-[#16231c] leading-[1.12]">
+            Stop chasing rent. <br className="hidden sm:inline" />
+            Start collecting it.
           </h1>
 
-          {/* Subtitle in clean sans-serif */}
+          {/* Subtitle rewritten for Indian landlords */}
           <p className="text-xs sm:text-base lg:text-lg text-[#2f3f35] max-w-2xl mx-auto leading-relaxed font-normal px-1 sm:px-0">
-            Staywise addresses all vacancy and yield forecasting hurdles by examining subtle tenant interactions, enhancing your property portfolio precision.
+            Staywise is the operating system for rental businesses in India. PG, hostel, apartment, and villa owners — manage leads, automated WhatsApp rent, tenant KYC, and caretakers in one unified hub.
           </p>
 
-          {/* Central Dark Forest Green Pill Button with Arrow */}
+          {/* Dual Action Buttons */}
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto">
             <button
               type="button"
               onClick={() => handleOpenTrial('growth_pro')}
               className="w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 rounded-full bg-[#203a2d] hover:bg-[#172b21] text-white font-bold text-xs sm:text-base shadow-lg shadow-[#203a2d]/30 transition-all duration-150 transform hover:-translate-y-0.5 flex items-center justify-center gap-2.5 group cursor-pointer"
             >
-              <span>Reserve your demo today!</span>
+              <span>Start 7-Day Free Trial (₹0 Today)</span>
               <span className="text-base sm:text-lg group-hover:translate-x-1.5 transition-transform duration-150">→</span>
             </button>
+
+            <a
+              href="#how-it-works"
+              onClick={(e) => handleNavClick(e, '#how-it-works')}
+              className="w-full sm:w-auto px-6 py-3.5 sm:py-4 rounded-full bg-white/95 border border-[#e3e1d8] text-[#16231c] font-bold text-xs sm:text-sm hover:bg-[#f4f3ef] transition-colors shadow-xs cursor-pointer"
+            >
+              See How It Works (15 Mins)
+            </a>
           </div>
 
-          {/* 7-Day Free Trial ₹0 Guarantee */}
-          <div className="pt-1 text-[11px] sm:text-xs font-semibold text-[#203a2d] flex items-center justify-center gap-1.5 flex-wrap px-2">
-            <Sparkles className="h-3.5 w-3.5 text-emerald-700 shrink-0" />
-            <span>7-Day Free Trial • ₹0 charged today • Cancel before 7 days in 1 click</span>
+          {/* 7-Day Free Trial & Autopay Guarantee */}
+          <div className="pt-1 text-[11px] sm:text-xs font-semibold text-[#203a2d] flex items-center justify-center gap-2 flex-wrap px-2">
+            <span className="flex items-center gap-1">
+              <Check className="h-3.5 w-3.5 text-emerald-700" />
+              <span>₹0 charged today</span>
+            </span>
+            <span>•</span>
+            <span className="flex items-center gap-1">
+              <Check className="h-3.5 w-3.5 text-emerald-700" />
+              <span>Cancel before 7 days in 1 click</span>
+            </span>
+            <span>•</span>
+            <span className="flex items-center gap-1">
+              <Check className="h-3.5 w-3.5 text-emerald-700" />
+              <span>Works directly on WhatsApp</span>
+            </span>
           </div>
         </div>
 
-        {/* Bottom Trust Bar ("Trusted by leaders in") */}
+        {/* Bottom Trust Rail: Real Estate & Banking Rails */}
         <div className="relative z-10 mt-auto pt-10 sm:pt-16 lg:pt-20 pb-6 sm:pb-8 w-full max-w-4xl mx-auto space-y-3 px-2 sm:px-0">
           <div className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#495b50]">
-            Trusted by leaders in
+            Integrated with India&apos;s Prime Portals &amp; Banking Rails
           </div>
 
-          {/* Monochrome Brand / Banking Rail Logos */}
-          <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center justify-center gap-3 sm:gap-8 lg:gap-10 text-xs sm:text-sm font-black text-[#2f3d35]/85 tracking-tight">
-            <span className="flex items-center justify-center gap-1.5 hover:text-[#19251f] transition-opacity">
-              <span className="text-sm sm:text-base font-serif">Creatio</span>
+          <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center justify-center gap-4 sm:gap-8 lg:gap-10 text-xs sm:text-sm font-black text-[#2f3d35]/85 tracking-tight">
+            <span className="flex items-center justify-center gap-1">
+              <span className="font-serif font-bold text-sm sm:text-base">Axis Escrow</span>
             </span>
-            <span className="flex items-center justify-center gap-1.5 hover:text-[#19251f] transition-opacity">
-              <span className="text-sm sm:text-base font-sans font-extrabold tracking-tighter">HubSpot</span>
+            <span className="flex items-center justify-center gap-1">
+              <span className="font-sans font-extrabold text-sm sm:text-base text-emerald-800">UPI AutoPay</span>
             </span>
-            <span className="flex items-center justify-center gap-1.5 hover:text-[#19251f] transition-opacity">
-              <span className="text-sm sm:text-base font-sans font-bold">zendesk</span>
+            <span className="flex items-center justify-center gap-1">
+              <span className="font-sans font-bold text-sm sm:text-base text-amber-800">99acres</span>
             </span>
-            <span className="flex items-center justify-center gap-1.5 hover:text-[#19251f] transition-opacity">
-              <span className="text-sm sm:text-base font-mono font-bold">Bitrix24©</span>
+            <span className="flex items-center justify-center gap-1">
+              <span className="font-mono font-bold text-sm sm:text-base">MagicBricks</span>
             </span>
-            <span className="flex items-center justify-center gap-1.5 hover:text-[#19251f] transition-opacity">
-              <span className="text-sm sm:text-base font-serif italic">Apptivo</span>
+            <span className="flex items-center justify-center gap-1">
+              <span className="font-serif italic font-bold text-sm sm:text-base">NoBroker</span>
             </span>
-            <span className="flex items-center justify-center gap-1.5 hover:text-[#19251f] transition-opacity">
-              <span className="text-sm sm:text-base font-sans font-black">FreshBooks</span>
-            </span>
-            <span className="hidden sm:flex items-center justify-center gap-1.5 hover:text-[#19251f] transition-opacity">
-              <span className="text-sm sm:text-base font-mono">pipedrive</span>
+            <span className="flex items-center justify-center gap-1">
+              <span className="font-sans font-black text-sm sm:text-base text-[#203a2d]">BESCOM / KSEB</span>
             </span>
           </div>
         </div>
 
-        {/* Smooth Dissolve Gradient to bottom content */}
-        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+        {/* Smooth Dissolve Gradient */}
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#fdfbf7] to-transparent pointer-events-none" />
+      </section>
+
+      {/* ---------------------------------------------------- */}
+      {/* 3. IN ONE LINE: THE CORE DEFINITION                   */}
+      {/* ---------------------------------------------------- */}
+      <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-12 bg-white border-y border-[#eeece5]">
+        <div className="max-w-4xl mx-auto text-center space-y-5">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f4f3ef] border border-[#e3e1d8] text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#6e7972]">
+            <span>What is Staywise</span>
+            <span className="text-[#203a2d]">• IN ONE LINE</span>
+          </div>
+
+          <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#16231c] leading-snug">
+            A free property operating system for Paying Guest (PG), hostel, co-living, flat, and villa owners in India.
+          </h2>
+
+          <p className="text-xs sm:text-base text-[#6e7972] max-w-2xl mx-auto leading-relaxed">
+            It sends <b>automatic rent reminders on WhatsApp</b>, tracks every bed, room, and flat across all your properties, manages leads from <b>99acres, MagicBricks, and NoBroker</b> in one inbox, and handles <b>digital KYC &amp; e-stamped rental agreements</b> — at zero cost to the owner.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 max-w-2xl mx-auto text-left">
+            <div className="p-3.5 rounded-2xl bg-[#faf9f6] border border-[#e3e1d8] flex items-center gap-3">
+              <Clock className="h-5 w-5 text-[#203a2d] shrink-0" />
+              <div>
+                <div className="font-bold text-xs text-[#16231c]">Ready in 15 Minutes</div>
+                <div className="text-[10px] text-[#6e7972]">Zero complex manuals</div>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-[#faf9f6] border border-[#e3e1d8] flex items-center gap-3">
+              <Bot className="h-5 w-5 text-emerald-700 shrink-0" />
+              <div>
+                <div className="font-bold text-xs text-[#16231c]">Works on WhatsApp</div>
+                <div className="text-[10px] text-[#6e7972]">English, Hindi &amp; Hinglish</div>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-[#faf9f6] border border-[#e3e1d8] flex items-center gap-3">
+              <ShieldCheck className="h-5 w-5 text-[#203a2d] shrink-0" />
+              <div>
+                <div className="font-bold text-xs text-[#16231c]">Free 7-Day Autopay Trial</div>
+                <div className="text-[10px] text-[#6e7972]">₹0 due today • Cancel anytime</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------- */}
+      {/* 4. WHERE OWNERS LOSE TIME (THE 5 REAL PAIN POINTS)   */}
+      {/* ---------------------------------------------------- */}
+      <section 
+        id="pain-points" 
+        ref={painSectionRef}
+        className="py-14 sm:py-20 px-4 sm:px-6 lg:px-12 bg-[#faf9f6] space-y-10 overflow-hidden"
+      >
+        <ScrollReveal>
+          <div className="text-center max-w-3xl mx-auto space-y-2.5 px-2 sm:px-0">
+            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#F7553D]">
+              Where Property Owners Lose Time
+            </span>
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#16231c]">
+              The 5 Daily Headaches Draining Your Rental Profits
+            </h2>
+            <p className="text-xs sm:text-sm text-[#6e7972] max-w-xl mx-auto leading-relaxed">
+              Managing properties on WhatsApp groups, spreadsheets, and sticky notes leads to unpaid rents, lost tenant enquiries, and endless disputes.
+            </p>
+          </div>
+        </ScrollReveal>
+
+        {/* Staggered Parallax Pain Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-6xl mx-auto items-stretch">
+          
+          {/* PAIN 1: The Rent Chase */}
+          <div 
+            ref={painCard1Ref}
+            className="p-6 rounded-3xl bg-white border border-[#e3e1d8] shadow-xs hover:shadow-md transition-shadow duration-150 flex flex-col justify-between space-y-4 will-change-transform transform-gpu"
+          >
+            <div className="space-y-3">
+              <div className="h-10 w-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+                <Receipt className="h-5 w-5" />
+              </div>
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-50 text-rose-700">
+                Pain #1 • The Rent Chase
+              </span>
+              <h3 className="font-editorial text-lg font-bold text-[#16231c]">
+                &ldquo;Rent kab bhejna hai?&rdquo;
+              </h3>
+              <p className="text-xs text-[#6e7972] leading-relaxed">
+                Day 1 arrives. You text: <i>&ldquo;Hi sir, kindly pay your rent...&rdquo;</i> They read and ignore. You call. They promise tomorrow. You spend 4 days chasing 20 different tenants across 3 properties.
+              </p>
+            </div>
+
+            <div className="pt-3 border-t border-[#eeece5] text-xs text-[#203a2d]">
+              <span className="font-bold text-emerald-800">Staywise Fix: </span>
+              <span>Automated WhatsApp reminders at T-3, Due Date, and T+3 with instant UPI QR links. 99.4% collected on time without one awkward call.</span>
+            </div>
+          </div>
+
+          {/* PAIN 2: The Lost Portal Leads */}
+          <div 
+            ref={painCard2Ref}
+            className="p-6 rounded-3xl bg-white border border-[#e3e1d8] shadow-xs hover:shadow-md transition-shadow duration-150 flex flex-col justify-between space-y-4 will-change-transform transform-gpu"
+          >
+            <div className="space-y-3">
+              <div className="h-10 w-10 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
+                <Phone className="h-5 w-5" />
+              </div>
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-800">
+                Pain #2 • The Lost Lead
+              </span>
+              <h3 className="font-editorial text-lg font-bold text-[#16231c]">
+                Missed calls &amp; lost bookings
+              </h3>
+              <p className="text-xs text-[#6e7972] leading-relaxed">
+                A high-budget seeker calls from 99acres while you are driving. You miss it. By the time you call back 2 hours later, they already booked another hostel down the street.
+              </p>
+            </div>
+
+            <div className="pt-3 border-t border-[#eeece5] text-xs text-[#203a2d]">
+              <span className="font-bold text-emerald-800">Staywise Fix: </span>
+              <span>Centralized CRM uniting 99acres, MagicBricks &amp; NoBroker with instant AI WhatsApp replies, location pins, and scheduled site visits.</span>
+            </div>
+          </div>
+
+          {/* PAIN 3: Vacancy Guessing & Caretaker Disconnect */}
+          <div 
+            ref={painCard3Ref}
+            className="p-6 rounded-3xl bg-white border border-[#e3e1d8] shadow-xs hover:shadow-md transition-shadow duration-150 flex flex-col justify-between space-y-4 will-change-transform transform-gpu"
+          >
+            <div className="space-y-3">
+              <div className="h-10 w-10 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold">
+                <Home className="h-5 w-5" />
+              </div>
+              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-teal-50 text-teal-800">
+                Pain #3 • Vacancy Guesswork
+              </span>
+              <h3 className="font-editorial text-lg font-bold text-[#16231c]">
+                &ldquo;Bhaiya, bed 204 khaali hai?&rdquo;
+              </h3>
+              <p className="text-xs text-[#6e7972] leading-relaxed">
+                A walk-in visits. You call your caretaker to ask if room 204 has a bed. He doesn&apos;t pick up. You guess. You guess wrong and have to refund a deposit.
+              </p>
+            </div>
+
+            <div className="pt-3 border-t border-[#eeece5] text-xs text-[#203a2d]">
+              <span className="font-bold text-emerald-800">Staywise Fix: </span>
+              <span>Live visual floor plan on your phone showing exactly which bed is occupied, vacant, or under 30-day notice.</span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* 2 Additional Pain Points: Electricity & Disputed Deposits */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-6xl mx-auto">
+          {/* PAIN 4: Electricity Bill Splitting */}
+          <div className="p-5 sm:p-6 rounded-3xl bg-white border border-[#e3e1d8] shadow-xs flex flex-col sm:flex-row items-start gap-4">
+            <div className="h-10 w-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold shrink-0">
+              <Zap className="h-5 w-5" />
+            </div>
+            <div className="space-y-1.5 text-xs">
+              <span className="text-[10px] font-black uppercase text-indigo-700">
+                Pain #4 • Electricity Bill Disputes
+              </span>
+              <h4 className="font-bold text-sm text-[#16231c]">
+                Tenants arguing over meter readings &amp; Excel sheets
+              </h4>
+              <p className="text-[#6e7972] leading-relaxed">
+                Tenants accuse each other of using the AC all night. You pull out a calculator, forget fixed charge slabs, and spend Sunday evening resolving a ₹400 dispute.
+              </p>
+              <div className="text-[#203a2d] pt-1">
+                <b>Staywise Solution: </b>Snap a photo of the Discom bill. The OCR engine reads slab tariffs, divides sub-meter units, and posts itemized bills to tenant WhatsApp accounts.
+              </div>
+            </div>
+          </div>
+
+          {/* PAIN 5: MoveFlow Deposits & Paper KYC */}
+          <div className="p-5 sm:p-6 rounded-3xl bg-white border border-[#e3e1d8] shadow-xs flex flex-col sm:flex-row items-start gap-4">
+            <div className="h-10 w-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold shrink-0">
+              <Scale className="h-5 w-5" />
+            </div>
+            <div className="space-y-1.5 text-xs">
+              <span className="text-[10px] font-black uppercase text-emerald-800">
+                Pain #5 • Deposit &amp; Damage Battles
+              </span>
+              <h4 className="font-bold text-sm text-[#16231c]">
+                Tenant leaves damaged walls. You have no move-in proof.
+              </h4>
+              <p className="text-[#6e7972] leading-relaxed">
+                Tenant moves out and demands full security deposit. The bathroom tiles are cracked, but with no move-in checklist, you either absorb the loss or face a bitter argument.
+              </p>
+              <div className="text-[#203a2d] pt-1">
+                <b>Staywise Solution: </b>MoveFlow digital photo inspection with timestamp seals at check-in. Legally compliant e-stamped agreements generated in 5 minutes.
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* --------------------------------------------------------------------------------- */}
-      {/* 3. LIGHTWEIGHT PARALLAX ARCHITECTURE SHOWCASE (ZERO LAG, SNAPPY MOUSEWHEEL)       */}
+      {/* 5. SIGNATURE ARCHITECTURE SHOWCASE (CONTINUOUS BUTTER-SMOOTH PARALLAX)             */}
       {/* --------------------------------------------------------------------------------- */}
       <section 
         id="interactive-building"
@@ -568,15 +843,14 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       >
         <div className="w-full max-w-7xl mx-auto space-y-8 sm:space-y-12">
           
-          {/* Section Header with Generous Responsive Padding (NEVER clipped) */}
           <ScrollReveal>
             <div className="text-center max-w-3xl mx-auto space-y-2 sm:space-y-2.5 px-2 sm:px-0">
               <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 rounded-full bg-[#e8eee9] text-[#203a2d] text-[10px] sm:text-xs font-black tracking-wider uppercase shadow-xs">
                 <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-emerald-600 animate-ping" />
-                <span>Architectural Telemetry In Motion</span>
+                <span>Physical Building Telemetry In Motion</span>
               </div>
               <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#16231c]">
-                Real-Time Portfolio Dynamics
+                Operate Real-World Real Estate with Software Precision
               </h2>
               <p className="text-xs sm:text-sm text-[#6e7972] max-w-xl mx-auto leading-relaxed">
                 As you scroll, experience how Staywise autonomously operates, inspects, and maximizes yields on physical building assets.
@@ -584,7 +858,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             </div>
           </ScrollReveal>
 
-          {/* Symmetrical Responsive Grid: Left Cards + Center Parallax Building + Right Cards */}
+          {/* Symmetrical Parallax Grid: Left Cards + Center Parallax Building + Right Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-center pt-2">
             
             {/* Center Column: The Parallax Architectural Residence Building (Mobile: Appears First) */}
@@ -605,7 +879,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   className="absolute top-3 sm:top-5 left-3 sm:left-5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-white/95 border border-[#e3e1d8] text-[10px] sm:text-xs font-bold text-[#16231c] shadow-md flex items-center gap-1.5 sm:gap-2 will-change-transform transform-gpu max-w-[85%] truncate"
                 >
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                  <span className="truncate">Malabar Luxury Villa • 100% Occupied</span>
+                  <span className="truncate">Sai Krishna PG • 126 Beds Active • 98.4% Occupied</span>
                 </div>
 
                 {/* Floating Scan Marker */}
@@ -692,117 +966,142 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       </section>
 
       {/* ---------------------------------------------------- */}
-      {/* 4. MULTI-ASSET OPERATING SOLUTIONS (#solutions)      */}
+      {/* 6. EVERYTHING INSIDE (MANAGR OPERATING SYSTEM GRID)   */}
       {/* ---------------------------------------------------- */}
       <section 
-        id="solutions" 
-        ref={solutionsSectionRef}
-        className="py-12 sm:py-16 px-4 sm:px-6 lg:px-12 bg-white space-y-8 sm:space-y-10 overflow-hidden"
+        id="everything-inside"
+        ref={dashboardSectionRef}
+        className="py-14 sm:py-20 px-4 sm:px-6 lg:px-12 bg-white space-y-10 overflow-hidden"
       >
-        
         <ScrollReveal>
           <div className="text-center max-w-3xl mx-auto space-y-2 sm:space-y-2.5 px-2 sm:px-0">
             <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#203a2d]">
-              Universal Property Coverage
+              Everything Inside Staywise
             </span>
             <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#16231c]">
-              Designed for Any Real Estate Asset Class
+              One Unified Dashboard. Every Rental Tool You Need.
             </h2>
             <p className="text-xs sm:text-sm text-[#6e7972] max-w-xl mx-auto leading-relaxed">
-              No fragmented tools. Staywise natively unifies multi-family residential apartments, PG co-living hostels, commercial high-streets, and luxury hospitality villas.
+              No fragmented tools. Staywise natively unifies rent collection, bed-level inventory, WhatsApp AI, leads CRM, and digital agreements.
             </p>
           </div>
         </ScrollReveal>
 
-        {/* 4 Multi-Asset Interactive Tabs */}
+        {/* Interactive Feature Tabs */}
         <ScrollReveal delay={40}>
           <div className="flex items-center justify-center w-full px-1">
             <div className="p-1 rounded-2xl sm:rounded-full bg-[#f4f3ef] border border-[#e3e1d8] flex flex-wrap sm:flex-nowrap gap-1 max-w-full overflow-x-auto justify-center">
               <button
                 type="button"
-                onClick={() => setActiveAssetTab('RESIDENTIAL')}
-                className={`px-3 sm:px-4.5 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
-                  activeAssetTab === 'RESIDENTIAL'
+                onClick={() => setActiveTab('RENT')}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                  activeTab === 'RENT'
+                    ? 'bg-[#16231c] text-white shadow-xs'
+                    : 'text-[#6e7972] hover:text-[#19251f]'
+                }`}
+              >
+                <Zap className="h-3.5 w-3.5" />
+                <span>Rent Collection</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('BEDS')}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                  activeTab === 'BEDS'
                     ? 'bg-[#16231c] text-white shadow-xs'
                     : 'text-[#6e7972] hover:text-[#19251f]'
                 }`}
               >
                 <Home className="h-3.5 w-3.5" />
-                <span>Residential Portfolios</span>
+                <span>Bed-Level Inventory</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => setActiveAssetTab('PG')}
-                className={`px-3 sm:px-4.5 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
-                  activeAssetTab === 'PG'
+                onClick={() => setActiveTab('WHATSAPP')}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                  activeTab === 'WHATSAPP'
+                    ? 'bg-[#16231c] text-white shadow-xs'
+                    : 'text-[#6e7972] hover:text-[#19251f]'
+                }`}
+              >
+                <Bot className="h-3.5 w-3.5" />
+                <span>WhatsApp AI</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('OCR')}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                  activeTab === 'OCR'
+                    ? 'bg-[#16231c] text-white shadow-xs'
+                    : 'text-[#6e7972] hover:text-[#19251f]'
+                }`}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                <span>Electricity OCR</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('CRM')}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                  activeTab === 'CRM'
                     ? 'bg-[#16231c] text-white shadow-xs'
                     : 'text-[#6e7972] hover:text-[#19251f]'
                 }`}
               >
                 <Users className="h-3.5 w-3.5" />
-                <span>PG &amp; Co-Living Beds</span>
+                <span>Leads CRM</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => setActiveAssetTab('COMMERCIAL')}
-                className={`px-3 sm:px-4.5 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
-                  activeAssetTab === 'COMMERCIAL'
+                onClick={() => setActiveTab('MOVEFLOW')}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                  activeTab === 'MOVEFLOW'
                     ? 'bg-[#16231c] text-white shadow-xs'
                     : 'text-[#6e7972] hover:text-[#19251f]'
                 }`}
               >
-                <Building className="h-3.5 w-3.5" />
-                <span>Commercial CAM &amp; Retail</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveAssetTab('ESTATE')}
-                className={`px-3 sm:px-4.5 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
-                  activeAssetTab === 'ESTATE'
-                    ? 'bg-[#16231c] text-white shadow-xs'
-                    : 'text-[#6e7972] hover:text-[#19251f]'
-                }`}
-              >
-                <Building2 className="h-3.5 w-3.5" />
-                <span>EstateOS &amp; Luxury Villas</span>
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span>KYC &amp; Agreements</span>
               </button>
             </div>
           </div>
         </ScrollReveal>
 
-        {/* Active Asset Canvas */}
-        <ScrollReveal delay={80}>
+        {/* Live Interactive Simulator Canvas */}
+        <ScrollReveal delay={70}>
           <div 
-            ref={solutionsCardRef}
-            className="max-w-5xl mx-auto rounded-2xl sm:rounded-3xl bg-[#f8f7f4] border border-[#e3e1d8] p-4 sm:p-7 lg:p-9 shadow-xs will-change-transform transform-gpu"
+            ref={dashboardCardRef}
+            className="max-w-5xl mx-auto rounded-3xl bg-[#f8f7f4] border border-[#e3e1d8] p-5 sm:p-8 shadow-xs will-change-transform transform-gpu"
           >
-            {activeAssetTab === 'RESIDENTIAL' && (
+            {activeTab === 'RENT' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
                   <span className="text-[10px] font-black uppercase text-[#203a2d] bg-[#e8eee9] px-3 py-1 rounded-full">
-                    Multi-Unit Flats &amp; Independent Gated Homes
+                    Rent Collection on Autopilot
                   </span>
                   <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#16231c]">
-                    Zero-Brokerage Residential Operating Hub
+                    Auto reminders, UPI links &amp; structured bank payouts.
                   </h3>
                   <p className="text-xs sm:text-sm text-[#6e7972] leading-relaxed">
-                    Automate tenant KYC checks, digital lease signing, WhatsApp rent collection with dynamic UPI QR codes, and MoveFlow digital photo inspections that eliminate deposit disputes.
+                    Say goodbye to manual phone calls and tracking bank statements. Staywise automatically sends WhatsApp reminders before and on the due date. Tenants pay in 1 tap via UPI or Card, and your ledger reconciles instantly.
                   </p>
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-[#203a2d]" />
-                      <span><b>Sub-Meter Electricity OCR:</b> Snap a photo of the Discom bill to instantly split charges.</span>
+                      <span><b>WhatsApp Auto Nudge:</b> T-3, Due Date, and T+3 with dynamic UPI QR code.</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-[#203a2d]" />
-                      <span><b>Tenant Reliability TrustScore:</b> Historical payment reliability tracking.</span>
+                      <span><b>Axis Escrow Instant Settlement:</b> 100% statutory security with direct bank sweep.</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-[#203a2d]" />
-                      <span><b>WhatsApp Dunning:</b> Automated payment reminders at T-3, Due Date, and T+3.</span>
+                      <span><b>One-Tap PDF Receipts:</b> Automatically shared with tenants upon successful payment.</span>
                     </div>
                   </div>
                   <div className="pt-2">
@@ -810,54 +1109,69 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                       onClick={() => handleOpenTrial('starter')}
                       className="px-6 py-2.5 rounded-full bg-[#16231c] hover:bg-[#203a2d] text-white font-bold text-xs transition duration-150 cursor-pointer"
                     >
-                      Start Residential 7-Day Trial →
+                      Start Free Trial →
                     </button>
                   </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white border border-[#e3e1d8] shadow-xs space-y-3.5 text-xs font-mono">
+                {/* Interactive Simulated UI */}
+                <div className="p-5 rounded-2xl bg-white border border-[#e3e1d8] shadow-sm space-y-3.5 text-xs font-mono">
                   <div className="flex justify-between items-center pb-2 border-b border-[#eeece5]">
-                    <span className="font-bold text-[#16231c]">Beach Road Apartments (3 Portfolios)</span>
-                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">95.2% Occupied</span>
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="font-bold text-[#16231c]">Rent Collection · Day 3 Status</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">99.4% On-Time</span>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-[#6e7972]">
-                      <span>Managed Units:</span>
-                      <span className="font-bold text-[#16231c]">21 Units</span>
+                  <div className="space-y-2.5">
+                    <div className="p-2.5 rounded-xl bg-[#faf9f6] border border-[#e3e1d8] flex justify-between items-center">
+                      <div>
+                        <div className="font-bold text-[#16231c]">Priya Sharma (Room 204)</div>
+                        <div className="text-[10px] text-[#6e7972]">AutoPay Scheduled · ₹14,500</div>
+                      </div>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Paid via UPI</span>
                     </div>
-                    <div className="flex justify-between text-[#6e7972]">
-                      <span>Monthly Yield:</span>
-                      <span className="font-bold text-emerald-700">₹5,40,000 /mo</span>
+
+                    <div className="p-2.5 rounded-xl bg-[#faf9f6] border border-[#e3e1d8] flex justify-between items-center">
+                      <div>
+                        <div className="font-bold text-[#16231c]">Arjun Mehta (Bed 102-B)</div>
+                        <div className="text-[10px] text-[#6e7972]">WhatsApp Reminder Sent · ₹8,500</div>
+                      </div>
+                      <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Link Clicked</span>
                     </div>
-                    <div className="flex justify-between text-[#6e7972]">
-                      <span>AutoPay Adoption:</span>
-                      <span className="font-bold text-[#16231c]">88% on UPI Autopay</span>
+
+                    <div className="p-2.5 rounded-xl bg-[#faf9f6] border border-[#e3e1d8] flex justify-between items-center">
+                      <div>
+                        <div className="font-bold text-[#16231c]">Karan Singh (Room 301)</div>
+                        <div className="text-[10px] text-[#6e7972]">Auto AI Call Reminder · ₹12,000</div>
+                      </div>
+                      <span className="text-[10px] font-bold text-teal-700 bg-teal-100 px-2 py-0.5 rounded-full">Promised 5 PM</span>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {activeAssetTab === 'PG' && (
+            {activeTab === 'BEDS' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
                   <span className="text-[10px] font-black uppercase text-[#203a2d] bg-[#e8eee9] px-3 py-1 rounded-full">
-                    Student Housing &amp; Co-Living Facilities
+                    Bed-Level Property &amp; Inventory Management
                   </span>
                   <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#16231c]">
-                    Granular Bed-Level Inventory &amp; Meal Plans
+                    Track every bed, room, and flat across all buildings.
                   </h3>
                   <p className="text-xs sm:text-sm text-[#6e7972] leading-relaxed">
-                    Track single, double, and triple-sharing beds with room-level sub-meter splitting, automated monthly meal plan add-ons, and notice period vacancy countdowns.
+                    Granular color-coded visual occupancy. Whether you operate a 120-bed PG in Bangalore or multiple apartment duplexes in Mumbai, see occupied, vacant, reserved, and under-notice beds in real time.
                   </p>
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-[#203a2d]" />
-                      <span><b>Bed-Level Allocation:</b> Visual floor plans with occupied, vacant &amp; reserved bed status.</span>
+                      <span><b>Bed-Level Allocation:</b> Single, double, and triple sharing bed tracking.</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Check className="h-4 w-4 text-[#203a2d]" />
-                      <span><b>Automated Food Billing:</b> Meal subscription tracking seamlessly attached to invoices.</span>
+                      <span><b>Notice Period Countdown:</b> Automatic vacancy warning 30 days prior.</span>
                     </div>
                   </div>
                   <div className="pt-2">
@@ -865,106 +1179,221 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                       onClick={() => handleOpenTrial('growth_pro')}
                       className="px-6 py-2.5 rounded-full bg-[#16231c] hover:bg-[#203a2d] text-white font-bold text-xs transition duration-150 cursor-pointer"
                     >
-                      Start PG Co-Living 7-Day Trial →
+                      Start Free Trial →
                     </button>
                   </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white border border-[#e3e1d8] shadow-xs space-y-3.5 text-xs font-mono">
+                <div className="p-5 rounded-2xl bg-white border border-[#e3e1d8] shadow-sm space-y-3.5 text-xs font-mono">
                   <div className="flex justify-between items-center pb-2 border-b border-[#eeece5]">
-                    <span className="font-bold text-[#16231c]">Kozhikode Tech Co-Living Hub</span>
-                    <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded">18 Beds Active</span>
+                    <span className="font-bold text-[#16231c]">HSR Layout Tech PG (126 Beds)</span>
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">98% Full</span>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-[#6e7972]">
-                      <span>Active Meal Plans:</span>
-                      <span className="font-bold text-[#16231c]">16 Full Board (₹3,500/mo)</span>
-                    </div>
-                    <div className="flex justify-between text-[#6e7972]">
-                      <span>Sub-Meter Splitting:</span>
-                      <span className="font-bold text-[#16231c]">3-Way Equal Division Active</span>
-                    </div>
+                  <div className="grid grid-cols-4 gap-2 pt-1">
+                    {[
+                      { bed: "101-A", status: "Occupied", bg: "bg-emerald-100 text-emerald-800" },
+                      { bed: "101-B", status: "Occupied", bg: "bg-emerald-100 text-emerald-800" },
+                      { bed: "102-A", status: "Vacant", bg: "bg-rose-100 text-rose-800" },
+                      { bed: "102-B", status: "Notice", bg: "bg-amber-100 text-amber-800" },
+                      { bed: "201-A", status: "Occupied", bg: "bg-emerald-100 text-emerald-800" },
+                      { bed: "201-B", status: "Occupied", bg: "bg-emerald-100 text-emerald-800" },
+                      { bed: "202-A", status: "Occupied", bg: "bg-emerald-100 text-emerald-800" },
+                      { bed: "202-B", status: "Occupied", bg: "bg-emerald-100 text-emerald-800" },
+                    ].map((b, i) => (
+                      <div key={i} className={`p-2 rounded-xl text-center border border-[#e3e1d8] ${b.bg}`}>
+                        <div className="font-bold text-[11px]">{b.bed}</div>
+                        <div className="text-[9px] uppercase font-extrabold">{b.status}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
             )}
 
-            {activeAssetTab === 'COMMERCIAL' && (
+            {activeTab === 'WHATSAPP' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
                   <span className="text-[10px] font-black uppercase text-[#203a2d] bg-[#e8eee9] px-3 py-1 rounded-full">
-                    Tech Parks &amp; High-Street Commercial Hubs
+                    WhatsApp AI Concierge
                   </span>
                   <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#16231c]">
-                    Commercial CAM Common Utility Allocation
+                    Run your entire rental business from WhatsApp.
                   </h3>
                   <p className="text-xs sm:text-sm text-[#6e7972] leading-relaxed">
-                    Calculate Common Area Maintenance (CAM) charges, central HVAC diesel generator splits, visitor footfall tracking, GST B2B e-invoicing, and statutory TDS reconciliation.
+                    No laptop needed. Just text Staywise AI in English, Hindi, or Hinglish: <i>&ldquo;Aaj ki collection kya hai?&rdquo;</i> or <i>&ldquo;Send rent reminder to room 102&rdquo;</i>. The AI executes the command instantly.
                   </p>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-[#203a2d]" />
+                      <span><b>Instant Queries:</b> Ask occupancy, pending balance, or tenant phone numbers.</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-[#203a2d]" />
+                      <span><b>Smart Nudges:</b> <i>&ldquo;₹16,000 pending from 2 tenants. Want me to nudge them?&rdquo;</i></span>
+                    </div>
+                  </div>
                   <div className="pt-2">
                     <button
-                      onClick={() => handleOpenTrial('enterprise')}
+                      onClick={() => handleOpenTrial('growth_pro')}
                       className="px-6 py-2.5 rounded-full bg-[#16231c] hover:bg-[#203a2d] text-white font-bold text-xs transition duration-150 cursor-pointer"
                     >
-                      Start Commercial 7-Day Trial →
+                      Connect WhatsApp AI →
                     </button>
                   </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white border border-[#e3e1d8] shadow-xs space-y-3.5 text-xs font-mono">
-                  <div className="flex justify-between items-center pb-2 border-b border-[#eeece5]">
-                    <span className="font-bold text-[#16231c]">CyberTower Commercial Hub</span>
-                    <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded">15,000 sq.ft</span>
+                <div className="p-4 rounded-2xl bg-[#eef3ee] border border-[#cbd8ce] shadow-sm space-y-3 text-xs">
+                  <div className="flex items-center gap-2 pb-2 border-b border-[#cbd8ce]">
+                    <Bot className="h-4 w-4 text-emerald-800" />
+                    <span className="font-bold text-[#16231c]">Staywise WhatsApp Assistant</span>
                   </div>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-[#6e7972]">
-                      <span>CAM Expenses Split:</span>
-                      <span className="font-bold text-[#16231c]">₹85,000 /mo Allocated</span>
+                    <div className="p-2.5 rounded-2xl rounded-tr-none bg-white text-[#16231c] max-w-[85%] ml-auto shadow-xs">
+                      Aaj kitna rent collect hua? Aur koi pending hai kya?
                     </div>
-                    <div className="flex justify-between text-[#6e7972]">
-                      <span>GST Invoices:</span>
-                      <span className="font-bold text-emerald-700">18% ITC Ready</span>
+                    <div className="p-2.5 rounded-2xl rounded-tl-none bg-[#dcf8c6] text-[#16231c] max-w-[85%] shadow-xs">
+                      <b>Good evening Vikram!</b><br />
+                      • Collected today: ₹1,42,000 (8 tenants)<br />
+                      • Pending: ₹16,000 (2 tenants)<br />
+                      Would you like me to send an automated UPI nudge to them now?
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {activeAssetTab === 'ESTATE' && (
+            {activeTab === 'OCR' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
                   <span className="text-[10px] font-black uppercase text-[#203a2d] bg-[#e8eee9] px-3 py-1 rounded-full">
-                    Luxury Villas, Resorts &amp; Airbnb Keys
+                    Discom Sub-Meter Electricity OCR
                   </span>
                   <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#16231c]">
-                    EstateOS Hospitality &amp; Smart Key Access
+                    Upload electricity bill. Auto-split without disputes.
                   </h3>
                   <p className="text-xs sm:text-sm text-[#6e7972] leading-relaxed">
-                    Control digital door locks, dispatch housekeeper turnovers, configure dynamic seasonal weekend premiums, and sync OTA calendars.
+                    Snap a photo of your DISCOM bill (Bescom, KSEB, MSEDCL, TPDDL). The AI extracts fixed charges, slab tariffs, and sub-meter consumption, automatically sharing itemized splits on tenant WhatsApp accounts.
                   </p>
                   <div className="pt-2">
                     <button
                       onClick={() => handleOpenTrial('growth_pro')}
                       className="px-6 py-2.5 rounded-full bg-[#16231c] hover:bg-[#203a2d] text-white font-bold text-xs transition duration-150 cursor-pointer"
                     >
-                      Start EstateOS 7-Day Trial →
+                      Start Free Trial →
                     </button>
                   </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white border border-[#e3e1d8] shadow-xs space-y-3.5 text-xs font-mono">
+                <div className="p-5 rounded-2xl bg-white border border-[#e3e1d8] shadow-sm space-y-3 text-xs font-mono">
                   <div className="flex justify-between items-center pb-2 border-b border-[#eeece5]">
-                    <span className="font-bold text-[#16231c]">Malabar Heritage Luxury Villa</span>
-                    <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded">EstateOS Live</span>
+                    <span className="font-bold text-[#16231c]">BESCOM LT-2 Bill OCR</span>
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">OCR Verified</span>
+                  </div>
+                  <div className="space-y-1.5 text-[#6e7972]">
+                    <div className="flex justify-between">
+                      <span>Total Discom Bill:</span>
+                      <span className="font-bold text-[#16231c]">₹8,450 (1,120 units)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Common Area Split (4 flats):</span>
+                      <span className="font-bold text-[#16231c]">₹420 / flat</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Room 102 Sub-Meter (240 units):</span>
+                      <span className="font-bold text-emerald-700">₹1,920 Added to Rent</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'CRM' && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div className="space-y-4">
+                  <span className="text-[10px] font-black uppercase text-[#203a2d] bg-[#e8eee9] px-3 py-1 rounded-full">
+                    Omnichannel Leads CRM &amp; Visit Scheduling
+                  </span>
+                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#16231c]">
+                    99acres, MagicBricks &amp; NoBroker in one unified inbox.
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#6e7972] leading-relaxed">
+                    Never lose a lead again. Capture enquiries from every portal, send instant WhatsApp greetings with location pins, and schedule property visits with automatic SMS reminders to prevent no-shows.
+                  </p>
+                  <div className="pt-2">
+                    <button
+                      onClick={() => handleOpenTrial('growth_pro')}
+                      className="px-6 py-2.5 rounded-full bg-[#16231c] hover:bg-[#203a2d] text-white font-bold text-xs transition duration-150 cursor-pointer"
+                    >
+                      Start Free Trial →
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-white border border-[#e3e1d8] shadow-sm space-y-3 text-xs font-mono">
+                  <div className="flex justify-between items-center pb-2 border-b border-[#eeece5]">
+                    <span className="font-bold text-[#16231c]">Unified Inquiries Pipeline</span>
+                    <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded">12 New Today</span>
                   </div>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-[#6e7972]">
-                      <span>Weekend ADR:</span>
-                      <span className="font-bold text-[#16231c]">₹38,000 / Night</span>
+                    <div className="p-2 rounded-xl bg-[#faf9f6] border border-[#e3e1d8] flex justify-between items-center">
+                      <div>
+                        <div className="font-bold text-[#16231c]">Rahul Verma · 99acres</div>
+                        <div className="text-[10px] text-[#6e7972]">2-Sharing • Move-in Oct 10</div>
+                      </div>
+                      <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded">Visit Scheduled</span>
                     </div>
-                    <div className="flex justify-between text-[#6e7972]">
-                      <span>Smart Lock:</span>
-                      <span className="font-bold text-emerald-700">PIN #8912 Active</span>
+
+                    <div className="p-2 rounded-xl bg-[#faf9f6] border border-[#e3e1d8] flex justify-between items-center">
+                      <div>
+                        <div className="font-bold text-[#16231c]">Anjali Iyer · MagicBricks</div>
+                        <div className="text-[10px] text-[#6e7972]">1 BHK Independent flat</div>
+                      </div>
+                      <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">WhatsApp Pin Sent</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'MOVEFLOW' && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div className="space-y-4">
+                  <span className="text-[10px] font-black uppercase text-[#203a2d] bg-[#e8eee9] px-3 py-1 rounded-full">
+                    MoveFlow Digital KYC &amp; Agreements
+                  </span>
+                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#16231c]">
+                    Real-time Aadhaar KYC, e-stamps &amp; zero dispute deposits.
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#6e7972] leading-relaxed">
+                    Paperless onboarding in 5 minutes. Verify tenant identity via Aadhaar, generate legally valid e-stamped rental agreements with e-signatures, and seal check-in photo checklists to eliminate deposit fights.
+                  </p>
+                  <div className="pt-2">
+                    <button
+                      onClick={() => handleOpenTrial('growth_pro')}
+                      className="px-6 py-2.5 rounded-full bg-[#16231c] hover:bg-[#203a2d] text-white font-bold text-xs transition duration-150 cursor-pointer"
+                    >
+                      Start Free Trial →
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-white border border-[#e3e1d8] shadow-sm space-y-3 text-xs font-mono">
+                  <div className="flex justify-between items-center pb-2 border-b border-[#eeece5]">
+                    <span className="font-bold text-[#16231c]">Tenant Onboarding Vault</span>
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">100% Paperless</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-[#faf9f6] border border-[#e3e1d8]">
+                      <span>Aadhaar Identity Verification</span>
+                      <span className="text-[10px] font-bold text-emerald-700">Verified ✓</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-[#faf9f6] border border-[#e3e1d8]">
+                      <span>E-Stamp Agreement (Karnataka)</span>
+                      <span className="text-[10px] font-bold text-emerald-700">E-Signed ✓</span>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-[#faf9f6] border border-[#e3e1d8]">
+                      <span>MoveFlow Photo Checklist (14 photos)</span>
+                      <span className="text-[10px] font-bold text-emerald-700">Timestamp Sealed ✓</span>
                     </div>
                   </div>
                 </div>
@@ -972,121 +1401,67 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             )}
           </div>
         </ScrollReveal>
-
       </section>
 
       {/* ---------------------------------------------------- */}
-      {/* 5. KEY PLATFORM FEATURES (#services)                 */}
+      {/* 7. HOW IT WORKS: READY IN 15 MINUTES                 */}
       {/* ---------------------------------------------------- */}
       <section 
-        id="services" 
-        ref={servicesSectionRef} 
-        className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-12 bg-[#faf9f6] border-y border-[#eeece5] space-y-8 sm:space-y-10 overflow-hidden"
+        id="how-it-works"
+        className="py-14 sm:py-20 px-4 sm:px-6 lg:px-12 bg-[#faf9f6] border-y border-[#eeece5] space-y-10 overflow-hidden"
       >
         <ScrollReveal>
-          <div className="text-center max-w-3xl mx-auto space-y-2 sm:space-y-2.5 px-2 sm:px-0">
-            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#203a2d]">
-              Intelligent Automation
+          <div className="text-center max-w-3xl mx-auto space-y-2 px-2 sm:px-0">
+            <span className="text-[10px] sm:text-xs font-black uppercase text-[#203a2d]">
+              Ready in 15 Minutes
             </span>
             <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#16231c]">
-              Engineered to Run Properties on Autopilot
+              How Staywise Runs Your Property on Autopilot
             </h2>
+            <p className="text-xs sm:text-sm text-[#6e7972] max-w-xl mx-auto leading-relaxed">
+              No complicated onboarding, hardware installations, or training seminars needed.
+            </p>
           </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto items-start">
-          {/* Column 1: Parallax Float Up */}
-          <div ref={servicesCol1Ref} className="space-y-4 sm:space-y-6 will-change-transform transform-gpu">
-            {/* Feature 1 */}
-            <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-2.5 sm:space-y-3 hover:shadow-md transition-shadow duration-150">
-              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold shrink-0">
-                <Zap className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-              </div>
-              <h3 className="font-bold text-xs sm:text-sm text-[#16231c]">
-                RentFlow Escrow &amp; WhatsApp Nudges
-              </h3>
-              <p className="text-[11px] sm:text-xs text-[#6e7972] leading-relaxed">
-                Automated multi-day payment reminders at T-3, Due Date, and T+3 with dynamic UPI QR codes. 99.4% on-time settlement into Axis Bank Escrow accounts.
-              </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto items-stretch">
+          {/* STEP 1 */}
+          <div className="p-6 rounded-3xl bg-white border border-[#e3e1d8] space-y-4 shadow-xs">
+            <div className="h-10 w-10 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold text-sm">
+              01
             </div>
-
-            {/* Feature 4 */}
-            <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-2.5 sm:space-y-3 hover:shadow-md transition-shadow duration-150">
-              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold shrink-0">
-                <TrendingUp className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-              </div>
-              <h3 className="font-bold text-xs sm:text-sm text-[#16231c]">
-                Vacancy Cost Engine &amp; Leak Detector
-              </h3>
-              <p className="text-[11px] sm:text-xs text-[#6e7972] leading-relaxed">
-                Live detection of unbilled sub-meters, pending repairs, and vacant units with automatic listing syndication (+18.4% average yield expansion).
-              </p>
-            </div>
+            <h3 className="font-bold text-base text-[#16231c]">Sign up free in 2 minutes</h3>
+            <p className="text-xs text-[#6e7972] leading-relaxed">
+              Create your account with your phone number and email. No setup fees, zero hidden contracts, and ₹0 due today.
+            </p>
           </div>
 
-          {/* Column 2: Anchor Center Column */}
-          <div className="space-y-4 sm:space-y-6">
-            {/* Feature 2 */}
-            <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-2.5 sm:space-y-3 hover:shadow-md transition-shadow duration-150">
-              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold shrink-0">
-                <FileText className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-              </div>
-              <h3 className="font-bold text-xs sm:text-sm text-[#16231c]">
-                Sub-Meter OCR Electricity Splitting
-              </h3>
-              <p className="text-[11px] sm:text-xs text-[#6e7972] leading-relaxed">
-                Upload a photo of your DISCOM bill (Bescom, KSEB, MSEDCL). The OCR engine parses slab tariffs, fixed charges, and pro-rata common area splits automatically.
-              </p>
+          {/* STEP 2 */}
+          <div className="p-6 rounded-3xl bg-white border border-[#e3e1d8] space-y-4 shadow-xs">
+            <div className="h-10 w-10 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold text-sm">
+              02
             </div>
-
-            {/* Feature 5 */}
-            <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-2.5 sm:space-y-3 hover:shadow-md transition-shadow duration-150">
-              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold shrink-0">
-                <Landmark className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-              </div>
-              <h3 className="font-bold text-xs sm:text-sm text-[#16231c]">
-                Statutory Double-Entry Ledger
-              </h3>
-              <p className="text-[11px] sm:text-xs text-[#6e7972] leading-relaxed">
-                Debit and credit balance sheets recorded for every rupee. Automatic GST tax invoices, TDS deductions, and 1-click export for auditors.
-              </p>
-            </div>
+            <h3 className="font-bold text-base text-[#16231c]">Add properties &amp; import tenants</h3>
+            <p className="text-xs text-[#6e7972] leading-relaxed">
+              Configure your buildings, floors, rooms, and beds. Import your existing tenants with 1-click Excel or WhatsApp contact sync.
+            </p>
           </div>
 
-          {/* Column 3: Parallax Float Down */}
-          <div ref={servicesCol3Ref} className="space-y-4 sm:space-y-6 will-change-transform transform-gpu">
-            {/* Feature 3 */}
-            <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-2.5 sm:space-y-3 hover:shadow-md transition-shadow duration-150">
-              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold shrink-0">
-                <ShieldCheck className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-              </div>
-              <h3 className="font-bold text-xs sm:text-sm text-[#16231c]">
-                MoveFlow Digital Inspections
-              </h3>
-              <p className="text-[11px] sm:text-xs text-[#6e7972] leading-relaxed">
-                Photographic room checklists at move-in and move-out with immutable timestamp seals. Zero deposit dispute escrow guarantee.
-              </p>
+          {/* STEP 3 */}
+          <div className="p-6 rounded-3xl bg-white border border-[#e3e1d8] space-y-4 shadow-xs">
+            <div className="h-10 w-10 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold text-sm">
+              03
             </div>
-
-            {/* Feature 6 */}
-            <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-2.5 sm:space-y-3 hover:shadow-md transition-shadow duration-150">
-              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold shrink-0">
-                <Sparkles className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-              </div>
-              <h3 className="font-bold text-xs sm:text-sm text-[#16231c]">
-                Staywise AI Yield Concierge
-              </h3>
-              <p className="text-[11px] sm:text-xs text-[#6e7972] leading-relaxed">
-                Proactive intelligence predicting tenant lease renewals, flagging maintenance risks before emergencies, and optimizing seasonal pricing.
-              </p>
-            </div>
+            <h3 className="font-bold text-base text-[#16231c]">Run on complete autopilot</h3>
+            <p className="text-xs text-[#6e7972] leading-relaxed">
+              Rent collection, UPI Autopay, WhatsApp reminders, portal leads, and caretaker tasks automatically flow from Day 1.
+            </p>
           </div>
         </div>
-
       </section>
 
       {/* ---------------------------------------------------- */}
-      {/* 6. PLATFORM SCALE & TELEMETRY NUMBERS (#about)       */}
+      {/* 8. SCALE & REAL LANDLORD TESTIMONIALS                */}
       {/* ---------------------------------------------------- */}
       <section 
         id="about" 
@@ -1096,10 +1471,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
         <ScrollReveal>
           <div className="text-center max-w-2xl mx-auto space-y-2 px-2 sm:px-0">
             <span className="text-[10px] sm:text-xs font-black uppercase text-[#203a2d]">
-              Institutional Reliability
+              Institutional Scale &amp; Reliability
             </span>
             <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl font-semibold text-[#16231c]">
-              Trusted Across India&apos;s Prime Metro Hubs
+              Trusted by 900+ Owners Across India
             </h2>
           </div>
         </ScrollReveal>
@@ -1134,78 +1509,105 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           </div>
         </ScrollReveal>
 
-        {/* Landlord Testimonial */}
-        <ScrollReveal delay={80}>
-          <div 
-            ref={testimonialRef}
-            className="max-w-3xl mx-auto p-5 sm:p-8 lg:p-9 rounded-2xl sm:rounded-3xl bg-[#f4f3ef] border border-[#e3e1d8] text-center space-y-3 sm:space-y-4 will-change-transform transform-gpu shadow-xs"
-          >
-            <div className="flex justify-center text-amber-500 gap-1">
+        {/* Real Indian Landlord Testimonials */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto pt-4">
+          <div className="p-5 rounded-2xl bg-[#faf9f6] border border-[#e3e1d8] space-y-3 shadow-xs">
+            <div className="flex text-amber-500 gap-1">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-amber-500" />
+                <Star key={i} className="h-3.5 w-3.5 fill-amber-500" />
               ))}
             </div>
-            <p className="font-editorial text-sm sm:text-base lg:text-lg text-[#16231c] italic leading-relaxed px-1 sm:px-0">
-              &ldquo;Staywise simplified our entire landlord workflow. We manage 120 flats and two PG campuses in Bangalore. Rent collection happens like clockwork on Day 3 via WhatsApp UPI QR codes, and our tenants love the MoveFlow digital inspection checklists.&rdquo;
+            <p className="text-xs text-[#16231c] italic leading-relaxed">
+              &ldquo;Rent reminders auto chale jaate hain. Mujhe kisi ko personally call nahi karna padta. Game changer for our 120 beds in Bangalore.&rdquo;
             </p>
-            <div className="text-[11px] sm:text-xs">
-              <div className="font-extrabold text-[#16231c]">Vikramaditya Singhania</div>
-              <div className="text-[#6e7972]">Singhania Asset Holdings LLP (Bangalore)</div>
+            <div className="text-[11px]">
+              <div className="font-bold text-[#16231c]">Sai Krishna PG</div>
+              <div className="text-[#6e7972]">Bengaluru</div>
             </div>
           </div>
-        </ScrollReveal>
+
+          <div className="p-5 rounded-2xl bg-[#faf9f6] border border-[#e3e1d8] space-y-3 shadow-xs">
+            <div className="flex text-amber-500 gap-1">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="h-3.5 w-3.5 fill-amber-500" />
+              ))}
+            </div>
+            <p className="text-xs text-[#16231c] italic leading-relaxed">
+              &ldquo;Mera caretaker phone par sab update karta hai. Main Mumbai mein hoon, property Bangalore mein. Sab control mein rehta hai.&rdquo;
+            </p>
+            <div className="text-[11px]">
+              <div className="font-bold text-[#16231c]">Singhania Asset Holdings</div>
+              <div className="text-[#6e7972]">Mumbai / Bangalore</div>
+            </div>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-[#faf9f6] border border-[#e3e1d8] space-y-3 shadow-xs">
+            <div className="flex text-amber-500 gap-1">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="h-3.5 w-3.5 fill-amber-500" />
+              ))}
+            </div>
+            <p className="text-xs text-[#16231c] italic leading-relaxed">
+              &ldquo;Electricity bill ka jhagda khatam. Staywise sub-meter OCR se auto split karta hai. Tenants bhi khush, main bhi khush.&rdquo;
+            </p>
+            <div className="text-[11px]">
+              <div className="font-bold text-[#16231c]">Green View Co-Living</div>
+              <div className="text-[#6e7972]">Hyderabad</div>
+            </div>
+          </div>
+        </div>
 
       </section>
 
       {/* ---------------------------------------------------- */}
-      {/* 7. PRICING PLANS MATRIX & 7-DAY FREE TRIAL (#pricing) */}
+      {/* 9. TRANSPARENT PRICING & 7-DAY FREE TRIAL            */}
       {/* ---------------------------------------------------- */}
       <section 
         id="pricing" 
         ref={pricingSectionRef} 
-        className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-12 bg-[#faf9f6] border-t border-[#eeece5] space-y-8 sm:space-y-10 overflow-hidden"
+        className="py-10 sm:py-16 lg:py-20 px-3 xs:px-4 sm:px-6 lg:px-12 bg-[#faf9f6] border-t border-[#eeece5] space-y-6 sm:space-y-10 overflow-hidden"
       >
         <ScrollReveal>
           <div className="text-center max-w-3xl mx-auto space-y-2 sm:space-y-3 px-2 sm:px-0">
-            <div className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1 rounded-full bg-[#e8eee9] text-[#203a2d] text-[10px] sm:text-xs font-bold">
-              <Sparkles className="h-3.5 w-3.5" />
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1 rounded-full bg-[#e8eee9] text-[#203a2d] text-[10px] sm:text-xs font-bold">
+              <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-700" />
               <span>7-Day Risk-Free Trial On Every Plan</span>
             </div>
 
-            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#16231c]">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#16231c] tracking-tight">
               Transparent Plans. ₹0 Due Today.
             </h2>
 
-            <p className="text-xs sm:text-sm text-[#6e7972] max-w-xl mx-auto leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#6e7972] max-w-xl mx-auto leading-relaxed px-1">
               Choose your portfolio tier. Enjoy full access for 7 days free. Connect card or bank account for autopay after 7 days, and cancel anytime before day 7 to pay ₹0.
             </p>
 
-            {/* Monthly / Annual Toggle */}
+            {/* Monthly / Annual Toggle - Fully Responsive */}
             <div className="pt-2 flex items-center justify-center w-full px-1">
               <div className="inline-flex items-center p-1 rounded-full bg-white border border-[#e3e1d8] shadow-xs max-w-full">
                 <button
                   type="button"
                   onClick={() => setBillingCycle('monthly')}
-                  className={`px-3 sm:px-4.5 py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 cursor-pointer whitespace-nowrap ${
+                  className={`px-2.5 xs:px-3.5 sm:px-4.5 py-1.5 rounded-full text-[10px] xs:text-[11px] sm:text-xs font-bold transition-all duration-100 cursor-pointer whitespace-nowrap ${
                     billingCycle === 'monthly'
                       ? 'bg-[#16231c] text-white shadow-xs'
                       : 'text-[#6e7972] hover:text-[#19251f]'
                   }`}
                 >
-                  Monthly Flexible
+                  <span>Monthly <span className="hidden xs:inline">Flexible</span></span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setBillingCycle('annual')}
-                  className={`px-3 sm:px-4.5 py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1 sm:gap-1.5 cursor-pointer whitespace-nowrap ${
+                  className={`px-2.5 xs:px-3.5 sm:px-4.5 py-1.5 rounded-full text-[10px] xs:text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1 sm:gap-1.5 cursor-pointer whitespace-nowrap ${
                     billingCycle === 'annual'
                       ? 'bg-[#16231c] text-white shadow-xs'
                       : 'text-[#6e7972] hover:text-[#19251f]'
                   }`}
                 >
-                  <span>Annual Commitment</span>
-                  <span className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold whitespace-nowrap">
+                  <span>Annual <span className="hidden sm:inline">Commitment</span></span>
+                  <span className="text-[8px] xs:text-[9px] sm:text-[10px] px-1 xs:px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold whitespace-nowrap">
                     Save 17%
                   </span>
                 </button>
@@ -1214,26 +1616,26 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           </div>
         </ScrollReveal>
 
-        {/* Pricing Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto items-stretch">
+        {/* Responsive Pricing Cards Grid: 1 col on mobile, 2 col on tablet (with featured spanning or centered), 3 col on desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 max-w-6xl mx-auto items-stretch">
           
           {/* TIER 1: STARTER */}
-          <ScrollReveal delay={40} className="flex">
-            <div className="w-full rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] p-5 sm:p-7 flex flex-col justify-between space-y-5 shadow-xs hover:shadow-md transition-shadow duration-150">
-              <div className="space-y-4">
+          <ScrollReveal delay={40} className="flex w-full">
+            <div className="w-full rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] p-4.5 xs:p-5 sm:p-7 flex flex-col justify-between space-y-4 sm:space-y-5 shadow-xs hover:shadow-md transition-shadow duration-150">
+              <div className="space-y-3.5 sm:space-y-4">
                 <div>
                   <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#f4f3ef] text-[#6e7972]">
                     Starter Landlord
                   </span>
                   <h3 className="font-editorial text-lg sm:text-xl font-bold text-[#16231c] mt-2">Starter Estate OS</h3>
-                  <p className="text-xs text-[#6e7972] mt-0.5">
+                  <p className="text-xs text-[#6e7972] mt-0.5 leading-relaxed">
                     Ideal for single-building landlords &amp; duplex assets.
                   </p>
                 </div>
 
-                <div className="pt-2 pb-4 border-b border-[#eeece5]">
+                <div className="pt-2 pb-3.5 sm:pb-4 border-b border-[#eeece5]">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl sm:text-4xl font-black text-[#16231c]">
+                    <span className="text-2xl xs:text-3xl sm:text-4xl font-black text-[#16231c] tracking-tight">
                       ₹{billingCycle === 'annual' ? Math.round(24990 / 12).toLocaleString('en-IN') : (2499).toLocaleString('en-IN')}
                     </span>
                     <span className="text-xs text-[#6e7972]">/month</span>
@@ -1267,11 +1669,11 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 <button
                   type="button"
                   onClick={() => handleOpenTrial('starter')}
-                  className="w-full py-3 rounded-full bg-[#f4f3ef] hover:bg-[#16231c] hover:text-white text-[#16231c] font-bold text-xs transition-colors duration-150 cursor-pointer"
+                  className="w-full py-2.5 sm:py-3 rounded-full bg-[#f4f3ef] hover:bg-[#16231c] hover:text-white text-[#16231c] font-bold text-xs transition-colors duration-150 cursor-pointer shadow-xs"
                 >
                   Start 7-Day Free Trial
                 </button>
-                <div className="text-center text-[10px] text-[#6e7972]">
+                <div className="text-center text-[10px] text-[#6e7972] leading-tight">
                   ₹0 due today • Autopay connected • Cancel before 7 days
                 </div>
               </div>
@@ -1279,29 +1681,29 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           </ScrollReveal>
 
           {/* TIER 2: GROWTH PRO (MOST POPULAR) */}
-          <ScrollReveal delay={80} className="flex">
+          <ScrollReveal delay={80} className="flex w-full md:col-span-2 lg:col-span-1">
             <div 
               ref={pricingFeaturedCardRef}
-              className="w-full rounded-2xl sm:rounded-3xl bg-white border-2 border-[#203a2d] p-5 sm:p-7 flex flex-col justify-between space-y-5 shadow-lg relative transform lg:-translate-y-2 will-change-transform transform-gpu"
+              className="w-full rounded-2xl sm:rounded-3xl bg-white border-2 border-[#203a2d] p-4.5 xs:p-5 sm:p-7 flex flex-col justify-between space-y-4 sm:space-y-5 shadow-lg relative mt-3 sm:mt-0 transform lg:-translate-y-2 will-change-transform transform-gpu"
             >
-              <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-[#203a2d] text-white text-[11px] sm:text-xs font-black uppercase tracking-wider shadow-xs whitespace-nowrap">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 sm:px-3.5 py-0.5 sm:py-1 rounded-full bg-[#203a2d] text-white text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-xs whitespace-nowrap">
                 Most Popular
               </span>
 
-              <div className="space-y-4 pt-1">
+              <div className="space-y-3.5 sm:space-y-4 pt-1">
                 <div>
                   <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#e8eee9] text-[#203a2d]">
                     Growth Portfolios
                   </span>
                   <h3 className="font-editorial text-xl sm:text-2xl font-bold text-[#16231c] mt-2">Growth Portfolio Pro OS</h3>
-                  <p className="text-xs text-[#6e7972] mt-0.5">
+                  <p className="text-xs text-[#6e7972] mt-0.5 leading-relaxed">
                     Unified multi-asset system with sub-meter OCR &amp; MoveFlow.
                   </p>
                 </div>
 
-                <div className="pt-2 pb-4 border-b border-[#eeece5]">
+                <div className="pt-2 pb-3.5 sm:pb-4 border-b border-[#eeece5]">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl xs:text-4xl sm:text-5xl font-black text-[#16231c]">
+                    <span className="text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-black text-[#16231c] tracking-tight">
                       ₹{billingCycle === 'annual' ? Math.round(79990 / 12).toLocaleString('en-IN') : (7999).toLocaleString('en-IN')}
                     </span>
                     <span className="text-xs text-[#6e7972]">/month</span>
@@ -1339,11 +1741,11 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 <button
                   type="button"
                   onClick={() => handleOpenTrial('growth_pro')}
-                  className="w-full py-3 sm:py-3.5 rounded-full bg-[#203a2d] hover:bg-[#172b21] text-white font-bold text-xs sm:text-sm shadow-md shadow-[#203a2d]/20 transition duration-150 cursor-pointer"
+                  className="w-full py-2.5 sm:py-3.5 rounded-full bg-[#203a2d] hover:bg-[#172b21] text-white font-bold text-xs sm:text-sm shadow-md shadow-[#203a2d]/20 transition duration-150 cursor-pointer"
                 >
                   Start 7-Day Free Trial (₹0 Today)
                 </button>
-                <div className="text-center text-[10px] text-[#203a2d] font-semibold">
+                <div className="text-center text-[10px] text-[#203a2d] font-semibold leading-tight">
                   Connect Card or Bank Autopay • Cancel before 7 days in 1 click
                 </div>
               </div>
@@ -1351,22 +1753,22 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           </ScrollReveal>
 
           {/* TIER 3: ENTERPRISE */}
-          <ScrollReveal delay={110} className="flex">
-            <div className="w-full rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] p-5 sm:p-7 flex flex-col justify-between space-y-5 shadow-xs hover:shadow-md transition-shadow duration-150">
-              <div className="space-y-4">
+          <ScrollReveal delay={110} className="flex w-full md:col-span-2 lg:col-span-1">
+            <div className="w-full rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] p-4.5 xs:p-5 sm:p-7 flex flex-col justify-between space-y-4 sm:space-y-5 shadow-xs hover:shadow-md transition-shadow duration-150">
+              <div className="space-y-3.5 sm:space-y-4">
                 <div>
                   <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#f4f3ef] text-[#6e7972]">
                     Enterprise Institutional
                   </span>
                   <h3 className="font-editorial text-lg sm:text-xl font-bold text-[#16231c] mt-2">Institutional Master OS</h3>
-                  <p className="text-xs text-[#6e7972] mt-0.5">
+                  <p className="text-xs text-[#6e7972] mt-0.5 leading-relaxed">
                     For family offices, LLPs &amp; commercial campuses.
                   </p>
                 </div>
 
-                <div className="pt-2 pb-4 border-b border-[#eeece5]">
+                <div className="pt-2 pb-3.5 sm:pb-4 border-b border-[#eeece5]">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl sm:text-4xl font-black text-[#16231c]">
+                    <span className="text-2xl xs:text-3xl sm:text-4xl font-black text-[#16231c] tracking-tight">
                       ₹{billingCycle === 'annual' ? Math.round(199990 / 12).toLocaleString('en-IN') : (19999).toLocaleString('en-IN')}
                     </span>
                     <span className="text-xs text-[#6e7972]">/month</span>
@@ -1400,11 +1802,11 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 <button
                   type="button"
                   onClick={() => handleOpenTrial('enterprise')}
-                  className="w-full py-3 rounded-full bg-[#f4f3ef] hover:bg-[#16231c] hover:text-white text-[#16231c] font-bold text-xs transition-colors duration-150 cursor-pointer"
+                  className="w-full py-2.5 sm:py-3 rounded-full bg-[#f4f3ef] hover:bg-[#16231c] hover:text-white text-[#16231c] font-bold text-xs transition-colors duration-150 cursor-pointer shadow-xs"
                 >
                   Start 7-Day Free Trial
                 </button>
-                <div className="text-center text-[10px] text-[#6e7972]">
+                <div className="text-center text-[10px] text-[#6e7972] leading-tight">
                   ₹0 due today • Autopay connected • Cancel before 7 days
                 </div>
               </div>
@@ -1413,11 +1815,11 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
         </div>
 
-        {/* Trial Guarantee Callout */}
+        {/* Trial Guarantee Callout - Responsive */}
         <ScrollReveal delay={70}>
           <div 
             ref={pricingGuaranteeRef}
-            className="max-w-4xl mx-auto p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#e8eee9] border border-[#cbd8ce] flex flex-col sm:flex-row items-center justify-between gap-4 will-change-transform transform-gpu"
+            className="max-w-4xl mx-auto p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#e8eee9] border border-[#cbd8ce] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 will-change-transform transform-gpu shadow-xs"
           >
             <div className="flex items-start sm:items-center gap-3 sm:gap-3.5">
               <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-[#203a2d] text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5 sm:mt-0">
@@ -1443,7 +1845,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       </section>
 
       {/* ---------------------------------------------------- */}
-      {/* 8. FREQUENTLY ASKED QUESTIONS (#faq)                 */}
+      {/* 10. FREQUENTLY ASKED QUESTIONS (#faq)                */}
       {/* ---------------------------------------------------- */}
       <section 
         id="faq" 
@@ -1469,20 +1871,28 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           >
             {[
               {
-                q: "Will I be charged anything today when signing up for the 7-day trial?",
-                a: "No! Absolutely ₹0.00 is charged today. When you connect your card or bank account, we establish an automated mandate so your account remains uninterrupted after the trial. Your first charge will only process on Day 7 if you choose to continue using Staywise."
+                q: "Is Staywise really free to try, and will I be charged today?",
+                a: "Absolutely ₹0.00 is charged today. You get full access to all features for 7 days. When you connect your card or bank mandate, payment is only processed on Day 7 if you choose to keep your subscription. You can cancel with 1 click before Day 7 to pay nothing."
               },
               {
-                q: "How do I cancel before the 7 days are up?",
-                a: "Cancellation is 100% self-serve and takes 1 click. Simply go to Platform Settings > Subscription & Plans in your dashboard and click 'Cancel 7-Day Trial & Autopay'. Your card or bank will never be charged."
+                q: "How does automated rent collection on WhatsApp work?",
+                a: "Staywise automatically sends polite WhatsApp reminders to tenants at T-3 days, on the Due Date, and T+3 days with a secure dynamic UPI QR code link. When a tenant pays via UPI (Google Pay, PhonePe, Paytm) or card, their payment status updates instantly and the money settles straight into your Axis Bank Escrow account."
               },
               {
-                q: "Which payment methods are supported for autopay?",
-                a: "We support all major Credit Cards (Visa, Mastercard, RuPay, Amex), recurring Debit Cards, and direct Net Banking via RBI e-NACH or UPI Recurring AutoPay (Google Pay, PhonePe, Paytm, BHIM)."
+                q: "What types of rental properties can I manage with Staywise?",
+                a: "Staywise natively supports Paying Guest (PG) accommodations, hostels, co-living campuses, multi-unit residential flats, commercial retail hubs, and luxury hospitality villas. You can track occupancy down to the bed, room, floor, and building level."
               },
               {
                 q: "How does the Sub-Meter Electricity OCR splitting work?",
-                a: "You simply upload a photograph or PDF of your state electricity board bill (e.g. BESCOM, KSEB, MSEDCL). Our AI OCR automatically extracts the fixed charges, slab tariff rates, and calculates each tenant's individual sub-meter units."
+                a: "You simply take a photo or upload a PDF of your DISCOM bill (e.g. BESCOM, KSEB, MSEDCL, TPDDL). The Staywise OCR engine extracts the fixed charges and slab tariffs, divides pro-rata common area electricity, and calculates each room's individual sub-meter bill without tenant arguments."
+              },
+              {
+                q: "How do tenant KYC and digital rental agreements work?",
+                a: "Staywise provides 100% paperless onboarding. You can verify Aadhaar identity in real-time, generate state-compliant e-stamped rental agreements with digital e-signatures, and store timestamped MoveFlow photo checklists at move-in."
+              },
+              {
+                q: "Can I manage multiple properties and staff members from different cities?",
+                a: "Yes! Staywise is built for multi-property operators. You can assign role-based access to caretakers, property managers, and accountants per building with granular permissions and activity logs, letting you manage properties remotely from your phone."
               }
             ].map((faq, idx) => {
               const isOpen = expandedFaq === idx;
@@ -1513,7 +1923,76 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       </section>
 
       {/* ---------------------------------------------------- */}
-      {/* 9. CLEAN MINIMALIST FOOTER                           */}
+      {/* 11. PROPERTY RESOURCES DIRECTORY (BY CITY & COMPARE) */}
+      {/* ---------------------------------------------------- */}
+      <section 
+        id="resources"
+        className="py-12 sm:py-16 px-4 sm:px-6 lg:px-12 bg-[#faf9f6] border-t border-[#eeece5] space-y-8 overflow-hidden"
+      >
+        <div className="max-w-6xl mx-auto space-y-6">
+          <div className="space-y-1 text-center md:text-left">
+            <span className="text-[10px] sm:text-xs font-black uppercase text-[#203a2d]">
+              Explore Staywise Hub
+            </span>
+            <h3 className="font-editorial text-xl sm:text-2xl font-bold text-[#16231c]">
+              Property Management Resources by City &amp; Comparisons
+            </h3>
+            <p className="text-xs text-[#6e7972]">
+              Guides, comparisons, and city pages for PG, hostel, co-living, and rental flat owners across India.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-[#e3e1d8] bg-white divide-y divide-[#eeece5] overflow-hidden text-xs">
+            {/* By City */}
+            <div className="p-5 sm:p-6 space-y-3">
+              <h4 className="font-bold text-sm text-[#16231c]">Operations By City</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[#6e7972]">
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">Bangalore Property Management</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">Hyderabad PG Operations</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">Delhi NCR Hostel Software</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">Pune Rental Management</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">Chennai Co-Living Systems</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">Gurgaon High-Street Flats</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">Noida Tech Park Rentals</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">Mumbai Luxury Estates</span>
+              </div>
+            </div>
+
+            {/* Comparisons & Alternatives */}
+            <div className="p-5 sm:p-6 space-y-3">
+              <h4 className="font-bold text-sm text-[#16231c]">Comparisons &amp; Modern Upgrades</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[#6e7972]">
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">Staywise vs Google Sheets</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">Staywise vs Manual WhatsApp</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">Staywise vs Pen &amp; Paper</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">Staywise vs Excel Workbooks</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">Staywise vs Tally Accounting</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">Staywise vs Crib / RentOk</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">Staywise vs Generic CRMs</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">MoveFlow vs Paper Checklists</span>
+              </div>
+            </div>
+
+            {/* Core Integrations */}
+            <div className="p-5 sm:p-6 space-y-3">
+              <h4 className="font-bold text-sm text-[#16231c]">Integrations &amp; Portals</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[#6e7972]">
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">WhatsApp Business Cloud API</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">Axis Bank Escrow Settlement</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">UPI Recurring AutoPay Mandates</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">RBI e-NACH NetBanking</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">99acres Leads Sync</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">MagicBricks Inquiries</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">NoBroker Direct Leads</span>
+                <span className="hover:text-[#203a2d] transition-colors cursor-pointer">Bescom / KSEB Electricity OCR</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------- */}
+      {/* 12. CLEAN MINIMALIST FOOTER                          */}
       {/* ---------------------------------------------------- */}
       <footer className="bg-[#16231c] text-white/80 py-10 sm:py-12 px-4 sm:px-6 lg:px-12 text-xs relative overflow-hidden">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 text-center md:text-left">
@@ -1525,7 +2004,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <span className="font-extrabold text-white text-sm tracking-tight">STAYWISE</span>
             </div>
             <span className="hidden sm:inline text-white/40">|</span>
-            <span className="text-[10px] sm:text-[11px] text-white/60">Operating System for Real Estate &amp; Rentals</span>
+            <span className="text-[10px] sm:text-[11px] text-white/60">The Operating System for Rental Businesses in India</span>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3.5 sm:gap-6 text-[11px] text-white/70">
@@ -1537,6 +2016,13 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               Home
             </a>
             <a 
+              href="#pain-points" 
+              onClick={(e) => handleNavClick(e, '#pain-points')}
+              className="hover:text-white transition-colors cursor-pointer"
+            >
+              Where Owners Lose Time
+            </a>
+            <a 
               href="#interactive-building" 
               onClick={(e) => handleNavClick(e, '#interactive-building')}
               className="hover:text-white transition-colors cursor-pointer"
@@ -1544,18 +2030,18 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               Architecture
             </a>
             <a 
-              href="#solutions" 
-              onClick={(e) => handleNavClick(e, '#solutions')}
+              href="#everything-inside" 
+              onClick={(e) => handleNavClick(e, '#everything-inside')}
               className="hover:text-white transition-colors cursor-pointer"
             >
-              Solutions
+              Features
             </a>
             <a 
               href="#pricing" 
               onClick={(e) => handleNavClick(e, '#pricing')}
               className="hover:text-white transition-colors cursor-pointer"
             >
-              Pricing Plans
+              Pricing
             </a>
             <a 
               href="/login" 
