@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Lenis from 'lenis';
+import 'lenis/dist/lenis.css';
 import { SubscriptionTierId } from '../../types';
 import TrialAutopayModal from './TrialAutopayModal';
 import {
@@ -17,7 +19,9 @@ import {
   Building,
   Landmark,
   TrendingUp,
-  ArrowUpRight
+  ArrowUpRight,
+  Menu,
+  X
 } from 'lucide-react';
 
 interface LandingPageViewProps {
@@ -40,6 +44,9 @@ function ScrollReveal({
 }
 
 export default function LandingPageView({ onNavigateToLogin }: LandingPageViewProps) {
+  // Mobile Navigation Drawer
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   // Pricing toggle: monthly vs annual
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('annual');
 
@@ -54,11 +61,12 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
   const [expandedFaq, setExpandedFaq] = useState<number | null>(0);
 
   // -------------------------------------------------------------------------
-  // ULTRA-LIGHTWEIGHT CINEMATIC FULL-PAGE PARALLAX ENGINE
-  // - High-performance ticking loop (exactly 1 RAF per vsync frame)
-  // - 100% passive, zero forced reflows, native 120 FPS mousewheel scrolling
-  // - Dynamic visible building displacement (+/-95px travel + 3D scale zoom)
+  // CONTINUOUS FULL-PAGE SMOOTH SCROLL & CINEMATIC PARALLAX ENGINE (LENIS)
+  // - Hardware-synchronized Lenis smooth inertia across all browsers
+  // - Dynamic visible building displacement (+/-110px travel + 3D scale zoom)
+  // - Multi-plane depth across every section from Header to Footer
   // -------------------------------------------------------------------------
+  const lenisRef = useRef<Lenis | null>(null);
   const heroBgRef = useRef<HTMLDivElement>(null);
   const heroContentRef = useRef<HTMLDivElement>(null);
   const architectureSectionRef = useRef<HTMLDivElement>(null);
@@ -66,52 +74,55 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
   const buildingBadgeRef = useRef<HTMLDivElement>(null);
   const leftCardsParallaxRef = useRef<HTMLDivElement>(null);
   const rightCardsParallaxRef = useRef<HTMLDivElement>(null);
+  const solutionsSectionRef = useRef<HTMLDivElement>(null);
+  const solutionsCardRef = useRef<HTMLDivElement>(null);
   const servicesSectionRef = useRef<HTMLDivElement>(null);
   const servicesCol1Ref = useRef<HTMLDivElement>(null);
   const servicesCol3Ref = useRef<HTMLDivElement>(null);
   const statsSectionRef = useRef<HTMLDivElement>(null);
   const statsBox1Ref = useRef<HTMLDivElement>(null);
   const statsBox4Ref = useRef<HTMLDivElement>(null);
+  const testimonialRef = useRef<HTMLDivElement>(null);
   const pricingSectionRef = useRef<HTMLDivElement>(null);
   const pricingFeaturedCardRef = useRef<HTMLDivElement>(null);
+  const pricingGuaranteeRef = useRef<HTMLDivElement>(null);
+  const faqSectionRef = useRef<HTMLDivElement>(null);
+  const faqContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let ticking = false;
-
-    const updateParallax = () => {
-      const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+    const updateParallax = (scrollY: number) => {
       const windowH = window.innerHeight;
 
-      // 1. Continuous Hero Glide Parallax
-      if (heroBgRef.current && scrollY < windowH * 1.5) {
-        heroBgRef.current.style.transform = `translate3d(0, ${(scrollY * 0.32).toFixed(1)}px, 0) scale(${(1 + scrollY * 0.00015).toFixed(3)})`;
+      // 1. Hero Continuous Parallax
+      if (heroBgRef.current && scrollY < windowH * 1.6) {
+        heroBgRef.current.style.transform = `translate3d(0, ${(scrollY * 0.35).toFixed(1)}px, 0) scale(${(1 + scrollY * 0.00016).toFixed(3)})`;
       }
-      if (heroContentRef.current && scrollY < windowH * 1.5) {
-        heroContentRef.current.style.transform = `translate3d(0, ${(scrollY * -0.08).toFixed(1)}px, 0)`;
+      if (heroContentRef.current && scrollY < windowH * 1.6) {
+        heroContentRef.current.style.transform = `translate3d(0, ${(scrollY * -0.09).toFixed(1)}px, 0)`;
       }
 
-      // 2. Interactive Building Parallax (Bold, visible 3D motion & perspective scale)
+      // 2. Flagship Architecture Parallax Building (Cinematic +/-110px Travel + 3D Zoom)
       if (architectureSectionRef.current) {
         const rect = architectureSectionRef.current.getBoundingClientRect();
-        if (rect.bottom > -150 && rect.top < windowH + 150) {
+        if (rect.bottom > -200 && rect.top < windowH + 200) {
           const sectionCenter = rect.top + rect.height * 0.5;
           const viewportCenter = windowH * 0.5;
           const relY = viewportCenter - sectionCenter;
 
-          // Prominent building vertical displacement (+/-95px)
-          const buildingY = Math.max(-95, Math.min(95, relY * -0.16));
-          // Optical zoom factor: zooms up to 1.04 when centered in viewport
+          // Prominent building vertical displacement (+/-110px)
+          const buildingY = Math.max(-110, Math.min(110, relY * -0.18));
+          // Optical zoom factor: zooms up to 1.05 when centered in viewport
           const proximity = Math.max(0, 1 - Math.abs(relY) / (windowH * 0.85));
-          const buildingScale = 0.96 + proximity * 0.07;
+          const buildingScale = 0.95 + proximity * 0.09;
 
-          // Counter-gliding flanking cards (+/-60px)
-          const cardsY = Math.max(-60, Math.min(60, relY * 0.10));
+          // Counter-gliding flanking cards (+/-70px and +/-80px)
+          const cardsY = Math.max(-70, Math.min(70, relY * 0.11));
 
           if (buildingParallaxRef.current) {
             buildingParallaxRef.current.style.transform = `translate3d(0, ${buildingY.toFixed(1)}px, 0) scale(${buildingScale.toFixed(3)})`;
           }
           if (buildingBadgeRef.current) {
-            buildingBadgeRef.current.style.transform = `translate3d(0, ${(relY * -0.04).toFixed(1)}px, 0)`;
+            buildingBadgeRef.current.style.transform = `translate3d(0, ${(relY * -0.05).toFixed(1)}px, 0)`;
           }
           if (leftCardsParallaxRef.current) {
             leftCardsParallaxRef.current.style.transform = `translate3d(0, ${cardsY.toFixed(1)}px, 0)`;
@@ -122,12 +133,24 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
         }
       }
 
-      // 3. Autopilot Services 3-Column Staggered Parallax
+      // 3. Universal Asset Solutions Parallax
+      if (solutionsSectionRef.current) {
+        const rect = solutionsSectionRef.current.getBoundingClientRect();
+        if (rect.bottom > -150 && rect.top < windowH + 150) {
+          const relY = windowH * 0.5 - (rect.top + rect.height * 0.5);
+          const solFloat = Math.max(-35, Math.min(35, relY * -0.06));
+          if (solutionsCardRef.current) {
+            solutionsCardRef.current.style.transform = `translate3d(0, ${solFloat.toFixed(1)}px, 0)`;
+          }
+        }
+      }
+
+      // 4. Autopilot Services 3-Column Staggered Parallax
       if (servicesSectionRef.current) {
         const rect = servicesSectionRef.current.getBoundingClientRect();
-        if (rect.bottom > -100 && rect.top < windowH + 100) {
+        if (rect.bottom > -150 && rect.top < windowH + 150) {
           const relY = windowH * 0.5 - (rect.top + rect.height * 0.5);
-          const colShift = Math.max(-35, Math.min(35, relY * 0.06));
+          const colShift = Math.max(-40, Math.min(40, relY * 0.07));
           if (servicesCol1Ref.current) {
             servicesCol1Ref.current.style.transform = `translate3d(0, ${(-colShift).toFixed(1)}px, 0)`;
           }
@@ -137,51 +160,102 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
         }
       }
 
-      // 4. Institutional Reliability Stats Depth
+      // 5. Institutional Reliability Stats & Testimonial Depth
       if (statsSectionRef.current) {
         const rect = statsSectionRef.current.getBoundingClientRect();
-        if (rect.bottom > -100 && rect.top < windowH + 100) {
+        if (rect.bottom > -150 && rect.top < windowH + 150) {
           const relY = windowH * 0.5 - (rect.top + rect.height * 0.5);
-          const statShift = Math.max(-28, Math.min(28, relY * 0.045));
+          const statShift = Math.max(-30, Math.min(30, relY * 0.05));
           if (statsBox1Ref.current) {
             statsBox1Ref.current.style.transform = `translate3d(0, ${(-statShift).toFixed(1)}px, 0)`;
           }
           if (statsBox4Ref.current) {
             statsBox4Ref.current.style.transform = `translate3d(0, ${statShift.toFixed(1)}px, 0)`;
           }
+          if (testimonialRef.current) {
+            const testShift = Math.max(-25, Math.min(25, relY * -0.04));
+            testimonialRef.current.style.transform = `translate3d(0, ${testShift.toFixed(1)}px, 0)`;
+          }
         }
       }
 
-      // 5. Featured Pricing Card Elevated Parallax
+      // 6. Pricing Featured Card & Guarantee Parallax
       if (pricingSectionRef.current) {
         const rect = pricingSectionRef.current.getBoundingClientRect();
-        if (rect.bottom > -100 && rect.top < windowH + 100) {
+        if (rect.bottom > -150 && rect.top < windowH + 150) {
           const relY = windowH * 0.5 - (rect.top + rect.height * 0.5);
-          const cardFloat = Math.max(-22, Math.min(22, relY * -0.04));
+          const cardFloat = Math.max(-26, Math.min(26, relY * -0.045));
           if (pricingFeaturedCardRef.current) {
             pricingFeaturedCardRef.current.style.transform = `translate3d(0, ${cardFloat.toFixed(1)}px, 0)`;
+          }
+          if (pricingGuaranteeRef.current) {
+            const guarFloat = Math.max(-20, Math.min(20, relY * 0.035));
+            pricingGuaranteeRef.current.style.transform = `translate3d(0, ${guarFloat.toFixed(1)}px, 0)`;
+          }
+        }
+      }
+
+      // 7. FAQ Accordion Float
+      if (faqSectionRef.current) {
+        const rect = faqSectionRef.current.getBoundingClientRect();
+        if (rect.bottom > -150 && rect.top < windowH + 150) {
+          const relY = windowH * 0.5 - (rect.top + rect.height * 0.5);
+          const faqFloat = Math.max(-22, Math.min(22, relY * -0.035));
+          if (faqContainerRef.current) {
+            faqContainerRef.current.style.transform = `translate3d(0, ${faqFloat.toFixed(1)}px, 0)`;
           }
         }
       }
     };
 
-    const onScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          updateParallax();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
+    // Initialize Lenis smooth scroll engine
+    const lenis = new Lenis({
+      duration: 1.15,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1.0,
+      touchMultiplier: 1.5,
+    });
+    lenisRef.current = lenis;
 
-    window.addEventListener('scroll', onScroll, { passive: true });
-    updateParallax();
+    let rafId: number;
+    function raf(time: number) {
+      lenis.raf(time);
+      rafId = requestAnimationFrame(raf);
+    }
+    rafId = requestAnimationFrame(raf);
+
+    lenis.on('scroll', (e: { scroll: number }) => {
+      updateParallax(e.scroll);
+    });
+
+    // Initial update
+    updateParallax(window.scrollY || 0);
 
     return () => {
-      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(rafId);
+      lenis.destroy();
+      lenisRef.current = null;
     };
   }, []);
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    e.preventDefault();
+    if (lenisRef.current) {
+      lenisRef.current.scrollTo(targetId, { offset: -55, duration: 1.2 });
+    } else {
+      document.querySelector(targetId)?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleSignInClick = (e: React.MouseEvent) => {
+    if (onNavigateToLogin) {
+      e.preventDefault();
+      onNavigateToLogin();
+    }
+  };
 
   const handleOpenTrial = (planId: SubscriptionTierId = 'growth_pro') => {
     setSelectedPlanForTrial(planId);
@@ -198,18 +272,22 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       {/* ---------------------------------------------------- */}
       {/* 1. TOP HEADER NAVIGATION                             */}
       {/* ---------------------------------------------------- */}
-      <header className="w-full px-6 sm:px-12 py-3.5 flex items-center justify-between border-b border-[#eeece5] bg-white sticky top-0 z-50 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <header className="w-full px-4 sm:px-8 lg:px-12 py-3 sm:py-3.5 flex items-center justify-between border-b border-[#eeece5] bg-white/95 backdrop-blur-md sticky top-0 z-50 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
         {/* Left: Geometric Emblem + Brand Name */}
-        <div className="flex items-center gap-3">
-          <a href="#overview" className="flex items-center gap-2.5 group">
-            <div className="h-9 w-9 rounded-full bg-[#16231c] text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-150">
-              <svg className="w-4.5 h-4.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <a 
+            href="#overview" 
+            onClick={(e) => handleNavClick(e, '#overview')}
+            className="flex items-center gap-2 sm:gap-2.5 group cursor-pointer"
+          >
+            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-[#16231c] text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-150 shrink-0">
+              <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2L2 7l10 5 10-5-10-5z" />
                 <path d="M2 17l10 5 10-5" />
                 <path d="M2 12l10 5 10-5" />
               </svg>
             </div>
-            <span className="font-extrabold text-base tracking-tight text-[#16231c]">
+            <span className="font-extrabold text-sm sm:text-base tracking-tight text-[#16231c]">
               STAYWISE
             </span>
           </a>
@@ -217,39 +295,182 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
         {/* Center Navigation Links matching reference design */}
         <nav className="hidden lg:flex items-center gap-8 text-xs font-medium text-[#4d5a52]">
-          <a href="#overview" className="hover:text-[#19251f] transition-colors duration-100">Home</a>
-          <a href="#interactive-building" className="hover:text-[#19251f] transition-colors duration-100 flex items-center gap-1 font-semibold text-[#203a2d]">
+          <a 
+            href="#overview" 
+            onClick={(e) => handleNavClick(e, '#overview')}
+            className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
+          >
+            Home
+          </a>
+          <a 
+            href="#interactive-building" 
+            onClick={(e) => handleNavClick(e, '#interactive-building')}
+            className="hover:text-[#19251f] transition-colors duration-100 flex items-center gap-1 font-semibold text-[#203a2d] cursor-pointer"
+          >
             <span>Architecture</span>
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
           </a>
-          <a href="#solutions" className="hover:text-[#19251f] transition-colors duration-100">Solutions</a>
-          <a href="#services" className="hover:text-[#19251f] transition-colors duration-100">Services</a>
-          <a href="#pricing" className="hover:text-[#19251f] transition-colors duration-100">Pricing</a>
-          <a href="#about" className="hover:text-[#19251f] transition-colors duration-100">About us</a>
-          <a href="#faq" className="hover:text-[#19251f] transition-colors duration-100">FAQ</a>
+          <a 
+            href="#solutions" 
+            onClick={(e) => handleNavClick(e, '#solutions')}
+            className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
+          >
+            Solutions
+          </a>
+          <a 
+            href="#services" 
+            onClick={(e) => handleNavClick(e, '#services')}
+            className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
+          >
+            Services
+          </a>
+          <a 
+            href="#pricing" 
+            onClick={(e) => handleNavClick(e, '#pricing')}
+            className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
+          >
+            Pricing
+          </a>
+          <a 
+            href="#about" 
+            onClick={(e) => handleNavClick(e, '#about')}
+            className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
+          >
+            About us
+          </a>
+          <a 
+            href="#faq" 
+            onClick={(e) => handleNavClick(e, '#faq')}
+            className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
+          >
+            FAQ
+          </a>
         </nav>
 
-        {/* Right Actions: Outlined Sign in button (OPENS NEW TAB) */}
-        <div className="flex items-center gap-3">
-          {/* SIGN IN BUTTON: OPENS LOGIN DIRECTLY IN NEW TAB */}
+        {/* Right Actions: Outlined Sign in button */}
+        <div className="flex items-center gap-2 sm:gap-3">
           <a
             href="/login"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-5 py-1.5 rounded-full border border-[#16231c] text-xs font-bold text-[#16231c] hover:bg-[#16231c] hover:text-white transition-all duration-150 shadow-xs cursor-pointer inline-flex items-center justify-center gap-1.5 group"
+            onClick={handleSignInClick}
+            className="px-3.5 sm:px-5 py-1.5 rounded-full border border-[#16231c] text-[11px] sm:text-xs font-bold text-[#16231c] hover:bg-[#16231c] hover:text-white transition-all duration-150 shadow-xs cursor-pointer inline-flex items-center justify-center gap-1.5 group shrink-0"
           >
             <span>Sign in</span>
             <ArrowUpRight className="h-3 w-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-150" />
           </a>
+
+          {/* Mobile hamburger menu toggle */}
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle navigation menu"
+            className="lg:hidden p-1.5 rounded-xl text-[#16231c] hover:bg-[#f4f3ef] transition-colors cursor-pointer"
+          >
+            {isMobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </button>
         </div>
       </header>
+
+      {/* Mobile Navigation Drawer */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden fixed top-[53px] sm:top-[57px] left-0 right-0 bg-white/98 backdrop-blur-lg border-b border-[#eeece5] shadow-xl z-40 px-5 py-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-150">
+          <nav className="flex flex-col space-y-2.5 text-xs font-semibold text-[#3b4941]">
+            <a 
+              href="#overview" 
+              onClick={(e) => {
+                handleNavClick(e, '#overview');
+                setIsMobileMenuOpen(false);
+              }}
+              className="py-1 hover:text-[#16231c] transition-colors"
+            >
+              Home
+            </a>
+            <a 
+              href="#interactive-building" 
+              onClick={(e) => {
+                handleNavClick(e, '#interactive-building');
+                setIsMobileMenuOpen(false);
+              }}
+              className="py-1 flex items-center justify-between text-[#203a2d] font-bold"
+            >
+              <span>Architecture</span>
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            </a>
+            <a 
+              href="#solutions" 
+              onClick={(e) => {
+                handleNavClick(e, '#solutions');
+                setIsMobileMenuOpen(false);
+              }}
+              className="py-1 hover:text-[#16231c] transition-colors"
+            >
+              Solutions
+            </a>
+            <a 
+              href="#services" 
+              onClick={(e) => {
+                handleNavClick(e, '#services');
+                setIsMobileMenuOpen(false);
+              }}
+              className="py-1 hover:text-[#16231c] transition-colors"
+            >
+              Services
+            </a>
+            <a 
+              href="#pricing" 
+              onClick={(e) => {
+                handleNavClick(e, '#pricing');
+                setIsMobileMenuOpen(false);
+              }}
+              className="py-1 hover:text-[#16231c] transition-colors"
+            >
+              Pricing Plans
+            </a>
+            <a 
+              href="#about" 
+              onClick={(e) => {
+                handleNavClick(e, '#about');
+                setIsMobileMenuOpen(false);
+              }}
+              className="py-1 hover:text-[#16231c] transition-colors"
+            >
+              About us
+            </a>
+            <a 
+              href="#faq" 
+              onClick={(e) => {
+                handleNavClick(e, '#faq');
+                setIsMobileMenuOpen(false);
+              }}
+              className="py-1 hover:text-[#16231c] transition-colors"
+            >
+              FAQ
+            </a>
+          </nav>
+
+          <div className="pt-2 border-t border-[#eeece5]">
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                handleOpenTrial('growth_pro');
+              }}
+              className="w-full py-2.5 rounded-full bg-[#203a2d] hover:bg-[#172b21] text-white font-bold text-xs shadow-md transition text-center cursor-pointer"
+            >
+              Start 7-Day Free Trial (₹0 Today)
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ---------------------------------------------------- */}
       {/* 2. HERO SECTION WITH OPTIMIZED LIGHTWEIGHT ASSET     */}
       {/* ---------------------------------------------------- */}
       <section 
         id="overview"
-        className="relative w-full min-h-[600px] sm:min-h-[680px] lg:min-h-[740px] flex flex-col items-center justify-start pt-12 sm:pt-16 lg:pt-20 px-4 sm:px-8 text-center overflow-hidden"
+        className="relative w-full min-h-[560px] sm:min-h-[660px] lg:min-h-[740px] flex flex-col items-center justify-start pt-8 sm:pt-14 lg:pt-20 px-4 sm:px-6 lg:px-8 text-center overflow-hidden"
       >
         {/* Hardware-Accelerated Lightweight Hero Background Image (182KB) */}
         <div 
@@ -261,74 +482,74 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
         />
 
         {/* Crisp static gradient overlay (No expensive blur = 100% smooth) */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/50 to-white pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white/85 via-white/55 to-white pointer-events-none" />
 
         {/* Floating Pill Announcement */}
-        <div className="relative z-10 mb-5 sm:mb-6 animate-in fade-in slide-in-from-top-3 duration-500">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/95 border border-[#c1d3c9] text-[#203a2d] text-xs font-semibold shadow-xs hover:bg-white transition-colors">
+        <div className="relative z-10 mb-4 sm:mb-6 animate-in fade-in slide-in-from-top-3 duration-500 w-full flex justify-center px-2">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-white/95 border border-[#c1d3c9] text-[#203a2d] text-[10px] sm:text-xs font-semibold shadow-xs hover:bg-white transition-colors max-w-full text-center">
             <span>✨ AI-Powered Rental Yield Forecasting &amp; Automated Rent Collection 2.0</span>
           </div>
         </div>
 
         {/* Editorial Serif Headline */}
-        <div ref={heroContentRef} className="relative z-10 max-w-4xl mx-auto space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-600 will-change-transform transform-gpu">
-          <h1 className="font-editorial text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-[#16231c] leading-[1.12]">
-            The Premier SaaS Solution <br />
+        <div ref={heroContentRef} className="relative z-10 max-w-4xl mx-auto space-y-4 sm:space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-600 will-change-transform transform-gpu px-2 sm:px-0">
+          <h1 className="font-editorial text-3xl xs:text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-[#16231c] leading-[1.15] sm:leading-[1.12]">
+            The Premier SaaS Solution <br className="hidden sm:inline" />
             Tailored for Landlords.
           </h1>
 
           {/* Subtitle in clean sans-serif */}
-          <p className="text-sm sm:text-base lg:text-lg text-[#2f3f35] max-w-2xl mx-auto leading-relaxed font-normal">
+          <p className="text-xs sm:text-base lg:text-lg text-[#2f3f35] max-w-2xl mx-auto leading-relaxed font-normal px-1 sm:px-0">
             Staywise addresses all vacancy and yield forecasting hurdles by examining subtle tenant interactions, enhancing your property portfolio precision.
           </p>
 
           {/* Central Dark Forest Green Pill Button with Arrow */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto">
             <button
               type="button"
               onClick={() => handleOpenTrial('growth_pro')}
-              className="px-8 py-3.5 sm:py-4 rounded-full bg-[#203a2d] hover:bg-[#172b21] text-white font-bold text-sm sm:text-base shadow-lg shadow-[#203a2d]/30 transition-all duration-150 transform hover:-translate-y-0.5 flex items-center justify-center gap-2.5 group cursor-pointer"
+              className="w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 rounded-full bg-[#203a2d] hover:bg-[#172b21] text-white font-bold text-xs sm:text-base shadow-lg shadow-[#203a2d]/30 transition-all duration-150 transform hover:-translate-y-0.5 flex items-center justify-center gap-2.5 group cursor-pointer"
             >
               <span>Reserve your demo today!</span>
-              <span className="text-lg group-hover:translate-x-1.5 transition-transform duration-150">→</span>
+              <span className="text-base sm:text-lg group-hover:translate-x-1.5 transition-transform duration-150">→</span>
             </button>
           </div>
 
           {/* 7-Day Free Trial ₹0 Guarantee */}
-          <div className="pt-1 text-xs font-semibold text-[#203a2d] flex items-center justify-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-emerald-700" />
+          <div className="pt-1 text-[11px] sm:text-xs font-semibold text-[#203a2d] flex items-center justify-center gap-1.5 flex-wrap px-2">
+            <Sparkles className="h-3.5 w-3.5 text-emerald-700 shrink-0" />
             <span>7-Day Free Trial • ₹0 charged today • Cancel before 7 days in 1 click</span>
           </div>
         </div>
 
         {/* Bottom Trust Bar ("Trusted by leaders in") */}
-        <div className="relative z-10 mt-auto pt-12 sm:pt-20 pb-8 w-full max-w-4xl mx-auto space-y-3.5">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-[#495b50]">
+        <div className="relative z-10 mt-auto pt-10 sm:pt-16 lg:pt-20 pb-6 sm:pb-8 w-full max-w-4xl mx-auto space-y-3 px-2 sm:px-0">
+          <div className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#495b50]">
             Trusted by leaders in
           </div>
 
           {/* Monochrome Brand / Banking Rail Logos */}
-          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs sm:text-sm font-black text-[#2f3d35]/85 tracking-tight">
-            <span className="flex items-center gap-1.5 hover:text-[#19251f] transition-opacity">
-              <span className="text-base font-serif">Creatio</span>
+          <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center justify-center gap-3 sm:gap-8 lg:gap-10 text-xs sm:text-sm font-black text-[#2f3d35]/85 tracking-tight">
+            <span className="flex items-center justify-center gap-1.5 hover:text-[#19251f] transition-opacity">
+              <span className="text-sm sm:text-base font-serif">Creatio</span>
             </span>
-            <span className="flex items-center gap-1.5 hover:text-[#19251f] transition-opacity">
-              <span className="text-base font-sans font-extrabold tracking-tighter">HubSpot</span>
+            <span className="flex items-center justify-center gap-1.5 hover:text-[#19251f] transition-opacity">
+              <span className="text-sm sm:text-base font-sans font-extrabold tracking-tighter">HubSpot</span>
             </span>
-            <span className="flex items-center gap-1.5 hover:text-[#19251f] transition-opacity">
-              <span className="text-base font-sans font-bold">zendesk</span>
+            <span className="flex items-center justify-center gap-1.5 hover:text-[#19251f] transition-opacity">
+              <span className="text-sm sm:text-base font-sans font-bold">zendesk</span>
             </span>
-            <span className="flex items-center gap-1.5 hover:text-[#19251f] transition-opacity">
-              <span className="text-base font-mono font-bold">Bitrix24©</span>
+            <span className="flex items-center justify-center gap-1.5 hover:text-[#19251f] transition-opacity">
+              <span className="text-sm sm:text-base font-mono font-bold">Bitrix24©</span>
             </span>
-            <span className="flex items-center gap-1.5 hover:text-[#19251f] transition-opacity">
-              <span className="text-base font-serif italic">Apptivo</span>
+            <span className="flex items-center justify-center gap-1.5 hover:text-[#19251f] transition-opacity">
+              <span className="text-sm sm:text-base font-serif italic">Apptivo</span>
             </span>
-            <span className="flex items-center gap-1.5 hover:text-[#19251f] transition-opacity">
-              <span className="text-base font-sans font-black">FreshBooks</span>
+            <span className="flex items-center justify-center gap-1.5 hover:text-[#19251f] transition-opacity">
+              <span className="text-sm sm:text-base font-sans font-black">FreshBooks</span>
             </span>
-            <span className="flex items-center gap-1.5 hover:text-[#19251f] transition-opacity">
-              <span className="text-base font-mono">pipedrive</span>
+            <span className="hidden sm:flex items-center justify-center gap-1.5 hover:text-[#19251f] transition-opacity">
+              <span className="text-sm sm:text-base font-mono">pipedrive</span>
             </span>
           </div>
         </div>
@@ -343,18 +564,18 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       <section 
         id="interactive-building"
         ref={architectureSectionRef}
-        className="relative w-full py-16 sm:py-24 px-4 sm:px-8 bg-gradient-to-b from-white via-[#faf9f5] to-white overflow-hidden"
+        className="relative w-full py-12 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white via-[#faf9f5] to-white overflow-hidden"
       >
-        <div className="w-full max-w-7xl mx-auto space-y-12">
+        <div className="w-full max-w-7xl mx-auto space-y-8 sm:space-y-12">
           
           {/* Section Header with Generous Responsive Padding (NEVER clipped) */}
           <ScrollReveal>
-            <div className="text-center max-w-3xl mx-auto space-y-2.5">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#e8eee9] text-[#203a2d] text-xs font-black tracking-wider uppercase shadow-xs">
-                <span className="h-2 w-2 rounded-full bg-emerald-600 animate-ping" />
+            <div className="text-center max-w-3xl mx-auto space-y-2 sm:space-y-2.5 px-2 sm:px-0">
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 rounded-full bg-[#e8eee9] text-[#203a2d] text-[10px] sm:text-xs font-black tracking-wider uppercase shadow-xs">
+                <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-emerald-600 animate-ping" />
                 <span>Architectural Telemetry In Motion</span>
               </div>
-              <h2 className="font-editorial text-3xl sm:text-5xl font-semibold text-[#16231c]">
+              <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#16231c]">
                 Real-Time Portfolio Dynamics
               </h2>
               <p className="text-xs sm:text-sm text-[#6e7972] max-w-xl mx-auto leading-relaxed">
@@ -364,48 +585,13 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           </ScrollReveal>
 
           {/* Symmetrical Responsive Grid: Left Cards + Center Parallax Building + Right Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center pt-2">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 items-center pt-2">
             
-            {/* Left Symmetrical Column (Parallax Flank) */}
-            <div ref={leftCardsParallaxRef} className="lg:col-span-3 space-y-5 will-change-transform transform-gpu">
-              {/* CARD 1: Autonomous RentFlow */}
-              <div className="p-5 rounded-2xl bg-white border border-[#e3e1d8] shadow-sm hover:shadow-md transition-shadow duration-200 space-y-2.5">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-9 w-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
-                    <Zap className="h-4.5 w-4.5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-xs text-[#16231c]">Autonomous RentFlow</h4>
-                    <span className="text-[10px] text-emerald-700 font-extrabold">99.4% On-Time Rate</span>
-                  </div>
-                </div>
-                <p className="text-xs text-[#6e7972] leading-relaxed">
-                  Direct UPI Autopay settlement into Axis Escrow accounts with dynamic WhatsApp reminder nudges.
-                </p>
-              </div>
-
-              {/* CARD 2: Sub-Meter OCR Engine */}
-              <div className="p-5 rounded-2xl bg-white border border-[#e3e1d8] shadow-sm hover:shadow-md transition-shadow duration-200 space-y-2.5">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-9 w-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
-                    <FileText className="h-4.5 w-4.5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-xs text-[#16231c]">Sub-Meter OCR Engine</h4>
-                    <span className="text-[10px] text-amber-700 font-extrabold">Automated BESCOM Split</span>
-                  </div>
-                </div>
-                <p className="text-xs text-[#6e7972] leading-relaxed">
-                  Photo bill capture automatically calculates tiered slab tariffs and pro-rata common area utilities.
-                </p>
-              </div>
-            </div>
-
-            {/* Center Column: The Parallax Architectural Residence Building (Lightweight 73KB asset) */}
-            <div className="lg:col-span-6 relative flex items-center justify-center py-4">
+            {/* Center Column: The Parallax Architectural Residence Building (Mobile: Appears First) */}
+            <div className="lg:col-span-6 relative flex items-center justify-center py-2 sm:py-4 order-1 lg:order-2">
               <div 
                 ref={buildingParallaxRef} 
-                className="w-full relative rounded-3xl overflow-hidden shadow-2xl border border-[#e3e1d8] will-change-transform transform-gpu"
+                className="w-full relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-[#e3e1d8] will-change-transform transform-gpu"
               >
                 <img
                   src="/images/parallax-building-light.jpg"
@@ -416,50 +602,85 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 {/* Live Telemetry Floating Pill on Building */}
                 <div 
                   ref={buildingBadgeRef}
-                  className="absolute top-4 sm:top-5 left-5 px-3.5 py-1.5 rounded-full bg-white/95 border border-[#e3e1d8] text-xs font-bold text-[#16231c] shadow-md flex items-center gap-2 will-change-transform transform-gpu"
+                  className="absolute top-3 sm:top-5 left-3 sm:left-5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-white/95 border border-[#e3e1d8] text-[10px] sm:text-xs font-bold text-[#16231c] shadow-md flex items-center gap-1.5 sm:gap-2 will-change-transform transform-gpu max-w-[85%] truncate"
                 >
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Malabar Luxury Villa • 100% Occupied • ₹5.4L/mo</span>
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  <span className="truncate">Malabar Luxury Villa • 100% Occupied</span>
                 </div>
 
                 {/* Floating Scan Marker */}
-                <div className="absolute bottom-4 right-5 px-3.5 py-1 rounded-full bg-[#16231c]/90 text-white text-[11px] font-semibold flex items-center gap-1.5 shadow-sm">
-                  <Sparkles className="h-3 w-3 text-amber-400" />
+                <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-5 px-2.5 sm:px-3.5 py-1 rounded-full bg-[#16231c]/90 text-white text-[10px] sm:text-[11px] font-semibold flex items-center gap-1.5 shadow-sm">
+                  <Sparkles className="h-3 w-3 text-amber-400 shrink-0" />
                   <span>MoveFlow AI Sealed</span>
                 </div>
               </div>
             </div>
 
-            {/* Right Symmetrical Column (Parallax Flank) */}
-            <div ref={rightCardsParallaxRef} className="lg:col-span-3 space-y-5 will-change-transform transform-gpu">
-              {/* CARD 3: MoveFlow Inspections */}
-              <div className="p-5 rounded-2xl bg-white border border-[#e3e1d8] shadow-sm hover:shadow-md transition-shadow duration-200 space-y-2.5">
+            {/* Left Symmetrical Column (Parallax Flank) */}
+            <div ref={leftCardsParallaxRef} className="lg:col-span-3 space-y-4 sm:space-y-5 order-2 lg:order-1 will-change-transform transform-gpu">
+              {/* CARD 1: Autonomous RentFlow */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#e3e1d8] shadow-sm hover:shadow-md transition-shadow duration-200 space-y-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-9 w-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold">
-                    <ShieldCheck className="h-4.5 w-4.5" />
+                  <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold shrink-0">
+                    <Zap className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs text-[#16231c]">Autonomous RentFlow</h4>
+                    <span className="text-[10px] text-emerald-700 font-extrabold">99.4% On-Time Rate</span>
+                  </div>
+                </div>
+                <p className="text-[11px] sm:text-xs text-[#6e7972] leading-relaxed">
+                  Direct UPI Autopay settlement into Axis Escrow accounts with dynamic WhatsApp reminder nudges.
+                </p>
+              </div>
+
+              {/* CARD 2: Sub-Meter OCR Engine */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#e3e1d8] shadow-sm hover:shadow-md transition-shadow duration-200 space-y-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold shrink-0">
+                    <FileText className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs text-[#16231c]">Sub-Meter OCR Engine</h4>
+                    <span className="text-[10px] text-amber-700 font-extrabold">Automated BESCOM Split</span>
+                  </div>
+                </div>
+                <p className="text-[11px] sm:text-xs text-[#6e7972] leading-relaxed">
+                  Photo bill capture automatically calculates tiered slab tariffs and pro-rata common area utilities.
+                </p>
+              </div>
+            </div>
+
+            {/* Right Symmetrical Column (Parallax Flank) */}
+            <div ref={rightCardsParallaxRef} className="lg:col-span-3 space-y-4 sm:space-y-5 order-3 lg:order-3 will-change-transform transform-gpu">
+              {/* CARD 3: MoveFlow Inspections */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#e3e1d8] shadow-sm hover:shadow-md transition-shadow duration-200 space-y-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold shrink-0">
+                    <ShieldCheck className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                   </div>
                   <div>
                     <h4 className="font-bold text-xs text-[#16231c]">MoveFlow Inspections</h4>
                     <span className="text-[10px] text-teal-700 font-extrabold">Zero Deposit Disputes</span>
                   </div>
                 </div>
-                <p className="text-xs text-[#6e7972] leading-relaxed">
+                <p className="text-[11px] sm:text-xs text-[#6e7972] leading-relaxed">
                   Timestamped digital photo checklists at check-in &amp; check-out that protect owner and tenant deposits.
                 </p>
               </div>
 
               {/* CARD 4: Double-Entry Ledger */}
-              <div className="p-5 rounded-2xl bg-white border border-[#e3e1d8] shadow-sm hover:shadow-md transition-shadow duration-200 space-y-2.5">
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#e3e1d8] shadow-sm hover:shadow-md transition-shadow duration-200 space-y-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-9 w-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold">
-                    <Landmark className="h-4.5 w-4.5" />
+                  <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold shrink-0">
+                    <Landmark className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                   </div>
                   <div>
                     <h4 className="font-bold text-xs text-[#16231c]">Double-Entry Ledger</h4>
                     <span className="text-[10px] text-indigo-700 font-extrabold">Audited GST Invoicing</span>
                   </div>
                 </div>
-                <p className="text-xs text-[#6e7972] leading-relaxed">
+                <p className="text-[11px] sm:text-xs text-[#6e7972] leading-relaxed">
                   Real-time balance sheets, statutory TDS calculations, and 1-click auditor export packages.
                 </p>
               </div>
@@ -473,14 +694,18 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       {/* ---------------------------------------------------- */}
       {/* 4. MULTI-ASSET OPERATING SOLUTIONS (#solutions)      */}
       {/* ---------------------------------------------------- */}
-      <section id="solutions" className="py-12 sm:py-16 px-6 sm:px-12 bg-white space-y-10">
+      <section 
+        id="solutions" 
+        ref={solutionsSectionRef}
+        className="py-12 sm:py-16 px-4 sm:px-6 lg:px-12 bg-white space-y-8 sm:space-y-10 overflow-hidden"
+      >
         
         <ScrollReveal>
-          <div className="text-center max-w-3xl mx-auto space-y-2.5">
-            <span className="text-xs font-black uppercase tracking-wider text-[#203a2d]">
+          <div className="text-center max-w-3xl mx-auto space-y-2 sm:space-y-2.5 px-2 sm:px-0">
+            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#203a2d]">
               Universal Property Coverage
             </span>
-            <h2 className="font-editorial text-3xl sm:text-5xl font-semibold text-[#16231c]">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#16231c]">
               Designed for Any Real Estate Asset Class
             </h2>
             <p className="text-xs sm:text-sm text-[#6e7972] max-w-xl mx-auto leading-relaxed">
@@ -491,12 +716,12 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
         {/* 4 Multi-Asset Interactive Tabs */}
         <ScrollReveal delay={40}>
-          <div className="flex items-center justify-center">
-            <div className="p-1 rounded-full bg-[#f4f3ef] border border-[#e3e1d8] flex flex-wrap gap-1 max-w-full overflow-x-auto">
+          <div className="flex items-center justify-center w-full px-1">
+            <div className="p-1 rounded-2xl sm:rounded-full bg-[#f4f3ef] border border-[#e3e1d8] flex flex-wrap sm:flex-nowrap gap-1 max-w-full overflow-x-auto justify-center">
               <button
                 type="button"
                 onClick={() => setActiveAssetTab('RESIDENTIAL')}
-                className={`px-4.5 py-2 rounded-full text-xs font-bold transition-all duration-100 flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                className={`px-3 sm:px-4.5 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
                   activeAssetTab === 'RESIDENTIAL'
                     ? 'bg-[#16231c] text-white shadow-xs'
                     : 'text-[#6e7972] hover:text-[#19251f]'
@@ -509,7 +734,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <button
                 type="button"
                 onClick={() => setActiveAssetTab('PG')}
-                className={`px-4.5 py-2 rounded-full text-xs font-bold transition-all duration-100 flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                className={`px-3 sm:px-4.5 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
                   activeAssetTab === 'PG'
                     ? 'bg-[#16231c] text-white shadow-xs'
                     : 'text-[#6e7972] hover:text-[#19251f]'
@@ -522,7 +747,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <button
                 type="button"
                 onClick={() => setActiveAssetTab('COMMERCIAL')}
-                className={`px-4.5 py-2 rounded-full text-xs font-bold transition-all duration-100 flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                className={`px-3 sm:px-4.5 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
                   activeAssetTab === 'COMMERCIAL'
                     ? 'bg-[#16231c] text-white shadow-xs'
                     : 'text-[#6e7972] hover:text-[#19251f]'
@@ -535,7 +760,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <button
                 type="button"
                 onClick={() => setActiveAssetTab('ESTATE')}
-                className={`px-4.5 py-2 rounded-full text-xs font-bold transition-all duration-100 flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                className={`px-3 sm:px-4.5 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 sm:gap-2 whitespace-nowrap cursor-pointer ${
                   activeAssetTab === 'ESTATE'
                     ? 'bg-[#16231c] text-white shadow-xs'
                     : 'text-[#6e7972] hover:text-[#19251f]'
@@ -550,7 +775,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
         {/* Active Asset Canvas */}
         <ScrollReveal delay={80}>
-          <div className="max-w-5xl mx-auto rounded-3xl bg-[#f8f7f4] border border-[#e3e1d8] p-6 sm:p-9 shadow-xs">
+          <div 
+            ref={solutionsCardRef}
+            className="max-w-5xl mx-auto rounded-2xl sm:rounded-3xl bg-[#f8f7f4] border border-[#e3e1d8] p-4 sm:p-7 lg:p-9 shadow-xs will-change-transform transform-gpu"
+          >
             {activeAssetTab === 'RESIDENTIAL' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
@@ -753,102 +981,102 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       <section 
         id="services" 
         ref={servicesSectionRef} 
-        className="py-16 sm:py-20 px-6 sm:px-12 bg-[#faf9f6] border-y border-[#eeece5] space-y-10 overflow-hidden"
+        className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-12 bg-[#faf9f6] border-y border-[#eeece5] space-y-8 sm:space-y-10 overflow-hidden"
       >
         <ScrollReveal>
-          <div className="text-center max-w-3xl mx-auto space-y-2.5">
-            <span className="text-xs font-black uppercase tracking-wider text-[#203a2d]">
+          <div className="text-center max-w-3xl mx-auto space-y-2 sm:space-y-2.5 px-2 sm:px-0">
+            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#203a2d]">
               Intelligent Automation
             </span>
-            <h2 className="font-editorial text-3xl sm:text-5xl font-semibold text-[#16231c]">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#16231c]">
               Engineered to Run Properties on Autopilot
             </h2>
           </div>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto items-start">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto items-start">
           {/* Column 1: Parallax Float Up */}
-          <div ref={servicesCol1Ref} className="space-y-6 will-change-transform transform-gpu">
+          <div ref={servicesCol1Ref} className="space-y-4 sm:space-y-6 will-change-transform transform-gpu">
             {/* Feature 1 */}
-            <div className="p-6 rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-3 hover:shadow-md transition-shadow duration-150">
-              <div className="h-9 w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold">
-                <Zap className="h-4.5 w-4.5" />
+            <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-2.5 sm:space-y-3 hover:shadow-md transition-shadow duration-150">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold shrink-0">
+                <Zap className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </div>
-              <h3 className="font-bold text-sm text-[#16231c]">
+              <h3 className="font-bold text-xs sm:text-sm text-[#16231c]">
                 RentFlow Escrow &amp; WhatsApp Nudges
               </h3>
-              <p className="text-xs text-[#6e7972] leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-[#6e7972] leading-relaxed">
                 Automated multi-day payment reminders at T-3, Due Date, and T+3 with dynamic UPI QR codes. 99.4% on-time settlement into Axis Bank Escrow accounts.
               </p>
             </div>
 
             {/* Feature 4 */}
-            <div className="p-6 rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-3 hover:shadow-md transition-shadow duration-150">
-              <div className="h-9 w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold">
-                <TrendingUp className="h-4.5 w-4.5" />
+            <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-2.5 sm:space-y-3 hover:shadow-md transition-shadow duration-150">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold shrink-0">
+                <TrendingUp className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </div>
-              <h3 className="font-bold text-sm text-[#16231c]">
+              <h3 className="font-bold text-xs sm:text-sm text-[#16231c]">
                 Vacancy Cost Engine &amp; Leak Detector
               </h3>
-              <p className="text-xs text-[#6e7972] leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-[#6e7972] leading-relaxed">
                 Live detection of unbilled sub-meters, pending repairs, and vacant units with automatic listing syndication (+18.4% average yield expansion).
               </p>
             </div>
           </div>
 
           {/* Column 2: Anchor Center Column */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Feature 2 */}
-            <div className="p-6 rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-3 hover:shadow-md transition-shadow duration-150">
-              <div className="h-9 w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold">
-                <FileText className="h-4.5 w-4.5" />
+            <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-2.5 sm:space-y-3 hover:shadow-md transition-shadow duration-150">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold shrink-0">
+                <FileText className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </div>
-              <h3 className="font-bold text-sm text-[#16231c]">
+              <h3 className="font-bold text-xs sm:text-sm text-[#16231c]">
                 Sub-Meter OCR Electricity Splitting
               </h3>
-              <p className="text-xs text-[#6e7972] leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-[#6e7972] leading-relaxed">
                 Upload a photo of your DISCOM bill (Bescom, KSEB, MSEDCL). The OCR engine parses slab tariffs, fixed charges, and pro-rata common area splits automatically.
               </p>
             </div>
 
             {/* Feature 5 */}
-            <div className="p-6 rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-3 hover:shadow-md transition-shadow duration-150">
-              <div className="h-9 w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold">
-                <Landmark className="h-4.5 w-4.5" />
+            <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-2.5 sm:space-y-3 hover:shadow-md transition-shadow duration-150">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold shrink-0">
+                <Landmark className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </div>
-              <h3 className="font-bold text-sm text-[#16231c]">
+              <h3 className="font-bold text-xs sm:text-sm text-[#16231c]">
                 Statutory Double-Entry Ledger
               </h3>
-              <p className="text-xs text-[#6e7972] leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-[#6e7972] leading-relaxed">
                 Debit and credit balance sheets recorded for every rupee. Automatic GST tax invoices, TDS deductions, and 1-click export for auditors.
               </p>
             </div>
           </div>
 
           {/* Column 3: Parallax Float Down */}
-          <div ref={servicesCol3Ref} className="space-y-6 will-change-transform transform-gpu">
+          <div ref={servicesCol3Ref} className="space-y-4 sm:space-y-6 will-change-transform transform-gpu">
             {/* Feature 3 */}
-            <div className="p-6 rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-3 hover:shadow-md transition-shadow duration-150">
-              <div className="h-9 w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold">
-                <ShieldCheck className="h-4.5 w-4.5" />
+            <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-2.5 sm:space-y-3 hover:shadow-md transition-shadow duration-150">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold shrink-0">
+                <ShieldCheck className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </div>
-              <h3 className="font-bold text-sm text-[#16231c]">
+              <h3 className="font-bold text-xs sm:text-sm text-[#16231c]">
                 MoveFlow Digital Inspections
               </h3>
-              <p className="text-xs text-[#6e7972] leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-[#6e7972] leading-relaxed">
                 Photographic room checklists at move-in and move-out with immutable timestamp seals. Zero deposit dispute escrow guarantee.
               </p>
             </div>
 
             {/* Feature 6 */}
-            <div className="p-6 rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-3 hover:shadow-md transition-shadow duration-150">
-              <div className="h-9 w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold">
-                <Sparkles className="h-4.5 w-4.5" />
+            <div className="p-5 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] shadow-xs space-y-2.5 sm:space-y-3 hover:shadow-md transition-shadow duration-150">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-2xl bg-[#e8eee9] text-[#203a2d] flex items-center justify-center font-bold shrink-0">
+                <Sparkles className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </div>
-              <h3 className="font-bold text-sm text-[#16231c]">
+              <h3 className="font-bold text-xs sm:text-sm text-[#16231c]">
                 Staywise AI Yield Concierge
               </h3>
-              <p className="text-xs text-[#6e7972] leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-[#6e7972] leading-relaxed">
                 Proactive intelligence predicting tenant lease renewals, flagging maintenance risks before emergencies, and optimizing seasonal pricing.
               </p>
             </div>
@@ -863,61 +1091,64 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       <section 
         id="about" 
         ref={statsSectionRef} 
-        className="py-16 sm:py-20 px-6 sm:px-12 bg-white space-y-10 overflow-hidden"
+        className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-12 bg-white space-y-8 sm:space-y-10 overflow-hidden"
       >
         <ScrollReveal>
-          <div className="text-center max-w-2xl mx-auto space-y-2">
-            <span className="text-xs font-black uppercase text-[#203a2d]">
+          <div className="text-center max-w-2xl mx-auto space-y-2 px-2 sm:px-0">
+            <span className="text-[10px] sm:text-xs font-black uppercase text-[#203a2d]">
               Institutional Reliability
             </span>
-            <h2 className="font-editorial text-3xl sm:text-4xl font-semibold text-[#16231c]">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl font-semibold text-[#16231c]">
               Trusted Across India&apos;s Prime Metro Hubs
             </h2>
           </div>
         </ScrollReveal>
 
         <ScrollReveal delay={50}>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto text-center items-center">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 max-w-5xl mx-auto text-center items-center">
             <div 
               ref={statsBox1Ref} 
-              className="p-6 rounded-3xl bg-[#f8f7f4] border border-[#e3e1d8] space-y-1 will-change-transform transform-gpu shadow-xs"
+              className="p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#f8f7f4] border border-[#e3e1d8] space-y-0.5 sm:space-y-1 will-change-transform transform-gpu shadow-xs"
             >
-              <div className="font-editorial text-3xl sm:text-5xl font-semibold text-[#203a2d]">₹142Cr+</div>
-              <div className="text-xs text-[#6e7972] font-semibold mt-1">Gross Assets Under Management</div>
+              <div className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#203a2d]">₹142Cr+</div>
+              <div className="text-[10px] sm:text-xs text-[#6e7972] font-semibold mt-1">Gross Assets Under Management</div>
             </div>
 
-            <div className="p-6 rounded-3xl bg-[#f8f7f4] border border-[#e3e1d8] space-y-1 shadow-xs">
-              <div className="font-editorial text-3xl sm:text-5xl font-semibold text-[#16231c]">18,400+</div>
-              <div className="text-xs text-[#6e7972] font-semibold mt-1">Managed Units &amp; Co-Living Beds</div>
+            <div className="p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#f8f7f4] border border-[#e3e1d8] space-y-0.5 sm:space-y-1 shadow-xs">
+              <div className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#16231c]">18,400+</div>
+              <div className="text-[10px] sm:text-xs text-[#6e7972] font-semibold mt-1">Managed Units &amp; Beds</div>
             </div>
 
-            <div className="p-6 rounded-3xl bg-[#f8f7f4] border border-[#e3e1d8] space-y-1 shadow-xs">
-              <div className="font-editorial text-3xl sm:text-5xl font-semibold text-emerald-700">99.4%</div>
-              <div className="text-xs text-[#6e7972] font-semibold mt-1">On-Time Rent Collection Rate</div>
+            <div className="p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#f8f7f4] border border-[#e3e1d8] space-y-0.5 sm:space-y-1 shadow-xs">
+              <div className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-emerald-700">99.4%</div>
+              <div className="text-[10px] sm:text-xs text-[#6e7972] font-semibold mt-1">On-Time Rent Collection</div>
             </div>
 
             <div 
               ref={statsBox4Ref} 
-              className="p-6 rounded-3xl bg-[#f8f7f4] border border-[#e3e1d8] space-y-1 will-change-transform transform-gpu shadow-xs"
+              className="p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#f8f7f4] border border-[#e3e1d8] space-y-0.5 sm:space-y-1 will-change-transform transform-gpu shadow-xs"
             >
-              <div className="font-editorial text-3xl sm:text-5xl font-semibold text-[#16231c]">100%</div>
-              <div className="text-xs text-[#6e7972] font-semibold mt-1">Axis Bank Escrow Settled</div>
+              <div className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#16231c]">100%</div>
+              <div className="text-[10px] sm:text-xs text-[#6e7972] font-semibold mt-1">Axis Bank Escrow Settled</div>
             </div>
           </div>
         </ScrollReveal>
 
         {/* Landlord Testimonial */}
         <ScrollReveal delay={80}>
-          <div className="max-w-3xl mx-auto p-7 sm:p-9 rounded-3xl bg-[#f4f3ef] border border-[#e3e1d8] text-center space-y-4">
+          <div 
+            ref={testimonialRef}
+            className="max-w-3xl mx-auto p-5 sm:p-8 lg:p-9 rounded-2xl sm:rounded-3xl bg-[#f4f3ef] border border-[#e3e1d8] text-center space-y-3 sm:space-y-4 will-change-transform transform-gpu shadow-xs"
+          >
             <div className="flex justify-center text-amber-500 gap-1">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="h-4 w-4 fill-amber-500" />
+                <Star key={i} className="h-3.5 w-3.5 sm:h-4 sm:w-4 fill-amber-500" />
               ))}
             </div>
-            <p className="font-editorial text-base sm:text-lg text-[#16231c] italic leading-relaxed">
+            <p className="font-editorial text-sm sm:text-base lg:text-lg text-[#16231c] italic leading-relaxed px-1 sm:px-0">
               &ldquo;Staywise simplified our entire landlord workflow. We manage 120 flats and two PG campuses in Bangalore. Rent collection happens like clockwork on Day 3 via WhatsApp UPI QR codes, and our tenants love the MoveFlow digital inspection checklists.&rdquo;
             </p>
-            <div className="text-xs">
+            <div className="text-[11px] sm:text-xs">
               <div className="font-extrabold text-[#16231c]">Vikramaditya Singhania</div>
               <div className="text-[#6e7972]">Singhania Asset Holdings LLP (Bangalore)</div>
             </div>
@@ -932,16 +1163,16 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       <section 
         id="pricing" 
         ref={pricingSectionRef} 
-        className="py-16 sm:py-20 px-6 sm:px-12 bg-[#faf9f6] border-t border-[#eeece5] space-y-10 overflow-hidden"
+        className="py-12 sm:py-16 lg:py-20 px-4 sm:px-6 lg:px-12 bg-[#faf9f6] border-t border-[#eeece5] space-y-8 sm:space-y-10 overflow-hidden"
       >
         <ScrollReveal>
-          <div className="text-center max-w-3xl mx-auto space-y-3">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#e8eee9] text-[#203a2d] text-xs font-bold">
+          <div className="text-center max-w-3xl mx-auto space-y-2 sm:space-y-3 px-2 sm:px-0">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-3.5 py-1 rounded-full bg-[#e8eee9] text-[#203a2d] text-[10px] sm:text-xs font-bold">
               <Sparkles className="h-3.5 w-3.5" />
               <span>7-Day Risk-Free Trial On Every Plan</span>
             </div>
 
-            <h2 className="font-editorial text-3xl sm:text-5xl font-semibold text-[#16231c]">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#16231c]">
               Transparent Plans. ₹0 Due Today.
             </h2>
 
@@ -950,12 +1181,12 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             </p>
 
             {/* Monthly / Annual Toggle */}
-            <div className="pt-2 flex items-center justify-center">
-              <div className="inline-flex items-center p-1 rounded-full bg-white border border-[#e3e1d8] shadow-xs">
+            <div className="pt-2 flex items-center justify-center w-full px-1">
+              <div className="inline-flex items-center p-1 rounded-full bg-white border border-[#e3e1d8] shadow-xs max-w-full">
                 <button
                   type="button"
                   onClick={() => setBillingCycle('monthly')}
-                  className={`px-4.5 py-1.5 rounded-full text-xs font-bold transition-all duration-100 cursor-pointer ${
+                  className={`px-3 sm:px-4.5 py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 cursor-pointer whitespace-nowrap ${
                     billingCycle === 'monthly'
                       ? 'bg-[#16231c] text-white shadow-xs'
                       : 'text-[#6e7972] hover:text-[#19251f]'
@@ -967,15 +1198,15 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 <button
                   type="button"
                   onClick={() => setBillingCycle('annual')}
-                  className={`px-4.5 py-1.5 rounded-full text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer ${
+                  className={`px-3 sm:px-4.5 py-1.5 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1 sm:gap-1.5 cursor-pointer whitespace-nowrap ${
                     billingCycle === 'annual'
                       ? 'bg-[#16231c] text-white shadow-xs'
                       : 'text-[#6e7972] hover:text-[#19251f]'
                   }`}
                 >
                   <span>Annual Commitment</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold">
-                    Save 17% (2 Mo Free)
+                  <span className="text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold whitespace-nowrap">
+                    Save 17%
                   </span>
                 </button>
               </div>
@@ -984,17 +1215,17 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
         </ScrollReveal>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto items-stretch">
           
           {/* TIER 1: STARTER */}
           <ScrollReveal delay={40} className="flex">
-            <div className="w-full rounded-3xl bg-white border border-[#e3e1d8] p-6 sm:p-7 flex flex-col justify-between space-y-5 shadow-xs hover:shadow-md transition-shadow duration-150">
+            <div className="w-full rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] p-5 sm:p-7 flex flex-col justify-between space-y-5 shadow-xs hover:shadow-md transition-shadow duration-150">
               <div className="space-y-4">
                 <div>
                   <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#f4f3ef] text-[#6e7972]">
                     Starter Landlord
                   </span>
-                  <h3 className="font-editorial text-xl font-bold text-[#16231c] mt-2">Starter Estate OS</h3>
+                  <h3 className="font-editorial text-lg sm:text-xl font-bold text-[#16231c] mt-2">Starter Estate OS</h3>
                   <p className="text-xs text-[#6e7972] mt-0.5">
                     Ideal for single-building landlords &amp; duplex assets.
                   </p>
@@ -1051,9 +1282,9 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           <ScrollReveal delay={80} className="flex">
             <div 
               ref={pricingFeaturedCardRef}
-              className="w-full rounded-3xl bg-white border-2 border-[#203a2d] p-6 sm:p-7 flex flex-col justify-between space-y-5 shadow-lg relative transform lg:-translate-y-2 will-change-transform transform-gpu"
+              className="w-full rounded-2xl sm:rounded-3xl bg-white border-2 border-[#203a2d] p-5 sm:p-7 flex flex-col justify-between space-y-5 shadow-lg relative transform lg:-translate-y-2 will-change-transform transform-gpu"
             >
-              <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-[#203a2d] text-white text-xs font-black uppercase tracking-wider shadow-xs">
+              <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-[#203a2d] text-white text-[11px] sm:text-xs font-black uppercase tracking-wider shadow-xs whitespace-nowrap">
                 Most Popular
               </span>
 
@@ -1062,7 +1293,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#e8eee9] text-[#203a2d]">
                     Growth Portfolios
                   </span>
-                  <h3 className="font-editorial text-2xl font-bold text-[#16231c] mt-2">Growth Portfolio Pro OS</h3>
+                  <h3 className="font-editorial text-xl sm:text-2xl font-bold text-[#16231c] mt-2">Growth Portfolio Pro OS</h3>
                   <p className="text-xs text-[#6e7972] mt-0.5">
                     Unified multi-asset system with sub-meter OCR &amp; MoveFlow.
                   </p>
@@ -1070,7 +1301,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                 <div className="pt-2 pb-4 border-b border-[#eeece5]">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-4xl sm:text-5xl font-black text-[#16231c]">
+                    <span className="text-3xl xs:text-4xl sm:text-5xl font-black text-[#16231c]">
                       ₹{billingCycle === 'annual' ? Math.round(79990 / 12).toLocaleString('en-IN') : (7999).toLocaleString('en-IN')}
                     </span>
                     <span className="text-xs text-[#6e7972]">/month</span>
@@ -1108,7 +1339,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 <button
                   type="button"
                   onClick={() => handleOpenTrial('growth_pro')}
-                  className="w-full py-3.5 rounded-full bg-[#203a2d] hover:bg-[#172b21] text-white font-bold text-sm shadow-md shadow-[#203a2d]/20 transition duration-150 cursor-pointer"
+                  className="w-full py-3 sm:py-3.5 rounded-full bg-[#203a2d] hover:bg-[#172b21] text-white font-bold text-xs sm:text-sm shadow-md shadow-[#203a2d]/20 transition duration-150 cursor-pointer"
                 >
                   Start 7-Day Free Trial (₹0 Today)
                 </button>
@@ -1121,13 +1352,13 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
           {/* TIER 3: ENTERPRISE */}
           <ScrollReveal delay={110} className="flex">
-            <div className="w-full rounded-3xl bg-white border border-[#e3e1d8] p-6 sm:p-7 flex flex-col justify-between space-y-5 shadow-xs hover:shadow-md transition-shadow duration-150">
+            <div className="w-full rounded-2xl sm:rounded-3xl bg-white border border-[#e3e1d8] p-5 sm:p-7 flex flex-col justify-between space-y-5 shadow-xs hover:shadow-md transition-shadow duration-150">
               <div className="space-y-4">
                 <div>
                   <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#f4f3ef] text-[#6e7972]">
                     Enterprise Institutional
                   </span>
-                  <h3 className="font-editorial text-xl font-bold text-[#16231c] mt-2">Institutional Master OS</h3>
+                  <h3 className="font-editorial text-lg sm:text-xl font-bold text-[#16231c] mt-2">Institutional Master OS</h3>
                   <p className="text-xs text-[#6e7972] mt-0.5">
                     For family offices, LLPs &amp; commercial campuses.
                   </p>
@@ -1184,12 +1415,15 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
         {/* Trial Guarantee Callout */}
         <ScrollReveal delay={70}>
-          <div className="max-w-4xl mx-auto p-5 sm:p-6 rounded-3xl bg-[#e8eee9] border border-[#cbd8ce] flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="h-9 w-9 rounded-full bg-[#203a2d] text-white flex items-center justify-center shrink-0 shadow-xs">
-                <ShieldCheck className="h-4.5 w-4.5" />
+          <div 
+            ref={pricingGuaranteeRef}
+            className="max-w-4xl mx-auto p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#e8eee9] border border-[#cbd8ce] flex flex-col sm:flex-row items-center justify-between gap-4 will-change-transform transform-gpu"
+          >
+            <div className="flex items-start sm:items-center gap-3 sm:gap-3.5">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-[#203a2d] text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5 sm:mt-0">
+                <ShieldCheck className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </div>
-              <div className="text-xs text-[#203a2d]">
+              <div className="text-[11px] sm:text-xs text-[#203a2d] leading-relaxed">
                 <span className="font-extrabold">How does the 7-day trial autopay work? </span>
                 <span className="text-[#3b5949]">
                   ₹0.00 is charged today. You connect your card or bank account, but payment is only processed on Day 7 if you keep the plan. Cancel anytime before Day 7 from Settings with 1 click to pay nothing.
@@ -1199,7 +1433,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
             <button
               onClick={() => handleOpenTrial('growth_pro')}
-              className="px-5 py-2 rounded-full bg-[#203a2d] hover:bg-[#172b21] text-white font-bold text-xs shrink-0 transition-colors shadow-xs cursor-pointer"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-[#203a2d] hover:bg-[#172b21] text-white font-bold text-xs shrink-0 transition-colors shadow-xs cursor-pointer text-center"
             >
               Start Free Trial →
             </button>
@@ -1211,21 +1445,28 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       {/* ---------------------------------------------------- */}
       {/* 8. FREQUENTLY ASKED QUESTIONS (#faq)                 */}
       {/* ---------------------------------------------------- */}
-      <section id="faq" className="py-12 sm:py-16 px-6 sm:px-12 bg-white space-y-8">
+      <section 
+        id="faq" 
+        ref={faqSectionRef}
+        className="py-12 sm:py-16 px-4 sm:px-6 lg:px-12 bg-white space-y-6 sm:space-y-8 overflow-hidden"
+      >
         
         <ScrollReveal>
-          <div className="text-center max-w-2xl mx-auto space-y-2">
-            <span className="text-xs font-black uppercase text-[#203a2d]">
+          <div className="text-center max-w-2xl mx-auto space-y-2 px-2 sm:px-0">
+            <span className="text-[10px] sm:text-xs font-black uppercase text-[#203a2d]">
               Questions &amp; Answers
             </span>
-            <h2 className="font-editorial text-3xl sm:text-4xl font-semibold text-[#16231c]">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl font-semibold text-[#16231c]">
               Frequently Asked Questions
             </h2>
           </div>
         </ScrollReveal>
 
         <ScrollReveal delay={70}>
-          <div className="max-w-3xl mx-auto space-y-3">
+          <div 
+            ref={faqContainerRef}
+            className="max-w-3xl mx-auto space-y-2.5 sm:space-y-3 will-change-transform transform-gpu"
+          >
             {[
               {
                 q: "Will I be charged anything today when signing up for the 7-day trial?",
@@ -1248,18 +1489,18 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               return (
                 <div 
                   key={idx}
-                  className="rounded-2xl bg-[#faf9f6] border border-[#e3e1d8] overflow-hidden transition-colors duration-100"
+                  className="rounded-xl sm:rounded-2xl bg-[#faf9f6] border border-[#e3e1d8] overflow-hidden transition-colors duration-100"
                 >
                   <button
                     type="button"
                     onClick={() => toggleFaq(idx)}
-                    className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 font-bold text-sm text-[#16231c] hover:text-[#203a2d] transition-colors cursor-pointer"
+                    className="w-full p-3.5 sm:p-5 text-left flex items-center justify-between gap-3 font-bold text-xs sm:text-sm text-[#16231c] hover:text-[#203a2d] transition-colors cursor-pointer"
                   >
-                    <span>{faq.q}</span>
+                    <span className="leading-snug">{faq.q}</span>
                     <ChevronDown className={`h-4 w-4 text-[#6e7972] shrink-0 transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {isOpen && (
-                    <div className="px-5 pb-4 pt-1 text-xs text-[#6e7972] leading-relaxed border-t border-[#eeece5]">
+                    <div className="px-3.5 sm:px-5 pb-3.5 sm:pb-4 pt-1 text-[11px] sm:text-xs text-[#6e7972] leading-relaxed border-t border-[#eeece5]">
                       {faq.a}
                     </div>
                   )}
@@ -1274,29 +1515,59 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       {/* ---------------------------------------------------- */}
       {/* 9. CLEAN MINIMALIST FOOTER                           */}
       {/* ---------------------------------------------------- */}
-      <footer className="bg-[#16231c] text-white/80 py-12 px-6 sm:px-12 text-xs relative overflow-hidden">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6 relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-white text-[#16231c] flex items-center justify-center font-bold text-xs">
-              SW
+      <footer className="bg-[#16231c] text-white/80 py-10 sm:py-12 px-4 sm:px-6 lg:px-12 text-xs relative overflow-hidden">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 text-center md:text-left">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white text-[#16231c] flex items-center justify-center font-bold text-xs shrink-0">
+                SW
+              </div>
+              <span className="font-extrabold text-white text-sm tracking-tight">STAYWISE</span>
             </div>
-            <span className="font-extrabold text-white text-sm tracking-tight">STAYWISE</span>
-            <span className="text-white/40">|</span>
-            <span className="text-[11px] text-white/60">Operating System for Real Estate &amp; Rentals</span>
+            <span className="hidden sm:inline text-white/40">|</span>
+            <span className="text-[10px] sm:text-[11px] text-white/60">Operating System for Real Estate &amp; Rentals</span>
           </div>
 
-          <div className="flex items-center gap-6 text-[11px] text-white/70">
-            <a href="#overview" className="hover:text-white transition-colors">Home</a>
-            <a href="#interactive-building" className="hover:text-white transition-colors">Architecture</a>
-            <a href="#solutions" className="hover:text-white transition-colors">Solutions</a>
-            <a href="#pricing" className="hover:text-white transition-colors">Pricing Plans</a>
-            <a href="/login" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors flex items-center gap-1 text-emerald-300 font-semibold">
+          <div className="flex flex-wrap items-center justify-center gap-3.5 sm:gap-6 text-[11px] text-white/70">
+            <a 
+              href="#overview" 
+              onClick={(e) => handleNavClick(e, '#overview')}
+              className="hover:text-white transition-colors cursor-pointer"
+            >
+              Home
+            </a>
+            <a 
+              href="#interactive-building" 
+              onClick={(e) => handleNavClick(e, '#interactive-building')}
+              className="hover:text-white transition-colors cursor-pointer"
+            >
+              Architecture
+            </a>
+            <a 
+              href="#solutions" 
+              onClick={(e) => handleNavClick(e, '#solutions')}
+              className="hover:text-white transition-colors cursor-pointer"
+            >
+              Solutions
+            </a>
+            <a 
+              href="#pricing" 
+              onClick={(e) => handleNavClick(e, '#pricing')}
+              className="hover:text-white transition-colors cursor-pointer"
+            >
+              Pricing Plans
+            </a>
+            <a 
+              href="/login" 
+              onClick={handleSignInClick}
+              className="hover:text-white transition-colors flex items-center gap-1 text-emerald-300 font-semibold cursor-pointer"
+            >
               <span>Member Sign in</span>
               <ArrowUpRight className="h-3 w-3" />
             </a>
           </div>
 
-          <div className="text-[11px] text-white/50">
+          <div className="text-[10px] sm:text-[11px] text-white/50">
             &copy; {new Date().getFullYear()} Staywise Technologies Pvt. Ltd. All rights reserved.
           </div>
         </div>

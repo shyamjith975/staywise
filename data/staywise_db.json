@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-10-04T08:50:33.360Z",
+  "lastUpdated": "2026-10-04T10:24:12.144Z",
   "users": [
     {
       "id": "user-owner-vikram",
@@ -97,9 +97,52 @@
       "description": "Bangalore • 7-Day Free Trial Active • Autopay Secured",
       "id": "user-owner-1791103833075",
       "createdAt": "2026-10-04T08:50:33.075Z"
+    },
+    {
+      "email": "shyam@staywise.com",
+      "password": "12345678",
+      "name": "shyam",
+      "role": "owner",
+      "roleLabel": "Property Owner",
+      "avatar": "👨‍💼",
+      "title": "kuleri Owner",
+      "description": "Bangalore • Registered Asset Workspace • Escrow Bank Account Active",
+      "id": "user-owner-1791109452130",
+      "createdAt": "2026-10-04T10:24:12.131Z"
     }
   ],
   "properties": [
+    {
+      "name": "kuleri Residency",
+      "type": "Apartment",
+      "portfolio": "kuleri",
+      "address": "Central Commercial Boulevard",
+      "city": "Bangalore",
+      "state": "Karnataka",
+      "pincode": "560001",
+      "totalUnits": 6,
+      "occupiedUnits": 0,
+      "expectedMonthlyRent": 150000,
+      "collectedRent": 0,
+      "pendingRent": 150000,
+      "imageUrl": "/images/properties/beach-road.jpg",
+      "status": "VACANT",
+      "healthScore": 92,
+      "verificationStatus": "PENDING",
+      "submittedDocs": [
+        "Title_Deed_Ownership_Registration.pdf",
+        "Municipal_Building_Permit_2026.pdf",
+        "Fire_Safety_NOC_Clearance.pdf"
+      ],
+      "amenities": [
+        "Covered Parking",
+        "24/7 Security & CCTV",
+        "Solar Rooftop Grid",
+        "Smart Access Keyless Entry"
+      ],
+      "units": [],
+      "id": "prop-1791109452143"
+    },
     {
       "name": "Sen Luxury Estates Residency",
       "type": "Apartment",

@@ -11,9 +11,22 @@ function LoginContent() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/');
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('staywise_is_authenticated', 'true');
+          localStorage.setItem('staywise_active_view', 'dashboard');
+        } catch (e) {}
+        if (window.opener && !window.opener.closed) {
+          try {
+            window.opener.location.href = '/?view=dashboard';
+            window.close();
+            return;
+          } catch (e) {}
+        }
+        window.location.href = '/?view=dashboard';
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated]);
 
   return (
     <LoginView

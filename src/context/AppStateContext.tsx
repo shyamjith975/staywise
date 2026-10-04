@@ -360,7 +360,15 @@ const INITIAL_ELECTRICITY_BILLS: ElectricityBill[] = [
 ];
 
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return localStorage.getItem('staywise_is_authenticated') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+  const [isHydrated, setIsHydrated] = useState<boolean>(false);
   const [activeRole, setActiveRole] = useState<UserRole>('owner');
   const [currentUser, setCurrentUser] = useState<DemoCredential>(DEMO_CREDENTIALS.owner);
   const [activePortfolio, setActivePortfolio] = useState<string>('all');
@@ -376,12 +384,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       const urlRole = urlParams.get('role') as UserRole | null;
       const urlPortfolio = urlParams.get('portfolio');
 
+      const savedAuth = localStorage.getItem('staywise_is_authenticated');
       const savedView = urlView || localStorage.getItem('staywise_active_view');
       const savedRole = (urlRole && DEMO_CREDENTIALS[urlRole] ? urlRole : (localStorage.getItem('staywise_active_role') as UserRole | null));
       const savedUser = localStorage.getItem('staywise_current_user');
       const savedPortfolio = urlPortfolio || localStorage.getItem('staywise_active_portfolio');
-      const savedAuth = localStorage.getItem('staywise_is_authenticated');
 
+      if (savedAuth === 'true') {
+        setIsAuthenticated(true);
+      }
       if (savedView) {
         setActiveView(savedView);
       }
@@ -397,19 +408,16 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       if (savedPortfolio) {
         setActivePortfolio(savedPortfolio);
       }
-      if (savedAuth === 'true') {
-        setIsAuthenticated(true);
-      } else {
-        setIsAuthenticated(false);
-      }
     } catch (e) {
       console.warn('[Staywise State] Failed to hydrate session:', e);
+    } finally {
+      setIsHydrated(true);
     }
   }, []);
 
   // 2. Synchronize active state changes to localStorage and URL query params
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !isHydrated) return;
     try {
       localStorage.setItem('staywise_is_authenticated', String(isAuthenticated));
       
@@ -441,7 +449,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       }
       window.history.replaceState({}, '', url.toString());
     } catch (e) {}
-  }, [activeView, activeRole, activePortfolio, currentUser, isAuthenticated]);
+  }, [activeView, activeRole, activePortfolio, currentUser, isAuthenticated, isHydrated]);
 
   const handleRoleChange = (role: UserRole) => {
     setActiveRole(role);
@@ -450,22 +458,29 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   const login = (role: UserRole, customUser?: Partial<DemoCredential>) => {
     setActiveRole(role);
-    if (customUser) {
-      setCurrentUser({
-        role,
-        email: customUser.email || DEMO_CREDENTIALS[role]?.email || 'user@staywise.com',
-        pass: customUser.pass || '******',
-        name: customUser.name || 'Member',
-        roleLabel: customUser.roleLabel || DEMO_CREDENTIALS[role]?.roleLabel || 'Member',
-        avatar: customUser.avatar || DEMO_CREDENTIALS[role]?.avatar || '👤',
-        title: customUser.title || DEMO_CREDENTIALS[role]?.title || 'Portal Member',
-        description: customUser.description || DEMO_CREDENTIALS[role]?.description || 'Active Member'
-      });
-    } else {
-      setCurrentUser(DEMO_CREDENTIALS[role] || DEMO_CREDENTIALS.owner);
-    }
+    const userToSet = customUser ? {
+      role,
+      email: customUser.email || DEMO_CREDENTIALS[role]?.email || 'user@staywise.com',
+      pass: customUser.pass || '******',
+      name: customUser.name || 'Member',
+      roleLabel: customUser.roleLabel || DEMO_CREDENTIALS[role]?.roleLabel || 'Member',
+      avatar: customUser.avatar || DEMO_CREDENTIALS[role]?.avatar || '👤',
+      title: customUser.title || DEMO_CREDENTIALS[role]?.title || 'Portal Member',
+      description: customUser.description || DEMO_CREDENTIALS[role]?.description || 'Active Member'
+    } : (DEMO_CREDENTIALS[role] || DEMO_CREDENTIALS.owner);
+
+    setCurrentUser(userToSet);
     setIsAuthenticated(true);
     setActiveView('dashboard');
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('staywise_is_authenticated', 'true');
+        localStorage.setItem('staywise_active_role', role);
+        localStorage.setItem('staywise_active_view', 'dashboard');
+        localStorage.setItem('staywise_current_user', JSON.stringify(userToSet));
+      } catch (e) {}
+    }
   };
 
   const signupUser = async (userData: {
