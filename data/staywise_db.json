@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "lastUpdated": "2026-10-03T19:45:36.622Z",
+  "lastUpdated": "2026-10-04T08:50:33.360Z",
   "users": [
     {
       "id": "user-owner-vikram",
@@ -85,9 +85,51 @@
       "description": "Goa • Registered Asset Workspace • Escrow Bank Account Active",
       "id": "user-estate_manager-1791056628238",
       "createdAt": "2026-10-03T19:43:48.239Z"
+    },
+    {
+      "email": "ananya.trial2015225872@realtyholdings.in",
+      "password": "TrialPassword@123",
+      "name": "Ananya Sen",
+      "role": "owner",
+      "roleLabel": "Property Owner",
+      "avatar": "👨‍💼",
+      "title": "Sen Luxury Estates Operator",
+      "description": "Bangalore • 7-Day Free Trial Active • Autopay Secured",
+      "id": "user-owner-1791103833075",
+      "createdAt": "2026-10-04T08:50:33.075Z"
     }
   ],
   "properties": [
+    {
+      "name": "Sen Luxury Estates Residency",
+      "type": "Apartment",
+      "portfolio": "Sen Luxury Estates",
+      "address": "Central Avenue Heights",
+      "city": "Bangalore",
+      "state": "Karnataka",
+      "pincode": "560001",
+      "totalUnits": 8,
+      "occupiedUnits": 0,
+      "expectedMonthlyRent": 180000,
+      "collectedRent": 0,
+      "pendingRent": 180000,
+      "imageUrl": "/images/properties/beach-road.jpg",
+      "status": "VACANT",
+      "healthScore": 94,
+      "verificationStatus": "PENDING",
+      "submittedDocs": [
+        "Title_Ownership_Registration.pdf",
+        "Municipal_Clearance.pdf"
+      ],
+      "amenities": [
+        "Covered Parking",
+        "24/7 CCTV & Security",
+        "Keyless Access",
+        "Power Backup"
+      ],
+      "units": [],
+      "id": "prop-1791103833084"
+    },
     {
       "id": "prop-hillview-heights",
       "name": "Hillview Heights Residency",
@@ -523,6 +565,94 @@
     }
   ],
   "ledger": [
+    {
+      "id": "led-cancel-1791103833360",
+      "timestamp": "2026-10-04 08:50:33",
+      "description": "7-Day Free Trial Cancelled by User before Day 7 - Autopay Mandate Revoked (₹0 Charged)",
+      "type": "DEBIT",
+      "amount": 0,
+      "account": "4010-PLATFORM-SAAS-CANCELLATION",
+      "entityType": "RENT",
+      "referenceId": "sub_trial_1791103833091",
+      "settlementStatus": "CLEARED"
+    },
+    {
+      "id": "led-trial-1791103833254",
+      "timestamp": "2026-10-04 08:50:33",
+      "description": "7-Day Free Trial Activated: Growth Portfolio Pro OS (ANNUAL) - Autopay Card: Visa/Mastercard ending in •••• 9842 [₹0 Due Today, Autopay Scheduled for 2026-10-11]",
+      "type": "CREDIT",
+      "amount": 0,
+      "account": "4010-PLATFORM-SAAS-TRIAL",
+      "entityType": "RENT",
+      "referenceId": "sub_trial_1791103833091",
+      "settlementStatus": "CLEARED"
+    },
+    {
+      "id": "led-sub-1791102749718",
+      "timestamp": "2026-10-04 08:32:29",
+      "description": "Platform Subscription: Growth Portfolio Pro OS (ANNUAL) - Axis Bank Escrow Auto-Debit [Authoritative Hash Verified]",
+      "type": "CREDIT",
+      "amount": 79990,
+      "account": "4010-PLATFORM-SAAS-REVENUE",
+      "entityType": "RENT",
+      "referenceId": "INV-STAY-SUB-1791102749716",
+      "settlementStatus": "CLEARED"
+    },
+    {
+      "id": "led-sub-1791102749195",
+      "timestamp": "2026-10-04 08:32:29",
+      "description": "Platform Subscription: Starter Estate OS (MONTHLY) - UPI [Authoritative Hash Verified]",
+      "type": "CREDIT",
+      "amount": 2499,
+      "account": "4010-PLATFORM-SAAS-REVENUE",
+      "entityType": "RENT",
+      "referenceId": "INV-STAY-SUB-1791102749169",
+      "settlementStatus": "CLEARED"
+    },
+    {
+      "id": "led-sub-1791102522613",
+      "timestamp": "2026-10-04 08:28:42",
+      "description": "Platform Subscription: Growth Portfolio Pro OS (ANNUAL) - Axis Bank Escrow Auto-Debit [Authoritative Hash Verified]",
+      "type": "CREDIT",
+      "amount": 79990,
+      "account": "4010-PLATFORM-SAAS-REVENUE",
+      "entityType": "RENT",
+      "referenceId": "INV-STAY-SUB-1791102522612",
+      "settlementStatus": "CLEARED"
+    },
+    {
+      "id": "led-sub-1791102522479",
+      "timestamp": "2026-10-04 08:28:42",
+      "description": "Platform Subscription: Starter Estate OS (MONTHLY) - UPI [Authoritative Hash Verified]",
+      "type": "CREDIT",
+      "amount": 2499,
+      "account": "4010-PLATFORM-SAAS-REVENUE",
+      "entityType": "RENT",
+      "referenceId": "INV-STAY-SUB-1791102522438",
+      "settlementStatus": "CLEARED"
+    },
+    {
+      "id": "led-sub-1791102445164",
+      "timestamp": "2026-10-04 08:27:25",
+      "description": "Platform Subscription: Growth Portfolio Pro OS (ANNUAL) - Axis Bank Escrow Auto-Debit [Authoritative Hash Verified]",
+      "type": "CREDIT",
+      "amount": 79990,
+      "account": "4010-PLATFORM-SAAS-REVENUE",
+      "entityType": "RENT",
+      "referenceId": "INV-STAY-SUB-1791102445163",
+      "settlementStatus": "CLEARED"
+    },
+    {
+      "id": "led-sub-1791102445037",
+      "timestamp": "2026-10-04 08:27:25",
+      "description": "Platform Subscription: Starter Estate OS (MONTHLY) - UPI [Authoritative Hash Verified]",
+      "type": "CREDIT",
+      "amount": 2499,
+      "account": "4010-PLATFORM-SAAS-REVENUE",
+      "entityType": "RENT",
+      "referenceId": "INV-STAY-SUB-1791102444896",
+      "settlementStatus": "CLEARED"
+    },
     {
       "id": "ledg-001",
       "timestamp": "2026-10-01 09:15 AM",
@@ -1685,6 +1815,187 @@
       "totalCommissionPaid": 45000,
       "status": "ACTIVE",
       "createdAt": "22 Aug 2026"
+    }
+  ],
+  "subscriptions": [
+    {
+      "id": "sub_trial_1791103833091",
+      "userId": "user-owner-1791103833075",
+      "ownerName": "Ananya Sen",
+      "entityName": "Sen Luxury Estates",
+      "planId": "growth_pro",
+      "planName": "Growth Portfolio Pro OS",
+      "status": "CANCELLED",
+      "billingCycle": "annual",
+      "startDate": "2026-10-04",
+      "endDate": "2026-10-11",
+      "daysRemaining": 7,
+      "amount": 79990,
+      "currency": "INR",
+      "maxUnits": 50,
+      "currentUnits": 1,
+      "paymentMethod": "Autopay Card: Visa/Mastercard ending in •••• 9842",
+      "lastPaymentTxnId": "TXN-TRIAL-MANDATE-1791103833091",
+      "lastPaymentDate": "2026-10-04",
+      "autoRenew": false,
+      "gstin": "29AAACS1928K1Z5",
+      "tamperProofHash": "f531717ae876add87992609d25e00afe9d5c32d2f887b67bccdda045f9d6b6d2",
+      "history": [
+        {
+          "invoiceId": "INV-TRIAL-TOKEN-1791103833092",
+          "date": "04 Oct 2026",
+          "amount": 0,
+          "currency": "INR",
+          "planId": "growth_pro",
+          "planName": "Growth Portfolio Pro OS (7-Day Free Trial - ₹0 Today)",
+          "billingCycle": "annual",
+          "txnId": "TXN-TRIAL-1791103833253",
+          "paymentMethod": "Card Tokenization (₹0.00 Auth)",
+          "status": "PAID",
+          "taxAmount": 0,
+          "gstin": "29AAACS1928K1Z5",
+          "downloadUrl": "#"
+        }
+      ],
+      "isTrial": false,
+      "trialDaysRemaining": 7,
+      "trialEndsAt": "2026-10-11",
+      "canCancelBefore": "2026-10-11",
+      "autopayConnected": false,
+      "autopayMethod": "CARD",
+      "autopayMaskedDetails": "Visa/Mastercard ending in •••• 9842",
+      "firstChargeAmount": 79990,
+      "firstChargeDate": "2026-10-11"
+    },
+    {
+      "id": "sub_vikram_2026",
+      "userId": "user-owner-vikram",
+      "ownerName": "Vikram Singhania",
+      "entityName": "Singhania Asset Holdings LLP",
+      "planId": "growth_pro",
+      "planName": "Growth Portfolio Pro OS",
+      "status": "ACTIVE",
+      "billingCycle": "annual",
+      "startDate": "2026-10-04",
+      "endDate": "2027-10-04",
+      "daysRemaining": 365,
+      "amount": 79990,
+      "currency": "INR",
+      "maxUnits": 50,
+      "currentUnits": 24,
+      "paymentMethod": "Axis Bank Escrow Auto-Debit",
+      "lastPaymentTxnId": "TXN-STAY-SUB-1791102749715",
+      "lastPaymentDate": "2026-10-04",
+      "autoRenew": true,
+      "gstin": "29AAACS1928K1Z5",
+      "tamperProofHash": "65291c8fb4e10092d6740dc8b205144f66b6b5e653dd46d69d63b670c568a6d2",
+      "history": [
+        {
+          "invoiceId": "INV-STAY-SUB-1791102749716",
+          "date": "04 Oct 2026",
+          "amount": 79990,
+          "currency": "INR",
+          "planId": "growth_pro",
+          "planName": "Growth Portfolio Pro OS (Annual)",
+          "billingCycle": "annual",
+          "txnId": "TXN-STAY-SUB-1791102749715",
+          "paymentMethod": "Axis Bank Escrow Auto-Debit",
+          "status": "PAID",
+          "taxAmount": 12202,
+          "gstin": "29AAACS1928K1Z5",
+          "downloadUrl": "#"
+        },
+        {
+          "invoiceId": "INV-STAY-SUB-1791102749169",
+          "date": "04 Oct 2026",
+          "amount": 2499,
+          "currency": "INR",
+          "planId": "starter",
+          "planName": "Starter Estate OS (Monthly)",
+          "billingCycle": "monthly",
+          "txnId": "TXN-STAY-SUB-1791102749168",
+          "paymentMethod": "UPI",
+          "status": "PAID",
+          "taxAmount": 381,
+          "gstin": "29AAACS1928K1Z5",
+          "downloadUrl": "#"
+        },
+        {
+          "invoiceId": "INV-STAY-SUB-1791102522612",
+          "date": "04 Oct 2026",
+          "amount": 79990,
+          "currency": "INR",
+          "planId": "growth_pro",
+          "planName": "Growth Portfolio Pro OS (Annual)",
+          "billingCycle": "annual",
+          "txnId": "TXN-STAY-SUB-1791102522612",
+          "paymentMethod": "Axis Bank Escrow Auto-Debit",
+          "status": "PAID",
+          "taxAmount": 12202,
+          "gstin": "29AAACS1928K1Z5",
+          "downloadUrl": "#"
+        },
+        {
+          "invoiceId": "INV-STAY-SUB-1791102522438",
+          "date": "04 Oct 2026",
+          "amount": 2499,
+          "currency": "INR",
+          "planId": "starter",
+          "planName": "Starter Estate OS (Monthly)",
+          "billingCycle": "monthly",
+          "txnId": "TXN-STAY-SUB-1791102522435",
+          "paymentMethod": "UPI",
+          "status": "PAID",
+          "taxAmount": 381,
+          "gstin": "29AAACS1928K1Z5",
+          "downloadUrl": "#"
+        },
+        {
+          "invoiceId": "INV-STAY-SUB-1791102445163",
+          "date": "04 Oct 2026",
+          "amount": 79990,
+          "currency": "INR",
+          "planId": "growth_pro",
+          "planName": "Growth Portfolio Pro OS (Annual)",
+          "billingCycle": "annual",
+          "txnId": "TXN-STAY-SUB-1791102445163",
+          "paymentMethod": "Axis Bank Escrow Auto-Debit",
+          "status": "PAID",
+          "taxAmount": 12202,
+          "gstin": "29AAACS1928K1Z5",
+          "downloadUrl": "#"
+        },
+        {
+          "invoiceId": "INV-STAY-SUB-1791102444896",
+          "date": "04 Oct 2026",
+          "amount": 2499,
+          "currency": "INR",
+          "planId": "starter",
+          "planName": "Starter Estate OS (Monthly)",
+          "billingCycle": "monthly",
+          "txnId": "TXN-STAY-SUB-1791102444895",
+          "paymentMethod": "UPI",
+          "status": "PAID",
+          "taxAmount": 381,
+          "gstin": "29AAACS1928K1Z5",
+          "downloadUrl": "#"
+        },
+        {
+          "invoiceId": "INV-STAY-SUB-2026-001",
+          "date": "01 Oct 2026",
+          "amount": 79990,
+          "currency": "INR",
+          "planId": "growth_pro",
+          "planName": "Growth Portfolio Pro OS (Annual)",
+          "billingCycle": "annual",
+          "txnId": "TXN-STAY-SUB-SECURE-98124",
+          "paymentMethod": "Axis Bank Escrow Auto-Debit",
+          "status": "PAID",
+          "gstin": "29AAACS1928K1Z5",
+          "taxAmount": 12202,
+          "downloadUrl": "#"
+        }
+      ]
     }
   ]
 }

@@ -53,21 +53,41 @@ import PGBedManagementView from '../components/modules/pg/PGBedManagementView';
 import CommercialCAMView from '../components/modules/commercial/CommercialCAMView';
 import MoveFlowRetentionView from '../components/modules/moveflow/MoveFlowRetentionView';
 import FindHomeView from '../components/modules/discovery/FindHomeView';
+import LandingPageView from '../components/landing/LandingPageView';
 
 function MainAppShell() {
   const { 
     isAuthenticated, 
     activeRole, 
     activeView, 
+    setActiveView,
     isUploadBillModalOpen, 
     setIsUploadBillModalOpen, 
     preselectedUnitForUpload 
   } = useAppState();
 
-  // If not logged in, render the dedicated multi-role login screen with temporary credentials
+  const [unauthScreen, setUnauthScreen] = React.useState<'landing' | 'login'>('landing');
+
+  // Check URL query parameters (?login=true or ?view=login)
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('login') === 'true' || urlParams.get('view') === 'login') {
+        setUnauthScreen('login');
+      }
+    } catch (e) {}
+  }, []);
+
+  // If not logged in, render the modern high-converting Landing Page by default
+  // with 1-click option to switch to LoginView or open 7-day trial modal
   if (!isAuthenticated) {
-    return <LoginView />;
+    if (unauthScreen === 'login') {
+      return <LoginView onBackToLanding={() => setUnauthScreen('landing')} />;
+    }
+    return <LandingPageView onNavigateToLogin={() => setUnauthScreen('login')} />;
   }
+
 
   const renderActiveView = () => {
     // Strict Tenant Boundary - Only allow self views

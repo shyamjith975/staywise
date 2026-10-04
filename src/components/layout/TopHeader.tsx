@@ -9,7 +9,8 @@ import {
   ShieldCheck, 
   ChevronDown,
   Sparkles,
-  UserCheck
+  UserCheck,
+  Globe
 } from 'lucide-react';
 
 export default function TopHeader() {
@@ -20,6 +21,8 @@ export default function TopHeader() {
     markAllNotificationsRead,
     setActiveRole,
     activeRole,
+    activeView,
+    setActiveView,
     logout 
   } = useAppState();
 
@@ -112,6 +115,7 @@ export default function TopHeader() {
             </div>
           )}
         </div>
+
 
         {/* Active Role Indicator Pill */}
         <div 

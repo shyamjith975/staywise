@@ -558,4 +558,114 @@ export interface InfluencerOffer {
   createdAt: string;
 }
 
+// ----------------------------------------------------
+// OWNER SUBSCRIPTION & ANTI-TAMPER SECURITY (Sections 47-50)
+// ----------------------------------------------------
+export type SubscriptionTierId = 'starter' | 'growth_pro' | 'enterprise';
+
+export interface SubscriptionPlan {
+  id: SubscriptionTierId;
+  name: string;
+  tagline: string;
+  monthlyPrice: number;
+  annualPrice: number;
+  maxUnits: number;
+  badge?: string;
+  popular?: boolean;
+  features: string[];
+}
+
+export interface SubscriptionInvoice {
+  invoiceId: string;
+  date: string;
+  amount: number;
+  currency: string;
+  planId: SubscriptionTierId;
+  planName: string;
+  billingCycle: 'monthly' | 'annual';
+  txnId: string;
+  paymentMethod: string;
+  status: 'PAID' | 'PENDING' | 'FAILED';
+  gstin?: string;
+  taxAmount: number;
+  downloadUrl?: string;
+}
+
+export interface OwnerSubscription {
+  id: string;
+  userId: string;
+  ownerName: string;
+  entityName: string;
+  planId: SubscriptionTierId;
+  planName: string;
+  status: 'ACTIVE' | 'EXPIRED' | 'TRIAL' | 'PAST_DUE' | 'CANCELLED';
+  billingCycle: 'monthly' | 'annual';
+  startDate: string;        // e.g. "2026-10-01"
+  endDate: string;          // e.g. "2027-10-01"
+  daysRemaining: number;
+  amount: number;
+  currency: string;
+  maxUnits: number;
+  currentUnits: number;
+  paymentMethod: string;
+  lastPaymentTxnId: string;
+  lastPaymentDate: string;
+  autoRenew: boolean;
+  gstin?: string;
+  tamperProofHash: string;  // SHA256 of immutable subscription parameters to prevent DB manipulation
+  history: SubscriptionInvoice[];
+  // 7-Day Free Trial & Autopay Fields
+  isTrial?: boolean;
+  trialDaysRemaining?: number;
+  trialEndsAt?: string;
+  canCancelBefore?: string;
+  autopayConnected?: boolean;
+  autopayMethod?: 'CARD' | 'BANK_MANDATE';
+  autopayMaskedDetails?: string;
+  firstChargeAmount?: number;
+  firstChargeDate?: string;
+}
+
+export interface SignedCheckoutSession {
+  sessionId: string;
+  sessionToken: string;
+  userId: string;
+  planId: SubscriptionTierId;
+  planName: string;
+  billingCycle: 'monthly' | 'annual';
+  authoritativeAmount: number;
+  currency: string;
+  nonce: string;
+  createdAt: number;
+  expiresAt: number;
+  signature: string;
+}
+
+export interface TrialSignupPayload {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  role: 'owner' | 'estate_manager';
+  portfolioName: string;
+  city: string;
+  planId: SubscriptionTierId;
+  billingCycle: 'monthly' | 'annual';
+  autopayMethod: 'CARD' | 'BANK_MANDATE';
+  cardDetails?: {
+    holderName: string;
+    cardNumberMasked: string;
+    expiry: string;
+    cardBrand?: string;
+  };
+  bankDetails?: {
+    accountHolder: string;
+    bankName: string;
+    accountNumberMasked: string;
+    ifsc: string;
+    mandateType?: 'E_NACH' | 'UPI_MANDATE';
+  };
+}
+
+
 

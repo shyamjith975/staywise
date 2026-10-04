@@ -8,6 +8,7 @@ import {
   Lock, 
   Mail, 
   ArrowRight, 
+  ArrowLeft,
   CheckCircle2, 
   ShieldCheck, 
   Eye, 
@@ -22,11 +23,17 @@ import {
   AlertCircle,
   Briefcase
 } from 'lucide-react';
+import TrialAutopayModal from '../landing/TrialAutopayModal';
 
-export default function LoginView() {
+interface LoginViewProps {
+  onBackToLanding?: () => void;
+}
+
+export default function LoginView({ onBackToLanding }: LoginViewProps) {
   const { login, signupUser } = useAppState();
 
   const [authMode, setAuthMode] = useState<'SIGNIN' | 'SIGNUP'>('SIGNIN');
+  const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
 
   // Sign In State
   const ALLOWED_LOGIN_ROLES: UserRole[] = ['owner', 'tenant', 'estate_manager'];
@@ -87,6 +94,30 @@ export default function LoginView() {
 
   return (
     <div className="min-h-screen bg-[#edece6] flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
+      
+      {/* Navigation bar to return to Landing Page */}
+      {onBackToLanding && (
+        <div className="mb-4 w-full max-w-2xl flex items-center justify-between">
+          <button
+            type="button"
+            onClick={onBackToLanding}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-white border border-[#e3e1d8] text-[#19251f] text-xs font-bold shadow-sm hover:bg-[#f4f3ef] transition"
+          >
+            <ArrowLeft className="h-3.5 w-3.5 text-[#274235]" />
+            <span>← Back to Website &amp; Pricing</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsTrialModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-extrabold shadow-sm hover:bg-emerald-100 transition"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+            <span>Start 7-Day Trial (₹0 Today)</span>
+          </button>
+        </div>
+      )}
+
       {/* Brand Header */}
       <div className="mb-5 text-center space-y-2">
         <div className="flex items-center justify-center gap-3">
@@ -530,6 +561,13 @@ export default function LoginView() {
         )}
 
       </div>
+
+      {/* 7-Day Trial Modal */}
+      <TrialAutopayModal
+        isOpen={isTrialModalOpen}
+        onClose={() => setIsTrialModalOpen(false)}
+      />
     </div>
   );
 }
+

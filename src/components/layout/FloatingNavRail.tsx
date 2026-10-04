@@ -19,7 +19,8 @@ import {
   Truck,
   Gift,
   Compass,
-  Sliders
+  Sliders,
+  Globe
 } from 'lucide-react';
 
 export default function FloatingNavRail() {
@@ -93,6 +94,7 @@ export default function FloatingNavRail() {
 
       {/* Bottom Section: Settings, Logout, Avatar */}
       <div className="flex flex-col items-center gap-2 pt-3 mt-2 border-t border-[#eeece5] w-full shrink-0">
+
         {activeRole !== 'tenant' && (
           <button
             onClick={() => setActiveView('settings')}

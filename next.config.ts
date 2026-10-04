@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
     "192.168.1.25",
     "localhost",
   ],
+  experimental: {
+    cpus: 1,
+    workerThreads: false,
+  },
   async headers() {
     return [
       {
