@@ -27,14 +27,14 @@ import { SubscriptionPlan, SubscriptionTierId, SignedCheckoutSession, OwnerSubsc
 export const SUBSCRIPTION_PLANS: Record<SubscriptionTierId, SubscriptionPlan> = {
   starter: {
     id: 'starter',
-    name: 'Starter Estate OS',
-    tagline: 'Ideal for single-building landlords & independent duplex assets',
-    monthlyPrice: 2499,
-    annualPrice: 24990, // ₹2,082/mo (Save 17%)
-    maxUnits: 10,
-    badge: 'Starter',
+    name: 'Starter (1 Property)',
+    tagline: '1 Property • Annual Plan for single-building landlords & independent assets',
+    monthlyPrice: 59,
+    annualPrice: 599, // ₹599/year (Approx ₹50/month)
+    maxUnits: 1,
+    badge: '1 Property • ₹599/yr',
     features: [
-      'Up to 10 Residential / Commercial Units',
+      '1 Property (PG, Flat, House or Commercial)',
       'Automated Rent Invoices & PDF Receipts',
       'WhatsApp Payment Reminder Automations',
       'Standard UPI Dynamic QR Code Collection',
@@ -44,41 +44,37 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTierId, SubscriptionPlan> = 
   },
   growth_pro: {
     id: 'growth_pro',
-    name: 'Growth Portfolio Pro OS',
-    tagline: 'Comprehensive operating system for growing multi-asset portfolios',
-    monthlyPrice: 7999,
-    annualPrice: 79990, // ₹6,665/mo (Save 17%)
-    maxUnits: 50,
-    badge: 'Most Popular',
+    name: 'Growth Pro (10 Properties)',
+    tagline: 'Up to 10 Properties • Annual Plan for growing multi-asset portfolios',
+    monthlyPrice: 149,
+    annualPrice: 1499, // ₹1,499/year (Approx ₹125/month)
+    maxUnits: 10,
+    badge: '10 Properties • ₹1,499/yr',
     popular: true,
     features: [
-      'Up to 50 Units, Flats & PG Co-living Beds',
+      'Up to 10 Properties & PG Co-living Buildings',
       'Sub-Meter Electricity OCR Bill Splitting & Tariffs',
       'Automated Multi-Day WhatsApp & SMS Dunning (T-3, Due, T+3)',
       'MoveFlow Digital Check-in / Check-out Inspections',
       'Statutory Double-Entry Ledger Surveillance',
-      'Influencer Promo Code & Affiliate Marketing Engine',
-      'Vacancy Cost Engine & Money Leak Detector',
-      '3 Delegated Role Logins (Accountant, Caretaker, Field Agent)'
+      '3 Delegated Role Logins (Accountant, Caretaker)'
     ]
   },
   enterprise: {
     id: 'enterprise',
-    name: 'Institutional Asset Master OS',
-    tagline: 'Enterprise-grade platform for asset trusts, LLPs & luxury campuses',
-    monthlyPrice: 19999,
-    annualPrice: 199990, // ₹16,665/mo (Save 17%)
-    maxUnits: 500,
-    badge: 'Enterprise Institutional',
+    name: 'Enterprise (Unlimited Properties)',
+    tagline: 'Unlimited Properties • Annual Plan for portfolios, LLPs & campuses',
+    monthlyPrice: 299,
+    annualPrice: 2999, // ₹2,999/year (Approx ₹250/month)
+    maxUnits: 99999,
+    badge: 'Unlimited Properties • ₹2,999/yr',
     features: [
-      'Unlimited Portfolios, Multi-Entity LLPs & Campuses',
+      'Unlimited Properties, Multi-Entity LLPs & Campuses',
       'Axis Bank Escrow Direct Instant T+0 Auto-Sweeps',
       'SuperAdmin Multi-Role Governance & Triage Queue',
       'RBI Regulated Double-Entry Immutable Ledger',
       'Commercial CAM Common Area Utility Allocation Engine',
-      'Automated Tenant KYC & TrustScore Background Verification',
-      'Priority 24/7 Dedicated Account Concierge with 1-hr SLA',
-      'Custom White-Label Domain & Unlimited Delegated Seats'
+      'Priority 24/7 Dedicated Account Concierge with 1-hr SLA'
     ]
   }
 };

@@ -7,11 +7,9 @@ import {
   UserPlus, 
   Send, 
   CheckCircle, 
-  FileText, 
-  Building, 
   Copy, 
   ShieldCheck,
-  ArrowRight
+  AlertCircle
 } from 'lucide-react';
 
 export default function ExistingTenantWizardModal() {
@@ -23,14 +21,17 @@ export default function ExistingTenantWizardModal() {
   } = useAppState();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     email: '',
     propertyId: properties[0]?.id || 'prop-beach-road',
-    unitNumber: '304',
-    monthlyRent: 26000,
-    deposit: 78000,
+    unitNumber: '',
+    monthlyRent: '' as any,
+    deposit: '' as any,
     leaseStart: '2026-10-01',
     leaseEnd: '2027-09-30',
     rentDueDate: 5
@@ -40,27 +41,71 @@ export default function ExistingTenantWizardModal() {
 
   if (!isExistingTenantWizardOpen) return null;
 
+  const clearFieldError = (field: string) => {
+    setFieldErrors(prev => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+    if (validationError) setValidationError(null);
+  };
+
   const handleSendInvite = (e: React.FormEvent) => {
     e.preventDefault();
+    const errors: Record<string, string> = {};
+    setValidationError(null);
+
+    if (!formData.name.trim() || formData.name.trim().length < 2) {
+      errors.name = 'Full name is required (min 2 chars)';
+    }
+    const cleanPhone = formData.phone.replace(/\D/g, '');
+    if (cleanPhone.length < 10) {
+      errors.phone = 'Valid 10-digit phone required';
+    }
+    if (!formData.email.trim() || !formData.email.includes('@') || !formData.email.includes('.')) {
+      errors.email = 'Valid email is required';
+    }
+    if (!formData.unitNumber.trim()) {
+      errors.unitNumber = 'Unit number is required';
+    }
+    if (!formData.monthlyRent || Number(formData.monthlyRent) <= 0) {
+      errors.monthlyRent = 'Enter valid rent (₹)';
+    }
+
+    setFieldErrors(errors);
+    const errorCount = Object.keys(errors).length;
+    if (errorCount > 0) {
+      setValidationError(`Please fill out the ${errorCount} required field${errorCount > 1 ? 's' : ''} highlighted.`);
+      return;
+    }
+
     setStep(2);
   };
 
   const handleSimulateTenantAcceptance = () => {
-    addExistingTenant(formData);
+    addExistingTenant({
+      ...formData,
+      unitNumber: formData.unitNumber || '101',
+      monthlyRent: Number(formData.monthlyRent) || 25000,
+      deposit: Number(formData.deposit) || 50000
+    });
     setStep(3);
   };
 
   const handleClose = () => {
     setIsExistingTenantWizardOpen(false);
+    setValidationError(null);
+    setFieldErrors({});
     setStep(1);
     setFormData({
       name: '',
       phone: '',
       email: '',
       propertyId: properties[0]?.id || 'prop-beach-road',
-      unitNumber: '304',
-      monthlyRent: 26000,
-      deposit: 78000,
+      unitNumber: '',
+      monthlyRent: '' as any,
+      deposit: '' as any,
       leaseStart: '2026-10-01',
       leaseEnd: '2027-09-30',
       rentDueDate: 5
@@ -72,9 +117,9 @@ export default function ExistingTenantWizardModal() {
   return (
     <div 
       onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
-      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 font-sans overflow-y-auto"
+      className="fixed inset-0 z-50 bg-[#19251f]/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 font-sans overflow-y-auto"
     >
-      <div className="w-full max-w-xl bg-white border border-[#e3e1d8] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto">
+      <div className="w-full max-w-xl bg-white border border-[#e3e1d8] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto animate-in fade-in zoom-in-95 duration-200">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#eeece5] bg-[#fbfbfa]">
           <div className="flex items-center gap-2.5">
@@ -89,7 +134,7 @@ export default function ExistingTenantWizardModal() {
           <button 
             type="button"
             onClick={handleClose} 
-            className="h-8 w-8 rounded-full flex items-center justify-center text-[#6e7972] hover:text-[#19251f] hover:bg-[#f4f3ef] transition"
+            className="h-8 w-8 rounded-full flex items-center justify-center text-[#6e7972] hover:text-[#19251f] hover:bg-[#f4f3ef] transition cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -105,50 +150,108 @@ export default function ExistingTenantWizardModal() {
             2. Send Invite Link
           </span>
           <span className="text-[#95a099]">→</span>
-          <span className={`font-bold ${step === 3 ? 'text-emerald-700' : 'text-[#95a099]'}`}>
+          <span className={`font-bold ${step === 3 ? 'text-[#274235]' : 'text-[#95a099]'}`}>
             3. Connected
           </span>
         </div>
 
         {/* Body Content */}
-        <div className="p-5 sm:p-6 overflow-y-auto">
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-3 bg-[#fbfbfa]">
+          {validationError && (
+            <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center justify-between gap-2 animate-in fade-in">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+                <span>{validationError}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setValidationError(null)}
+                className="text-rose-600 hover:text-rose-800 p-0.5 rounded-full cursor-pointer"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+
           {step === 1 && (
             <form onSubmit={handleSendInvite} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#19251f] font-semibold mb-1">Tenant Full Name</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[#19251f] font-semibold">Tenant Full Name <span className="text-rose-600">*</span></label>
+                    {fieldErrors.name && (
+                      <span className="text-[10px] font-bold text-rose-600 flex items-center gap-0.5 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">
+                        <AlertCircle className="h-2.5 w-2.5 text-rose-600 shrink-0" />
+                        {fieldErrors.name}
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="text"
-                    required
                     placeholder="e.g. Rohith Varma"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] placeholder-[#95a099] focus:outline-none focus:border-[#274235] focus:bg-white"
+                    onChange={(e) => {
+                      setFormData({ ...formData, name: e.target.value });
+                      clearFieldError('name');
+                    }}
+                    className={`w-full px-3.5 py-2.5 rounded-2xl border text-[#19251f] placeholder-[#95a099] focus:outline-none transition ${
+                      fieldErrors.name
+                        ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
+                        : 'bg-[#f7f6f2] border-[#e3e1d8] focus:border-[#274235] focus:bg-white'
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[#19251f] font-semibold mb-1">Mobile Number</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[#19251f] font-semibold">Mobile Number <span className="text-rose-600">*</span></label>
+                    {fieldErrors.phone && (
+                      <span className="text-[10px] font-bold text-rose-600 flex items-center gap-0.5 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">
+                        <AlertCircle className="h-2.5 w-2.5 text-rose-600 shrink-0" />
+                        {fieldErrors.phone}
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="tel"
-                    required
                     placeholder="+91 98470 XXXXX"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] placeholder-[#95a099] focus:outline-none focus:border-[#274235] focus:bg-white"
+                    onChange={(e) => {
+                      setFormData({ ...formData, phone: e.target.value });
+                      clearFieldError('phone');
+                    }}
+                    className={`w-full px-3.5 py-2.5 rounded-2xl border text-[#19251f] placeholder-[#95a099] focus:outline-none transition ${
+                      fieldErrors.phone
+                        ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
+                        : 'bg-[#f7f6f2] border-[#e3e1d8] focus:border-[#274235] focus:bg-white'
+                    }`}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[#19251f] font-semibold mb-1">Email Address</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[#19251f] font-semibold">Email Address <span className="text-rose-600">*</span></label>
+                  {fieldErrors.email && (
+                    <span className="text-[10px] font-bold text-rose-600 flex items-center gap-0.5 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">
+                      <AlertCircle className="h-2.5 w-2.5 text-rose-600 shrink-0" />
+                      {fieldErrors.email}
+                    </span>
+                  )}
+                </div>
                 <input
                   type="email"
-                  required
                   placeholder="tenant@example.com"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] placeholder-[#95a099] focus:outline-none focus:border-[#274235] focus:bg-white"
+                  onChange={(e) => {
+                    setFormData({ ...formData, email: e.target.value });
+                    clearFieldError('email');
+                  }}
+                  className={`w-full px-3.5 py-2.5 rounded-2xl border text-[#19251f] placeholder-[#95a099] focus:outline-none transition ${
+                    fieldErrors.email
+                      ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
+                      : 'bg-[#f7f6f2] border-[#e3e1d8] focus:border-[#274235] focus:bg-white'
+                  }`}
                 />
               </div>
 
@@ -167,26 +270,56 @@ export default function ExistingTenantWizardModal() {
                 </div>
 
                 <div>
-                  <label className="block text-[#19251f] font-semibold mb-1">Unit Number</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[#19251f] font-semibold">Unit Number <span className="text-rose-600">*</span></label>
+                    {fieldErrors.unitNumber && (
+                      <span className="text-[10px] font-bold text-rose-600 flex items-center gap-0.5 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">
+                        <AlertCircle className="h-2.5 w-2.5 text-rose-600 shrink-0" />
+                        {fieldErrors.unitNumber}
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="text"
-                    required
+                    placeholder="e.g. 304 or Flat 2B"
                     value={formData.unitNumber}
-                    onChange={(e) => setFormData({ ...formData, unitNumber: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
+                    onChange={(e) => {
+                      setFormData({ ...formData, unitNumber: e.target.value });
+                      clearFieldError('unitNumber');
+                    }}
+                    className={`w-full px-3.5 py-2.5 rounded-2xl border text-[#19251f] placeholder-[#95a099] focus:outline-none transition ${
+                      fieldErrors.unitNumber
+                        ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
+                        : 'bg-[#f7f6f2] border-[#e3e1d8] focus:border-[#274235] focus:bg-white'
+                    }`}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#19251f] font-semibold mb-1">Monthly Rent (₹)</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[#19251f] font-semibold">Monthly Rent (₹) <span className="text-rose-600">*</span></label>
+                    {fieldErrors.monthlyRent && (
+                      <span className="text-[10px] font-bold text-rose-600 flex items-center gap-0.5 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">
+                        <AlertCircle className="h-2.5 w-2.5 text-rose-600 shrink-0" />
+                        {fieldErrors.monthlyRent}
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="number"
-                    required
+                    placeholder="e.g. 26000"
                     value={formData.monthlyRent}
-                    onChange={(e) => setFormData({ ...formData, monthlyRent: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
+                    onChange={(e) => {
+                      setFormData({ ...formData, monthlyRent: e.target.value });
+                      clearFieldError('monthlyRent');
+                    }}
+                    className={`w-full px-3.5 py-2.5 rounded-2xl border text-[#19251f] placeholder-[#95a099] focus:outline-none transition ${
+                      fieldErrors.monthlyRent
+                        ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
+                        : 'bg-[#f7f6f2] border-[#e3e1d8] focus:border-[#274235] focus:bg-white'
+                    }`}
                   />
                 </div>
 
@@ -194,10 +327,10 @@ export default function ExistingTenantWizardModal() {
                   <label className="block text-[#19251f] font-semibold mb-1">Security Deposit (₹)</label>
                   <input
                     type="number"
-                    required
+                    placeholder="e.g. 78000"
                     value={formData.deposit}
-                    onChange={(e) => setFormData({ ...formData, deposit: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
+                    onChange={(e) => setFormData({ ...formData, deposit: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] placeholder-[#95a099] focus:outline-none focus:border-[#274235]"
                   />
                 </div>
               </div>
@@ -240,7 +373,7 @@ export default function ExistingTenantWizardModal() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-3.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs shadow-xl shadow-[#274235]/20 transition flex items-center justify-center gap-2"
+                  className="w-full py-3.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs shadow-xl shadow-[#274235]/20 transition flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Send className="h-4 w-4" />
                   <span>Generate Onboarding Invite Link</span>
@@ -273,7 +406,7 @@ export default function ExistingTenantWizardModal() {
                       setCopied(true);
                       setTimeout(() => setCopied(false), 2000);
                     }}
-                    className="px-4 py-2.5 rounded-2xl bg-[#274235] text-white font-bold flex items-center gap-1.5 shadow-sm"
+                    className="px-4 py-2.5 rounded-2xl bg-[#274235] text-white font-bold flex items-center gap-1.5 shadow-sm cursor-pointer"
                   >
                     <Copy className="h-3.5 w-3.5" />
                     <span>{copied ? 'Copied!' : 'Copy'}</span>
@@ -302,14 +435,14 @@ export default function ExistingTenantWizardModal() {
               <div className="pt-2 flex items-center justify-between gap-3">
                 <button
                   onClick={() => setStep(1)}
-                  className="px-4 py-2.5 rounded-2xl bg-[#f4f3ef] text-[#19251f] hover:bg-[#e3e1d8] font-bold"
+                  className="px-4 py-2.5 rounded-2xl bg-[#f4f3ef] text-[#19251f] hover:bg-[#e3e1d8] font-bold cursor-pointer"
                 >
                   Edit Terms
                 </button>
 
                 <button
                   onClick={handleSimulateTenantAcceptance}
-                  className="flex-1 py-3 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold shadow-md shadow-[#274235]/20 transition flex items-center justify-center gap-2"
+                  className="flex-1 py-3 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold shadow-md shadow-[#274235]/20 transition flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <ShieldCheck className="h-4 w-4" />
                   <span>Simulate Instant Tenant Acceptance</span>
@@ -334,7 +467,7 @@ export default function ExistingTenantWizardModal() {
               <div className="pt-2">
                 <button
                   onClick={handleClose}
-                  className="px-6 py-2.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs shadow-md transition"
+                  className="px-6 py-2.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs shadow-md transition cursor-pointer"
                 >
                   Return to Dashboard
                 </button>

@@ -500,140 +500,6 @@ export default function OwnerDashboard() {
         </div>
       )}
 
-      {/* ============================================================ */}
-      {/* 4. PORTFOLIO AT A GLANCE (Image 1)                            */}
-      {/* ============================================================ */}
-      <div className="space-y-2.5">
-        <span className="text-[10px] font-black uppercase tracking-wider text-[#6e7972] block">
-          Portfolio at a glance
-        </span>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {/* Card 1: Total Properties */}
-          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#e3e1d8] space-y-2 shadow-2xs">
-            <div className="h-8 w-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Building2 className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="text-xl sm:text-2xl font-black text-[#19251f]">{properties.length || 1}</div>
-              <div className="text-xs font-bold text-[#19251f]">Total Properties</div>
-              <div className="text-[10px] text-[#6e7972] truncate mt-0.5">
-                {properties.reduce((acc, p) => acc + (p.totalUnits || 0), 0) || 1} total beds across all
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: Occupancy Rate */}
-          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#e3e1d8] space-y-2 shadow-2xs">
-            <div className="h-8 w-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-              <BedDouble className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="text-xl sm:text-2xl font-black text-[#19251f]">0%</div>
-              <div className="text-xs font-bold text-[#19251f]">Occupancy Rate</div>
-              <div className="text-[10px] text-[#6e7972] truncate mt-0.5">0 / 1 beds occupied</div>
-            </div>
-          </div>
-
-          {/* Card 3: Rent Collection */}
-          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#e3e1d8] space-y-2 shadow-2xs">
-            <div className="h-8 w-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-              <Percent className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="text-xl sm:text-2xl font-black text-[#19251f]">0%</div>
-              <div className="text-xs font-bold text-[#19251f]">Rent Collection</div>
-              <div className="text-[10px] text-[#6e7972] truncate mt-0.5">₹0 of ₹0</div>
-            </div>
-          </div>
-
-          {/* Card 4: Active Leads */}
-          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#e3e1d8] space-y-2 shadow-2xs">
-            <div className="h-8 w-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-              <Users className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="text-xl sm:text-2xl font-black text-[#19251f]">0</div>
-              <div className="text-xs font-bold text-[#19251f]">Active Leads</div>
-              <div className="text-[10px] text-[#6e7972] truncate mt-0.5">0 new today</div>
-            </div>
-          </div>
-
-          {/* Card 5: Unlocked by Tenants */}
-          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#e3e1d8] space-y-2 shadow-2xs col-span-2 sm:col-span-1">
-            <div className="h-8 w-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
-              <Key className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="text-xl sm:text-2xl font-black text-[#19251f]">0</div>
-              <div className="text-xs font-bold text-[#19251f]">Unlocked by Tenants</div>
-              <div className="text-[10px] text-[#6e7972] truncate mt-0.5">this month: 0 today</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ============================================================ */}
-      {/* 5. BED OCCUPANCY MAP (Image 1)                                */}
-      {/* ============================================================ */}
-      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#e3e1d8] space-y-3.5 shadow-2xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#eeece5] pb-3">
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
-              <BedDouble className="h-4 w-4" />
-            </div>
-            <div>
-              <h3 className="text-xs font-bold text-[#19251f]">Occupancy Map</h3>
-              <p className="text-[10px] text-[#6e7972]">Live bed status across properties</p>
-            </div>
-          </div>
-
-          {/* Map Status Legends matching Image 1 */}
-          <div className="flex items-center gap-2.5 text-[10px] font-black uppercase tracking-wider flex-wrap">
-            <span className="flex items-center gap-1 text-emerald-600">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span>Occupied</span>
-            </span>
-            <span className="flex items-center gap-1 text-rose-600">
-              <span className="h-2 w-2 rounded-full bg-rose-500" />
-              <span>Available</span>
-            </span>
-            <span className="flex items-center gap-1 text-blue-600">
-              <span className="h-2 w-2 rounded-full bg-blue-500" />
-              <span>On Hold</span>
-            </span>
-            <span className="flex items-center gap-1 text-slate-500">
-              <span className="h-2 w-2 rounded-full bg-slate-400" />
-              <span>Blocked</span>
-            </span>
-          </div>
-        </div>
-
-        {/* Live Property Bed Row */}
-        <div className="p-3.5 rounded-2xl bg-[#faf9f6] border border-[#eeece5] space-y-2.5">
-          <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 font-bold text-[#19251f]">
-              <div className="h-6 w-6 rounded-lg bg-[#eef3f0] text-[#274235] flex items-center justify-center">
-                <Building2 className="h-3.5 w-3.5" />
-              </div>
-              <span>shyam's pg</span>
-            </div>
-            <span className="text-[11px] font-bold text-[#6e7972]">1 beds</span>
-          </div>
-
-          {/* Occupancy Multi-colored Bar matching Image 1 */}
-          <div className="h-2.5 w-full rounded-full bg-slate-200 overflow-hidden flex">
-            <div className="w-full bg-rose-500 rounded-full" title="1 Available" />
-          </div>
-
-          <div className="flex items-center gap-3 text-[10px] text-[#6e7972] font-semibold pt-1">
-            <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> 0 Occupied</span>
-            <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-rose-500" /> 1 Available</span>
-            <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-blue-500" /> 0 On Hold</span>
-            <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-slate-400" /> 0 Blocked</span>
-          </div>
-        </div>
-      </div>
-
       {/* SECTION 53: OWNER DAILY AI BRIEF */}
       <div className="rounded-3xl p-4 sm:p-6 bg-gradient-to-br from-[#19251f] via-[#203429] to-[#274235] text-white shadow-xl relative overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -756,6 +622,140 @@ export default function OwnerDashboard() {
             />
           </svg>
           <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        </div>
+      </div>
+
+      {/* ============================================================ */}
+      {/* 4. PORTFOLIO AT A GLANCE (Above Command Center)              */}
+      {/* ============================================================ */}
+      <div className="space-y-2.5">
+        <span className="text-[10px] font-black uppercase tracking-wider text-[#6e7972] block">
+          Portfolio at a glance
+        </span>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {/* Card 1: Total Properties */}
+          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#e3e1d8] space-y-2 shadow-2xs">
+            <div className="h-8 w-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Building2 className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-black text-[#19251f]">{properties.length || 1}</div>
+              <div className="text-xs font-bold text-[#19251f]">Total Properties</div>
+              <div className="text-[10px] text-[#6e7972] truncate mt-0.5">
+                {properties.reduce((acc, p) => acc + (p.totalUnits || 0), 0) || 1} total beds across all
+              </div>
+            </div>
+          </div>
+
+          {/* Card 2: Occupancy Rate */}
+          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#e3e1d8] space-y-2 shadow-2xs">
+            <div className="h-8 w-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <BedDouble className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-black text-[#19251f]">0%</div>
+              <div className="text-xs font-bold text-[#19251f]">Occupancy Rate</div>
+              <div className="text-[10px] text-[#6e7972] truncate mt-0.5">0 / 1 beds occupied</div>
+            </div>
+          </div>
+
+          {/* Card 3: Rent Collection */}
+          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#e3e1d8] space-y-2 shadow-2xs">
+            <div className="h-8 w-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <Percent className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-black text-[#19251f]">0%</div>
+              <div className="text-xs font-bold text-[#19251f]">Rent Collection</div>
+              <div className="text-[10px] text-[#6e7972] truncate mt-0.5">₹0 of ₹0</div>
+            </div>
+          </div>
+
+          {/* Card 4: Active Leads */}
+          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#e3e1d8] space-y-2 shadow-2xs">
+            <div className="h-8 w-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+              <Users className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-black text-[#19251f]">0</div>
+              <div className="text-xs font-bold text-[#19251f]">Active Leads</div>
+              <div className="text-[10px] text-[#6e7972] truncate mt-0.5">0 new today</div>
+            </div>
+          </div>
+
+          {/* Card 5: Unlocked by Tenants */}
+          <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#e3e1d8] space-y-2 shadow-2xs col-span-2 sm:col-span-1">
+            <div className="h-8 w-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+              <Key className="h-4 w-4" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-black text-[#19251f]">0</div>
+              <div className="text-xs font-bold text-[#19251f]">Unlocked by Tenants</div>
+              <div className="text-[10px] text-[#6e7972] truncate mt-0.5">this month: 0 today</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ============================================================ */}
+      {/* 5. BED OCCUPANCY MAP (Above Command Center)                  */}
+      {/* ============================================================ */}
+      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-[#e3e1d8] space-y-3.5 shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#eeece5] pb-3">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+              <BedDouble className="h-4 w-4" />
+            </div>
+            <div>
+              <h3 className="text-xs font-bold text-[#19251f]">Occupancy Map</h3>
+              <p className="text-[10px] text-[#6e7972]">Live bed status across properties</p>
+            </div>
+          </div>
+
+          {/* Map Status Legends */}
+          <div className="flex items-center gap-2.5 text-[10px] font-black uppercase tracking-wider flex-wrap">
+            <span className="flex items-center gap-1 text-emerald-600">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              <span>Occupied</span>
+            </span>
+            <span className="flex items-center gap-1 text-rose-600">
+              <span className="h-2 w-2 rounded-full bg-rose-500" />
+              <span>Available</span>
+            </span>
+            <span className="flex items-center gap-1 text-blue-600">
+              <span className="h-2 w-2 rounded-full bg-blue-500" />
+              <span>On Hold</span>
+            </span>
+            <span className="flex items-center gap-1 text-slate-500">
+              <span className="h-2 w-2 rounded-full bg-slate-400" />
+              <span>Blocked</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Live Property Bed Row */}
+        <div className="p-3.5 rounded-2xl bg-[#faf9f6] border border-[#eeece5] space-y-2.5">
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2 font-bold text-[#19251f]">
+              <div className="h-6 w-6 rounded-lg bg-[#eef3f0] text-[#274235] flex items-center justify-center">
+                <Building2 className="h-3.5 w-3.5" />
+              </div>
+              <span>shyam's pg</span>
+            </div>
+            <span className="text-[11px] font-bold text-[#6e7972]">1 beds</span>
+          </div>
+
+          {/* Occupancy Multi-colored Bar */}
+          <div className="h-2.5 w-full rounded-full bg-slate-200 overflow-hidden flex">
+            <div className="w-full bg-rose-500 rounded-full" title="1 Available" />
+          </div>
+
+          <div className="flex items-center gap-3 text-[10px] text-[#6e7972] font-semibold pt-1">
+            <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> 0 Occupied</span>
+            <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-rose-500" /> 1 Available</span>
+            <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-blue-500" /> 0 On Hold</span>
+            <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-slate-400" /> 0 Blocked</span>
+          </div>
         </div>
       </div>
 

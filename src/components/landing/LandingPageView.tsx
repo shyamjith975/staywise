@@ -549,20 +549,20 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
         <div className="relative z-10 mb-4 sm:mb-6 animate-in fade-in slide-in-from-top-3 duration-500 w-full flex justify-center px-2">
           <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-white/95 border border-[#c1d3c9] text-[#203a2d] text-[10px] sm:text-xs font-bold shadow-xs hover:bg-white transition-colors max-w-full text-center">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-            <span>Built for India • The Property Operating System for PGs, Hostels &amp; Flats</span>
+            <span>Staywise Enterprise OS • Multi-Asset Property Intelligence &amp; Rent Automation</span>
           </div>
         </div>
 
-        {/* Editorial Serif Headline matching ManagR's core proposition */}
+        {/* Distinctive Editorial Serif Headline */}
         <div ref={heroContentRef} className="relative z-10 max-w-4xl mx-auto space-y-4 sm:space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-600 will-change-transform transform-gpu px-2 sm:px-0">
           <h1 className="font-editorial text-3xl xs:text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-[#16231c] leading-[1.12]">
-            Stop chasing rent. <br className="hidden sm:inline" />
-            Start collecting it.
+            Universal Property Operations. <br className="hidden sm:inline" />
+            Effortless Yield Intelligence.
           </h1>
 
-          {/* Subtitle rewritten for Indian landlords */}
+          {/* Subtitle */}
           <p className="text-xs sm:text-base lg:text-lg text-[#2f3f35] max-w-2xl mx-auto leading-relaxed font-normal px-1 sm:px-0">
-            Staywise is the operating system for rental businesses in India. PG, hostel, apartment, and villa owners — manage leads, automated WhatsApp rent, tenant KYC, and caretakers in one unified hub.
+            Staywise is the complete property intelligence &amp; automation system. From PG co-living buildings and residential apartments to warehouses and commercial assets — automate rent reconciliation, sub-meter billing, tenant KYC, and portfolio performance in one unified platform.
           </p>
 
           {/* Dual Action Buttons */}
@@ -667,7 +667,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <Bot className="h-5 w-5 text-emerald-700 shrink-0" />
               <div>
                 <div className="font-bold text-xs text-[#16231c]">Works on WhatsApp</div>
-                <div className="text-[10px] text-[#6e7972]">English, Hindi &amp; Hinglish</div>
+                <div className="text-[10px] text-[#6e7972]">English Natural Language AI</div>
               </div>
             </div>
 
@@ -720,7 +720,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 Pain #1 • The Rent Chase
               </span>
               <h3 className="font-editorial text-lg font-bold text-[#16231c]">
-                &ldquo;Rent kab bhejna hai?&rdquo;
+                &ldquo;When will the rent be paid?&rdquo;
               </h3>
               <p className="text-xs text-[#6e7972] leading-relaxed">
                 Day 1 arrives. You text: <i>&ldquo;Hi sir, kindly pay your rent...&rdquo;</i> They read and ignore. You call. They promise tomorrow. You spend 4 days chasing 20 different tenants across 3 properties.
@@ -772,7 +772,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 Pain #3 • Vacancy Guesswork
               </span>
               <h3 className="font-editorial text-lg font-bold text-[#16231c]">
-                &ldquo;Bhaiya, bed 204 khaali hai?&rdquo;
+                &ldquo;Is Room 204 vacant right now?&rdquo;
               </h3>
               <p className="text-xs text-[#6e7972] leading-relaxed">
                 A walk-in visits. You call your caretaker to ask if room 204 has a bed. He doesn&apos;t pick up. You guess. You guess wrong and have to refund a deposit.
@@ -966,7 +966,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       </section>
 
       {/* ---------------------------------------------------- */}
-      {/* 6. EVERYTHING INSIDE (MANAGR OPERATING SYSTEM GRID)   */}
+      {/* 6. EVERYTHING INSIDE (STAYWISE OPERATING SYSTEM GRID) */}
       {/* ---------------------------------------------------- */}
       <section 
         id="everything-inside"
@@ -1220,7 +1220,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                     Run your entire rental business from WhatsApp.
                   </h3>
                   <p className="text-xs sm:text-sm text-[#6e7972] leading-relaxed">
-                    No laptop needed. Just text Staywise AI in English, Hindi, or Hinglish: <i>&ldquo;Aaj ki collection kya hai?&rdquo;</i> or <i>&ldquo;Send rent reminder to room 102&rdquo;</i>. The AI executes the command instantly.
+                    No laptop needed. Simply text Staywise AI in English: <i>&ldquo;What is today's total collection?&rdquo;</i> or <i>&ldquo;Send rent reminder to room 102&rdquo;</i>. The AI executes commands instantly.
                   </p>
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center gap-2">
@@ -1249,7 +1249,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   </div>
                   <div className="space-y-2">
                     <div className="p-2.5 rounded-2xl rounded-tr-none bg-white text-[#16231c] max-w-[85%] ml-auto shadow-xs">
-                      Aaj kitna rent collect hua? Aur koi pending hai kya?
+                      What is today's rent collection? Are there any pending dues?
                     </div>
                     <div className="p-2.5 rounded-2xl rounded-tl-none bg-[#dcf8c6] text-[#16231c] max-w-[85%] shadow-xs">
                       <b>Good evening Vikram!</b><br />
@@ -1518,7 +1518,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               ))}
             </div>
             <p className="text-xs text-[#16231c] italic leading-relaxed">
-              &ldquo;Rent reminders auto chale jaate hain. Mujhe kisi ko personally call nahi karna padta. Game changer for our 120 beds in Bangalore.&rdquo;
+              &ldquo;Rent reminders are dispatched automatically. I no longer have to make awkward collection calls. A complete game-changer for our 120 beds in Bangalore.&rdquo;
             </p>
             <div className="text-[11px]">
               <div className="font-bold text-[#16231c]">Sai Krishna PG</div>
@@ -1533,7 +1533,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               ))}
             </div>
             <p className="text-xs text-[#16231c] italic leading-relaxed">
-              &ldquo;Mera caretaker phone par sab update karta hai. Main Mumbai mein hoon, property Bangalore mein. Sab control mein rehta hai.&rdquo;
+              &ldquo;My caretaker updates everything directly from his mobile phone. I reside in Mumbai while managing properties in Bangalore with complete visibility and peace of mind.&rdquo;
             </p>
             <div className="text-[11px]">
               <div className="font-bold text-[#16231c]">Singhania Asset Holdings</div>
@@ -1548,7 +1548,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               ))}
             </div>
             <p className="text-xs text-[#16231c] italic leading-relaxed">
-              &ldquo;Electricity bill ka jhagda khatam. Staywise sub-meter OCR se auto split karta hai. Tenants bhi khush, main bhi khush.&rdquo;
+              &ldquo;Electricity billing disputes are completely eliminated. Staywise reads the sub-meters via OCR and divides utility slabs automatically. Both tenants and management are delighted.&rdquo;
             </p>
             <div className="text-[11px]">
               <div className="font-bold text-[#16231c]">Green View Co-Living</div>
@@ -1625,30 +1625,30 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <div className="space-y-3.5 sm:space-y-4">
                 <div>
                   <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#f4f3ef] text-[#6e7972]">
-                    Starter Landlord
+                    1 Property
                   </span>
-                  <h3 className="font-editorial text-lg sm:text-xl font-bold text-[#16231c] mt-2">Starter Estate OS</h3>
+                  <h3 className="font-editorial text-lg sm:text-xl font-bold text-[#16231c] mt-2">Starter (1 Property)</h3>
                   <p className="text-xs text-[#6e7972] mt-0.5 leading-relaxed">
-                    Ideal for single-building landlords &amp; duplex assets.
+                    Ideal for single-building landlords &amp; independent assets.
                   </p>
                 </div>
 
                 <div className="pt-2 pb-3.5 sm:pb-4 border-b border-[#eeece5]">
                   <div className="flex items-baseline gap-1">
                     <span className="text-2xl xs:text-3xl sm:text-4xl font-black text-[#16231c] tracking-tight">
-                      ₹{billingCycle === 'annual' ? Math.round(24990 / 12).toLocaleString('en-IN') : (2499).toLocaleString('en-IN')}
+                      ₹{billingCycle === 'annual' ? (599).toLocaleString('en-IN') : (59).toLocaleString('en-IN')}
                     </span>
-                    <span className="text-xs text-[#6e7972]">/month</span>
+                    <span className="text-xs text-[#6e7972]">/{billingCycle === 'annual' ? 'year' : 'month'}</span>
                   </div>
                   <div className="text-[11px] text-[#6e7972] mt-0.5">
-                    {billingCycle === 'annual' ? '₹24,990 billed annually (Save ₹4,998)' : '₹2,499 billed monthly'}
+                    {billingCycle === 'annual' ? '₹599/year (Equivalent to ~₹50/month)' : '₹59 billed monthly'}
                   </div>
                 </div>
 
                 <div className="space-y-2 text-xs text-[#4d5a52]">
                   <div className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-[#203a2d] shrink-0" />
-                    <span>Up to 10 Units</span>
+                    <span><b>1 Property (PG, Flat, House, or Commercial)</b></span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-[#203a2d] shrink-0" />
@@ -1693,9 +1693,9 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <div className="space-y-3.5 sm:space-y-4 pt-1">
                 <div>
                   <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#e8eee9] text-[#203a2d]">
-                    Growth Portfolios
+                    10 Properties
                   </span>
-                  <h3 className="font-editorial text-xl sm:text-2xl font-bold text-[#16231c] mt-2">Growth Portfolio Pro OS</h3>
+                  <h3 className="font-editorial text-xl sm:text-2xl font-bold text-[#16231c] mt-2">Growth Pro (10 Properties)</h3>
                   <p className="text-xs text-[#6e7972] mt-0.5 leading-relaxed">
                     Unified multi-asset system with sub-meter OCR &amp; MoveFlow.
                   </p>
@@ -1704,19 +1704,19 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 <div className="pt-2 pb-3.5 sm:pb-4 border-b border-[#eeece5]">
                   <div className="flex items-baseline gap-1">
                     <span className="text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-black text-[#16231c] tracking-tight">
-                      ₹{billingCycle === 'annual' ? Math.round(79990 / 12).toLocaleString('en-IN') : (7999).toLocaleString('en-IN')}
+                      ₹{billingCycle === 'annual' ? (1499).toLocaleString('en-IN') : (149).toLocaleString('en-IN')}
                     </span>
-                    <span className="text-xs text-[#6e7972]">/month</span>
+                    <span className="text-xs text-[#6e7972]">/{billingCycle === 'annual' ? 'year' : 'month'}</span>
                   </div>
                   <div className="text-[11px] text-[#203a2d] font-semibold mt-0.5">
-                    {billingCycle === 'annual' ? '₹79,990 billed annually (Save ₹15,998)' : '₹7,999 billed monthly'}
+                    {billingCycle === 'annual' ? '₹1,499/year (Equivalent to ~₹125/month)' : '₹149 billed monthly'}
                   </div>
                 </div>
 
                 <div className="space-y-2 text-xs text-[#16231c]">
                   <div className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-[#203a2d] shrink-0" />
-                    <span><b>Up to 50 Units &amp; PG Co-living Beds</b></span>
+                    <span><b>Up to 10 Properties &amp; PG Co-Living Buildings</b></span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-[#203a2d] shrink-0" />
@@ -1758,9 +1758,9 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <div className="space-y-3.5 sm:space-y-4">
                 <div>
                   <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#f4f3ef] text-[#6e7972]">
-                    Enterprise Institutional
+                    Unlimited Properties
                   </span>
-                  <h3 className="font-editorial text-lg sm:text-xl font-bold text-[#16231c] mt-2">Institutional Master OS</h3>
+                  <h3 className="font-editorial text-lg sm:text-xl font-bold text-[#16231c] mt-2">Enterprise (Unlimited Properties)</h3>
                   <p className="text-xs text-[#6e7972] mt-0.5 leading-relaxed">
                     For family offices, LLPs &amp; commercial campuses.
                   </p>
@@ -1769,19 +1769,19 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 <div className="pt-2 pb-3.5 sm:pb-4 border-b border-[#eeece5]">
                   <div className="flex items-baseline gap-1">
                     <span className="text-2xl xs:text-3xl sm:text-4xl font-black text-[#16231c] tracking-tight">
-                      ₹{billingCycle === 'annual' ? Math.round(199990 / 12).toLocaleString('en-IN') : (19999).toLocaleString('en-IN')}
+                      ₹{billingCycle === 'annual' ? (2999).toLocaleString('en-IN') : (299).toLocaleString('en-IN')}
                     </span>
-                    <span className="text-xs text-[#6e7972]">/month</span>
+                    <span className="text-xs text-[#6e7972]">/{billingCycle === 'annual' ? 'year' : 'month'}</span>
                   </div>
                   <div className="text-[11px] text-[#6e7972] mt-0.5">
-                    {billingCycle === 'annual' ? '₹1,99,990 billed annually (Save ₹39,998)' : '₹19,999 billed monthly'}
+                    {billingCycle === 'annual' ? '₹2,999/year (Equivalent to ~₹250/month)' : '₹299 billed monthly'}
                   </div>
                 </div>
 
                 <div className="space-y-2 text-xs text-[#4d5a52]">
                   <div className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-[#203a2d] shrink-0" />
-                    <span>Unlimited Portfolios &amp; LLPs</span>
+                    <span><b>Unlimited Properties, Portfolios &amp; LLPs</b></span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-[#203a2d] shrink-0" />
