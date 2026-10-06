@@ -26,7 +26,8 @@ export default function PropertyList() {
     setIsExistingTenantWizardOpen,
     setIsEditPropertyModalOpen,
     setPropertyToEdit,
-    deleteProperty
+    deleteProperty,
+    activeRole
   } = useAppState();
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
@@ -52,22 +53,24 @@ export default function PropertyList() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => setIsExistingTenantWizardOpen(true)}
-            className="px-4 py-2.5 rounded-2xl bg-white hover:bg-[#f4f3ef] text-[#19251f] text-xs font-bold border border-[#e3e1d8] transition flex items-center gap-1.5 shadow-sm"
-          >
-            <UserPlus className="h-4 w-4 text-[#274235]" />
-            <span>Onboard Tenant</span>
-          </button>
-          <button
-            onClick={() => setIsAddPropertyOpen(true)}
-            className="px-4 py-2.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs shadow-md shadow-[#274235]/20 transition flex items-center gap-1.5"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Add Property</span>
-          </button>
-        </div>
+        {activeRole !== 'admin' && (
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setIsExistingTenantWizardOpen(true)}
+              className="px-4 py-2.5 rounded-2xl bg-white hover:bg-[#f4f3ef] text-[#19251f] text-xs font-bold border border-[#e3e1d8] transition flex items-center gap-1.5 shadow-sm"
+            >
+              <UserPlus className="h-4 w-4 text-[#274235]" />
+              <span>Onboard Tenant</span>
+            </button>
+            <button
+              onClick={() => setIsAddPropertyOpen(true)}
+              className="px-4 py-2.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs shadow-md shadow-[#274235]/20 transition flex items-center gap-1.5"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Add Property</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Property Cards Grid */}

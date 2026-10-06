@@ -49,7 +49,10 @@ import {
   VacancyCostReport,
   PropertyPassportData,
   TenantPassportData,
-  InfluencerOffer
+  InfluencerOffer,
+  OwnerSubscription,
+  SubscriptionTierId,
+  TrialSignupPayload
 } from '../types';
 import { 
   INITIAL_PROPERTIES, 
@@ -163,7 +166,16 @@ export const DEMO_CREDENTIALS: Record<UserRole, DemoCredential> = {
 interface AppStateContextType {
   isAuthenticated: boolean;
   currentUser: DemoCredential;
-  login: (role: UserRole) => void;
+  login: (role: UserRole, customUser?: Partial<DemoCredential>) => void;
+  signupUser: (userData: {
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+    role: 'owner' | 'estate_manager';
+    portfolioName?: string;
+    city?: string;
+  }) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   activeRole: UserRole;
   setActiveRole: (role: UserRole) => void;
@@ -200,6 +212,13 @@ interface AppStateContextType {
   vacancyCosts: VacancyCostReport[];
   propertyPassport: PropertyPassportData;
   tenantPassport: TenantPassportData;
+  
+  // Subscription & Platform Licensing
+  subscription: OwnerSubscription | null;
+  refreshSubscription: () => Promise<void>;
+  upgradeSubscription: (planId: SubscriptionTierId, billingCycle: 'monthly' | 'annual', paymentMethod?: string) => Promise<{ success: boolean; error?: string; subscription?: OwnerSubscription }>;
+  startTrialSignup: (payload: TrialSignupPayload) => Promise<{ success: boolean; error?: string }>;
+  cancelTrial: () => Promise<{ success: boolean; error?: string }>;
   
   // Global search
   isSearchOpen: boolean;
@@ -341,26 +360,186 @@ const INITIAL_ELECTRICITY_BILLS: ElectricityBill[] = [
 ];
 
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return localStorage.getItem('staywise_is_authenticated') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
+  const [isHydrated, setIsHydrated] = useState<boolean>(false);
   const [activeRole, setActiveRole] = useState<UserRole>('owner');
   const [currentUser, setCurrentUser] = useState<DemoCredential>(DEMO_CREDENTIALS.owner);
   const [activePortfolio, setActivePortfolio] = useState<string>('all');
   const [activeView, setActiveView] = useState<string>('dashboard');
+  const [subscription, setSubscription] = useState<OwnerSubscription | null>(null);
+
+  // 1. Initial Client-Side Hydration: Preserve active view, persona, and filters across page reloads
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlView = urlParams.get('view');
+      const urlRole = urlParams.get('role') as UserRole | null;
+      const urlPortfolio = urlParams.get('portfolio');
+
+      const savedAuth = localStorage.getItem('staywise_is_authenticated');
+      const savedView = urlView || localStorage.getItem('staywise_active_view');
+      const savedRole = (urlRole && DEMO_CREDENTIALS[urlRole] ? urlRole : (localStorage.getItem('staywise_active_role') as UserRole | null));
+      const savedUser = localStorage.getItem('staywise_current_user');
+      const savedPortfolio = urlPortfolio || localStorage.getItem('staywise_active_portfolio');
+
+      if (savedAuth === 'true') {
+        setIsAuthenticated(true);
+      }
+      if (savedView) {
+        setActiveView(savedView);
+      }
+      if (savedRole && DEMO_CREDENTIALS[savedRole]) {
+        setActiveRole(savedRole);
+      }
+      if (savedUser) {
+        try {
+          const parsed = JSON.parse(savedUser);
+          if (parsed && parsed.email) setCurrentUser(parsed);
+        } catch (e) {}
+      }
+      if (savedPortfolio) {
+        setActivePortfolio(savedPortfolio);
+      }
+    } catch (e) {
+      console.warn('[Staywise State] Failed to hydrate session:', e);
+    } finally {
+      setIsHydrated(true);
+    }
+  }, []);
+
+  // 2. Synchronize active state changes to localStorage and URL query params
+  useEffect(() => {
+    if (typeof window === 'undefined' || !isHydrated) return;
+    try {
+      localStorage.setItem('staywise_is_authenticated', String(isAuthenticated));
+      
+      if (!isAuthenticated) {
+        // Clean URL parameters when on the unauthenticated landing page
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('role') || (url.searchParams.has('view') && url.searchParams.get('view') !== 'login')) {
+          url.searchParams.delete('view');
+          url.searchParams.delete('role');
+          url.searchParams.delete('portfolio');
+          window.history.replaceState({}, '', url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : ''));
+        }
+        return;
+      }
+
+      localStorage.setItem('staywise_active_view', activeView);
+      localStorage.setItem('staywise_active_role', activeRole);
+      localStorage.setItem('staywise_active_portfolio', activePortfolio);
+      localStorage.setItem('staywise_current_user', JSON.stringify(currentUser));
+
+      // Keep address bar query params in sync without reloading
+      const url = new URL(window.location.href);
+      url.searchParams.set('view', activeView);
+      url.searchParams.set('role', activeRole);
+      if (activePortfolio && activePortfolio !== 'all') {
+        url.searchParams.set('portfolio', activePortfolio);
+      } else {
+        url.searchParams.delete('portfolio');
+      }
+      window.history.replaceState({}, '', url.toString());
+    } catch (e) {}
+  }, [activeView, activeRole, activePortfolio, currentUser, isAuthenticated, isHydrated]);
 
   const handleRoleChange = (role: UserRole) => {
     setActiveRole(role);
     setCurrentUser(DEMO_CREDENTIALS[role] || DEMO_CREDENTIALS.owner);
   };
 
-  const login = (role: UserRole) => {
+  const login = (role: UserRole, customUser?: Partial<DemoCredential>) => {
     setActiveRole(role);
-    setCurrentUser(DEMO_CREDENTIALS[role] || DEMO_CREDENTIALS.owner);
+    const userToSet = customUser ? {
+      role,
+      email: customUser.email || DEMO_CREDENTIALS[role]?.email || 'user@staywise.com',
+      pass: customUser.pass || '******',
+      name: customUser.name || 'Member',
+      roleLabel: customUser.roleLabel || DEMO_CREDENTIALS[role]?.roleLabel || 'Member',
+      avatar: customUser.avatar || DEMO_CREDENTIALS[role]?.avatar || '👤',
+      title: customUser.title || DEMO_CREDENTIALS[role]?.title || 'Portal Member',
+      description: customUser.description || DEMO_CREDENTIALS[role]?.description || 'Active Member'
+    } : (DEMO_CREDENTIALS[role] || DEMO_CREDENTIALS.owner);
+
+    setCurrentUser(userToSet);
     setIsAuthenticated(true);
     setActiveView('dashboard');
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('staywise_is_authenticated', 'true');
+        localStorage.setItem('staywise_active_role', role);
+        localStorage.setItem('staywise_active_view', 'dashboard');
+        localStorage.setItem('staywise_current_user', JSON.stringify(userToSet));
+      } catch (e) {}
+    }
+  };
+
+  const signupUser = async (userData: {
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+    role: 'owner' | 'estate_manager';
+    portfolioName?: string;
+    city?: string;
+  }): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Registration failed' };
+      }
+
+      if (data.property) {
+        setProperties(prev => [data.property, ...prev]);
+        setActivePortfolio(data.property.portfolio || 'all');
+      }
+
+      const newCred: DemoCredential = {
+        role: userData.role,
+        email: data.user.email,
+        pass: userData.password,
+        name: data.user.name,
+        roleLabel: data.user.roleLabel,
+        avatar: data.user.avatar,
+        title: data.user.title,
+        description: data.user.description
+      };
+      login(userData.role, newCred);
+
+      addNotification(
+        'Workspace Initialized!',
+        `Welcome ${data.user.name}! Your ${data.user.roleLabel} portal and starter asset have been created.`,
+        'SYSTEM'
+      );
+
+      return { success: true };
+    } catch (err: any) {
+      console.error('Signup error:', err);
+      return { success: false, error: err.message || 'Connection failed' };
+    }
   };
 
   const logout = () => {
     setIsAuthenticated(false);
+    try {
+      localStorage.removeItem('staywise_active_view');
+      localStorage.removeItem('staywise_current_user');
+      localStorage.setItem('staywise_is_authenticated', 'false');
+    } catch (e) {}
   };
   
   const [properties, setProperties] = useState<Property[]>(INITIAL_PROPERTIES);
@@ -483,6 +662,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           if (Array.isArray(d.influencerOffers) && d.influencerOffers.length > 0) setInfluencerOffers(d.influencerOffers);
           if (Array.isArray(d.tickets) && d.tickets.length > 0) setTickets(d.tickets);
           if (Array.isArray(d.electricityBills) && d.electricityBills.length > 0) setElectricityBills(d.electricityBills);
+          if (d.subscription) setSubscription(d.subscription);
         }
       } catch (err) {
         console.warn('[Staywise Database] Hydrated using local store fallback:', err);
@@ -907,11 +1087,148 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     addNotification('Referral Logged', `Referral registered for ${referral.referredName}. Reward balance credited!`, 'SYSTEM');
   };
 
+  const refreshSubscription = async () => {
+    try {
+      const res = await fetch('/api/subscription');
+      const json = await res.json();
+      if (json.success && json.data) {
+        setSubscription(json.data);
+      }
+    } catch (err) {
+      console.error('[Staywise Subscription] Refresh failed:', err);
+    }
+  };
+
+  const upgradeSubscription = async (
+    planId: SubscriptionTierId,
+    billingCycle: 'monthly' | 'annual',
+    paymentMethod: string = 'Axis Bank Escrow Auto-Debit'
+  ): Promise<{ success: boolean; error?: string; subscription?: OwnerSubscription }> => {
+    try {
+      // Step 1: Request cryptographically signed checkout session (server-authoritative pricing)
+      const checkoutRes = await fetch('/api/subscription/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          planId, 
+          billingCycle, 
+          userId: currentUser.email || 'user-owner-vikram' 
+        })
+      });
+      const checkoutData = await checkoutRes.json();
+      if (!checkoutRes.ok || !checkoutData.success) {
+        return { success: false, error: checkoutData.error || 'Failed to initialize secure checkout session' };
+      }
+
+      const { sessionToken } = checkoutData.data;
+
+      // Step 2: Verify signed session and execute upgrade (HMAC verified, replay protected)
+      const verifyRes = await fetch('/api/subscription/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionToken,
+          paymentMethod,
+          transactionRef: `TXN-STAY-SUB-${Date.now()}`
+        })
+      });
+      const verifyData = await verifyRes.json();
+      if (!verifyRes.ok || !verifyData.success) {
+        return { success: false, error: verifyData.error || 'Cryptographic verification failed' };
+      }
+
+      setSubscription(verifyData.data);
+      addNotification(
+        'Subscription Activated',
+        `Your workspace has been successfully upgraded to ${verifyData.data.planName}. Statutory double-entry ledger entry created.`,
+        'SYSTEM'
+      );
+      return { success: true, subscription: verifyData.data };
+    } catch (err: any) {
+      console.error('[Staywise Subscription] Upgrade failed:', err);
+      return { success: false, error: err.message || 'Connection error during upgrade' };
+    }
+  };
+
+  const startTrialSignup = async (payload: TrialSignupPayload): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/auth/trial-signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Failed to start 7-day trial.' };
+      }
+
+      if (data.property) {
+        setProperties(prev => [data.property, ...prev]);
+        setActivePortfolio(data.property.portfolio || 'all');
+      }
+
+      if (data.subscription) {
+        setSubscription(data.subscription);
+      }
+
+      const newCred: DemoCredential = {
+        role: payload.role,
+        email: data.user.email,
+        pass: payload.password,
+        name: data.user.name,
+        roleLabel: data.user.roleLabel,
+        avatar: data.user.avatar,
+        title: data.user.title,
+        description: data.user.description
+      };
+      login(payload.role, newCred);
+
+      addNotification(
+        '7-Day Free Trial Activated!',
+        `Welcome ${data.user.name}! Your 7-day risk-free trial is active (₹0 charged today). Autopay connected.`,
+        'SYSTEM'
+      );
+
+      return { success: true };
+    } catch (err: any) {
+      console.error('[Staywise Trial] Signup error:', err);
+      return { success: false, error: err.message || 'Connection failed' };
+    }
+  };
+
+  const cancelTrial = async (): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const res = await fetch('/api/subscription/cancel-trial', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.email || 'user-owner-vikram' })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Failed to cancel trial' };
+      }
+
+      if (data.data) {
+        setSubscription(data.data);
+      }
+      addNotification(
+        '7-Day Trial Cancelled',
+        'Your trial has been cancelled and autopay revoked. Zero charges applied.',
+        'SYSTEM'
+      );
+      return { success: true };
+    } catch (err: any) {
+      console.error('[Staywise Trial] Cancellation error:', err);
+      return { success: false, error: err.message || 'Network error during cancellation' };
+    }
+  };
+
   return (
     <AppStateContext.Provider value={{
       isAuthenticated,
       currentUser,
       login,
+      signupUser,
       logout,
       activeRole,
       setActiveRole: handleRoleChange,
@@ -919,6 +1236,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       setActivePortfolio,
       activeView,
       setActiveView,
+      subscription,
+      refreshSubscription,
+      upgradeSubscription,
+      startTrialSignup,
+      cancelTrial,
       properties,
       tenants,
       invoices,

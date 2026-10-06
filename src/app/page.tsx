@@ -53,21 +53,41 @@ import PGBedManagementView from '../components/modules/pg/PGBedManagementView';
 import CommercialCAMView from '../components/modules/commercial/CommercialCAMView';
 import MoveFlowRetentionView from '../components/modules/moveflow/MoveFlowRetentionView';
 import FindHomeView from '../components/modules/discovery/FindHomeView';
+import LandingPageView from '../components/landing/LandingPageView';
 
 function MainAppShell() {
   const { 
     isAuthenticated, 
     activeRole, 
     activeView, 
+    setActiveView,
     isUploadBillModalOpen, 
     setIsUploadBillModalOpen, 
     preselectedUnitForUpload 
   } = useAppState();
 
-  // If not logged in, render the dedicated multi-role login screen with temporary credentials
+  const [unauthScreen, setUnauthScreen] = React.useState<'landing' | 'login'>('landing');
+
+  // Check URL query parameters (?login=true or ?view=login)
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('login') === 'true' || urlParams.get('view') === 'login') {
+        setUnauthScreen('login');
+      }
+    } catch (e) {}
+  }, []);
+
+  // If not logged in, render the modern high-converting Landing Page by default
+  // with 1-click option to switch to LoginView or open 7-day trial modal
   if (!isAuthenticated) {
-    return <LoginView />;
+    if (unauthScreen === 'login') {
+      return <LoginView onBackToLanding={() => setUnauthScreen('landing')} />;
+    }
+    return <LandingPageView onNavigateToLogin={() => setUnauthScreen('login')} />;
   }
+
 
   const renderActiveView = () => {
     // Strict Tenant Boundary - Only allow self views
@@ -164,17 +184,17 @@ function MainAppShell() {
   };
 
   return (
-    <div className="min-h-screen bg-[#edece6] text-[#19251f] flex font-sans selection:bg-[#274235]/20 selection:text-[#274235] overflow-x-hidden">
-      {/* Floating Vertical Navigation Rail from reference image */}
+    <div className="min-h-screen bg-[#EBF0E6] text-[#132A13] flex font-sans selection:bg-[#ECF39E] selection:text-[#132A13] overflow-x-hidden">
+      {/* Left Sidebar Navigation matching reference design */}
       <FloatingNavRail />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 pr-0 sm:pr-4 overflow-x-hidden">
-        {/* Top Header matching reference image with floral logo, greeting & search */}
+      <div className="flex-1 flex flex-col min-w-0 bg-white lg:rounded-l-[2.5rem] my-0 lg:my-3 lg:mr-3 shadow-xs border-l border-[#DCE5D3] overflow-hidden min-h-[calc(100vh-1.5rem)]">
+        {/* Top Header */}
         <TopHeader />
 
-        {/* Content Canvas with ample bottom padding on mobile/tablet for bottom nav bar */}
-        <main className="flex-1 p-3.5 sm:p-6 pb-28 lg:pb-8 max-w-7xl w-full mx-auto overflow-y-auto">
+        {/* Content Canvas */}
+        <main className="flex-1 p-3.5 sm:p-6 pb-28 lg:pb-8 w-full mx-auto overflow-y-auto">
           {renderActiveView()}
         </main>
       </div>

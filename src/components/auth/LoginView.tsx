@@ -1,31 +1,49 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAppState, DEMO_CREDENTIALS, DemoCredential } from '../../context/AppStateContext';
+import { useAppState, DEMO_CREDENTIALS } from '../../context/AppStateContext';
 import { UserRole } from '../../types';
 import { 
   Building2, 
   Lock, 
   Mail, 
   ArrowRight, 
-  CheckCircle2, 
+  ArrowLeft,
   ShieldCheck, 
   Eye, 
   EyeOff, 
   Sparkles,
-  KeyRound
+  KeyRound,
+  AlertCircle
 } from 'lucide-react';
+import TrialAutopayModal from '../landing/TrialAutopayModal';
 
-export default function LoginView() {
-  const { login } = useAppState();
+interface LoginViewProps {
+  onBackToLanding?: () => void;
+}
 
+export default function LoginView({ onBackToLanding }: LoginViewProps) {
+  const { login, signupUser } = useAppState();
+
+  const [authMode, setAuthMode] = useState<'SIGNIN' | 'SIGNUP'>('SIGNIN');
+  const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
+
+  // Sign In State
   const ALLOWED_LOGIN_ROLES: UserRole[] = ['owner', 'tenant', 'estate_manager'];
-
   const [selectedRole, setSelectedRole] = useState<UserRole>('owner');
   const [email, setEmail] = useState(DEMO_CREDENTIALS.owner.email);
   const [password, setPassword] = useState(DEMO_CREDENTIALS.owner.pass);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+
+  // Sign Up State
+  const [signupRole, setSignupRole] = useState<'owner' | 'estate_manager'>('owner');
+  const [signupName, setSignupName] = useState('');
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupPhone, setSignupPhone] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [signupLoading, setSignupLoading] = useState(false);
+  const [signupError, setSignupError] = useState<string | null>(null);
 
   const activeCred = DEMO_CREDENTIALS[selectedRole] || DEMO_CREDENTIALS.owner;
 
@@ -44,190 +62,276 @@ export default function LoginView() {
     login(role);
   };
 
+  const handleSignupSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSignupError(null);
+    setSignupLoading(true);
+
+    const res = await signupUser({
+      name: signupName,
+      email: signupEmail,
+      password: signupPassword,
+      phone: signupPhone,
+      role: signupRole,
+      portfolioName: `${signupName}'s Portfolio`,
+      city: 'Bangalore'
+    });
+
+    setSignupLoading(false);
+    if (!res.success) {
+      setSignupError(res.error || 'Failed to create account.');
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#edece6] flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
+    <div className="min-h-screen bg-[#EBF0E6] flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 font-sans selection:bg-[#ECF39E] selection:text-[#132A13]">
+      
+      {/* Navigation bar to return to Landing Page */}
+      {onBackToLanding && (
+        <div className="mb-4 w-full max-w-xl flex items-center justify-between">
+          <button
+            type="button"
+            onClick={onBackToLanding}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#DCE5D3] text-[#132A13] text-xs font-bold shadow-2xs hover:bg-[#F3F6EE] transition"
+          >
+            <ArrowLeft className="h-3.5 w-3.5 text-[#31572C]" />
+            <span>← Back to Website</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsTrialModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#ECF39E] border border-[#132A13]/20 text-[#132A13] text-xs font-black shadow-2xs hover:bg-[#dfe68b] transition"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-[#132A13]" />
+            <span>Start Free Trial</span>
+          </button>
+        </div>
+      )}
+
       {/* Brand Header */}
-      <div className="mb-6 text-center space-y-2">
-        <div className="flex items-center justify-center gap-3">
-          <div className="h-12 w-12 rounded-2xl bg-[#274235] text-white flex items-center justify-center shadow-lg shadow-[#274235]/25">
-            <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1l2.1-2.1M17 7l2.1-2.1" />
-            </svg>
+      <div className="mb-5 text-center space-y-1.5">
+        <div className="flex items-center justify-center gap-2.5">
+          <div className="h-9 w-9 rounded-xl bg-[#132A13] text-[#ECF39E] flex items-center justify-center font-black text-sm shadow-xs">
+            ✦
           </div>
-          <span className="text-3xl font-extrabold tracking-tight text-[#19251f]">
+          <span className="text-2xl font-black tracking-tight text-[#132A13]">
             STAYWISE
           </span>
         </div>
-        <p className="text-sm font-medium text-[#6e7972]">
-          The Operating System for Rental &amp; Real Estate Assets
+        <p className="text-xs font-semibold text-[#657D5C]">
+          Unified Property Operating System • Landlords, Estates &amp; Residents
         </p>
       </div>
 
-      {/* Main Login Card */}
-      <div className="w-full max-w-2xl bg-white rounded-3xl p-6 sm:p-8 shadow-[0_12px_40px_rgba(25,37,31,0.06)] border border-[#e3e1d8] space-y-6">
-        <div>
-          <h2 className="text-xl font-extrabold text-[#19251f]">
-            Sign In to Your Workspace
-          </h2>
-          <p className="text-xs text-[#6e7972] mt-0.5">
-            Select your account type to access role-specific permissions and dashboards
-          </p>
-        </div>
-
-        {/* Role Selector Tabs (Owner, Tenant, EstateOS) */}
-        <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-[#6e7972] mb-2">
-            Select Account Type
-          </label>
-          <div className="grid grid-cols-3 gap-2 p-1.5 bg-[#f4f3ef] rounded-2xl border border-[#e3e1d8]/80">
-            {ALLOWED_LOGIN_ROLES.map((role) => {
-              const cred = DEMO_CREDENTIALS[role];
-              const isSelected = selectedRole === role;
-              return (
-                <button
-                  key={role}
-                  type="button"
-                  onClick={() => handleRoleSelect(role)}
-                  className={`py-2.5 px-2 rounded-xl text-xs font-bold transition flex flex-col items-center text-center gap-1.5 ${
-                    isSelected
-                      ? 'bg-white text-[#19251f] shadow-md border border-[#e3e1d8]'
-                      : 'text-[#6e7972] hover:text-[#19251f] hover:bg-white/50'
-                  }`}
-                >
-                  <span className="text-xl">{cred.avatar}</span>
-                  <span className="font-extrabold text-[11px] leading-tight line-clamp-2">{cred.roleLabel}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Temporary Credentials Banner */}
-        <div className="p-4 rounded-2xl bg-[#eef3f0] border border-[#274235]/20 space-y-2.5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#274235] flex items-center gap-1.5">
-              <KeyRound className="h-4 w-4" />
-              <span>Temporary Demo ID & Password ({activeCred.roleLabel})</span>
-            </span>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#274235] text-white">
-              Ready to Test
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono">
-            <div className="p-2.5 rounded-xl bg-white border border-[#e3e1d8] flex justify-between items-center">
-              <span className="text-[#6e7972] text-[11px]">ID:</span>
-              <span className="font-bold text-[#19251f] select-all">{activeCred.email}</span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-white border border-[#e3e1d8] flex justify-between items-center">
-              <span className="text-[#6e7972] text-[11px]">Pass:</span>
-              <span className="font-bold text-[#19251f] select-all">{activeCred.pass}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-[11px] text-[#6e7972]">{activeCred.description}</span>
-            <button
-              type="button"
-              onClick={() => handleQuickDemoLogin(selectedRole)}
-              className="px-3.5 py-1.5 rounded-xl bg-[#274235] hover:bg-[#1e352a] text-white text-xs font-bold shadow-sm transition flex items-center gap-1 shrink-0"
-            >
-              <span>Instant Login</span>
-              <ArrowRight className="h-3 w-3" />
-            </button>
-          </div>
-        </div>
-
-        {/* Standard Login Form */}
-        <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
-          <div>
-            <label className="block text-[#19251f] font-semibold mb-1">
-              Email / Mobile ID
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@staywise.com"
-                className="w-full pl-10 pr-4 py-3 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] font-medium placeholder-[#95a099] focus:outline-none focus:border-[#274235] focus:bg-white transition"
-              />
-              <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-[#95a099]" />
-            </div>
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-[#19251f] font-semibold">
-                Password
-              </label>
-              <a href="#" onClick={(e) => { e.preventDefault(); alert(`Your temp password is: ${activeCred.pass}`); }} className="text-[#274235] hover:underline font-semibold text-[11px]">
-                Forgot password?
-              </a>
-            </div>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password"
-                className="w-full pl-10 pr-10 py-3 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] font-medium placeholder-[#95a099] focus:outline-none focus:border-[#274235] focus:bg-white transition"
-              />
-              <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-[#95a099]" />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-3.5 text-[#95a099] hover:text-[#19251f]"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 cursor-pointer text-[#6e7972]">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 rounded border-[#e3e1d8] text-[#274235] focus:ring-[#274235]"
-              />
-              <span>Remember this session</span>
-            </label>
-          </div>
-
+      {/* Main Container Card */}
+      <div className="w-full max-w-xl bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-[#DCE5D3] space-y-6">
+        
+        {/* Sign In vs Sign Up Segmented Controller */}
+        <div className="flex items-center p-1 rounded-full bg-[#F3F6EE] border border-[#DCE5D3]">
           <button
-            type="submit"
-            className="w-full py-3.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-sm shadow-xl shadow-[#274235]/20 transition flex items-center justify-center gap-2"
+            type="button"
+            onClick={() => { setAuthMode('SIGNIN'); setSignupError(null); }}
+            className={`flex-1 py-2 rounded-full text-xs font-bold transition text-center ${
+              authMode === 'SIGNIN'
+                ? 'bg-[#132A13] text-[#ECF39E] shadow-xs'
+                : 'text-[#657D5C] hover:text-[#132A13]'
+            }`}
           >
-            <span>Sign In as {activeCred.roleLabel}</span>
-            <ArrowRight className="h-4 w-4" />
+            Sign In
           </button>
-        </form>
-
-        {/* Quick Demo Access Bar at Bottom */}
-        <div className="pt-2 border-t border-[#e3e1d8] text-center">
-          <div className="text-[11px] font-bold text-[#6e7972] mb-2 uppercase tracking-wider">
-            Quick Persona Switch
-          </div>
-          <div className="flex justify-center gap-2">
-            {ALLOWED_LOGIN_ROLES.map(role => (
-              <button
-                key={role}
-                type="button"
-                onClick={() => handleQuickDemoLogin(role)}
-                className="px-3.5 py-1.5 rounded-xl bg-[#f4f3ef] hover:bg-[#274235] hover:text-white text-[#19251f] text-xs font-semibold border border-[#e3e1d8] transition flex items-center gap-1.5"
-              >
-                <span>{DEMO_CREDENTIALS[role].avatar}</span>
-                <span>{DEMO_CREDENTIALS[role].roleLabel}</span>
-              </button>
-            ))}
-          </div>
+          <button
+            type="button"
+            onClick={() => { setAuthMode('SIGNUP'); setSignupError(null); }}
+            className={`flex-1 py-2 rounded-full text-xs font-bold transition text-center flex items-center justify-center gap-1.5 ${
+              authMode === 'SIGNUP'
+                ? 'bg-[#132A13] text-[#ECF39E] shadow-xs'
+                : 'text-[#657D5C] hover:text-[#132A13]'
+            }`}
+          >
+            <Sparkles className="h-3.5 w-3.5 text-[#31572C]" />
+            <span>Create Account</span>
+          </button>
         </div>
+
+        {/* MODE 1: SIGN IN */}
+        {authMode === 'SIGNIN' ? (
+          <div className="space-y-5">
+            <div>
+              <h2 className="text-lg font-black text-[#132A13]">
+                Sign In to Workspace
+              </h2>
+              <p className="text-xs text-[#657D5C] mt-0.5">
+                Select your persona to access customized dashboards
+              </p>
+            </div>
+
+            {/* Role Selector Tabs */}
+            <div className="grid grid-cols-3 gap-2 p-1.5 bg-[#F3F6EE] rounded-2xl border border-[#DCE5D3]">
+              {ALLOWED_LOGIN_ROLES.map((role) => {
+                const cred = DEMO_CREDENTIALS[role];
+                const isSelected = selectedRole === role;
+                return (
+                  <button
+                    key={role}
+                    type="button"
+                    onClick={() => handleRoleSelect(role)}
+                    className={`py-2 px-2 rounded-xl text-xs font-bold transition flex flex-col items-center text-center gap-1 ${
+                      isSelected
+                        ? 'bg-[#132A13] text-[#ECF39E] shadow-2xs border border-[#4F772D]'
+                        : 'text-[#31572C] hover:text-[#132A13] hover:bg-white'
+                    }`}
+                  >
+                    <span className="text-xl">{cred.avatar}</span>
+                    <span className="font-extrabold text-[11px] leading-tight line-clamp-1">{cred.roleLabel}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Demo ID & Password Quick Login Banner */}
+            <div className="p-3.5 rounded-2xl bg-[#F3F6EE] border border-[#DCE5D3] space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#132A13] flex items-center gap-1.5">
+                  <KeyRound className="h-3.5 w-3.5 text-[#31572C]" />
+                  <span>Demo ID &amp; Password ({activeCred.roleLabel})</span>
+                </span>
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#ECF39E] text-[#132A13]">
+                  Ready
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                <div className="p-2 rounded-xl bg-white border border-[#DCE5D3] truncate">
+                  <span className="text-[#657D5C] mr-1">ID:</span>
+                  <span className="font-bold text-[#132A13]">{activeCred.email}</span>
+                </div>
+                <div className="p-2 rounded-xl bg-white border border-[#DCE5D3] truncate">
+                  <span className="text-[#657D5C] mr-1">Pass:</span>
+                  <span className="font-bold text-[#132A13]">{activeCred.pass}</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleQuickDemoLogin(selectedRole)}
+                className="w-full py-2 rounded-xl bg-[#132A13] hover:bg-[#31572C] text-[#ECF39E] text-xs font-black shadow-xs transition flex items-center justify-center gap-1"
+              >
+                <span>Instant Login as {activeCred.roleLabel}</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleFormSubmit} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-[#132A13] font-bold mb-1">
+                  Email
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#F3F6EE] border border-[#DCE5D3] text-[#132A13] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#31572C] transition"
+                  />
+                  <Mail className="absolute left-3 top-3 h-3.5 w-3.5 text-[#657D5C]" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[#132A13] font-bold mb-1">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-[#F3F6EE] border border-[#DCE5D3] text-[#132A13] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#31572C] transition"
+                  />
+                  <Lock className="absolute left-3 top-3 h-3.5 w-3.5 text-[#657D5C]" />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-[#657D5C] hover:text-[#132A13]"
+                  >
+                    {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-full bg-[#132A13] hover:bg-[#31572C] text-[#ECF39E] font-black text-xs shadow-xs transition"
+              >
+                Sign In
+              </button>
+            </form>
+          </div>
+        ) : (
+          /* MODE 2: SIGN UP */
+          <div className="space-y-4 text-xs">
+            <h2 className="text-lg font-black text-[#132A13]">
+              Create Your Account
+            </h2>
+
+            <form onSubmit={handleSignupSubmit} className="space-y-3">
+              <div>
+                <label className="block text-[#657D5C] font-semibold mb-1">Name</label>
+                <input
+                  type="text"
+                  required
+                  value={signupName}
+                  onChange={e => setSignupName(e.target.value)}
+                  placeholder="Margaret Miller"
+                  className="w-full p-2.5 rounded-xl bg-[#F3F6EE] border border-[#DCE5D3] text-[#132A13] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#31572C]"
+                />
+              </div>
+              <div>
+                <label className="block text-[#657D5C] font-semibold mb-1">Email</label>
+                <input
+                  type="email"
+                  required
+                  value={signupEmail}
+                  onChange={e => setSignupEmail(e.target.value)}
+                  placeholder="margaret@staywise.app"
+                  className="w-full p-2.5 rounded-xl bg-[#F3F6EE] border border-[#DCE5D3] text-[#132A13] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#31572C]"
+                />
+              </div>
+              <div>
+                <label className="block text-[#657D5C] font-semibold mb-1">Password</label>
+                <input
+                  type="password"
+                  required
+                  value={signupPassword}
+                  onChange={e => setSignupPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full p-2.5 rounded-xl bg-[#F3F6EE] border border-[#DCE5D3] text-[#132A13] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#31572C]"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={signupLoading}
+                className="w-full py-3 rounded-full bg-[#132A13] hover:bg-[#31572C] text-[#ECF39E] font-black text-xs transition"
+              >
+                {signupLoading ? 'Creating Account...' : 'Get Started'}
+              </button>
+            </form>
+          </div>
+        )}
+
       </div>
+
+      {isTrialModalOpen && (
+        <TrialAutopayModal 
+          isOpen={isTrialModalOpen} 
+          onClose={() => setIsTrialModalOpen(false)} 
+        />
+      )}
     </div>
   );
 }

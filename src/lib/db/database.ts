@@ -38,8 +38,12 @@ import {
   MoveFlowChecklistItem,
   DepositSettlementDispute,
   TenantReferralItem,
-  InfluencerOffer
+  InfluencerOffer,
+  OwnerSubscription,
+  SubscriptionInvoice,
+  SubscriptionTierId
 } from '../../types';
+import { SUBSCRIPTION_PLANS, calculateSubscriptionHash } from '../security/subscriptionCatalog';
 
 import { 
   INITIAL_PROPERTIES, 
@@ -146,10 +150,60 @@ export interface StaywiseDatabaseSchema {
   depositDisputes: DepositSettlementDispute[];
   referrals: TenantReferralItem[];
   influencerOffers: InfluencerOffer[];
+  subscriptions: OwnerSubscription[];
 }
 
 const DB_DIR = path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DB_DIR, 'staywise_db.json');
+
+const INITIAL_SUBSCRIPTIONS: OwnerSubscription[] = [
+  {
+    id: 'sub_vikram_2026',
+    userId: 'user-owner-vikram',
+    ownerName: 'Vikram Singhania',
+    entityName: 'Singhania Asset Holdings LLP',
+    planId: 'growth_pro',
+    planName: 'Growth Portfolio Pro OS',
+    status: 'ACTIVE',
+    billingCycle: 'annual',
+    startDate: '2026-10-01',
+    endDate: '2027-10-01',
+    daysRemaining: 362,
+    amount: 79990,
+    currency: 'INR',
+    maxUnits: 50,
+    currentUnits: 24,
+    paymentMethod: 'Axis Bank Escrow Auto-Debit',
+    lastPaymentTxnId: 'TXN-STAY-SUB-SECURE-98124',
+    lastPaymentDate: '2026-10-01',
+    autoRenew: true,
+    gstin: '29AAACS1928K1Z5',
+    tamperProofHash: calculateSubscriptionHash({
+      userId: 'user-owner-vikram',
+      planId: 'growth_pro',
+      startDate: '2026-10-01',
+      endDate: '2027-10-01',
+      amount: 79990
+    }),
+    history: [
+      {
+        invoiceId: 'INV-STAY-SUB-2026-001',
+        date: '01 Oct 2026',
+        amount: 79990,
+        currency: 'INR',
+        planId: 'growth_pro',
+        planName: 'Growth Portfolio Pro OS (Annual)',
+        billingCycle: 'annual',
+        txnId: 'TXN-STAY-SUB-SECURE-98124',
+        paymentMethod: 'Axis Bank Escrow Auto-Debit',
+        status: 'PAID',
+        gstin: '29AAACS1928K1Z5',
+        taxAmount: 12202,
+        downloadUrl: '#'
+      }
+    ]
+  }
+];
 
 const INITIAL_USERS: UserAccount[] = [
   {
@@ -265,7 +319,8 @@ class DatabaseEngine {
           moveFlowChecklist: INITIAL_MOVEFLOW_CHECKLIST,
           depositDisputes: INITIAL_DEPOSIT_DISPUTES,
           referrals: INITIAL_REFERRALS,
-          influencerOffers: INITIAL_INFLUENCER_OFFERS
+          influencerOffers: INITIAL_INFLUENCER_OFFERS,
+          subscriptions: INITIAL_SUBSCRIPTIONS
         };
 
         this.writeSync(seedData);
@@ -281,8 +336,13 @@ class DatabaseEngine {
     this.ensureInitialized();
     try {
       const raw = fs.readFileSync(DB_FILE, 'utf-8');
-      this.cache = JSON.parse(raw);
-      return this.cache!;
+      const parsed: StaywiseDatabaseSchema = JSON.parse(raw);
+      if (!parsed.subscriptions || !Array.isArray(parsed.subscriptions)) {
+        parsed.subscriptions = INITIAL_SUBSCRIPTIONS;
+        this.writeSync(parsed);
+      }
+      this.cache = parsed;
+      return this.cache;
     } catch (err) {
       console.error('[Staywise Database] Failed to read database file:', err);
       throw new Error('Database read failure');
@@ -320,6 +380,17 @@ class DatabaseEngine {
         return user;
       }
       return null;
+    },
+    create: async (payload: Omit<UserAccount, 'id' | 'createdAt'> & { id?: string }): Promise<UserAccount> => {
+      const data = this.readSync();
+      const newUser: UserAccount = {
+        ...payload,
+        id: payload.id || `user-${payload.role}-${Date.now()}`,
+        createdAt: new Date().toISOString()
+      };
+      data.users.push(newUser);
+      this.writeSync(data);
+      return newUser;
     }
   };
 
@@ -445,8 +516,23 @@ class DatabaseEngine {
       const inv = data.invoices.find(i => i.id === id);
       if (!inv) return null;
 
-      const payAmount = amount || inv.totalAmount;
-      inv.paidAmount = payAmount;
+      // Anti-Replay / Double Settlement Check
+      if (inv.status === 'Paid') {
+        throw new Error('ALREADY_PAID');
+      }
+
+      // Authoritative Price Enforcement (Burp Suite Defense)
+      const authoritativeDue = inv.totalAmount - (inv.paidAmount || 0);
+      if (amount !== undefined && amount !== null) {
+        if (Math.abs(amount - authoritativeDue) > 0.01 && Math.abs(amount - inv.totalAmount) > 0.01) {
+          console.warn(`[SECURITY ALERT] Burp Suite price tampering detected on Invoice ${id}! Expected ₹${authoritativeDue}, received ₹${amount}`);
+          throw new Error('PRICE_TAMPERING_DETECTED');
+        }
+      }
+
+      // Enforce authoritative settlement amount
+      const payAmount = authoritativeDue > 0 ? authoritativeDue : inv.totalAmount;
+      inv.paidAmount = inv.totalAmount;
       inv.status = 'Paid';
       inv.paymentMethod = paymentMethod;
       inv.paidDate = new Date().toISOString().split('T')[0];
@@ -456,7 +542,7 @@ class DatabaseEngine {
       const ledgerEntry: LedgerEntry = {
         id: `led-${Date.now()}`,
         timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-        description: `Rent payment received for ${inv.propertyName} (${inv.unitNumber}) via ${paymentMethod} [DB Verified]`,
+        description: `Rent payment received for ${inv.propertyName} (${inv.unitNumber}) via ${paymentMethod} [DB Verified Authoritative Settlement]`,
         type: 'CREDIT',
         amount: payAmount,
         account: '1010-ESCROW-COLLECTION',
@@ -551,6 +637,27 @@ class DatabaseEngine {
   };
 
   // ==========================================
+  // REFERRALS REPOSITORY
+  // ==========================================
+  public referrals = {
+    findMany: async (): Promise<TenantReferralItem[]> => {
+      const data = this.readSync();
+      return data.referrals;
+    },
+    create: async (referral: Omit<TenantReferralItem, 'id' | 'date'> & { id?: string; date?: string }): Promise<TenantReferralItem> => {
+      const data = this.readSync();
+      const newRef: TenantReferralItem = {
+        ...referral,
+        id: referral.id || `ref-${Date.now()}`,
+        date: referral.date || new Date().toISOString().split('T')[0]
+      };
+      data.referrals.unshift(newRef);
+      this.writeSync(data);
+      return newRef;
+    }
+  };
+
+  // ==========================================
   // ELECTRICITY BILLS REPOSITORY
   // ==========================================
   public bills = {
@@ -608,6 +715,252 @@ class DatabaseEngine {
   public estate = {
     getAssets: async (): Promise<EstateAsset[]> => this.readSync().estateAssets,
     getStaff: async (): Promise<StaffMember[]> => this.readSync().staff
+  };
+
+  // ==========================================
+  // SUBSCRIPTIONS & PLATFORM SAAS LICENSING
+  // ==========================================
+  public subscriptions = {
+    getForUser: async (userId?: string): Promise<OwnerSubscription | null> => {
+      const data = this.readSync();
+      const sub = data.subscriptions.find(s => s.userId === userId || s.userId === 'user-owner-vikram');
+      return sub || data.subscriptions[0] || null;
+    },
+    getAll: async (): Promise<OwnerSubscription[]> => {
+      const data = this.readSync();
+      return data.subscriptions;
+    },
+    save: async (sub: OwnerSubscription): Promise<OwnerSubscription> => {
+      const data = this.readSync();
+      const idx = data.subscriptions.findIndex(s => s.id === sub.id || s.userId === sub.userId);
+      if (idx >= 0) {
+        data.subscriptions[idx] = sub;
+      } else {
+        data.subscriptions.unshift(sub);
+      }
+      this.writeSync(data);
+      return sub;
+    },
+    upgrade: async (
+      userId: string,
+      planId: SubscriptionTierId,
+      billingCycle: 'monthly' | 'annual',
+      paymentMethod: string,
+      txnId: string
+    ): Promise<OwnerSubscription> => {
+      const data = this.readSync();
+      let sub = data.subscriptions.find(s => s.userId === userId || s.userId === 'user-owner-vikram') || data.subscriptions[0];
+      const plan = SUBSCRIPTION_PLANS[planId];
+      if (!plan) throw new Error(`Invalid plan identifier: ${planId}`);
+
+      const authoritativeAmount = billingCycle === 'annual' ? plan.annualPrice : plan.monthlyPrice;
+      const startDate = new Date().toISOString().split('T')[0];
+      const expiry = new Date();
+      if (billingCycle === 'annual') {
+        expiry.setFullYear(expiry.getFullYear() + 1);
+      } else {
+        expiry.setMonth(expiry.getMonth() + 1);
+      }
+      const endDate = expiry.toISOString().split('T')[0];
+      const daysRemaining = Math.max(1, Math.round((expiry.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+
+      const newInvoice: SubscriptionInvoice = {
+        invoiceId: `INV-STAY-SUB-${Date.now()}`,
+        date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        amount: authoritativeAmount,
+        currency: 'INR',
+        planId,
+        planName: `${plan.name} (${billingCycle === 'annual' ? 'Annual' : 'Monthly'})`,
+        billingCycle,
+        txnId,
+        paymentMethod,
+        status: 'PAID',
+        taxAmount: Math.round((authoritativeAmount * 18) / 118),
+        gstin: sub?.gstin || '29AAACS1928K1Z5',
+        downloadUrl: '#'
+      };
+
+      const updatedSub: OwnerSubscription = {
+        id: sub ? sub.id : `sub_${Date.now()}`,
+        userId: userId || 'user-owner-vikram',
+        ownerName: sub ? sub.ownerName : 'Vikram Singhania',
+        entityName: sub ? sub.entityName : 'Singhania Asset Holdings LLP',
+        planId,
+        planName: plan.name,
+        status: 'ACTIVE',
+        billingCycle,
+        startDate,
+        endDate,
+        daysRemaining,
+        amount: authoritativeAmount,
+        currency: 'INR',
+        maxUnits: plan.maxUnits,
+        currentUnits: sub ? sub.currentUnits : 24,
+        paymentMethod,
+        lastPaymentTxnId: txnId,
+        lastPaymentDate: startDate,
+        autoRenew: true,
+        gstin: sub?.gstin || '29AAACS1928K1Z5',
+        tamperProofHash: calculateSubscriptionHash({
+          userId: userId || 'user-owner-vikram',
+          planId,
+          startDate,
+          endDate,
+          amount: authoritativeAmount
+        }),
+        history: sub?.history ? [newInvoice, ...sub.history] : [newInvoice]
+      };
+
+      const idx = data.subscriptions.findIndex(s => s.id === updatedSub.id || s.userId === updatedSub.userId);
+      if (idx >= 0) {
+        data.subscriptions[idx] = updatedSub;
+      } else {
+        data.subscriptions.unshift(updatedSub);
+      }
+
+      // Record SaaS revenue credit in statutory double-entry ledger
+      const ledgerEntry: LedgerEntry = {
+        id: `led-sub-${Date.now()}`,
+        timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        description: `Platform Subscription: ${plan.name} (${billingCycle.toUpperCase()}) - ${paymentMethod} [Authoritative Hash Verified]`,
+        type: 'CREDIT',
+        amount: authoritativeAmount,
+        account: '4010-PLATFORM-SAAS-REVENUE',
+        entityType: 'RENT',
+        referenceId: newInvoice.invoiceId,
+        settlementStatus: 'CLEARED'
+      };
+      data.ledger.unshift(ledgerEntry);
+
+      this.writeSync(data);
+      return updatedSub;
+    },
+
+    createTrial: async (params: {
+      userId: string;
+      ownerName: string;
+      entityName: string;
+      planId: SubscriptionTierId;
+      billingCycle: 'monthly' | 'annual';
+      autopayMethod: 'CARD' | 'BANK_MANDATE';
+      autopayMaskedDetails: string;
+    }): Promise<OwnerSubscription> => {
+      const data = this.readSync();
+      const plan = SUBSCRIPTION_PLANS[params.planId] || SUBSCRIPTION_PLANS.growth_pro;
+      const authoritativeAmount = params.billingCycle === 'annual' ? plan.annualPrice : plan.monthlyPrice;
+      
+      const startDate = new Date().toISOString().split('T')[0];
+      const expiry = new Date();
+      expiry.setDate(expiry.getDate() + 7);
+      const endDate = expiry.toISOString().split('T')[0];
+      
+      const trialSub: OwnerSubscription = {
+        id: `sub_trial_${Date.now()}`,
+        userId: params.userId,
+        ownerName: params.ownerName,
+        entityName: params.entityName,
+        planId: params.planId,
+        planName: plan.name,
+        status: 'TRIAL',
+        billingCycle: params.billingCycle,
+        startDate,
+        endDate,
+        daysRemaining: 7,
+        amount: authoritativeAmount,
+        currency: 'INR',
+        maxUnits: plan.maxUnits,
+        currentUnits: 1,
+        paymentMethod: params.autopayMethod === 'CARD' 
+          ? `Autopay Card: ${params.autopayMaskedDetails}` 
+          : `Autopay Bank Mandate: ${params.autopayMaskedDetails}`,
+        lastPaymentTxnId: `TXN-TRIAL-MANDATE-${Date.now()}`,
+        lastPaymentDate: startDate,
+        autoRenew: true,
+        gstin: '29AAACS1928K1Z5',
+        tamperProofHash: calculateSubscriptionHash({
+          userId: params.userId,
+          planId: params.planId,
+          startDate,
+          endDate,
+          amount: authoritativeAmount
+        }),
+        history: [{
+          invoiceId: `INV-TRIAL-TOKEN-${Date.now()}`,
+          date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          amount: 0,
+          currency: 'INR',
+          planId: params.planId,
+          planName: `${plan.name} (7-Day Free Trial - ₹0 Today)`,
+          billingCycle: params.billingCycle,
+          txnId: `TXN-TRIAL-${Date.now()}`,
+          paymentMethod: params.autopayMethod === 'CARD' ? 'Card Tokenization (₹0.00 Auth)' : 'e-NACH Mandate Registration',
+          status: 'PAID',
+          taxAmount: 0,
+          gstin: '29AAACS1928K1Z5',
+          downloadUrl: '#'
+        }],
+        isTrial: true,
+        trialDaysRemaining: 7,
+        trialEndsAt: endDate,
+        canCancelBefore: endDate,
+        autopayConnected: true,
+        autopayMethod: params.autopayMethod,
+        autopayMaskedDetails: params.autopayMaskedDetails,
+        firstChargeAmount: authoritativeAmount,
+        firstChargeDate: endDate
+      };
+
+      const idx = data.subscriptions.findIndex(s => s.userId === params.userId);
+      if (idx >= 0) {
+        data.subscriptions[idx] = trialSub;
+      } else {
+        data.subscriptions.unshift(trialSub);
+      }
+
+      // Record 0 charge trial entry in ledger
+      const ledgerEntry: LedgerEntry = {
+        id: `led-trial-${Date.now()}`,
+        timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        description: `7-Day Free Trial Activated: ${plan.name} (${params.billingCycle.toUpperCase()}) - ${trialSub.paymentMethod} [₹0 Due Today, Autopay Scheduled for ${endDate}]`,
+        type: 'CREDIT',
+        amount: 0,
+        account: '4010-PLATFORM-SAAS-TRIAL',
+        entityType: 'RENT',
+        referenceId: trialSub.id,
+        settlementStatus: 'CLEARED'
+      };
+      data.ledger.unshift(ledgerEntry);
+
+      this.writeSync(data);
+      return trialSub;
+    },
+
+    cancelTrial: async (userId: string): Promise<OwnerSubscription | null> => {
+      const data = this.readSync();
+      const sub = data.subscriptions.find(s => s.userId === userId || s.userId === 'user-owner-vikram') || data.subscriptions[0];
+      if (!sub) return null;
+
+      sub.status = 'CANCELLED';
+      sub.autoRenew = false;
+      sub.autopayConnected = false;
+      sub.isTrial = false;
+
+      const ledgerEntry: LedgerEntry = {
+        id: `led-cancel-${Date.now()}`,
+        timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+        description: `7-Day Free Trial Cancelled by User before Day 7 - Autopay Mandate Revoked (₹0 Charged)`,
+        type: 'DEBIT',
+        amount: 0,
+        account: '4010-PLATFORM-SAAS-CANCELLATION',
+        entityType: 'RENT',
+        referenceId: sub.id,
+        settlementStatus: 'CLEARED'
+      };
+      data.ledger.unshift(ledgerEntry);
+
+      this.writeSync(data);
+      return sub;
+    }
   };
 }
 

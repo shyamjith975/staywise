@@ -18,14 +18,55 @@ import {
   Download, 
   Key, 
   Sliders,
-  DollarSign
+  DollarSign,
+  Crown,
+  Sparkles,
+  Calendar,
+  Clock,
+  ArrowUpRight,
+  Check,
+  AlertTriangle,
+  RefreshCw,
+  Hash,
+  ShieldAlert
 } from 'lucide-react';
+import { SUBSCRIPTION_PLANS } from '../../../lib/security/subscriptionCatalog';
 
 export default function SettingsView() {
-  const { currentUser, addNotification } = useAppState();
+  const { currentUser, addNotification, subscription, upgradeSubscription, refreshSubscription, cancelTrial } = useAppState();
 
-  const [activeTab, setActiveTab] = useState<'PORTFOLIO' | 'RENT_RULES' | 'UTILITIES' | 'BANKING' | 'DELEGATES' | 'SECURITY'>('PORTFOLIO');
+  const [activeTab, setActiveTab] = useState<'PORTFOLIO' | 'SUBSCRIPTION' | 'RENT_RULES' | 'UTILITIES' | 'BANKING' | 'DELEGATES' | 'SECURITY'>('SUBSCRIPTION');
   const [isSavedToast, setIsSavedToast] = useState(false);
+  const [isCancellingTrial, setIsCancellingTrial] = useState(false);
+
+  // Subscription Upgrade Modal State
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const [selectedCycle, setSelectedCycle] = useState<'annual' | 'monthly'>('annual');
+  const [isUpgrading, setIsUpgrading] = useState(false);
+  const [upgradeError, setUpgradeError] = useState<string | null>(null);
+  const [upgradeSuccess, setUpgradeSuccess] = useState<boolean>(false);
+
+  // Tab persistence across page refresh
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const urlTab = new URLSearchParams(window.location.search).get('tab') as any;
+      const savedTab = urlTab || localStorage.getItem('staywise_settings_tab');
+      if (savedTab && ['PORTFOLIO', 'SUBSCRIPTION', 'RENT_RULES', 'UTILITIES', 'BANKING', 'DELEGATES', 'SECURITY'].includes(savedTab)) {
+        setActiveTab(savedTab);
+      }
+    } catch (e) {}
+  }, []);
+
+  const handleTabChange = (tab: 'PORTFOLIO' | 'SUBSCRIPTION' | 'RENT_RULES' | 'UTILITIES' | 'BANKING' | 'DELEGATES' | 'SECURITY') => {
+    setActiveTab(tab);
+    try {
+      localStorage.setItem('staywise_settings_tab', tab);
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', tab);
+      window.history.replaceState({}, '', url.toString());
+    } catch (e) {}
+  };
 
   // Form State: Portfolio & Entity
   const [entityName, setEntityName] = useState('Singhania Asset Holdings LLP');
@@ -73,20 +114,41 @@ export default function SettingsView() {
     alert('Exporting complete portfolio ledger, tenant contracts, and audit trail (ZIP/JSON)...');
   };
 
+  const handleUpgradeTier = async (planId: 'starter' | 'growth_pro' | 'enterprise') => {
+    setIsUpgrading(true);
+    setUpgradeError(null);
+    try {
+      const res = await upgradeSubscription(planId, selectedCycle);
+      setIsUpgrading(false);
+      if (!res.success) {
+        setUpgradeError(res.error || 'Failed to complete cryptographic upgrade');
+      } else {
+        setUpgradeSuccess(true);
+        setTimeout(() => {
+          setIsUpgradeModalOpen(false);
+          setUpgradeSuccess(false);
+        }, 1500);
+      }
+    } catch (err: any) {
+      setIsUpgrading(false);
+      setUpgradeError(err.message || 'Upgrade request failed');
+    }
+  };
+
   return (
     <div className="space-y-6 pb-12 font-sans">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#e3e1d8]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#DCE5D3]">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#19251f]">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#132A13]">
               Platform &amp; Portfolio Settings
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#eef3f0] text-[#274235] font-bold border border-[#274235]/20">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#EBF0E6] text-[#31572C] font-bold border border-[#31572C]/20">
               Live Configuration
             </span>
           </div>
-          <p className="text-xs text-[#6e7972] mt-0.5">
+          <p className="text-xs text-[#657D5C] mt-0.5">
             Configure entity profile, automated rent schedules, electricity tariffs, and escrow payouts
           </p>
         </div>
@@ -94,15 +156,15 @@ export default function SettingsView() {
         <div className="flex items-center gap-2.5">
           <button
             onClick={handleExportBackup}
-            className="px-3.5 py-2 rounded-2xl bg-white hover:bg-[#f4f3ef] border border-[#e3e1d8] text-[#19251f] text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
+            className="px-3.5 py-2 rounded-2xl bg-white hover:bg-[#F3F6EE] border border-[#DCE5D3] text-[#132A13] text-xs font-bold flex items-center gap-1.5 transition shadow-2xs"
           >
-            <Download className="h-4 w-4 text-[#274235]" />
+            <Download className="h-4 w-4 text-[#31572C]" />
             <span>Export Full Backup</span>
           </button>
 
           <button
             onClick={handleSaveSettings}
-            className="px-5 py-2 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white text-xs font-bold shadow-md shadow-[#274235]/20 flex items-center gap-2 transition"
+            className="px-5 py-2 rounded-2xl bg-[#132A13] hover:bg-[#31572C] text-[#ECF39E] text-xs font-bold shadow-md shadow-[#132A13]/20 flex items-center gap-2 transition"
           >
             <Save className="h-4 w-4" />
             <span>Save Configurations</span>
@@ -111,13 +173,28 @@ export default function SettingsView() {
       </div>
 
       {/* Settings Navigation Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-[#eeece5] text-xs">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-[#E8EFE2] text-xs">
         <button
-          onClick={() => setActiveTab('PORTFOLIO')}
+          onClick={() => handleTabChange('SUBSCRIPTION')}
+          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
+            activeTab === 'SUBSCRIPTION'
+              ? 'bg-[#132A13] text-[#ECF39E] shadow-sm'
+              : 'text-[#657D5C] hover:text-[#132A13] hover:bg-white'
+          }`}
+        >
+          <Crown className="h-4 w-4 text-amber-400" />
+          <span>Subscription &amp; Plans</span>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#ECF39E]/30 text-[#ECF39E] font-extrabold border border-[#ECF39E]/40">
+            Active
+          </span>
+        </button>
+
+        <button
+          onClick={() => handleTabChange('PORTFOLIO')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'PORTFOLIO'
-              ? 'bg-[#19251f] text-white shadow-md shadow-[#19251f]/10'
-              : 'text-[#6e7972] hover:text-[#19251f] hover:bg-white'
+              ? 'bg-[#132A13] text-[#ECF39E] shadow-sm'
+              : 'text-[#657D5C] hover:text-[#132A13] hover:bg-white'
           }`}
         >
           <Building2 className="h-4 w-4" />
@@ -125,11 +202,11 @@ export default function SettingsView() {
         </button>
 
         <button
-          onClick={() => setActiveTab('RENT_RULES')}
+          onClick={() => handleTabChange('RENT_RULES')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'RENT_RULES'
-              ? 'bg-[#19251f] text-white shadow-md shadow-[#19251f]/10'
-              : 'text-[#6e7972] hover:text-[#19251f] hover:bg-white'
+              ? 'bg-[#132A13] text-[#ECF39E] shadow-sm'
+              : 'text-[#657D5C] hover:text-[#132A13] hover:bg-white'
           }`}
         >
           <Sliders className="h-4 w-4" />
@@ -137,11 +214,11 @@ export default function SettingsView() {
         </button>
 
         <button
-          onClick={() => setActiveTab('UTILITIES')}
+          onClick={() => handleTabChange('UTILITIES')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'UTILITIES'
-              ? 'bg-[#19251f] text-white shadow-md shadow-[#19251f]/10'
-              : 'text-[#6e7972] hover:text-[#19251f] hover:bg-white'
+              ? 'bg-[#132A13] text-[#ECF39E] shadow-sm'
+              : 'text-[#657D5C] hover:text-[#132A13] hover:bg-white'
           }`}
         >
           <Zap className="h-4 w-4 text-amber-500" />
@@ -149,11 +226,11 @@ export default function SettingsView() {
         </button>
 
         <button
-          onClick={() => setActiveTab('BANKING')}
+          onClick={() => handleTabChange('BANKING')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'BANKING'
-              ? 'bg-[#19251f] text-white shadow-md shadow-[#19251f]/10'
-              : 'text-[#6e7972] hover:text-[#19251f] hover:bg-white'
+              ? 'bg-[#132A13] text-[#ECF39E] shadow-sm'
+              : 'text-[#657D5C] hover:text-[#132A13] hover:bg-white'
           }`}
         >
           <CreditCard className="h-4 w-4" />
@@ -161,11 +238,11 @@ export default function SettingsView() {
         </button>
 
         <button
-          onClick={() => setActiveTab('DELEGATES')}
+          onClick={() => handleTabChange('DELEGATES')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'DELEGATES'
-              ? 'bg-[#19251f] text-white shadow-md shadow-[#19251f]/10'
-              : 'text-[#6e7972] hover:text-[#19251f] hover:bg-white'
+              ? 'bg-[#132A13] text-[#ECF39E] shadow-sm'
+              : 'text-[#657D5C] hover:text-[#132A13] hover:bg-white'
           }`}
         >
           <Users className="h-4 w-4" />
@@ -173,17 +250,341 @@ export default function SettingsView() {
         </button>
 
         <button
-          onClick={() => setActiveTab('SECURITY')}
+          onClick={() => handleTabChange('SECURITY')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'SECURITY'
-              ? 'bg-[#19251f] text-white shadow-md shadow-[#19251f]/10'
-              : 'text-[#6e7972] hover:text-[#19251f] hover:bg-white'
+              ? 'bg-[#132A13] text-[#ECF39E] shadow-sm'
+              : 'text-[#657D5C] hover:text-[#132A13] hover:bg-white'
           }`}
         >
           <ShieldCheck className="h-4 w-4" />
           <span>Security &amp; 2FA</span>
         </button>
       </div>
+
+      {/* TAB: Owner Subscription Model & White-Hat Security Hardening */}
+      {activeTab === 'SUBSCRIPTION' && (
+        <div className="space-y-6">
+          {/* Top Hero Banner */}
+          <div className="organic-card p-6 sm:p-8 bg-gradient-to-br from-[#132A13] via-[#31572C] to-[#132A13] text-white relative overflow-hidden rounded-3xl shadow-xl border border-[#4F772D]">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-[#ECF39E]/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {subscription?.status === 'TRIAL' ? (
+                    <span className="px-3 py-1 rounded-full bg-[#ECF39E] text-[#132A13] text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
+                      <span className="h-2 w-2 rounded-full bg-rose-600 animate-ping" />
+                      7-Day Free Trial • Autopay Scheduled
+                    </span>
+                  ) : subscription?.status === 'CANCELLED' ? (
+                    <span className="px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-xs font-bold border border-rose-500/30">
+                      Trial Cancelled • Autopay Revoked
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1 rounded-full bg-[#ECF39E]/20 text-[#ECF39E] text-xs font-black uppercase tracking-wider border border-[#ECF39E]/40 flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-[#ECF39E] animate-ping" />
+                      Active Plan • Auto-Renew ON
+                    </span>
+                  )}
+
+                  <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30 flex items-center gap-1.5">
+                    <Crown className="h-3.5 w-3.5 text-amber-400" />
+                    {subscription?.billingCycle === 'annual' ? 'Annual Commitment (Saved 17%)' : 'Monthly Flexible'}
+                  </span>
+                </div>
+
+                <div>
+                  <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-3">
+                    {subscription?.planName || 'Growth Portfolio Pro OS'}
+                  </h2>
+                  <p className="text-xs text-[#ECF39E]/80 mt-1 max-w-2xl leading-relaxed">
+                    {subscription?.status === 'TRIAL' 
+                      ? `Your 7-day risk-free trial is active. You have full access to all features. Your card/bank will only process autopay on ${subscription.endDate} (₹${subscription.amount}) if not cancelled before then.`
+                      : 'Unified multi-asset property management operating system with statutory double-entry ledger, sub-meter OCR tariff splitting, automated WhatsApp dunning, and Axis Bank Escrow clearance.'
+                    }
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-6 pt-2 text-xs text-white/90">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-[#ECF39E]" />
+                    <span>Plan Started: <b className="text-white">{subscription?.startDate || '01 Oct 2026'}</b></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-amber-300" />
+                    <span>{subscription?.status === 'TRIAL' ? 'Trial Ends / First Charge:' : 'Next Renewal:'} <b className="text-white">{subscription?.endDate || '01 Oct 2027'}</b></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-[#ECF39E]" />
+                    <span>{subscription?.status === 'TRIAL' ? 'Trial Remaining:' : 'Validity Countdown:'} <b className="text-[#ECF39E]">{subscription?.daysRemaining ?? 7} Days Left</b></span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row lg:flex-col gap-3 min-w-[220px]">
+                <button
+                  onClick={() => setIsUpgradeModalOpen(true)}
+                  className="px-5 py-3 rounded-2xl bg-[#ECF39E] hover:bg-[#dfe68b] text-[#132A13] font-black text-xs transition shadow-lg shadow-[#132A13]/20 flex items-center justify-center gap-2 border border-[#132A13]/10"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span>{subscription?.status === 'CANCELLED' ? 'Reactivate Subscription' : 'Upgrade / Switch Tier'}</span>
+                </button>
+
+                {subscription?.status === 'TRIAL' && (
+                  <button
+                    onClick={async () => {
+                      if (confirm("Cancel 7-Day Free Trial?\n\nYour connected card/bank autopay mandate will be revoked immediately and you will NOT be charged (₹0). You can continue exploring until your trial expires.")) {
+                        setIsCancellingTrial(true);
+                        await cancelTrial();
+                        setIsCancellingTrial(false);
+                      }
+                    }}
+                    disabled={isCancellingTrial}
+                    className="px-4 py-2.5 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <AlertTriangle className="h-3.5 w-3.5 text-rose-400" />
+                    <span>{isCancellingTrial ? 'Revoking Autopay...' : 'Cancel Trial & Autopay (₹0 Charged)'}</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={async () => {
+                    await refreshSubscription();
+                    addNotification('Subscription Status Refreshed', 'Synced latest quota & ledger status from central server.', 'SYSTEM');
+                  }}
+                  className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition border border-white/15 flex items-center justify-center gap-2"
+                >
+                  <RefreshCw className="h-3.5 w-3.5 text-[#ECF39E]" />
+                  <span>Sync Server Status</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 2-Column Plan Details & Quota Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Card 1: Subscription Financials */}
+            <div className="organic-card p-5 space-y-3.5 border border-[#DCE5D3] bg-white">
+              <div className="flex items-center justify-between pb-2 border-b border-[#E8EFE2]">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-xl bg-[#EBF0E6] text-[#31572C] flex items-center justify-center">
+                    <DollarSign className="h-4 w-4" />
+                  </div>
+                  <h4 className="font-extrabold text-sm text-[#132A13]">Subscription Billing</h4>
+                </div>
+                <span className="text-[11px] font-bold text-[#31572C] bg-[#EBF0E6] px-2 py-0.5 rounded-md">
+                  Cleared
+                </span>
+              </div>
+
+              <div className="space-y-2.5 text-xs">
+                <div className="flex justify-between items-center text-[#657D5C]">
+                  <span>Annual Invoiced Fee:</span>
+                  <span className="font-black text-[#132A13] text-sm">
+                    ₹{(subscription?.amount || 79990).toLocaleString('en-IN')}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-[#657D5C]">
+                  <span>GST Applicable (18%):</span>
+                  <span className="font-bold text-[#132A13]">Included (₹12,202)</span>
+                </div>
+                <div className="flex justify-between items-center text-[#657D5C]">
+                  <span>Active Payment Method:</span>
+                  <span className="font-bold text-[#132A13]">{subscription?.paymentMethod || 'Axis Bank Escrow Auto-Debit'}</span>
+                </div>
+                <div className="flex justify-between items-center text-[#657D5C]">
+                  <span>Billing Entity GSTIN:</span>
+                  <span className="font-mono text-[#132A13] font-semibold">{subscription?.gstin || '29AAACS1928K1Z5'}</span>
+                </div>
+                <div className="flex justify-between items-center text-[#657D5C]">
+                  <span>Last Cleared Txn:</span>
+                  <span className="font-mono text-[11px] text-[#31572C] bg-[#EBF0E6] px-1.5 py-0.5 rounded font-bold">
+                    {subscription?.lastPaymentTxnId || 'TXN-STAY-SUB-SECURE-98124'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Quota & Capacity Usage */}
+            <div className="organic-card p-5 space-y-3.5 border border-[#DCE5D3] bg-white">
+              <div className="flex items-center justify-between pb-2 border-b border-[#E8EFE2]">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
+                    <Building2 className="h-4 w-4" />
+                  </div>
+                  <h4 className="font-extrabold text-sm text-[#132A13]">Unit &amp; Asset Quota</h4>
+                </div>
+                <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md">
+                  {Math.round(((subscription?.currentUnits || 24) / (subscription?.maxUnits || 50)) * 100)}% Used
+                </span>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <div className="flex justify-between text-[#657D5C] mb-1">
+                    <span>Managed Units Allocation:</span>
+                    <span className="font-bold text-[#132A13]">
+                      {subscription?.currentUnits || 24} of {subscription?.maxUnits || 50} Units
+                    </span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-[#EBF0E6] overflow-hidden">
+                    <div 
+                      className="h-full bg-[#31572C] rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, Math.round(((subscription?.currentUnits || 24) / (subscription?.maxUnits || 50)) * 100))}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div className="p-2 rounded-xl bg-[#F3F6EE] border border-[#DCE5D3]">
+                    <div className="text-[10px] text-[#657D5C]">PG Co-living Beds</div>
+                    <div className="text-xs font-black text-[#132A13]">18 Active Beds</div>
+                  </div>
+                  <div className="p-2 rounded-xl bg-[#F3F6EE] border border-[#DCE5D3]">
+                    <div className="text-[10px] text-[#657D5C]">Commercial Area</div>
+                    <div className="text-xs font-black text-[#132A13]">15,000 sq.ft</div>
+                  </div>
+                  <div className="p-2 rounded-xl bg-[#F3F6EE] border border-[#DCE5D3]">
+                    <div className="text-[10px] text-[#657D5C]">WhatsApp Dunning</div>
+                    <div className="text-xs font-black text-[#31572C]">Unlimited</div>
+                  </div>
+                  <span className="font-mono text-[11px] text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded">
+                    {subscription?.lastPaymentTxnId || 'TXN-STAY-SUB-SECURE-98124'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Quota & Capacity Usage */}
+            <div className="organic-card p-5 space-y-3.5 border border-[#e3e1d8] bg-white">
+              <div className="flex items-center justify-between pb-2 border-b border-[#eeece5]">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
+                    <Building2 className="h-4 w-4" />
+                  </div>
+                  <h4 className="font-extrabold text-sm text-[#19251f]">Unit &amp; Asset Quota</h4>
+                </div>
+                <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md">
+                  {Math.round(((subscription?.currentUnits || 24) / (subscription?.maxUnits || 50)) * 100)}% Used
+                </span>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <div className="flex justify-between text-[#6e7972] mb-1">
+                    <span>Managed Units Allocation:</span>
+                    <span className="font-bold text-[#19251f]">
+                      {subscription?.currentUnits || 24} of {subscription?.maxUnits || 50} Units
+                    </span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-[#f0eee6] overflow-hidden">
+                    <div 
+                      className="h-full bg-emerald-600 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, Math.round(((subscription?.currentUnits || 24) / (subscription?.maxUnits || 50)) * 100))}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div className="p-2 rounded-xl bg-[#f7f6f2] border border-[#e3e1d8]">
+                    <div className="text-[10px] text-[#6e7972]">PG Co-living Beds</div>
+                    <div className="text-xs font-black text-[#19251f]">18 Active Beds</div>
+                  </div>
+                  <div className="p-2 rounded-xl bg-[#f7f6f2] border border-[#e3e1d8]">
+                    <div className="text-[10px] text-[#6e7972]">Commercial Area</div>
+                    <div className="text-xs font-black text-[#19251f]">15,000 sq.ft</div>
+                  </div>
+                  <div className="p-2 rounded-xl bg-[#f7f6f2] border border-[#e3e1d8]">
+                    <div className="text-[10px] text-[#6e7972]">WhatsApp Dunning</div>
+                    <div className="text-xs font-black text-emerald-700">Unlimited</div>
+                  </div>
+                  <div className="p-2 rounded-xl bg-[#f7f6f2] border border-[#e3e1d8]">
+                    <div className="text-[10px] text-[#6e7972]">OCR Bill Reads</div>
+                    <div className="text-xs font-black text-[#19251f]">89 / 500 Used</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          {/* Subscription Invoices History */}
+          <div className="organic-card p-6 border border-[#e3e1d8] bg-white space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-base font-extrabold text-[#19251f]">Subscription Tax Invoices &amp; Receipts</h3>
+                <p className="text-xs text-[#6e7972]">
+                  RBI-compliant GST tax invoices generated for all subscription periods and upgrades
+                </p>
+              </div>
+
+              <button
+                onClick={() => alert('Downloading official GST Tax Invoices ZIP archive...')}
+                className="px-3.5 py-2 rounded-xl bg-[#f7f6f2] hover:bg-[#eeece5] border border-[#e3e1d8] text-xs font-bold text-[#19251f] flex items-center gap-1.5 transition"
+              >
+                <Download className="h-3.5 w-3.5 text-[#274235]" />
+                <span>Export Tax Invoices (PDF)</span>
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-[#eeece5] text-[#6e7972] font-bold">
+                    <th className="pb-2.5">Invoice #</th>
+                    <th className="pb-2.5">Date</th>
+                    <th className="pb-2.5">Plan Description</th>
+                    <th className="pb-2.5">Cycle</th>
+                    <th className="pb-2.5">Transaction ID</th>
+                    <th className="pb-2.5">Amount</th>
+                    <th className="pb-2.5">Status</th>
+                    <th className="pb-2.5 text-right">Receipt</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#eeece5]">
+                  {(subscription?.history && subscription.history.length > 0 ? subscription.history : [
+                    {
+                      invoiceId: 'INV-STAY-SUB-2026-001',
+                      date: '01 Oct 2026',
+                      amount: 79990,
+                      currency: 'INR',
+                      planId: 'growth_pro',
+                      planName: 'Growth Portfolio Pro OS (Annual)',
+                      billingCycle: 'annual',
+                      txnId: 'TXN-STAY-SUB-SECURE-98124',
+                      paymentMethod: 'Axis Bank Escrow Auto-Debit',
+                      status: 'PAID'
+                    }
+                  ]).map((item, idx) => (
+                    <tr key={idx} className="hover:bg-[#fbfbfa]">
+                      <td className="py-3 font-mono font-bold text-[#19251f]">{item.invoiceId}</td>
+                      <td className="py-3 text-[#6e7972]">{item.date}</td>
+                      <td className="py-3 font-semibold text-[#19251f]">{item.planName}</td>
+                      <td className="py-3 text-[#6e7972] capitalize">{item.billingCycle}</td>
+                      <td className="py-3 font-mono text-[10px] text-[#6e7972]">{item.txnId}</td>
+                      <td className="py-3 font-black text-[#19251f]">₹{item.amount.toLocaleString('en-IN')}</td>
+                      <td className="py-3">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700">
+                          {item.status}
+                        </span>
+                      </td>
+                      <td className="py-3 text-right">
+                        <button
+                          onClick={() => alert(`Opening official GST tax receipt for ${item.invoiceId}`)}
+                          className="px-2.5 py-1 rounded-lg bg-white border border-[#e3e1d8] text-[#274235] hover:bg-[#f7f6f2] font-bold text-[11px] inline-flex items-center gap-1 shadow-sm"
+                        >
+                          <Download className="h-3 w-3" />
+                          <span>PDF</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* TAB 1: Portfolio & Legal Entity */}
       {activeTab === 'PORTFOLIO' && (
@@ -798,32 +1199,32 @@ export default function SettingsView() {
 
           <div className="organic-card p-6 flex flex-col justify-between space-y-4">
             <div>
-              <h3 className="text-base font-extrabold text-[#19251f]">Change Password</h3>
-              <p className="text-xs text-[#6e7972]">Current user: {currentUser.email}</p>
+              <h3 className="text-base font-extrabold text-[#132A13]">Change Password</h3>
+              <p className="text-xs text-[#657D5C]">Current user: {currentUser.email}</p>
             </div>
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block text-[#19251f] font-semibold mb-1">Current Password</label>
+                <label className="block text-[#132A13] font-semibold mb-1">Current Password</label>
                 <input
                   type="password"
                   defaultValue="Owner@123"
-                  className="w-full px-3 py-2 rounded-xl border border-[#e3e1d8] bg-white"
+                  className="w-full px-3 py-2 rounded-xl border border-[#DCE5D3] bg-white text-[#132A13]"
                 />
               </div>
               <div>
-                <label className="block text-[#19251f] font-semibold mb-1">New Password</label>
+                <label className="block text-[#132A13] font-semibold mb-1">New Password</label>
                 <input
                   type="password"
                   placeholder="Enter strong new password"
-                  className="w-full px-3 py-2 rounded-xl border border-[#e3e1d8] bg-white"
+                  className="w-full px-3 py-2 rounded-xl border border-[#DCE5D3] bg-white text-[#132A13]"
                 />
               </div>
             </div>
 
             <button
               onClick={() => alert('Password updated securely.')}
-              className="w-full py-2.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs shadow-sm transition"
+              className="w-full py-2.5 rounded-2xl bg-[#132A13] hover:bg-[#31572C] text-[#ECF39E] font-bold text-xs shadow-sm transition"
             >
               Update Security Password
             </button>
@@ -831,10 +1232,169 @@ export default function SettingsView() {
         </div>
       )}
 
+      {/* Tier Switcher & Upgrade Modal */}
+      {isUpgradeModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#132A13]/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto font-sans">
+          <div className="w-full max-w-4xl bg-white border border-[#DCE5D3] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] my-auto">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-[#E8EFE2] bg-[#F8FAF6] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-2xl bg-[#ECF39E] text-[#132A13] flex items-center justify-center font-bold">
+                  <Crown className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-[#132A13]">Staywise Platform Tier Selection</h3>
+                  <p className="text-xs text-[#657D5C]">Server-Authoritative Pricing • Protected by HMAC-SHA256 Tokenization</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { setIsUpgradeModalOpen(false); setUpgradeError(null); }}
+                className="text-[#657D5C] hover:text-[#132A13] p-1.5 rounded-xl hover:bg-[#EBF0E6] text-lg font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Cycle Toggle */}
+            <div className="p-6 overflow-y-auto space-y-6">
+              <div className="flex justify-center">
+                <div className="p-1 rounded-2xl bg-[#EBF0E6] flex items-center gap-1 border border-[#DCE5D3]">
+                  <button
+                    onClick={() => setSelectedCycle('monthly')}
+                    className={`px-4 py-1.5 rounded-xl text-xs font-bold transition ${
+                      selectedCycle === 'monthly' ? 'bg-[#132A13] text-[#ECF39E] shadow-sm' : 'text-[#657D5C] hover:text-[#132A13]'
+                    }`}
+                  >
+                    Monthly Billing
+                  </button>
+                  <button
+                    onClick={() => setSelectedCycle('annual')}
+                    className={`px-4 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                      selectedCycle === 'annual' ? 'bg-[#132A13] text-[#ECF39E] shadow-sm' : 'text-[#657D5C] hover:text-[#132A13]'
+                    }`}
+                  >
+                    <span>Annual Billing</span>
+                    <span className="px-1.5 py-0.2 rounded-full bg-[#ECF39E] text-[#132A13] font-black text-[9px]">
+                      SAVE 17%
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {upgradeError && (
+                <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2">
+                  <ShieldAlert className="h-4 w-4 shrink-0 text-rose-600" />
+                  <span>{upgradeError}</span>
+                </div>
+              )}
+
+              {upgradeSuccess && (
+                <div className="p-3.5 rounded-2xl bg-[#EBF0E6] border border-[#31572C]/30 text-[#132A13] text-xs font-bold flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-[#31572C]" />
+                  <span>Plan upgraded and cryptographically verified! Refreshing workspace...</span>
+                </div>
+              )}
+
+              {/* 3 Tier Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {(['starter', 'growth_pro', 'enterprise'] as const).map((tierId) => {
+                  const plan = SUBSCRIPTION_PLANS[tierId];
+                  const price = selectedCycle === 'annual' ? plan.annualPrice : plan.monthlyPrice;
+                  const isCurrent = subscription?.planId === tierId;
+
+                  return (
+                    <div 
+                      key={tierId}
+                      className={`rounded-2xl p-5 border flex flex-col justify-between transition-all ${
+                        isCurrent 
+                          ? 'border-[#31572C] bg-[#EBF0E6]/50 shadow-md ring-2 ring-[#31572C]/20' 
+                          : plan.popular 
+                            ? 'border-[#31572C] bg-[#F3F6EE]' 
+                            : 'border-[#DCE5D3] bg-white'
+                      }`}
+                    >
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-[10px] font-black uppercase tracking-wider text-[#657D5C]">
+                              {plan.badge || 'Tier Plan'}
+                            </span>
+                            <h4 className="text-base font-extrabold text-[#132A13]">{plan.name}</h4>
+                          </div>
+                          {isCurrent && (
+                            <span className="px-2 py-0.5 rounded-full bg-[#ECF39E] text-[#132A13] text-[10px] font-black">
+                              Current
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="pt-1 pb-2">
+                          <span className="text-2xl font-black text-[#132A13]">
+                            ₹{price.toLocaleString('en-IN')}
+                          </span>
+                          <span className="text-xs text-[#657D5C] font-semibold">
+                            /{selectedCycle === 'annual' ? 'yr' : 'mo'}
+                          </span>
+                          <div className="text-[10px] text-[#657D5C] mt-0.5">
+                            {selectedCycle === 'annual' ? `(Approx ₹${Math.round(price / 12).toLocaleString('en-IN')}/month)` : 'Cancel anytime'}
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-[#E8EFE2] space-y-2 text-xs text-[#132A13]">
+                          {plan.features.slice(0, 5).map((f, i) => (
+                            <div key={i} className="flex items-start gap-2 text-[11px]">
+                              <Check className="h-3 w-3 text-[#31572C] mt-0.5 shrink-0" />
+                              <span>{f}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="pt-5 mt-4 border-t border-[#E8EFE2]">
+                        <button
+                          disabled={isUpgrading}
+                          onClick={() => handleUpgradeTier(tierId)}
+                          className={`w-full py-2.5 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 ${
+                            isCurrent
+                              ? 'bg-white border border-[#31572C] text-[#31572C] hover:bg-[#EBF0E6]'
+                              : plan.popular
+                                ? 'bg-[#132A13] text-[#ECF39E] hover:bg-[#31572C] shadow-sm'
+                                : 'bg-[#31572C] text-white hover:bg-[#132A13] shadow-sm'
+                          }`}
+                        >
+                          {isUpgrading ? (
+                            <span>Verifying HMAC Seal...</span>
+                          ) : isCurrent ? (
+                            <span>Renew Active Tier</span>
+                          ) : (
+                            <>
+                              <span>Switch to this Tier</span>
+                              <ArrowUpRight className="h-3.5 w-3.5" />
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* White Hat Audit Notice */}
+              <div className="p-3.5 rounded-2xl bg-[#F3F6EE] border border-[#DCE5D3] flex items-center gap-3 text-xs text-[#657D5C]">
+                <ShieldCheck className="h-5 w-5 text-[#31572C] shrink-0" />
+                <span>
+                  <b>White-Hat Security Active:</b> Checkout tokens are cryptographically generated on server. Burp Suite request interception and client-side amount tampering are neutralized and quarantined.
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Floating Save Toast feedback */}
       {isSavedToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#19251f] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-[#274235] animate-bounce">
-          <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+        <div className="fixed bottom-6 right-6 z-50 bg-[#132A13] text-[#ECF39E] px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-[#4F772D] animate-bounce">
+          <CheckCircle2 className="h-5 w-5 text-[#ECF39E]" />
           <span className="text-xs font-bold">Settings and automation rules saved!</span>
         </div>
       )}

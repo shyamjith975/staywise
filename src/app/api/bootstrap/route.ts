@@ -19,7 +19,8 @@ export async function GET() {
       commercialVisitors,
       estateAssets,
       staff,
-      bills
+      bills,
+      subscription
     ] = await Promise.all([
       db.properties.findMany(),
       db.tenants.findMany(),
@@ -36,7 +37,8 @@ export async function GET() {
       db.commercial.getVisitors(),
       db.estate.getAssets(),
       db.estate.getStaff(),
-      db.bills.findMany()
+      db.bills.findMany(),
+      db.subscriptions.getForUser()
     ]);
 
     return NextResponse.json({
@@ -57,7 +59,8 @@ export async function GET() {
         commercialVisitors,
         estateAssets,
         staff,
-        electricityBills: bills
+        electricityBills: bills,
+        subscription
       }
     });
   } catch (error) {

@@ -26,7 +26,8 @@ export default function TenantsDirectory() {
     setIsExistingTenantWizardOpen, 
     addNotification, 
     setSelectedReceiptInvoice, 
-    invoices 
+    invoices,
+    activeRole
   } = useAppState();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -68,15 +69,17 @@ export default function TenantsDirectory() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => setIsExistingTenantWizardOpen(true)}
-            className="px-4 py-2.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white text-xs font-bold shadow-md shadow-[#274235]/20 transition flex items-center gap-1.5"
-          >
-            <UserPlus className="h-4 w-4" />
-            <span>Onboard Existing Tenant</span>
-          </button>
-        </div>
+        {activeRole !== 'admin' && (
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setIsExistingTenantWizardOpen(true)}
+              className="px-4 py-2.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white text-xs font-bold shadow-md shadow-[#274235]/20 transition flex items-center gap-1.5"
+            >
+              <UserPlus className="h-4 w-4" />
+              <span>Onboard Existing Tenant</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 4 Stat Overview Cards */}
