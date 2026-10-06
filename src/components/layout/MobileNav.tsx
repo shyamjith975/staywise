@@ -79,7 +79,7 @@ export default function MobileNav() {
       <div className="lg:hidden fixed bottom-20 right-4 z-40">
         <button
           onClick={handleFabClick}
-          className="flex items-center gap-2 px-4 py-3 rounded-full bg-[#274235] text-white font-bold text-xs shadow-xl shadow-[#274235]/30 hover:scale-105 active:scale-95 transition"
+          className="flex items-center gap-2 px-4 py-3 rounded-full bg-[#132A13] text-[#ECF39E] font-bold text-xs shadow-xl shadow-[#132A13]/30 hover:scale-105 active:scale-95 transition border border-[#4F772D]"
         >
           <Plus className="h-4 w-4" />
           <span>{getFabLabel()}</span>
@@ -90,25 +90,25 @@ export default function MobileNav() {
       {isMenuOpen && (
         <div 
           onClick={() => setIsMenuOpen(false)}
-          className="lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex flex-col justify-end animate-in fade-in duration-200"
+          className="lg:hidden fixed inset-0 z-50 bg-[#132A13]/60 backdrop-blur-md flex flex-col justify-end animate-in fade-in duration-200"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="bg-white border-t border-[#e3e1d8] rounded-t-[2.5rem] p-5 pb-8 space-y-5 max-h-[88vh] overflow-y-auto shadow-2xl animate-in slide-in-from-bottom duration-250 font-sans"
+            className="bg-white border-t border-[#DCE5D3] rounded-t-[2.5rem] p-5 pb-8 space-y-5 max-h-[88vh] overflow-y-auto shadow-2xl animate-in slide-in-from-bottom duration-250 font-sans"
           >
             {/* Grabber bar */}
-            <div className="w-12 h-1.5 rounded-full bg-slate-200 mx-auto" />
+            <div className="w-12 h-1.5 rounded-full bg-[#DCE5D3] mx-auto" />
 
             {/* Profile & Header Card */}
-            <div className="flex items-center justify-between pb-3 border-b border-[#eeece5]">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E8EFE2]">
               <div className="flex items-center gap-3">
-                <div className="h-11 w-11 rounded-2xl bg-[#f4f3ef] border border-[#274235]/30 flex items-center justify-center text-lg shadow-sm">
+                <div className="h-11 w-11 rounded-2xl bg-[#F3F6EE] border border-[#31572C]/30 flex items-center justify-center text-lg shadow-sm">
                   {currentUser.avatar}
                 </div>
                 <div>
-                  <h3 className="font-black text-sm text-[#19251f]">{currentUser.name}</h3>
+                  <h3 className="font-black text-sm text-[#132A13]">{currentUser.name}</h3>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-[#274235]">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#ECF39E] text-[#132A13]">
                       {currentUser.roleLabel}
                     </span>
                   </div>
@@ -118,7 +118,7 @@ export default function MobileNav() {
               <button 
                 type="button"
                 onClick={() => setIsMenuOpen(false)}
-                className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:text-slate-900 transition"
+                className="h-9 w-9 rounded-full bg-[#F3F6EE] flex items-center justify-center text-[#657D5C] hover:text-[#132A13] transition"
                 aria-label="Close menu"
               >
                 <X className="h-5 w-5" />
@@ -132,16 +132,16 @@ export default function MobileNav() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => { setIsAddPropertyOpen(true); setIsMenuOpen(false); }}
-                    className="p-3 rounded-2xl bg-[#274235] text-white flex items-center gap-2.5 text-xs font-bold shadow-md shadow-[#274235]/20 hover:bg-[#19251f] transition"
+                    className="p-3 rounded-2xl bg-[#132A13] text-[#ECF39E] flex items-center gap-2.5 text-xs font-bold shadow-md shadow-[#132A13]/20 hover:bg-[#31572C] transition border border-[#4F772D]"
                   >
-                    <Plus className="h-4 w-4 text-emerald-400" />
+                    <Plus className="h-4 w-4 text-[#ECF39E]" />
                     <span>Add Property</span>
                   </button>
                   <button
                     onClick={() => { setIsExistingTenantWizardOpen(true); setIsMenuOpen(false); }}
-                    className="p-3 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] flex items-center gap-2.5 text-xs font-bold hover:bg-white transition"
+                    className="p-3 rounded-2xl bg-[#F3F6EE] border border-[#DCE5D3] text-[#132A13] flex items-center gap-2.5 text-xs font-bold hover:bg-white transition"
                   >
-                    <Users2 className="h-4 w-4 text-[#274235]" />
+                    <Users2 className="h-4 w-4 text-[#31572C]" />
                     <span>Onboard Tenant</span>
                   </button>
                 </div>
@@ -516,14 +516,14 @@ export default function MobileNav() {
       )}
 
       {/* Sticky Bottom Navigation for Mobile */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#e3e1d8] px-2 py-2 flex items-center justify-around select-none">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#DCE5D3] px-2 py-2 flex items-center justify-around select-none font-sans">
         {activeRole === 'tenant' ? (
           // Tenant-Specific Bottom Nav
           <>
             <button
               onClick={() => setActiveView('dashboard')}
               className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition ${
-                activeView === 'dashboard' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'dashboard' ? 'text-[#132A13] font-black' : 'text-[#657D5C]'
               }`}
             >
               <LayoutDashboard className="h-5 w-5" />
@@ -533,17 +533,17 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('find_home')}
               className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition ${
-                activeView === 'find_home' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'find_home' ? 'text-[#132A13] font-black' : 'text-[#657D5C]'
               }`}
             >
-              <Compass className="h-5 w-5 text-emerald-600" />
+              <Compass className="h-5 w-5 text-[#31572C]" />
               <span className="text-[10px] font-bold">Find Home</span>
             </button>
 
             <button
               onClick={() => setActiveView('rentflow')}
               className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition ${
-                activeView === 'rentflow' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'rentflow' ? 'text-[#132A13] font-black' : 'text-[#657D5C]'
               }`}
             >
               <Receipt className="h-5 w-5" />
@@ -553,7 +553,7 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('maintenance')}
               className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition ${
-                activeView === 'maintenance' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'maintenance' ? 'text-[#132A13] font-black' : 'text-[#657D5C]'
               }`}
             >
               <Wrench className="h-5 w-5" />
@@ -562,7 +562,7 @@ export default function MobileNav() {
 
             <button
               onClick={() => setIsMenuOpen(true)}
-              className="flex flex-col items-center gap-1 py-1 px-2 rounded-xl text-[#6e7972] transition"
+              className="flex flex-col items-center gap-1 py-1 px-2 rounded-xl text-[#657D5C] transition"
             >
               <Menu className="h-5 w-5" />
               <span className="text-[10px] font-bold">Menu</span>
@@ -574,17 +574,17 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('dashboard')}
               className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition ${
-                activeView === 'dashboard' || activeView === 'overview' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'dashboard' || activeView === 'overview' ? 'text-[#132A13] font-black' : 'text-[#657D5C]'
               }`}
             >
-              <Trees className="h-5 w-5 text-emerald-700" />
+              <Trees className="h-5 w-5 text-[#31572C]" />
               <span className="text-[10px] font-bold">Host</span>
             </button>
 
             <button
               onClick={() => setActiveView('bookings')}
               className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition ${
-                activeView === 'bookings' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'bookings' ? 'text-[#132A13] font-black' : 'text-[#657D5C]'
               }`}
             >
               <Calendar className="h-5 w-5 text-rose-600" />
@@ -594,7 +594,7 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('villas')}
               className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition ${
-                activeView === 'villas' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'villas' ? 'text-[#132A13] font-black' : 'text-[#657D5C]'
               }`}
             >
               <Building className="h-5 w-5" />
@@ -604,16 +604,16 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('housekeeping')}
               className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition ${
-                activeView === 'housekeeping' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'housekeeping' ? 'text-[#132A13] font-black' : 'text-[#657D5C]'
               }`}
             >
-              <BedDouble className="h-5 w-5 text-blue-600" />
+              <BedDouble className="h-5 w-5 text-[#4F772D]" />
               <span className="text-[10px] font-bold">Turnovers</span>
             </button>
 
             <button
               onClick={() => setIsMenuOpen(true)}
-              className="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-[#6e7972] transition"
+              className="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-[#657D5C] transition"
             >
               <Menu className="h-5 w-5" />
               <span className="text-[10px] font-bold">Menu</span>
@@ -625,7 +625,7 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('dashboard')}
               className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition ${
-                activeView === 'dashboard' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'dashboard' ? 'text-[#132A13] font-black' : 'text-[#657D5C]'
               }`}
             >
               <LayoutDashboard className="h-5 w-5" />
@@ -635,7 +635,7 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('properties')}
               className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition ${
-                activeView === 'properties' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'properties' ? 'text-[#132A13] font-black' : 'text-[#657D5C]'
               }`}
             >
               <Building className="h-5 w-5" />
@@ -645,7 +645,7 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('rentflow')}
               className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition ${
-                activeView === 'rentflow' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'rentflow' ? 'text-[#132A13] font-black' : 'text-[#657D5C]'
               }`}
             >
               <Receipt className="h-5 w-5" />
@@ -655,7 +655,7 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('maintenance')}
               className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition ${
-                activeView === 'maintenance' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'maintenance' ? 'text-[#132A13] font-black' : 'text-[#657D5C]'
               }`}
             >
               <Wrench className="h-5 w-5" />
@@ -665,7 +665,7 @@ export default function MobileNav() {
             <button
               onClick={() => setIsMenuOpen(true)}
               className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition ${
-                isMenuOpen ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                isMenuOpen ? 'text-[#132A13] font-black' : 'text-[#657D5C]'
               }`}
             >
               <Menu className="h-5 w-5" />

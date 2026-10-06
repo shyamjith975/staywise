@@ -2,167 +2,89 @@
 
 @layer base {
   :root {
-    --color-primary: #274235; /* Deep Sage / Forest Green from reference design */
-    --color-primary-hover: #1e352a;
-    --color-primary-light: #e8eee9;
-    --color-secondary: #3b82f6;
-    --color-success: #15803d;
-    --color-warning: #d97706;
-    --color-danger: #dc2626;
-    --color-info: #0284c7;
+    /* User's Exact Color Palette */
+    --color-pine-dark: #132A13; /* Primary Deep Dark Pine */
+    --color-forest: #31572C;    /* Deep Hunter / Forest Green */
+    --color-moss: #4F772D;      /* Moss / Olive Accent */
+    --color-lime-glow: #ECF39E; /* Pale Lime / Glow Accent */
 
-    --color-background: #edece6; /* Soft warm organic cream / clay canvas */
-    --color-surface: #ffffff; /* Crisp white card surface */
-    --color-surface-hover: #f9f9f7;
-    --color-surface-muted: #f4f3ef;
+    /* Canvas & Surfaces */
+    --color-background-canvas: #EBF0E6; /* Soft natural canvas */
+    --color-background: #F6F8F4;        /* Dashboard background */
+    --color-surface: #FFFFFF;           /* Crisp white card surface */
+    --color-surface-subtle: #F3F6EE;    /* Soft pale olive/lime tinted card */
+    --color-surface-hover: #EBF0E6;
     
-    --color-border: #e3e1d8;
-    --color-border-subtle: #eeece5;
+    --color-border: #DCE5D3;
+    --color-border-subtle: #E8EFE2;
 
-    --color-text-primary: #19251f; /* Charcoal forest dark */
-    --color-text-secondary: #6e7972; /* Refined muted olive slate */
-    --color-muted: #95a099;
+    /* Text Hierarchy */
+    --color-text-primary: #132A13;      /* Deep Dark Pine */
+    --color-text-secondary: #31572C;    /* Forest Green */
+    --color-text-muted: #657D5C;        /* Olive Muted */
+
+    /* Accent & Functional */
+    --color-accent-lime: #ECF39E;
+    --color-accent-forest: #31572C;
+    --color-accent-moss: #4F772D;
+    --color-accent-orange: #E07A5F;
+    --color-accent-emerald: #31572C;
   }
 }
 
 body {
-  background-color: var(--color-background);
-  color: var(--color-text-primary);
-  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #EBF0E6;
+  color: #132A13;
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Inter", -apple-system, Roboto, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Organic Warm Cards from reference image */
-.organic-card {
+/* Organic Forest Cards */
+.organic-card, .logip-card {
   background-color: #ffffff;
-  border-radius: 1.75rem; /* rounded-3xl */
-  box-shadow: 0 4px 20px -2px rgba(25, 37, 31, 0.04), 0 2px 6px -1px rgba(25, 37, 31, 0.02);
-  border: 1px solid rgba(227, 225, 216, 0.6);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 1.5rem; /* rounded-3xl */
+  box-shadow: 0 1px 4px 0 rgba(19, 42, 19, 0.03), 0 1px 2px -1px rgba(19, 42, 19, 0.02);
+  border: 1px solid #DCE5D3;
+  transition: all 0.2s ease-in-out;
 }
 
-.organic-card:hover {
-  box-shadow: 0 10px 30px -4px rgba(25, 37, 31, 0.07);
-  transform: translateY(-2px);
+.organic-card:hover, .logip-card:hover {
+  box-shadow: 0 6px 16px -2px rgba(19, 42, 19, 0.06);
 }
 
 .organic-card-dark {
-  background-color: #274235;
+  background-color: #132A13;
   color: #ffffff;
-  border-radius: 1.75rem;
-  box-shadow: 0 10px 25px -4px rgba(39, 66, 53, 0.25);
+  border-radius: 1.5rem;
+  border: 1px solid #31572C;
 }
 
-/* Minimalist floating rail */
-.nav-rail {
-  background-color: #ffffff;
-  border-radius: 9999px; /* pill shape */
-  box-shadow: 0 10px 30px -4px rgba(25, 37, 31, 0.06);
-  border: 1px solid rgba(227, 225, 216, 0.7);
+.logip-card-subtle {
+  background-color: #F3F6EE;
+  border-radius: 1.5rem;
+  border: 1px solid #DCE5D3;
 }
 
 /* Custom Sleek Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #edece6;
+  background: #EBF0E6;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd3cc;
+  background: #B8CCA8;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #274235;
+  background: #4F772D;
 }
 
-/* Tabular numbers for fintech precision */
 .font-tabular {
   font-variant-numeric: tabular-nums;
 }
-
-/* Wave animations */
-@keyframes wave-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
-}
-
-@keyframes pulse-subtle {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.02); }
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-.animate-wave-float {
-  animation: wave-float 4s ease-in-out infinite;
-}
-
-.animate-pulse-subtle {
-  animation: pulse-subtle 3s ease-in-out infinite;
-}
-
-.animate-shimmer {
-  animation: shimmer 2.5s infinite;
-}
-
-html {
-  scroll-behavior: auto !important;
-  text-rendering: optimizeSpeed;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-html.lenis, html.lenis body {
-  height: auto;
-}
-
-.lenis.lenis-smooth {
-  scroll-behavior: auto !important;
-}
-
-.lenis.lenis-smooth [data-lenis-prevent] {
-  overscroll-behavior: contain;
-}
-
-.lenis.lenis-stopped {
-  overflow: clip;
-}
-
-.lenis.lenis-smooth iframe {
-  pointer-events: none;
-}
-
-body {
-  overflow-y: scroll;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: none;
-}
-
-/* Glassmorphism utilities */
-.glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(227, 225, 216, 0.8);
-}
-
-.glass-panel-dark {
-  background: rgba(18, 28, 23, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(39, 66, 53, 0.4);
-}
-
-.font-editorial {
-  font-family: Georgia, 'Times New Roman', Cambria, Times, serif;
-}
-

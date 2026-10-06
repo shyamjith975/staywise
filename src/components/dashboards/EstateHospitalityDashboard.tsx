@@ -241,18 +241,18 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
   return (
     <div className="space-y-6 pb-12 font-sans">
       {/* Top Hospitality Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-[#e3e1d8]">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-[#DCE5D3]">
         <div>
           <div className="flex items-center gap-2.5 flex-wrap">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#19251f] flex items-center gap-2">
-              <Trees className="h-6 w-6 text-[#274235]" />
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#132A13] flex items-center gap-2">
+              <Trees className="h-6 w-6 text-[#31572C]" />
               <span>EstateOS — Villas &amp; Campuses • Airbnb &amp; Hotels</span>
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#eef3f0] text-[#274235] font-bold border border-[#274235]/20">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#EBF0E6] text-[#31572C] font-bold border border-[#31572C]/20">
               Host Operations
             </span>
           </div>
-          <p className="text-xs text-[#6e7972] mt-0.5">
+          <p className="text-xs text-[#657D5C] mt-0.5">
             Luxury Villa Management • Short-Stay Airbnb &amp; Boutique Hotel Suites • Dynamic Nightly Pricing • Guest Smart Check-In
           </p>
         </div>
@@ -262,7 +262,7 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
           <select
             value={selectedCampus}
             onChange={(e) => setSelectedCampus(e.target.value as any)}
-            className="px-3 py-2 rounded-2xl bg-white border border-[#e3e1d8] text-xs font-bold text-[#19251f] focus:outline-none focus:ring-2 focus:ring-[#274235] shadow-sm"
+            className="px-3 py-2 rounded-2xl bg-white border border-[#DCE5D3] text-xs font-bold text-[#132A13] focus:outline-none focus:ring-2 focus:ring-[#31572C] shadow-2xs"
           >
             <option value="Wayanad">Wayanad Serene Mist Plantation (5BHK)</option>
             <option value="Alibaug">Alibaug Beachfront Haven &amp; Suites</option>
@@ -272,16 +272,16 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
 
           <button
             onClick={handleSyncOTAs}
-            className="px-3 py-2 rounded-2xl bg-white hover:bg-[#f4f3ef] border border-[#e3e1d8] text-[#19251f] text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
+            className="px-3 py-2 rounded-2xl bg-white hover:bg-[#F3F6EE] border border-[#DCE5D3] text-[#132A13] text-xs font-bold flex items-center gap-1.5 transition shadow-2xs"
             title="Sync with Airbnb iCal & Booking.com API"
           >
-            <RefreshCw className="h-3.5 w-3.5 text-[#274235]" />
+            <RefreshCw className="h-3.5 w-3.5 text-[#31572C]" />
             <span>Sync OTAs</span>
           </button>
 
           <button
             onClick={() => setIsAddReservationOpen(true)}
-            className="px-4 py-2 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white text-xs font-bold shadow-md shadow-[#274235]/20 flex items-center gap-1.5 transition"
+            className="px-4 py-2 rounded-2xl bg-[#132A13] hover:bg-[#31572C] text-[#ECF39E] text-xs font-bold shadow-md shadow-[#132A13]/20 flex items-center gap-1.5 transition"
           >
             <Plus className="h-4 w-4" />
             <span>+ Add Booking</span>
@@ -293,76 +293,76 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="organic-card p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#6e7972]">Hospitality Revenue (Oct)</span>
-            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+            <span className="text-xs font-semibold text-[#657D5C]">Hospitality Revenue (Oct)</span>
+            <span className="text-[10px] font-bold text-[#31572C] bg-[#EBF0E6] px-2 py-0.5 rounded-full">
               +24% YoY
             </span>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-[#19251f] font-tabular mt-2">
+          <div className="text-2xl sm:text-3xl font-black text-[#132A13] font-tabular mt-2">
             ₹14,85,000
           </div>
-          <span className="text-[11px] text-[#6e7972] mt-1 block">
+          <span className="text-[11px] text-[#657D5C] mt-1 block">
             RevPAR: ₹8,250/night across 4 Campuses
           </span>
         </div>
 
         <div className="organic-card p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#6e7972]">Villa &amp; Suite Occupancy</span>
-            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+            <span className="text-xs font-semibold text-[#657D5C]">Villa &amp; Suite Occupancy</span>
+            <span className="text-[10px] font-bold text-[#31572C] bg-[#EBF0E6] px-2 py-0.5 rounded-full">
               High Season
             </span>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-emerald-700 font-tabular mt-2">
+          <div className="text-2xl sm:text-3xl font-black text-[#31572C] font-tabular mt-2">
             91.4%
           </div>
-          <span className="text-[11px] text-[#6e7972] mt-1 block">
+          <span className="text-[11px] text-[#657D5C] mt-1 block">
             28 Nights booked in Oct (Airbnb + Direct)
           </span>
         </div>
 
         <div className="organic-card p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#6e7972]">Active In-House Guests</span>
-            <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">
+            <span className="text-xs font-semibold text-[#657D5C]">Active In-House Guests</span>
+            <span className="text-[10px] font-bold text-[#31572C] bg-[#EBF0E6] px-2 py-0.5 rounded-full">
               18 Guests
             </span>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-[#19251f] font-tabular mt-2">
+          <div className="text-2xl sm:text-3xl font-black text-[#132A13] font-tabular mt-2">
             4 Stays Live
           </div>
-          <span className="text-[11px] text-[#6e7972] mt-1 block">
+          <span className="text-[11px] text-[#657D5C] mt-1 block">
             2 Check-ins Today • 1 Check-out Tomorrow
           </span>
         </div>
 
         <div className="organic-card p-5">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[#6e7972]">Campus Solar &amp; Microgrid</span>
-            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+            <span className="text-xs font-semibold text-[#657D5C]">Campus Solar &amp; Microgrid</span>
+            <span className="text-[10px] font-bold text-[#31572C] bg-[#EBF0E6] px-2 py-0.5 rounded-full">
               Net Surplus
             </span>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-emerald-700 font-tabular mt-2">
+          <div className="text-2xl sm:text-3xl font-black text-[#31572C] font-tabular mt-2">
             +1,520 kWh
           </div>
-          <span className="text-[11px] text-[#6e7972] mt-1 block">
+          <span className="text-[11px] text-[#657D5C] mt-1 block">
             100% Eco-Sustainable • Generator Idle
           </span>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-[#eeece5] text-xs">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-[#E8EFE2] text-xs">
         <button
           onClick={() => handleTabClick('OVERVIEW')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'OVERVIEW'
-              ? 'bg-[#19251f] text-white shadow-md'
-              : 'text-[#6e7972] hover:text-[#19251f] hover:bg-white'
+              ? 'bg-[#132A13] text-[#ECF39E] shadow-sm'
+              : 'text-[#657D5C] hover:text-[#132A13] hover:bg-white'
           }`}
         >
-          <Sparkles className="h-4 w-4" />
+          <Sparkles className="h-4 w-4 text-[#4F772D]" />
           <span>Host Overview</span>
         </button>
 
@@ -370,11 +370,11 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
           onClick={() => handleTabClick('BOOKINGS')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'BOOKINGS'
-              ? 'bg-[#19251f] text-white shadow-md'
-              : 'text-[#6e7972] hover:text-[#19251f] hover:bg-white'
+              ? 'bg-[#132A13] text-[#ECF39E] shadow-sm'
+              : 'text-[#657D5C] hover:text-[#132A13] hover:bg-white'
           }`}
         >
-          <Calendar className="h-4 w-4 text-rose-600" />
+          <Calendar className="h-4 w-4 text-[#4F772D]" />
           <span>Airbnb &amp; Hotel Bookings ({bookings.length})</span>
         </button>
 
@@ -382,8 +382,8 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
           onClick={() => handleTabClick('VILLAS')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'VILLAS'
-              ? 'bg-[#19251f] text-white shadow-md'
-              : 'text-[#6e7972] hover:text-[#19251f] hover:bg-white'
+              ? 'bg-[#132A13] text-[#ECF39E] shadow-sm'
+              : 'text-[#657D5C] hover:text-[#132A13] hover:bg-white'
           }`}
         >
           <Building2 className="h-4 w-4" />
@@ -394,11 +394,11 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
           onClick={() => handleTabClick('HOUSEKEEPING')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'HOUSEKEEPING'
-              ? 'bg-[#19251f] text-white shadow-md'
-              : 'text-[#6e7972] hover:text-[#19251f] hover:bg-white'
+              ? 'bg-[#132A13] text-[#ECF39E] shadow-sm'
+              : 'text-[#657D5C] hover:text-[#132A13] hover:bg-white'
           }`}
         >
-          <BedDouble className="h-4 w-4 text-blue-600" />
+          <BedDouble className="h-4 w-4 text-[#4F772D]" />
           <span>Housekeeping Turnovers</span>
         </button>
 
@@ -406,8 +406,8 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
           onClick={() => handleTabClick('ASSETS')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'ASSETS'
-              ? 'bg-[#19251f] text-white shadow-md'
-              : 'text-[#6e7972] hover:text-[#19251f] hover:bg-white'
+              ? 'bg-[#132A13] text-[#ECF39E] shadow-sm'
+              : 'text-[#657D5C] hover:text-[#132A13] hover:bg-white'
           }`}
         >
           <Wrench className="h-4 w-4" />
@@ -418,8 +418,8 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
           onClick={() => handleTabClick('STAFF')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'STAFF'
-              ? 'bg-[#19251f] text-white shadow-md'
-              : 'text-[#6e7972] hover:text-[#19251f] hover:bg-white'
+              ? 'bg-[#132A13] text-[#ECF39E] shadow-sm'
+              : 'text-[#657D5C] hover:text-[#132A13] hover:bg-white'
           }`}
         >
           <Users className="h-4 w-4" />
@@ -430,8 +430,8 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
           onClick={() => handleTabClick('PRICING')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'PRICING'
-              ? 'bg-[#19251f] text-white shadow-md'
-              : 'text-[#6e7972] hover:text-[#19251f] hover:bg-white'
+              ? 'bg-[#132A13] text-[#ECF39E] shadow-sm'
+              : 'text-[#657D5C] hover:text-[#132A13] hover:bg-white'
           }`}
         >
           <Sliders className="h-4 w-4" />

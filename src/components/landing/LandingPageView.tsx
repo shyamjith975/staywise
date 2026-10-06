@@ -299,12 +299,12 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
   };
 
   return (
-    <div className="min-h-screen bg-[#fdfbf7] text-[#16231c] selection:bg-[#203a2d]/15 selection:text-[#203a2d] font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-[#EBF0E6] text-[#132A13] selection:bg-[#ECF39E] selection:text-[#132A13] font-sans antialiased overflow-x-hidden">
       
       {/* ---------------------------------------------------- */}
       {/* 1. TOP RESPONSIVE HEADER BAR                         */}
       {/* ---------------------------------------------------- */}
-      <header className="w-full px-4 sm:px-8 lg:px-12 py-3 sm:py-3.5 flex items-center justify-between border-b border-[#eeece5] bg-white/95 backdrop-blur-md sticky top-0 z-50 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
+      <header className="w-full px-4 sm:px-8 lg:px-12 py-3 sm:py-3.5 flex items-center justify-between border-b border-[#DCE5D3] bg-white/95 backdrop-blur-md sticky top-0 z-50 shadow-xs">
         {/* Left: Geometric Emblem + Brand Name */}
         <div className="flex items-center gap-2.5 sm:gap-3">
           <a 
@@ -312,80 +312,76 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             onClick={(e) => handleNavClick(e, '#overview')}
             className="flex items-center gap-2 sm:gap-2.5 group cursor-pointer"
           >
-            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-[#16231c] text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform duration-150 shrink-0">
-              <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                <path d="M2 17l10 5 10-5" />
-                <path d="M2 12l10 5 10-5" />
-              </svg>
+            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-[#132A13] text-[#ECF39E] flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-150 shrink-0 font-black">
+              <span className="text-sm font-black">✦</span>
             </div>
             <div className="flex flex-col text-left">
-              <span className="font-extrabold text-sm sm:text-base tracking-tight text-[#16231c] leading-none">
+              <span className="font-black text-sm sm:text-base tracking-tight text-[#132A13] leading-none">
                 STAYWISE
               </span>
-              <span className="text-[9px] text-[#6e7972] font-semibold tracking-wider uppercase mt-0.5 hidden xs:inline">
-                Operating System
+              <span className="text-[9px] text-[#657D5C] font-bold tracking-wider uppercase mt-0.5 hidden xs:inline">
+                Property OS
               </span>
             </div>
           </a>
         </div>
 
         {/* Center Desktop Navigation Links */}
-        <nav className="hidden lg:flex items-center gap-7 text-xs font-semibold text-[#4d5a52]">
+        <nav className="hidden lg:flex items-center gap-7 text-xs font-bold text-[#657D5C]">
           <a 
             href="#overview" 
             onClick={(e) => handleNavClick(e, '#overview')}
-            className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#132A13] transition-colors duration-100 cursor-pointer"
           >
             Home
           </a>
           <a 
             href="#pain-points" 
             onClick={(e) => handleNavClick(e, '#pain-points')}
-            className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#132A13] transition-colors duration-100 cursor-pointer"
           >
             Where Owners Lose Time
           </a>
           <a 
             href="#interactive-building" 
             onClick={(e) => handleNavClick(e, '#interactive-building')}
-            className="hover:text-[#19251f] transition-colors duration-100 flex items-center gap-1 font-bold text-[#203a2d] cursor-pointer"
+            className="hover:text-[#132A13] transition-colors duration-100 flex items-center gap-1 font-bold text-[#31572C] cursor-pointer"
           >
             <span>Architecture</span>
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[#31572C] animate-pulse" />
           </a>
           <a 
             href="#everything-inside" 
             onClick={(e) => handleNavClick(e, '#everything-inside')}
-            className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#132A13] transition-colors duration-100 cursor-pointer"
           >
             Everything Inside
           </a>
           <a 
             href="#how-it-works" 
             onClick={(e) => handleNavClick(e, '#how-it-works')}
-            className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#132A13] transition-colors duration-100 cursor-pointer"
           >
             How it Works
           </a>
           <a 
             href="#pricing" 
             onClick={(e) => handleNavClick(e, '#pricing')}
-            className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#132A13] transition-colors duration-100 cursor-pointer"
           >
             Pricing
           </a>
           <a 
             href="#faq" 
             onClick={(e) => handleNavClick(e, '#faq')}
-            className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#132A13] transition-colors duration-100 cursor-pointer"
           >
             FAQ
           </a>
           <a 
             href="#resources" 
             onClick={(e) => handleNavClick(e, '#resources')}
-            className="hover:text-[#19251f] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#132A13] transition-colors duration-100 cursor-pointer"
           >
             Resources
           </a>
@@ -396,15 +392,15 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           <a
             href="/login"
             onClick={handleSignInClick}
-            className="px-3.5 sm:px-4 py-1.5 rounded-full border border-[#16231c] text-[11px] sm:text-xs font-bold text-[#16231c] hover:bg-[#16231c] hover:text-white transition-all duration-150 shadow-xs cursor-pointer inline-flex items-center justify-center gap-1.5 group shrink-0"
+            className="px-3.5 sm:px-4 py-1.5 rounded-full border border-[#DCE5D3] text-[11px] sm:text-xs font-bold text-[#132A13] hover:bg-[#F3F6EE] transition-all duration-150 shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 group shrink-0"
           >
             <span>Sign in</span>
-            <ArrowUpRight className="h-3 w-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-150" />
+            <ArrowUpRight className="h-3 w-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-150 text-[#31572C]" />
           </a>
 
           <button
             onClick={() => handleOpenTrial('growth_pro')}
-            className="hidden sm:inline-flex px-4 py-1.5 rounded-full bg-[#203a2d] hover:bg-[#172b21] text-white text-xs font-bold shadow-xs transition duration-150 cursor-pointer"
+            className="hidden sm:inline-flex px-4 py-1.5 rounded-full bg-[#132A13] hover:bg-[#31572C] text-[#ECF39E] text-xs font-black shadow-xs transition duration-150 cursor-pointer border border-[#132A13]/20"
           >
             Start Free Trial →
           </button>
@@ -414,7 +410,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle navigation menu"
-            className="lg:hidden p-1.5 rounded-xl text-[#16231c] hover:bg-[#f4f3ef] transition-colors cursor-pointer"
+            className="lg:hidden p-1.5 rounded-xl text-[#132A13] hover:bg-[#F3F6EE] transition-colors cursor-pointer"
           >
             {isMobileMenuOpen ? (
               <X className="h-5 w-5" />

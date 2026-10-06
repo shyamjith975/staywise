@@ -184,17 +184,17 @@ function MainAppShell() {
   };
 
   return (
-    <div className="min-h-screen bg-[#edece6] text-[#19251f] flex font-sans selection:bg-[#274235]/20 selection:text-[#274235] overflow-x-hidden">
-      {/* Floating Vertical Navigation Rail from reference image */}
+    <div className="min-h-screen bg-[#EBF0E6] text-[#132A13] flex font-sans selection:bg-[#ECF39E] selection:text-[#132A13] overflow-x-hidden">
+      {/* Left Sidebar Navigation matching reference design */}
       <FloatingNavRail />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 pr-0 sm:pr-4 overflow-x-hidden">
-        {/* Top Header matching reference image with floral logo, greeting & search */}
+      <div className="flex-1 flex flex-col min-w-0 bg-white lg:rounded-l-[2.5rem] my-0 lg:my-3 lg:mr-3 shadow-xs border-l border-[#DCE5D3] overflow-hidden min-h-[calc(100vh-1.5rem)]">
+        {/* Top Header */}
         <TopHeader />
 
-        {/* Content Canvas with ample bottom padding on mobile/tablet for bottom nav bar */}
-        <main className="flex-1 p-3.5 sm:p-6 pb-28 lg:pb-8 max-w-7xl w-full mx-auto overflow-y-auto">
+        {/* Content Canvas */}
+        <main className="flex-1 p-3.5 sm:p-6 pb-28 lg:pb-8 w-full mx-auto overflow-y-auto">
           {renderActiveView()}
         </main>
       </div>
