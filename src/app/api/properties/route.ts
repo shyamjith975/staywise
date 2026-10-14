@@ -7,8 +7,9 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const portfolio = searchParams.get('portfolio') || undefined;
     const verificationStatus = searchParams.get('verificationStatus') || undefined;
+    const ownerId = searchParams.get('ownerId') || undefined;
 
-    const properties = await db.properties.findMany({ portfolio, verificationStatus });
+    const properties = await db.properties.findMany({ portfolio, verificationStatus, ownerId });
     return NextResponse.json({ success: true, count: properties.length, data: properties });
   } catch (error) {
     console.error('[API /api/properties] GET Error:', error);
@@ -38,6 +39,7 @@ export async function POST(req: NextRequest) {
     // 2. Owner created property defaults to PENDING verification for admin audit
     const newProperty = await db.properties.create({
       ...payload,
+      ownerId: rawBody.ownerId || payload.ownerId || undefined,
       verificationStatus: 'PENDING',
       submittedDocs: rawBody.submittedDocs || [
         'Title_Deed_Registry.pdf',

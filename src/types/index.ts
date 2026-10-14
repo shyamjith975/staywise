@@ -123,6 +123,7 @@ export interface PropertyUnit {
 
 export interface Property {
   id: string;
+  ownerId?: string;
   name: string;
   type: PropertyType;
   portfolio: string;
@@ -146,6 +147,7 @@ export interface Property {
 
 export interface Tenant {
   id: string;
+  userId?: string;
   name: string;
   email: string;
   phone: string;

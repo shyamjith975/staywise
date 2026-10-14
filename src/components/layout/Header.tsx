@@ -31,11 +31,20 @@ export default function Header() {
     setActivePortfolio,
     setIsSearchOpen,
     notifications,
-    markAllNotificationsRead
+    markAllNotificationsRead,
+    properties,
+    currentUser
   } = useAppState();
 
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  const availablePortfolios = Array.from(new Set(
+    (activeRole === 'owner' && currentUser.id && currentUser.id !== 'user-owner-vikram'
+      ? properties.filter(p => p.ownerId === currentUser.id)
+      : properties
+    ).map(p => p.portfolio).filter(Boolean)
+  ));
 
   return (
     <header className="sticky top-0 z-40 w-full bg-[#090d16]/95 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-6 py-2.5 flex items-center justify-between gap-4">
@@ -67,10 +76,10 @@ export default function Header() {
               onChange={(e) => setActivePortfolio(e.target.value)}
               className="bg-transparent text-white font-medium focus:outline-none cursor-pointer pr-1"
             >
-              <option value="all" className="bg-slate-900">All Portfolios (Kerala)</option>
-              <option value="kozhikode" className="bg-slate-900">Kozhikode Coastal</option>
-              <option value="kochi" className="bg-slate-900">Kochi Commercial</option>
-              <option value="wayanad" className="bg-slate-900">Wayanad Estates</option>
+              <option value="all" className="bg-slate-900">All Portfolios ({availablePortfolios.length})</option>
+              {availablePortfolios.map(port => (
+                <option key={port} value={port} className="bg-slate-900">{port}</option>
+              ))}
             </select>
           </div>
         </div>

@@ -68,28 +68,28 @@ export default function MarketplaceNRI() {
   return (
     <div className="space-y-6 pb-12 font-sans">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#e3e1d8]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#B5B5B5]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#19251f] flex items-center gap-2">
-              <Globe className="h-6 w-6 text-[#274235]" />
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#2a2a2a] flex items-center gap-2">
+              <Globe className="h-6 w-6 text-[#2a2a2a]" />
               <span>Marketplace & Staywise Remote Care (NRI)</span>
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#eef3f0] text-[#274235] font-bold border border-[#274235]/20">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#f0f0f0] text-[#2a2a2a] font-bold border border-[#2a2a2a]/20">
               NRI & Services
             </span>
           </div>
-          <p className="text-xs text-[#6e7972] mt-0.5">
+          <p className="text-xs text-[#666666] mt-0.5">
             Dedicated remote management for non-resident property owners & curated on-demand property services
           </p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center p-1 bg-white rounded-2xl border border-[#e3e1d8] text-xs self-start sm:self-auto">
+        <div className="flex items-center p-1 bg-white rounded-2xl border border-[#B5B5B5] text-xs self-start sm:self-auto">
           <button
             onClick={() => setActiveTab('NRI')}
             className={`px-3.5 py-1.5 rounded-xl font-bold transition ${
-              activeTab === 'NRI' ? 'bg-[#274235] text-white' : 'text-[#6e7972] hover:text-[#19251f]'
+              activeTab === 'NRI' ? 'bg-[#2a2a2a] text-white' : 'text-[#666666] hover:text-[#2a2a2a]'
             }`}
           >
             NRI Remote Care
@@ -97,7 +97,7 @@ export default function MarketplaceNRI() {
           <button
             onClick={() => setActiveTab('MARKETPLACE')}
             className={`px-3.5 py-1.5 rounded-xl font-bold transition ${
-              activeTab === 'MARKETPLACE' ? 'bg-[#274235] text-white' : 'text-[#6e7972] hover:text-[#19251f]'
+              activeTab === 'MARKETPLACE' ? 'bg-[#2a2a2a] text-white' : 'text-[#666666] hover:text-[#2a2a2a]'
             }`}
           >
             Services Catalog
@@ -111,24 +111,24 @@ export default function MarketplaceNRI() {
           {/* NRI Dashboard Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             <div className="organic-card p-4">
-              <span className="text-[11px] font-semibold text-[#6e7972]">India Assets</span>
-              <div className="text-xl font-black text-[#19251f] mt-1 font-tabular">7 Units</div>
+              <span className="text-[11px] font-semibold text-[#666666]">India Assets</span>
+              <div className="text-xl font-black text-[#2a2a2a] mt-1 font-tabular">7 Units</div>
             </div>
             <div className="organic-card p-4">
-              <span className="text-[11px] font-semibold text-[#6e7972]">Occupied Units</span>
+              <span className="text-[11px] font-semibold text-[#666666]">Occupied Units</span>
               <div className="text-xl font-black text-emerald-700 mt-1 font-tabular">6 Occupied</div>
             </div>
             <div className="organic-card p-4">
-              <span className="text-[11px] font-semibold text-[#6e7972]">Vacant</span>
+              <span className="text-[11px] font-semibold text-[#666666]">Vacant</span>
               <div className="text-xl font-black text-amber-700 mt-1 font-tabular">1 Vacant</div>
             </div>
             <div className="organic-card p-4">
-              <span className="text-[11px] font-semibold text-[#6e7972]">Monthly Inflow</span>
-              <div className="text-xl font-black text-[#19251f] mt-1 font-tabular">₹2.80L</div>
+              <span className="text-[11px] font-semibold text-[#666666]">Monthly Inflow</span>
+              <div className="text-xl font-black text-[#2a2a2a] mt-1 font-tabular">₹2.80L</div>
             </div>
             <div className="organic-card p-4">
-              <span className="text-[11px] font-semibold text-[#6e7972]">Taxes & Sinking</span>
-              <div className="text-xl font-black text-[#6e7972] mt-1 font-tabular">₹34K</div>
+              <span className="text-[11px] font-semibold text-[#666666]">Taxes & Sinking</span>
+              <div className="text-xl font-black text-[#666666] mt-1 font-tabular">₹34K</div>
             </div>
             <div className="organic-card p-4 border-emerald-300 bg-emerald-50/40">
               <span className="text-[11px] text-emerald-800 font-bold">Net NRE Yield</span>
@@ -139,33 +139,33 @@ export default function MarketplaceNRI() {
           {/* Remote Care Operational Feeds */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="organic-card p-6 space-y-4">
-              <h3 className="text-sm font-extrabold text-[#19251f]">Remote Audits & Field Inspections</h3>
-              <p className="text-[11px] text-[#6e7972]">Physical field inspection reports verified by Staywise inspectors</p>
+              <h3 className="text-sm font-extrabold text-[#2a2a2a]">Remote Audits & Field Inspections</h3>
+              <p className="text-[11px] text-[#666666]">Physical field inspection reports verified by Staywise inspectors</p>
 
               <div className="space-y-3 text-xs">
-                <div className="p-4 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] space-y-2">
+                <div className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-extrabold text-[#19251f]">Beach Road Apartments (Unit 302 & 304)</span>
+                    <span className="font-extrabold text-[#2a2a2a]">Beach Road Apartments (Unit 302 & 304)</span>
                     <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
                       Audited 28 Sep
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#6e7972]">
+                  <p className="text-[11px] text-[#666666]">
                     Waterproofing, balcony drainage, and AC units audited. 24 high-resolution geotagged photos uploaded to vault.
                   </p>
-                  <div className="text-[11px] text-[#274235] font-bold cursor-pointer hover:underline">
+                  <div className="text-[11px] text-[#2a2a2a] font-bold cursor-pointer hover:underline">
                     View 24 Geotagged Photos & 4K Video Tour →
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] space-y-2">
+                <div className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-extrabold text-[#19251f]">Serene Mist Estate Villa (Wayanad)</span>
+                    <span className="font-extrabold text-[#2a2a2a]">Serene Mist Estate Villa (Wayanad)</span>
                     <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
                       Audited 25 Sep
                     </span>
                   </div>
-                  <p className="text-[11px] text-[#6e7972]">
+                  <p className="text-[11px] text-[#666666]">
                     Solar generation check (100% efficiency), infinity pool filtration audited, generator fuel topped up.
                   </p>
                 </div>
@@ -173,24 +173,24 @@ export default function MarketplaceNRI() {
             </div>
 
             <div className="organic-card p-6 space-y-4">
-              <h3 className="text-sm font-extrabold text-[#19251f]">Direct NRE / NRO Repatriation Rails</h3>
-              <p className="text-[11px] text-[#6e7972]">Automated tax clearance (Form 15CA/15CB) and escrow disbursements</p>
+              <h3 className="text-sm font-extrabold text-[#2a2a2a]">Direct NRE / NRO Repatriation Rails</h3>
+              <p className="text-[11px] text-[#666666]">Automated tax clearance (Form 15CA/15CB) and escrow disbursements</p>
 
-              <div className="p-4 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] space-y-3 text-xs">
-                <div className="flex justify-between items-center text-[#6e7972]">
+              <div className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-3 text-xs">
+                <div className="flex justify-between items-center text-[#666666]">
                   <span>Linked Repatriation Account:</span>
-                  <span className="font-bold text-[#19251f]">HDFC Bank NRE •••• 9104</span>
+                  <span className="font-bold text-[#2a2a2a]">HDFC Bank NRE •••• 9104</span>
                 </div>
-                <div className="flex justify-between items-center text-[#6e7972]">
+                <div className="flex justify-between items-center text-[#666666]">
                   <span>TDS Compliance (Section 195):</span>
                   <span className="font-bold text-emerald-700">Pre-Computed & Deducted</span>
                 </div>
-                <div className="flex justify-between items-center text-[#6e7972]">
+                <div className="flex justify-between items-center text-[#666666]">
                   <span>Next Automated Remittance:</span>
-                  <span className="font-bold text-[#274235] font-tabular">07 October 2026</span>
+                  <span className="font-bold text-[#2a2a2a] font-tabular">07 October 2026</span>
                 </div>
-                <div className="pt-2 border-t border-[#eeece5] flex justify-between items-center">
-                  <span className="text-[#6e7972]">Est. Net Disbursement:</span>
+                <div className="pt-2 border-t border-[#E0E0E0] flex justify-between items-center">
+                  <span className="text-[#666666]">Est. Net Disbursement:</span>
                   <span className="text-lg font-black text-emerald-700 font-tabular">₹2,46,000</span>
                 </div>
               </div>
@@ -209,7 +209,7 @@ export default function MarketplaceNRI() {
             >
               <div className="space-y-2">
                 <div className="flex items-start justify-between">
-                  <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#f4f3ef] text-[#274235] font-bold uppercase tracking-wider border border-[#e3e1d8]">
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#f0f0f0] text-[#2a2a2a] font-bold uppercase tracking-wider border border-[#B5B5B5]">
                     {srv.category}
                   </span>
                   <div className="flex items-center gap-1 text-amber-500 text-xs font-bold">
@@ -218,22 +218,22 @@ export default function MarketplaceNRI() {
                   </div>
                 </div>
 
-                <h3 className="font-extrabold text-[#19251f] text-base">{srv.title}</h3>
-                <p className="text-xs text-[#6e7972] leading-relaxed">{srv.description}</p>
-                <div className="text-[11px] text-[#274235] font-semibold">Provider: {srv.provider} • SLA: {srv.sla}</div>
+                <h3 className="font-extrabold text-[#2a2a2a] text-base">{srv.title}</h3>
+                <p className="text-xs text-[#666666] leading-relaxed">{srv.description}</p>
+                <div className="text-[11px] text-[#2a2a2a] font-semibold">Provider: {srv.provider} • SLA: {srv.sla}</div>
               </div>
 
-              <div className="pt-3 border-t border-[#eeece5] flex items-center justify-between">
+              <div className="pt-3 border-t border-[#E0E0E0] flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-[#6e7972]">Fixed Rate</span>
-                  <div className="text-lg font-black text-[#19251f] font-tabular">
+                  <span className="text-[10px] text-[#666666]">Fixed Rate</span>
+                  <div className="text-lg font-black text-[#2a2a2a] font-tabular">
                     ₹{srv.price.toLocaleString('en-IN')}
                   </div>
                 </div>
 
                 <button
                   onClick={() => handleBookService(srv.title, srv.price)}
-                  className="px-4 py-2 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs shadow-md shadow-[#274235]/20 transition"
+                  className="px-4 py-2 rounded-2xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-bold text-xs shadow-md shadow-[#2a2a2a]/20 transition"
                 >
                   Book Service
                 </button>

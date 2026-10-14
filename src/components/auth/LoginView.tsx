@@ -35,9 +35,11 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
   const [password, setPassword] = useState(DEMO_CREDENTIALS.owner.pass);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   // Sign Up State
-  const [signupRole, setSignupRole] = useState<'owner' | 'estate_manager'>('owner');
+  const [signupRole, setSignupRole] = useState<UserRole>('owner');
   const [signupName, setSignupName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPhone, setSignupPhone] = useState('');
@@ -51,11 +53,44 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
     setSelectedRole(role);
     setEmail(DEMO_CREDENTIALS[role].email);
     setPassword(DEMO_CREDENTIALS[role].pass);
+    setLoginError(null);
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(selectedRole);
+    setLoginError(null);
+    setLoginLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, role: selectedRole })
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setLoginError(data.error || 'Invalid credentials. Please verify your email and password.');
+        setLoginLoading(false);
+        return;
+      }
+
+      const u = data.user;
+      login(u.role, {
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        role: u.role,
+        roleLabel: u.roleLabel,
+        avatar: u.avatar,
+        title: u.title,
+        description: u.description
+      });
+    } catch (err: any) {
+      setLoginError(err.message || 'Network connection failed. Please check your credentials.');
+    } finally {
+      setLoginLoading(false);
+    }
   };
 
   const handleQuickDemoLogin = (role: UserRole) => {
@@ -84,7 +119,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#EBF0E6] flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 font-sans selection:bg-[#ECF39E] selection:text-[#132A13]">
+    <div className="min-h-screen bg-[#c0c0c0] flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 font-sans selection:bg-[#e10600] selection:text-white">
       
       {/* Navigation bar to return to Landing Page */}
       {onBackToLanding && (
@@ -92,18 +127,18 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
           <button
             type="button"
             onClick={onBackToLanding}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#DCE5D3] text-[#132A13] text-xs font-bold shadow-2xs hover:bg-[#F3F6EE] transition"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#B5B5B5] text-[#2a2a2a] text-xs font-bold shadow-2xs hover:bg-[#f0f0f0] transition"
           >
-            <ArrowLeft className="h-3.5 w-3.5 text-[#31572C]" />
+            <ArrowLeft className="h-3.5 w-3.5 text-[#e10600]" />
             <span>← Back to Website</span>
           </button>
 
           <button
             type="button"
             onClick={() => setIsTrialModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#ECF39E] border border-[#132A13]/20 text-[#132A13] text-xs font-black shadow-2xs hover:bg-[#dfe68b] transition"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#e10600] border border-[#e10600] text-white text-xs font-black shadow-2xs hover:bg-[#c50500] transition"
           >
-            <Sparkles className="h-3.5 w-3.5 text-[#132A13]" />
+            <Sparkles className="h-3.5 w-3.5 text-white" />
             <span>Start Free Trial</span>
           </button>
         </div>
@@ -112,30 +147,30 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
       {/* Brand Header */}
       <div className="mb-5 text-center space-y-1.5">
         <div className="flex items-center justify-center gap-2.5">
-          <div className="h-9 w-9 rounded-xl bg-[#132A13] text-[#ECF39E] flex items-center justify-center font-black text-sm shadow-xs">
+          <div className="h-9 w-9 rounded-xl bg-[#2a2a2a] text-[#e10600] flex items-center justify-center font-black text-sm shadow-xs">
             ✦
           </div>
-          <span className="text-2xl font-black tracking-tight text-[#132A13]">
+          <span className="text-2xl font-black tracking-tight text-[#2a2a2a]">
             STAYWISE
           </span>
         </div>
-        <p className="text-xs font-semibold text-[#657D5C]">
+        <p className="text-xs font-semibold text-[#666666]">
           Unified Property Operating System • Landlords, Estates &amp; Residents
         </p>
       </div>
 
       {/* Main Container Card */}
-      <div className="w-full max-w-xl bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-[#DCE5D3] space-y-6">
+      <div className="w-full max-w-xl bg-white rounded-3xl p-6 sm:p-8 shadow-md border border-[#B5B5B5] space-y-6">
         
         {/* Sign In vs Sign Up Segmented Controller */}
-        <div className="flex items-center p-1 rounded-full bg-[#F3F6EE] border border-[#DCE5D3]">
+        <div className="flex items-center p-1 rounded-full bg-[#f0f0f0] border border-[#B5B5B5]">
           <button
             type="button"
             onClick={() => { setAuthMode('SIGNIN'); setSignupError(null); }}
             className={`flex-1 py-2 rounded-full text-xs font-bold transition text-center ${
               authMode === 'SIGNIN'
-                ? 'bg-[#132A13] text-[#ECF39E] shadow-xs'
-                : 'text-[#657D5C] hover:text-[#132A13]'
+                ? 'bg-[#2a2a2a] text-[#e10600] shadow-xs'
+                : 'text-[#666666] hover:text-[#2a2a2a]'
             }`}
           >
             Sign In
@@ -145,11 +180,11 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
             onClick={() => { setAuthMode('SIGNUP'); setSignupError(null); }}
             className={`flex-1 py-2 rounded-full text-xs font-bold transition text-center flex items-center justify-center gap-1.5 ${
               authMode === 'SIGNUP'
-                ? 'bg-[#132A13] text-[#ECF39E] shadow-xs'
-                : 'text-[#657D5C] hover:text-[#132A13]'
+                ? 'bg-[#2a2a2a] text-[#e10600] shadow-xs'
+                : 'text-[#666666] hover:text-[#2a2a2a]'
             }`}
           >
-            <Sparkles className="h-3.5 w-3.5 text-[#31572C]" />
+            <Sparkles className="h-3.5 w-3.5 text-[#e10600]" />
             <span>Create Account</span>
           </button>
         </div>
@@ -158,16 +193,16 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
         {authMode === 'SIGNIN' ? (
           <div className="space-y-5">
             <div>
-              <h2 className="text-lg font-black text-[#132A13]">
+              <h2 className="text-lg font-black text-[#2a2a2a]">
                 Sign In to Workspace
               </h2>
-              <p className="text-xs text-[#657D5C] mt-0.5">
+              <p className="text-xs text-[#666666] mt-0.5">
                 Select your persona to access customized dashboards
               </p>
             </div>
 
             {/* Role Selector Tabs */}
-            <div className="grid grid-cols-3 gap-2 p-1.5 bg-[#F3F6EE] rounded-2xl border border-[#DCE5D3]">
+            <div className="grid grid-cols-3 gap-2 p-1.5 bg-[#f0f0f0] rounded-2xl border border-[#B5B5B5]">
               {ALLOWED_LOGIN_ROLES.map((role) => {
                 const cred = DEMO_CREDENTIALS[role];
                 const isSelected = selectedRole === role;
@@ -178,8 +213,8 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                     onClick={() => handleRoleSelect(role)}
                     className={`py-2 px-2 rounded-xl text-xs font-bold transition flex flex-col items-center text-center gap-1 ${
                       isSelected
-                        ? 'bg-[#132A13] text-[#ECF39E] shadow-2xs border border-[#4F772D]'
-                        : 'text-[#31572C] hover:text-[#132A13] hover:bg-white'
+                        ? 'bg-[#2a2a2a] text-[#e10600] shadow-2xs border border-[#e10600]'
+                        : 'text-[#2a2a2a] hover:text-[#e10600] hover:bg-white'
                     }`}
                   >
                     <span className="text-xl">{cred.avatar}</span>
@@ -190,42 +225,50 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
             </div>
 
             {/* Demo ID & Password Quick Login Banner */}
-            <div className="p-3.5 rounded-2xl bg-[#F3F6EE] border border-[#DCE5D3] space-y-2 text-xs">
+            <div className="p-3.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-2 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#132A13] flex items-center gap-1.5">
-                  <KeyRound className="h-3.5 w-3.5 text-[#31572C]" />
+                <span className="text-xs font-bold text-[#2a2a2a] flex items-center gap-1.5">
+                  <KeyRound className="h-3.5 w-3.5 text-[#e10600]" />
                   <span>Demo ID &amp; Password ({activeCred.roleLabel})</span>
                 </span>
-                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#ECF39E] text-[#132A13]">
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#e10600] text-white">
                   Ready
                 </span>
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                <div className="p-2 rounded-xl bg-white border border-[#DCE5D3] truncate">
-                  <span className="text-[#657D5C] mr-1">ID:</span>
-                  <span className="font-bold text-[#132A13]">{activeCred.email}</span>
+                <div className="p-2 rounded-xl bg-white border border-[#B5B5B5] truncate">
+                  <span className="text-[#666666] mr-1">ID:</span>
+                  <span className="font-bold text-[#2a2a2a]">{activeCred.email}</span>
                 </div>
-                <div className="p-2 rounded-xl bg-white border border-[#DCE5D3] truncate">
-                  <span className="text-[#657D5C] mr-1">Pass:</span>
-                  <span className="font-bold text-[#132A13]">{activeCred.pass}</span>
+                <div className="p-2 rounded-xl bg-white border border-[#B5B5B5] truncate">
+                  <span className="text-[#666666] mr-1">Pass:</span>
+                  <span className="font-bold text-[#2a2a2a]">{activeCred.pass}</span>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={() => handleQuickDemoLogin(selectedRole)}
-                className="w-full py-2 rounded-xl bg-[#132A13] hover:bg-[#31572C] text-[#ECF39E] text-xs font-black shadow-xs transition flex items-center justify-center gap-1"
+                className="w-full py-2 rounded-xl bg-[#e10600] hover:bg-[#c50500] text-white text-xs font-black shadow-xs transition flex items-center justify-center gap-1"
               >
                 <span>Instant Login as {activeCred.roleLabel}</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>
 
+            {/* Login Error Alert */}
+            {loginError && (
+              <div className="p-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>{loginError}</span>
+              </div>
+            )}
+
             {/* Form */}
             <form onSubmit={handleFormSubmit} className="space-y-3.5 text-xs">
               <div>
-                <label className="block text-[#132A13] font-bold mb-1">
+                <label className="block text-[#2a2a2a] font-bold mb-1">
                   Email
                 </label>
                 <div className="relative">
@@ -234,14 +277,14 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#F3F6EE] border border-[#DCE5D3] text-[#132A13] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#31572C] transition"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600] transition"
                   />
-                  <Mail className="absolute left-3 top-3 h-3.5 w-3.5 text-[#657D5C]" />
+                  <Mail className="absolute left-3 top-3 h-3.5 w-3.5 text-[#666666]" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[#132A13] font-bold mb-1">
+                <label className="block text-[#2a2a2a] font-bold mb-1">
                   Password
                 </label>
                 <div className="relative">
@@ -250,13 +293,13 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-[#F3F6EE] border border-[#DCE5D3] text-[#132A13] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#31572C] transition"
+                    className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600] transition"
                   />
-                  <Lock className="absolute left-3 top-3 h-3.5 w-3.5 text-[#657D5C]" />
+                  <Lock className="absolute left-3 top-3 h-3.5 w-3.5 text-[#666666]" />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-[#657D5C] hover:text-[#132A13]"
+                    className="absolute right-3 top-3 text-[#666666] hover:text-[#2a2a2a]"
                   >
                     {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                   </button>
@@ -265,60 +308,132 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-full bg-[#132A13] hover:bg-[#31572C] text-[#ECF39E] font-black text-xs shadow-xs transition"
+                disabled={loginLoading}
+                className="w-full py-3 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white font-black text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
               >
-                Sign In
+                {loginLoading ? 'Authenticating with SQLite...' : 'Sign In'}
               </button>
             </form>
           </div>
         ) : (
           /* MODE 2: SIGN UP */
           <div className="space-y-4 text-xs">
-            <h2 className="text-lg font-black text-[#132A13]">
+            <h2 className="text-lg font-black text-[#2a2a2a]">
               Create Your Account
             </h2>
 
+            {signupError && (
+              <div className="p-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>{signupError}</span>
+              </div>
+            )}
+
             <form onSubmit={handleSignupSubmit} className="space-y-3">
               <div>
-                <label className="block text-[#657D5C] font-semibold mb-1">Name</label>
+                <label className="block text-[#666666] font-semibold mb-1">Select Role</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSignupRole('owner')}
+                    className={`p-2.5 rounded-xl border text-left transition font-bold ${
+                      signupRole === 'owner'
+                        ? 'border-[#e10600] bg-red-50/50 text-[#e10600]'
+                        : 'border-[#B5B5B5] bg-[#f0f0f0] text-[#2a2a2a]'
+                    }`}
+                  >
+                    <div className="text-sm">👨‍💼 Property Owner</div>
+                    <div className="text-[10px] text-[#666666] font-normal">Landlord / Portfolio</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSignupRole('tenant')}
+                    className={`p-2.5 rounded-xl border text-left transition font-bold ${
+                      signupRole === 'tenant'
+                        ? 'border-[#e10600] bg-red-50/50 text-[#e10600]'
+                        : 'border-[#B5B5B5] bg-[#f0f0f0] text-[#2a2a2a]'
+                    }`}
+                  >
+                    <div className="text-sm">👨‍🎓 Tenant / Resident</div>
+                    <div className="text-[10px] text-[#666666] font-normal">Renter / Resident</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSignupRole('estate_manager')}
+                    className={`p-2.5 rounded-xl border text-left transition font-bold ${
+                      signupRole === 'estate_manager'
+                        ? 'border-[#e10600] bg-red-50/50 text-[#e10600]'
+                        : 'border-[#B5B5B5] bg-[#f0f0f0] text-[#2a2a2a]'
+                    }`}
+                  >
+                    <div className="text-sm">🏡 EstateOS Host</div>
+                    <div className="text-[10px] text-[#666666] font-normal">Villas &amp; Keys</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSignupRole('manager')}
+                    className={`p-2.5 rounded-xl border text-left transition font-bold ${
+                      signupRole === 'manager'
+                        ? 'border-[#e10600] bg-red-50/50 text-[#e10600]'
+                        : 'border-[#B5B5B5] bg-[#f0f0f0] text-[#2a2a2a]'
+                    }`}
+                  >
+                    <div className="text-sm">🧑‍💻 Property Manager</div>
+                    <div className="text-[10px] text-[#666666] font-normal">Operations &amp; Field</div>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[#666666] font-semibold mb-1">Full Name</label>
                 <input
                   type="text"
                   required
                   value={signupName}
                   onChange={e => setSignupName(e.target.value)}
-                  placeholder="Margaret Miller"
-                  className="w-full p-2.5 rounded-xl bg-[#F3F6EE] border border-[#DCE5D3] text-[#132A13] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#31572C]"
+                  placeholder="e.g. Anand Kumar"
+                  className="w-full p-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600]"
                 />
               </div>
               <div>
-                <label className="block text-[#657D5C] font-semibold mb-1">Email</label>
+                <label className="block text-[#666666] font-semibold mb-1">Email</label>
                 <input
                   type="email"
                   required
                   value={signupEmail}
                   onChange={e => setSignupEmail(e.target.value)}
-                  placeholder="margaret@staywise.app"
-                  className="w-full p-2.5 rounded-xl bg-[#F3F6EE] border border-[#DCE5D3] text-[#132A13] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#31572C]"
+                  placeholder="anand@staywise.app"
+                  className="w-full p-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600]"
                 />
               </div>
               <div>
-                <label className="block text-[#657D5C] font-semibold mb-1">Password</label>
+                <label className="block text-[#666666] font-semibold mb-1">Phone Number (Optional)</label>
+                <input
+                  type="tel"
+                  value={signupPhone}
+                  onChange={e => setSignupPhone(e.target.value)}
+                  placeholder="+91 98765 43210"
+                  className="w-full p-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600]"
+                />
+              </div>
+              <div>
+                <label className="block text-[#666666] font-semibold mb-1">Password</label>
                 <input
                   type="password"
                   required
                   value={signupPassword}
                   onChange={e => setSignupPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full p-2.5 rounded-xl bg-[#F3F6EE] border border-[#DCE5D3] text-[#132A13] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#31572C]"
+                  className="w-full p-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600]"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={signupLoading}
-                className="w-full py-3 rounded-full bg-[#132A13] hover:bg-[#31572C] text-[#ECF39E] font-black text-xs transition"
+                className="w-full py-3 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white font-black text-xs transition cursor-pointer disabled:opacity-50"
               >
-                {signupLoading ? 'Creating Account...' : 'Get Started'}
+                {signupLoading ? 'Onboarding & Initializing SQLite...' : `Complete ${signupRole === 'tenant' ? 'Tenant' : signupRole === 'owner' ? 'Owner' : 'User'} Onboarding`}
               </button>
             </form>
           </div>

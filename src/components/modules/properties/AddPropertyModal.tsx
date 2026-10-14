@@ -44,7 +44,7 @@ const ASSET_TYPES: AssetTypeOption[] = [
     category: 'shared_living', 
     tagline: 'Students & professionals', 
     description: 'Bed-level inventory, meals, cleaning & curfews',
-    icon: <BedDouble className="h-5 w-5 text-[#274235]" />
+    icon: <BedDouble className="h-5 w-5 text-[#2a2a2a]" />
   },
   { 
     type: 'Flat', 
@@ -52,7 +52,7 @@ const ASSET_TYPES: AssetTypeOption[] = [
     category: 'residential', 
     tagline: 'Rent the whole-unit', 
     description: 'Gated society flats, single units & multi-unit complexes',
-    icon: <Home className="h-5 w-5 text-[#274235]" />
+    icon: <Home className="h-5 w-5 text-[#2a2a2a]" />
   },
   { 
     type: 'Warehouse', 
@@ -60,7 +60,7 @@ const ASSET_TYPES: AssetTypeOption[] = [
     category: 'industrial', 
     tagline: 'Storage, logistics & clear height', 
     description: 'Heavy duty floor, loading bays & industrial power',
-    icon: <Truck className="h-5 w-5 text-[#274235]" />
+    icon: <Truck className="h-5 w-5 text-[#2a2a2a]" />
   },
   { 
     type: 'Office', 
@@ -68,7 +68,7 @@ const ASSET_TYPES: AssetTypeOption[] = [
     category: 'commercial', 
     tagline: 'Offices, retail & tech parks', 
     description: 'Workstations, CAM charges, HVAC & corporate leases',
-    icon: <Briefcase className="h-5 w-5 text-[#274235]" />
+    icon: <Briefcase className="h-5 w-5 text-[#2a2a2a]" />
   },
   { 
     type: 'Independent House', 
@@ -76,14 +76,14 @@ const ASSET_TYPES: AssetTypeOption[] = [
     category: 'estate', 
     tagline: 'Luxury private residences', 
     description: 'Private lawn, pool, caretaker & premium tariffs',
-    icon: <Home className="h-5 w-5 text-[#274235]" />
+    icon: <Home className="h-5 w-5 text-[#2a2a2a]" />
   }
 ];
 
 const LOCAL_STORAGE_KEY = 'staywise_onboarding_draft_v2';
 
 export default function AddPropertyModal() {
-  const { isAddPropertyOpen, setIsAddPropertyOpen, addProperty, addNotification } = useAppState();
+  const { isAddPropertyOpen, setIsAddPropertyOpen, addProperty, addNotification, currentUser, activePortfolio } = useAppState();
 
   // Wizard Step
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
@@ -590,10 +590,15 @@ export default function AddPropertyModal() {
       'Independent House': [...villaLuxuryAmenities, ...villaServices]
     };
 
+    const assignedPortfolio = (activePortfolio && activePortfolio !== 'all')
+      ? activePortfolio
+      : (currentUser.name && currentUser.name !== 'Member' ? `${currentUser.name}'s Portfolio` : `${finalCity} Central`);
+
     addProperty({
+      ownerId: currentUser.id || 'user-owner-vikram',
       name: finalPropertyName,
       type: selectedAsset.type,
-      portfolio: `${finalCity} Central`,
+      portfolio: assignedPortfolio,
       address: finalAddress,
       city: finalCity,
       state: state.trim() || 'Karnataka',
@@ -627,28 +632,28 @@ export default function AddPropertyModal() {
 
   return (
     <div 
-      className="fixed inset-0 z-50 bg-[#19251f]/60 backdrop-blur-md flex items-center justify-center p-2 xs:p-3 sm:p-5 overflow-y-auto font-sans"
+      className="fixed inset-0 z-50 bg-[#2a2a2a]/60 backdrop-blur-md flex items-center justify-center p-2 xs:p-3 sm:p-5 overflow-y-auto font-sans"
       onClick={(e) => {
         if (e.target === e.currentTarget) handleCloseWithoutSaving();
       }}
     >
-      <div className="w-full max-w-2xl bg-white border border-[#e3e1d8] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[94vh] my-auto animate-in fade-in zoom-in-95 duration-200">
+      <div className="w-full max-w-2xl bg-white border border-[#B5B5B5] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[94vh] my-auto animate-in fade-in zoom-in-95 duration-200">
         
         {/* Header Bar in Staywise Forest Theme */}
-        <div className="bg-[#fbfbfa] border-b border-[#eeece5] px-4 sm:px-6 pt-4 pb-3 space-y-2.5">
+        <div className="bg-[#ffffff] border-b border-[#E0E0E0] px-4 sm:px-6 pt-4 pb-3 space-y-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {currentStep > 1 && (
                 <button
                   type="button"
                   onClick={handlePrevStep}
-                  className="h-7 w-7 rounded-xl bg-[#eef3f0] hover:bg-[#274235] hover:text-white text-[#274235] flex items-center justify-center transition cursor-pointer"
+                  className="h-7 w-7 rounded-xl bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white text-[#2a2a2a] flex items-center justify-center transition cursor-pointer"
                   title="Back (All entered data is preserved)"
                 >
                   <ArrowLeft className="h-3.5 w-3.5" />
                 </button>
               )}
-              <span className="text-[10px] font-black uppercase tracking-wider text-[#274235] bg-[#eef3f0] px-2.5 py-0.5 rounded-full border border-[#274235]/20">
+              <span className="text-[10px] font-black uppercase tracking-wider text-[#2a2a2a] bg-[#f0f0f0] px-2.5 py-0.5 rounded-full border border-[#2a2a2a]/20">
                 Step {currentStep} of 6 · {
                   currentStep === 1 ? 'BASICS' :
                   currentStep === 2 ? (selectedAsset.type === 'PG' ? 'BED INVENTORY' : selectedAsset.type === 'Warehouse' ? 'SPECS & AREA' : selectedAsset.type === 'Office' ? 'FLOOR TERMS' : 'UNIT LAYOUT') :
@@ -664,7 +669,7 @@ export default function AddPropertyModal() {
               <button
                 type="button"
                 onClick={handleSaveDraft}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-xl border border-[#e3e1d8] bg-white hover:border-[#274235] text-[11px] font-bold text-[#274235] transition cursor-pointer shadow-2xs"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-xl border border-[#B5B5B5] bg-white hover:border-[#2a2a2a] text-[11px] font-bold text-[#2a2a2a] transition cursor-pointer shadow-2xs"
                 title="Save your progress draft"
               >
                 <Save className="h-3 w-3" />
@@ -674,7 +679,7 @@ export default function AddPropertyModal() {
               <button
                 type="button"
                 onClick={handleResetForm}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-xl border border-[#e3e1d8] bg-white hover:bg-rose-50 hover:text-rose-700 text-[11px] font-bold text-[#6e7972] transition cursor-pointer shadow-2xs"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-xl border border-[#B5B5B5] bg-white hover:bg-rose-50 hover:text-rose-700 text-[11px] font-bold text-[#666666] transition cursor-pointer shadow-2xs"
                 title="Reset form and start fresh"
               >
                 <RotateCcw className="h-3 w-3" />
@@ -684,7 +689,7 @@ export default function AddPropertyModal() {
               <button
                 type="button"
                 onClick={handleCloseWithoutSaving}
-                className="text-[#6e7972] hover:text-[#19251f] p-1 rounded-full hover:bg-slate-100 transition cursor-pointer"
+                className="text-[#666666] hover:text-[#2a2a2a] p-1 rounded-full hover:bg-slate-100 transition cursor-pointer"
                 title="Close"
               >
                 <X className="h-5 w-5" />
@@ -693,12 +698,12 @@ export default function AddPropertyModal() {
           </div>
 
           {/* Stepper Progress Bar (Staywise Forest Palette) */}
-          <div className="grid grid-cols-6 gap-1.5 h-1.5 w-full bg-[#e8e6de] rounded-full overflow-hidden">
+          <div className="grid grid-cols-6 gap-1.5 h-1.5 w-full bg-[#B5B5B5] rounded-full overflow-hidden">
             {[1, 2, 3, 4, 5, 6].map((s) => (
               <div 
                 key={s}
                 className={`h-full transition-all duration-300 rounded-full ${
-                  s <= currentStep ? 'bg-[#274235]' : 'bg-transparent'
+                  s <= currentStep ? 'bg-[#2a2a2a]' : 'bg-transparent'
                 }`}
               />
             ))}
@@ -714,7 +719,7 @@ export default function AddPropertyModal() {
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(94vh-125px)] space-y-5 bg-[#fbfbfa]">
+        <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(94vh-125px)] space-y-5 bg-[#ffffff]">
 
           {/* Validation Error Alert Banner */}
           {validationError && (
@@ -754,14 +759,14 @@ export default function AddPropertyModal() {
                 <button
                   type="button"
                   onClick={handleResumeDraft}
-                  className="px-3.5 py-1.5 rounded-xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs transition cursor-pointer shadow-xs"
+                  className="px-3.5 py-1.5 rounded-xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-bold text-xs transition cursor-pointer shadow-xs"
                 >
                   Resume Draft →
                 </button>
                 <button
                   type="button"
                   onClick={handleDiscardDraft}
-                  className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-[#e3e1d8] font-bold text-xs transition cursor-pointer"
+                  className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-[#B5B5B5] font-bold text-xs transition cursor-pointer"
                   title="Discard this draft and start fresh"
                 >
                   Discard
@@ -776,19 +781,19 @@ export default function AddPropertyModal() {
           {currentStep === 1 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-[#19251f] tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-black text-[#2a2a2a] tracking-tight">
                   Let's start with the basics.
                 </h2>
-                <p className="text-xs text-[#6e7972] mt-0.5">
+                <p className="text-xs text-[#666666] mt-0.5">
                   Select your exact property asset class. Staywise will automatically tailor every following step to only include relevant fields.
                 </p>
               </div>
 
               {/* Asset Class Selector */}
-              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e3e1d8] space-y-3 shadow-2xs">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#B5B5B5] space-y-3 shadow-2xs">
                 <div>
-                  <h3 className="text-xs font-bold text-[#19251f]">Asset Class Engine</h3>
-                  <p className="text-[11px] text-[#6e7972]">Pick the property type you are onboarding</p>
+                  <h3 className="text-xs font-bold text-[#2a2a2a]">Asset Class Engine</h3>
+                  <p className="text-[11px] text-[#666666]">Pick the property type you are onboarding</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
@@ -801,18 +806,18 @@ export default function AddPropertyModal() {
                         onClick={() => handleAssetSelect(asset)}
                         className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                           isSelected
-                            ? 'border-[#274235] bg-[#eef3f0] ring-1 ring-[#274235] shadow-xs'
-                            : 'border-[#e3e1d8] bg-white hover:border-[#274235]/40'
+                            ? 'border-[#2a2a2a] bg-[#f0f0f0] ring-1 ring-[#2a2a2a] shadow-xs'
+                            : 'border-[#B5B5B5] bg-white hover:border-[#2a2a2a]/40'
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             {asset.icon}
-                            <span className="text-xs font-bold text-[#19251f]">{asset.label}</span>
+                            <span className="text-xs font-bold text-[#2a2a2a]">{asset.label}</span>
                           </div>
-                          {isSelected && <Check className="h-3.5 w-3.5 text-[#274235]" />}
+                          {isSelected && <Check className="h-3.5 w-3.5 text-[#2a2a2a]" />}
                         </div>
-                        <p className="text-[10px] text-[#6e7972] mt-1.5 leading-snug line-clamp-2">
+                        <p className="text-[10px] text-[#666666] mt-1.5 leading-snug line-clamp-2">
                           {asset.description}
                         </p>
                       </button>
@@ -822,10 +827,10 @@ export default function AddPropertyModal() {
               </div>
 
               {/* Property Identity Card */}
-              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e3e1d8] space-y-3 shadow-2xs">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#B5B5B5] space-y-3 shadow-2xs">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-[#19251f]">
+                    <label className="text-[11px] font-bold text-[#2a2a2a]">
                       Property Name / Identification <span className="text-rose-600">*</span>
                     </label>
                     {fieldErrors.propertyName && (
@@ -843,19 +848,19 @@ export default function AddPropertyModal() {
                       clearFieldError('propertyName');
                     }}
                     placeholder="Enter building or property name (e.g. Sunrise PG, Greenview Villa)"
-                    className={`w-full px-3.5 py-2.5 rounded-xl border text-xs text-[#19251f] placeholder-[#95a099] focus:outline-none transition ${
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-xs text-[#2a2a2a] placeholder-[#888888] focus:outline-none transition ${
                       fieldErrors.propertyName 
                         ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30' 
-                        : 'border-[#d8d6cd] bg-white focus:border-[#274235]'
+                        : 'border-[#B5B5B5] bg-white focus:border-[#2a2a2a]'
                     }`}
                   />
-                  <p className="text-[10px] text-[#6e7972]">Displayed on tenant invoices, agreements, and online listings.</p>
+                  <p className="text-[10px] text-[#666666]">Displayed on tenant invoices, agreements, and online listings.</p>
                 </div>
 
                 {/* Location */}
                 <div className="space-y-1 pt-1">
                   <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-bold text-[#19251f]">
+                    <label className="text-[11px] font-bold text-[#2a2a2a]">
                       Where is it located? <span className="text-rose-600">*</span>
                     </label>
                     {fieldErrors.addressSearch && (
@@ -866,7 +871,7 @@ export default function AddPropertyModal() {
                     )}
                   </div>
                   <div className="relative">
-                    <MapPin className="absolute left-3.5 top-3 h-4 w-4 text-[#274235]" />
+                    <MapPin className="absolute left-3.5 top-3 h-4 w-4 text-[#2a2a2a]" />
                     <input
                       type="text"
                       value={addressSearch}
@@ -875,10 +880,10 @@ export default function AddPropertyModal() {
                         clearFieldError('addressSearch');
                       }}
                       placeholder="Enter full street address, building number, area, city..."
-                      className={`w-full pl-9 pr-24 py-2.5 rounded-xl border text-xs text-[#19251f] placeholder-[#95a099] focus:outline-none transition ${
+                      className={`w-full pl-9 pr-24 py-2.5 rounded-xl border text-xs text-[#2a2a2a] placeholder-[#888888] focus:outline-none transition ${
                         fieldErrors.addressSearch 
                           ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30' 
-                          : 'border-[#d8d6cd] bg-white focus:border-[#274235]'
+                          : 'border-[#B5B5B5] bg-white focus:border-[#2a2a2a]'
                       }`}
                     />
                     <button
@@ -895,7 +900,7 @@ export default function AddPropertyModal() {
                           );
                         }
                       }}
-                      className="absolute right-2 top-1.5 px-2.5 py-1 rounded-lg bg-[#eef3f0] hover:bg-[#274235] hover:text-white text-[#274235] text-[10px] font-bold flex items-center gap-1 transition cursor-pointer"
+                      className="absolute right-2 top-1.5 px-2.5 py-1 rounded-lg bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white text-[#2a2a2a] text-[10px] font-bold flex items-center gap-1 transition cursor-pointer"
                     >
                       <Navigation className="h-3 w-3" />
                       <span>Pin Location</span>
@@ -911,11 +916,11 @@ export default function AddPropertyModal() {
                     const y = Math.min(90, Math.max(10, ((e.clientY - rect.top) / rect.height) * 100));
                     setMapPinCoords({ x, y });
                   }}
-                  className="relative h-36 rounded-xl border border-[#e3e1d8] bg-[#eef1ed] overflow-hidden cursor-crosshair group mt-2"
+                  className="relative h-36 rounded-xl border border-[#B5B5B5] bg-[#eef1ed] overflow-hidden cursor-crosshair group mt-2"
                 >
                   <svg className="w-full h-full opacity-60" viewBox="0 0 400 160" preserveAspectRatio="none">
-                    <rect width="400" height="160" fill="#eef3f0" />
-                    <path d="M-10 30 Q 120 60, 240 25 T 420 70" stroke="#d5ded7" strokeWidth="10" fill="none" />
+                    <rect width="400" height="160" fill="#f0f0f0" />
+                    <path d="M-10 30 Q 120 60, 240 25 T 420 70" stroke="#B5B5B5" strokeWidth="10" fill="none" />
                     <path d="M60 -10 L 90 180" stroke="#ffffff" strokeWidth="8" />
                     <path d="M190 -10 L 220 180" stroke="#ffffff" strokeWidth="12" />
                     <path d="M-10 95 L 420 105" stroke="#759382" strokeWidth="4" />
@@ -925,33 +930,33 @@ export default function AddPropertyModal() {
                     style={{ left: `${mapPinCoords.x}%`, top: `${mapPinCoords.y}%` }}
                     className="absolute -translate-x-1/2 -translate-y-full transition-all duration-150 flex flex-col items-center pointer-events-none"
                   >
-                    <div className="px-2 py-0.5 rounded-md bg-[#274235] text-white text-[9px] font-extrabold shadow-sm whitespace-nowrap mb-0.5">
+                    <div className="px-2 py-0.5 rounded-md bg-[#2a2a2a] text-white text-[9px] font-extrabold shadow-sm whitespace-nowrap mb-0.5">
                       {propertyName || 'Property Pin'}
                     </div>
-                    <div className="h-6 w-6 rounded-full bg-[#274235] text-white flex items-center justify-center shadow-lg border-2 border-white">
+                    <div className="h-6 w-6 rounded-full bg-[#2a2a2a] text-white flex items-center justify-center shadow-lg border-2 border-white">
                       <MapPin className="h-3 w-3 fill-current" />
                     </div>
                   </div>
 
-                  <div className="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-[#19251f]/80 text-white text-[9px] font-bold">
+                  <div className="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-[#2a2a2a]/80 text-white text-[9px] font-bold">
                     Tap to adjust pin location
                   </div>
                 </div>
 
                 {/* Proof of Address Upload */}
-                <div className="pt-2 border-t border-[#eeece5] space-y-1.5">
-                  <label className="block text-[11px] font-bold text-[#19251f]">
+                <div className="pt-2 border-t border-[#E0E0E0] space-y-1.5">
+                  <label className="block text-[11px] font-bold text-[#2a2a2a]">
                     Proof of Address (Electricity bill / Property tax / Deed)
                   </label>
                   {addressProofFile1 ? (
-                    <div className="p-3.5 rounded-xl border border-dashed border-[#274235]/40 bg-[#eef3f0]/40 flex items-center justify-between">
+                    <div className="p-3.5 rounded-xl border border-dashed border-[#2a2a2a]/40 bg-[#f0f0f0]/40 flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <div className="h-7 w-7 rounded-lg bg-[#274235] text-white flex items-center justify-center">
+                        <div className="h-7 w-7 rounded-lg bg-[#2a2a2a] text-white flex items-center justify-center">
                           <Upload className="h-3.5 w-3.5" />
                         </div>
                         <div>
-                          <span className="text-xs font-bold text-[#19251f] block">{addressProofFile1}</span>
-                          <span className="text-[10px] text-[#6e7972]">Attached Document</span>
+                          <span className="text-xs font-bold text-[#2a2a2a] block">{addressProofFile1}</span>
+                          <span className="text-[10px] text-[#666666]">Attached Document</span>
                         </div>
                       </div>
                       <button
@@ -963,17 +968,17 @@ export default function AddPropertyModal() {
                       </button>
                     </div>
                   ) : (
-                    <label className="p-3.5 rounded-xl border border-dashed border-[#d8d6cd] hover:border-[#274235] bg-[#fbfbfa] hover:bg-[#eef3f0]/30 flex items-center justify-between cursor-pointer transition">
+                    <label className="p-3.5 rounded-xl border border-dashed border-[#B5B5B5] hover:border-[#2a2a2a] bg-[#ffffff] hover:bg-[#f0f0f0]/30 flex items-center justify-between cursor-pointer transition">
                       <div className="flex items-center gap-2.5">
-                        <div className="h-7 w-7 rounded-lg bg-[#f4f3ef] text-[#6e7972] flex items-center justify-center">
+                        <div className="h-7 w-7 rounded-lg bg-[#f0f0f0] text-[#666666] flex items-center justify-center">
                           <Upload className="h-3.5 w-3.5" />
                         </div>
                         <div>
-                          <span className="text-xs font-bold text-[#19251f] block">Upload ownership or address document</span>
-                          <span className="text-[10px] text-[#6e7972]">PDF, JPG, or PNG up to 10MB</span>
+                          <span className="text-xs font-bold text-[#2a2a2a] block">Upload ownership or address document</span>
+                          <span className="text-[10px] text-[#666666]">PDF, JPG, or PNG up to 10MB</span>
                         </div>
                       </div>
-                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-[#274235] text-white">Browse</span>
+                      <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-[#2a2a2a] text-white">Browse</span>
                       <input
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png"
@@ -996,24 +1001,24 @@ export default function AddPropertyModal() {
           {currentStep === 2 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-[#19251f] tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-black text-[#2a2a2a] tracking-tight">
                   {selectedAsset.type === 'PG' ? 'Bed Inventory & Rent Structure' :
                    selectedAsset.type === 'Flat' ? 'Flat Configuration & Financials' :
                    selectedAsset.type === 'Warehouse' ? 'Warehouse Specifications & Leases' :
                    selectedAsset.type === 'Office' ? 'Office Floor Plate & Commercials' : 'Villa Specs & Tariffs'}
                 </h2>
-                <p className="text-xs text-[#6e7972] mt-0.5">
+                <p className="text-xs text-[#666666] mt-0.5">
                   Enter the capacity and leasing metrics for your {selectedAsset.label}.
                 </p>
               </div>
 
               {/* PG ONLY */}
               {selectedAsset.type === 'PG' && (
-                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e3e1d8] space-y-4 shadow-2xs">
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#B5B5B5] space-y-4 shadow-2xs">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Number of Floors <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.pgFloors && (
@@ -1036,13 +1041,13 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.pgFloors
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Rooms Per Floor <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.pgRoomsPerFloor && (
@@ -1065,14 +1070,14 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.pgRoomsPerFloor
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-[#19251f]">Room Sharing Tier</label>
+                    <label className="text-[11px] font-bold text-[#2a2a2a]">Room Sharing Tier</label>
                     <div className="grid grid-cols-4 gap-2">
                       {(['Single', '2-Sharing', '3-Sharing', '4-Sharing'] as const).map((s) => (
                         <button
@@ -1081,8 +1086,8 @@ export default function AddPropertyModal() {
                           onClick={() => setPgSharingType(s)}
                           className={`py-2 px-2 rounded-xl border text-xs font-bold transition cursor-pointer text-center ${
                             pgSharingType === s
-                              ? 'border-[#274235] bg-[#eef3f0] text-[#274235]'
-                              : 'border-[#e3e1d8] text-[#4d5a52] hover:bg-[#fbfbfa]'
+                              ? 'border-[#2a2a2a] bg-[#f0f0f0] text-[#2a2a2a]'
+                              : 'border-[#B5B5B5] text-[#666666] hover:bg-[#ffffff]'
                           }`}
                         >
                           {s}
@@ -1094,7 +1099,7 @@ export default function AddPropertyModal() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Rent per Bed / Month (₹) <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.pgRentPerBed && (
@@ -1115,13 +1120,13 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.pgRentPerBed
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] text-[#19251f] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] text-[#2a2a2a] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Security Deposit / Bed (₹) <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.pgDepositPerBed && (
@@ -1142,19 +1147,19 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.pgDepositPerBed
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] text-[#19251f] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] text-[#2a2a2a] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 pt-1 border-t border-[#eeece5]">
+                  <div className="grid grid-cols-2 gap-3 pt-1 border-t border-[#E0E0E0]">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Gender Policy</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Gender Policy</label>
                       <select
                         value={pgGenderPolicy}
                         onChange={(e) => setPgGenderPolicy(e.target.value as any)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs bg-white font-medium"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs bg-white font-medium"
                       >
                         <option value="Male Only">Male Only</option>
                         <option value="Female Only">Female Only</option>
@@ -1163,11 +1168,11 @@ export default function AddPropertyModal() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Electricity Billing</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Electricity Billing</label>
                       <select
                         value={pgElectricityBilling}
                         onChange={(e) => setPgElectricityBilling(e.target.value as any)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs bg-white font-medium"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs bg-white font-medium"
                       >
                         <option value="Sub-meter OCR">Sub-meter OCR (Per room)</option>
                         <option value="Equal Split">Equal Split across beds</option>
@@ -1180,14 +1185,14 @@ export default function AddPropertyModal() {
 
               {/* FLAT ONLY */}
               {selectedAsset.type === 'Flat' && (
-                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e3e1d8] space-y-4 shadow-2xs">
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#B5B5B5] space-y-4 shadow-2xs">
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">BHK Layout</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">BHK Layout</label>
                       <select
                         value={flatBhkType}
                         onChange={(e) => setFlatBhkType(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs bg-white font-bold"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs bg-white font-bold"
                       >
                         <option value="1 RK / Studio">1 RK / Studio</option>
                         <option value="1 BHK">1 BHK</option>
@@ -1199,7 +1204,7 @@ export default function AddPropertyModal() {
 
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Unit Number <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.flatUnitNumber && (
@@ -1220,19 +1225,19 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.flatUnitNumber
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Floor Number</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Floor Number</label>
                       <input
                         type="number"
                         placeholder="e.g. 4"
                         value={flatFloorNumber}
                         onChange={(e) => setFlatFloorNumber(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs"
                       />
                     </div>
                   </div>
@@ -1240,7 +1245,7 @@ export default function AddPropertyModal() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Monthly Rent for Flat (₹) <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.flatMonthlyRent && (
@@ -1261,14 +1266,14 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.flatMonthlyRent
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] text-[#19251f] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] text-[#2a2a2a] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
 
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Security Deposit (₹) <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.flatSecurityDeposit && (
@@ -1289,16 +1294,16 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.flatSecurityDeposit
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] text-[#19251f] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] text-[#2a2a2a] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 pt-1 border-t border-[#eeece5]">
+                  <div className="grid grid-cols-2 gap-3 pt-1 border-t border-[#E0E0E0]">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Carpet Area (sq.ft) <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.flatAreaSqFt && (
@@ -1319,19 +1324,19 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs transition focus:outline-none ${
                           fieldErrors.flatAreaSqFt
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Society Maintenance (₹/mo)</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Society Maintenance (₹/mo)</label>
                       <input
                         type="number"
                         placeholder="e.g. 4500"
                         value={flatMaintenanceFee}
                         onChange={(e) => setFlatMaintenanceFee(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs"
                       />
                     </div>
                   </div>
@@ -1340,11 +1345,11 @@ export default function AddPropertyModal() {
 
               {/* WAREHOUSE ONLY */}
               {selectedAsset.type === 'Warehouse' && (
-                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e3e1d8] space-y-4 shadow-2xs">
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#B5B5B5] space-y-4 shadow-2xs">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Clear Carpet Area (sq.ft) <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.whCarpetAreaSqFt && (
@@ -1365,14 +1370,14 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.whCarpetAreaSqFt
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] text-[#19251f] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] text-[#2a2a2a] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
 
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Clear Height (Feet) <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.whClearHeightFt && (
@@ -1393,7 +1398,7 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.whClearHeightFt
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] text-[#19251f] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] text-[#2a2a2a] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
@@ -1402,7 +1407,7 @@ export default function AddPropertyModal() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Base Rent (₹/sq.ft/month) <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.whBaseRentSqFt && (
@@ -1423,14 +1428,14 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.whBaseRentSqFt
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
 
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Loading Docks <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.whLoadingDocks && (
@@ -1451,41 +1456,41 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.whLoadingDocks
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2.5 pt-1 border-t border-[#eeece5]">
+                  <div className="grid grid-cols-3 gap-2.5 pt-1 border-t border-[#E0E0E0]">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Deposit (Months)</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Deposit (Months)</label>
                       <input
                         type="number"
                         placeholder="e.g. 6"
                         value={whSecurityDepositMonths}
                         onChange={(e) => setWhSecurityDepositMonths(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Lock-in (Months)</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Lock-in (Months)</label>
                       <input
                         type="number"
                         placeholder="e.g. 36"
                         value={whLockInMonths}
                         onChange={(e) => setWhLockInMonths(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Annual Escalation %</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Annual Escalation %</label>
                       <input
                         type="number"
                         placeholder="e.g. 5"
                         value={whEscalationPercent}
                         onChange={(e) => setWhEscalationPercent(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs"
                       />
                     </div>
                   </div>
@@ -1494,11 +1499,11 @@ export default function AddPropertyModal() {
 
               {/* COMMERCIAL / OFFICE ONLY */}
               {selectedAsset.type === 'Office' && (
-                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e3e1d8] space-y-4 shadow-2xs">
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#B5B5B5] space-y-4 shadow-2xs">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Carpet Area (sq.ft) <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.commCarpetSqFt && (
@@ -1519,17 +1524,17 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.commCarpetSqFt
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] text-[#19251f] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] text-[#2a2a2a] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Fit-Out Status</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Fit-Out Status</label>
                       <select
                         value={commFitOutStatus}
                         onChange={(e) => setCommFitOutStatus(e.target.value as any)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs bg-white font-bold"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs bg-white font-bold"
                       >
                         <option value="Plug & Play Furnished">Plug & Play Furnished</option>
                         <option value="Warm Shell">Warm Shell</option>
@@ -1541,7 +1546,7 @@ export default function AddPropertyModal() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Base Rent (₹/sq.ft/month) <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.commBaseRentSqFt && (
@@ -1562,14 +1567,14 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.commBaseRentSqFt
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
 
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           CAM Charges (₹/sq.ft) <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.commCamSqFt && (
@@ -1590,16 +1595,16 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.commCamSqFt
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2.5 pt-1 border-t border-[#eeece5]">
+                  <div className="grid grid-cols-3 gap-2.5 pt-1 border-t border-[#E0E0E0]">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">Workstations</label>
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">Workstations</label>
                         {fieldErrors.commWorkstations && (
                           <span className="text-[9px] font-bold text-rose-600">
                             {fieldErrors.commWorkstations}
@@ -1614,27 +1619,27 @@ export default function AddPropertyModal() {
                           setCommWorkstations(e.target.value);
                           clearFieldError('commWorkstations');
                         }}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Car Bays</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Car Bays</label>
                       <input
                         type="number"
                         placeholder="e.g. 12"
                         value={commCarBays}
                         onChange={(e) => setCommCarBays(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Lock-in (Mo)</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Lock-in (Mo)</label>
                       <input
                         type="number"
                         placeholder="e.g. 36"
                         value={commLockInMonths}
                         onChange={(e) => setCommLockInMonths(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs"
                       />
                     </div>
                   </div>
@@ -1643,11 +1648,11 @@ export default function AddPropertyModal() {
 
               {/* VILLA ONLY */}
               {selectedAsset.type === 'Independent House' && (
-                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e3e1d8] space-y-4 shadow-2xs">
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#B5B5B5] space-y-4 shadow-2xs">
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Bedrooms <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.villaBedrooms && (
@@ -1668,13 +1673,13 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.villaBedrooms
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Built-up (sq.ft) <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.villaBuiltUpSqFt && (
@@ -1695,18 +1700,18 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.villaBuiltUpSqFt
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Private Lawn (sq.ft)</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Private Lawn (sq.ft)</label>
                       <input
                         type="number"
                         placeholder="e.g. 8500"
                         value={villaPlotSqFt}
                         onChange={(e) => setVillaPlotSqFt(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs"
                       />
                     </div>
                   </div>
@@ -1714,7 +1719,7 @@ export default function AddPropertyModal() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Monthly Rent / Tariff (₹) <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.villaMonthlyRent && (
@@ -1735,14 +1740,14 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.villaMonthlyRent
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] text-[#19251f] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] text-[#2a2a2a] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
 
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-[#19251f]">
+                        <label className="text-[11px] font-bold text-[#2a2a2a]">
                           Security Deposit (₹) <span className="text-rose-600">*</span>
                         </label>
                         {fieldErrors.villaSecurityDeposit && (
@@ -1763,7 +1768,7 @@ export default function AddPropertyModal() {
                         className={`w-full px-3 py-2 rounded-xl border text-xs font-bold transition focus:outline-none ${
                           fieldErrors.villaSecurityDeposit
                             ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                            : 'border-[#d8d6cd] text-[#19251f] focus:border-[#274235]'
+                            : 'border-[#B5B5B5] text-[#2a2a2a] focus:border-[#2a2a2a]'
                         }`}
                       />
                     </div>
@@ -1779,18 +1784,18 @@ export default function AddPropertyModal() {
           {currentStep === 3 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-[#19251f] tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-black text-[#2a2a2a] tracking-tight">
                   {selectedAsset.type === 'PG' ? 'In-Room Furnishings' :
                    selectedAsset.type === 'Flat' ? 'Flat In-Unit Fittings & Appliances' :
                    selectedAsset.type === 'Warehouse' ? 'Industrial Power & Safety Infrastructure' :
                    selectedAsset.type === 'Office' ? 'Corporate Floor Plate Specifications' : 'Luxury Villa In-House Amenities'}
                 </h2>
-                <p className="text-xs text-[#6e7972] mt-0.5">
+                <p className="text-xs text-[#666666] mt-0.5">
                   Select what exists directly inside this {selectedAsset.label}.
                 </p>
               </div>
 
-              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e3e1d8] space-y-3 shadow-2xs">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#B5B5B5] space-y-3 shadow-2xs">
                 {/* Dynamically Render Checklist */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {(selectedAsset.type === 'PG' ? [
@@ -1858,13 +1863,13 @@ export default function AddPropertyModal() {
                         }}
                         className={`p-3 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
                           isChecked
-                            ? 'border-[#274235] bg-[#eef3f0] text-[#19251f]'
-                            : 'border-[#e3e1d8] bg-white text-[#4d5a52] hover:bg-[#fbfbfa]'
+                            ? 'border-[#2a2a2a] bg-[#f0f0f0] text-[#2a2a2a]'
+                            : 'border-[#B5B5B5] bg-white text-[#666666] hover:bg-[#ffffff]'
                         }`}
                       >
                         <span className="text-xs font-semibold">{item}</span>
                         <div className={`h-4 w-4 rounded-md border flex items-center justify-center shrink-0 ${
-                          isChecked ? 'bg-[#274235] border-[#274235] text-white' : 'border-[#d8d6cd]'
+                          isChecked ? 'bg-[#2a2a2a] border-[#2a2a2a] text-white' : 'border-[#B5B5B5]'
                         }`}>
                           {isChecked && <Check className="h-3 w-3" />}
                         </div>
@@ -1882,18 +1887,18 @@ export default function AddPropertyModal() {
           {currentStep === 4 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-[#19251f] tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-black text-[#2a2a2a] tracking-tight">
                   {selectedAsset.type === 'PG' ? 'Building Common Facilities' :
                    selectedAsset.type === 'Flat' ? 'Gated Society Facilities' :
                    selectedAsset.type === 'Warehouse' ? 'Logistics Park & Periphery Facilities' :
                    selectedAsset.type === 'Office' ? 'Commercial Tech Campus Amenities' : 'Private Estate Services'}
                 </h2>
-                <p className="text-xs text-[#6e7972] mt-0.5">
+                <p className="text-xs text-[#666666] mt-0.5">
                   Shared infrastructure and security outside the unit.
                 </p>
               </div>
 
-              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e3e1d8] space-y-3 shadow-2xs">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#B5B5B5] space-y-3 shadow-2xs">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {(selectedAsset.type === 'PG' ? [
                     'CCTV 24/7',
@@ -1959,13 +1964,13 @@ export default function AddPropertyModal() {
                         }}
                         className={`p-3 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
                           isChecked
-                            ? 'border-[#274235] bg-[#eef3f0] text-[#19251f]'
-                            : 'border-[#e3e1d8] bg-white text-[#4d5a52] hover:bg-[#fbfbfa]'
+                            ? 'border-[#2a2a2a] bg-[#f0f0f0] text-[#2a2a2a]'
+                            : 'border-[#B5B5B5] bg-white text-[#666666] hover:bg-[#ffffff]'
                         }`}
                       >
                         <span className="text-xs font-semibold">{item}</span>
                         <div className={`h-4 w-4 rounded-md border flex items-center justify-center shrink-0 ${
-                          isChecked ? 'bg-[#274235] border-[#274235] text-white' : 'border-[#d8d6cd]'
+                          isChecked ? 'bg-[#2a2a2a] border-[#2a2a2a] text-white' : 'border-[#B5B5B5]'
                         }`}>
                           {isChecked && <Check className="h-3 w-3" />}
                         </div>
@@ -1983,13 +1988,13 @@ export default function AddPropertyModal() {
           {currentStep === 5 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-[#19251f] tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-black text-[#2a2a2a] tracking-tight">
                   {selectedAsset.type === 'PG' ? 'PG Services & House Rules' :
                    selectedAsset.type === 'Flat' ? 'Society Rules & Tenant Policies' :
                    selectedAsset.type === 'Warehouse' ? 'Logistics Protocols & Compliance' :
                    selectedAsset.type === 'Office' ? 'Commercial Leasing Standards' : 'Estate Guest Norms'}
                 </h2>
-                <p className="text-xs text-[#6e7972] mt-0.5">
+                <p className="text-xs text-[#666666] mt-0.5">
                   Define operating expectations, curfews, and service schedules.
                 </p>
               </div>
@@ -1997,11 +2002,11 @@ export default function AddPropertyModal() {
               {/* PG ONLY: Services, Meals & Curfews */}
               {selectedAsset.type === 'PG' && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div className="bg-white p-4 rounded-2xl border border-[#e3e1d8] space-y-3.5 shadow-2xs">
-                    <span className="text-xs font-bold text-[#19251f] block border-b border-[#eeece5] pb-2">Included Services</span>
+                  <div className="bg-white p-4 rounded-2xl border border-[#B5B5B5] space-y-3.5 shadow-2xs">
+                    <span className="text-xs font-bold text-[#2a2a2a] block border-b border-[#E0E0E0] pb-2">Included Services</span>
                     
                     <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-[#6e7972] uppercase">Housekeeping Frequency</span>
+                      <span className="text-[10px] font-bold text-[#666666] uppercase">Housekeeping Frequency</span>
                       <div className="grid grid-cols-3 gap-1.5">
                         {(['Daily', 'Weekly', 'Bi-weekly'] as const).map((f) => (
                           <button
@@ -2009,7 +2014,7 @@ export default function AddPropertyModal() {
                             type="button"
                             onClick={() => setPgCleaningFreq(f)}
                             className={`py-1 text-center rounded-lg text-[10px] font-bold border transition ${
-                              pgCleaningFreq === f ? 'bg-[#eef3f0] border-[#274235] text-[#274235]' : 'border-[#e3e1d8] text-[#6e7972]'
+                              pgCleaningFreq === f ? 'bg-[#f0f0f0] border-[#2a2a2a] text-[#2a2a2a]' : 'border-[#B5B5B5] text-[#666666]'
                             }`}
                           >
                             {f}
@@ -2019,7 +2024,7 @@ export default function AddPropertyModal() {
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-[#6e7972] uppercase">Meals Included</span>
+                      <span className="text-[10px] font-bold text-[#666666] uppercase">Meals Included</span>
                       <div className="flex gap-1.5">
                         {['Breakfast', 'Lunch', 'Dinner'].map((m) => {
                           const isInc = pgMealsIncluded.includes(m);
@@ -2029,7 +2034,7 @@ export default function AddPropertyModal() {
                               type="button"
                               onClick={() => setPgMealsIncluded(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])}
                               className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition flex items-center gap-1 ${
-                                isInc ? 'bg-[#eef3f0] border-[#274235] text-[#274235]' : 'border-[#e3e1d8] text-[#6e7972]'
+                                isInc ? 'bg-[#f0f0f0] border-[#2a2a2a] text-[#2a2a2a]' : 'border-[#B5B5B5] text-[#666666]'
                               }`}
                             >
                               {isInc && <Check className="h-3 w-3" />}
@@ -2041,22 +2046,22 @@ export default function AddPropertyModal() {
                     </div>
 
                     <div className="flex items-center justify-between pt-1">
-                      <span className="text-xs text-[#19251f]">Washing Machine / Laundry</span>
+                      <span className="text-xs text-[#2a2a2a]">Washing Machine / Laundry</span>
                       <button
                         type="button"
                         onClick={() => setPgLaundryProvided(!pgLaundryProvided)}
-                        className={`w-9 h-5 rounded-full transition-colors relative ${pgLaundryProvided ? 'bg-[#274235]' : 'bg-slate-200'}`}
+                        className={`w-9 h-5 rounded-full transition-colors relative ${pgLaundryProvided ? 'bg-[#2a2a2a]' : 'bg-slate-200'}`}
                       >
                         <span className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full transition-transform ${pgLaundryProvided ? 'translate-x-4' : 'translate-x-0'}`} />
                       </button>
                     </div>
                   </div>
 
-                  <div className="bg-white p-4 rounded-2xl border border-[#e3e1d8] space-y-3.5 shadow-2xs">
-                    <span className="text-xs font-bold text-[#19251f] block border-b border-[#eeece5] pb-2">House Rules & Curfew</span>
+                  <div className="bg-white p-4 rounded-2xl border border-[#B5B5B5] space-y-3.5 shadow-2xs">
+                    <span className="text-xs font-bold text-[#2a2a2a] block border-b border-[#E0E0E0] pb-2">House Rules & Curfew</span>
 
                     <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-[#6e7972] uppercase">Main Gate Curfew</span>
+                      <span className="text-[10px] font-bold text-[#666666] uppercase">Main Gate Curfew</span>
                       <div className="grid grid-cols-4 gap-1.5">
                         {['9 PM', '10 PM', '11 PM', 'None'].map((t) => (
                           <button
@@ -2064,7 +2069,7 @@ export default function AddPropertyModal() {
                             type="button"
                             onClick={() => setPgGateClosingTime(t)}
                             className={`py-1 text-center rounded-lg text-[10px] font-bold border transition ${
-                              pgGateClosingTime === t ? 'bg-[#eef3f0] border-[#274235] text-[#274235]' : 'border-[#e3e1d8] text-[#6e7972]'
+                              pgGateClosingTime === t ? 'bg-[#f0f0f0] border-[#2a2a2a] text-[#2a2a2a]' : 'border-[#B5B5B5] text-[#666666]'
                             }`}
                           >
                             {t}
@@ -2074,7 +2079,7 @@ export default function AddPropertyModal() {
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-[10px] font-bold text-[#6e7972] uppercase">Guest Hours Cutoff</span>
+                      <span className="text-[10px] font-bold text-[#666666] uppercase">Guest Hours Cutoff</span>
                       <div className="grid grid-cols-4 gap-1.5">
                         {['8 PM', '9 PM', '10 PM', 'No curfew'].map((t) => (
                           <button
@@ -2082,7 +2087,7 @@ export default function AddPropertyModal() {
                             type="button"
                             onClick={() => setPgGuestCurfew(t)}
                             className={`py-1 text-center rounded-lg text-[10px] font-bold border transition ${
-                              pgGuestCurfew === t ? 'bg-[#eef3f0] border-[#274235] text-[#274235]' : 'border-[#e3e1d8] text-[#6e7972]'
+                              pgGuestCurfew === t ? 'bg-[#f0f0f0] border-[#2a2a2a] text-[#2a2a2a]' : 'border-[#B5B5B5] text-[#666666]'
                             }`}
                           >
                             {t}
@@ -2096,14 +2101,14 @@ export default function AddPropertyModal() {
 
               {/* FLAT ONLY: Society Rules */}
               {selectedAsset.type === 'Flat' && (
-                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e3e1d8] space-y-4 shadow-2xs">
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#B5B5B5] space-y-4 shadow-2xs">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Tenant Preference</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Tenant Preference</label>
                       <select
                         value={flatTenantPreference}
                         onChange={(e) => setFlatTenantPreference(e.target.value as any)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs bg-white font-medium"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs bg-white font-medium"
                       >
                         <option value="Family Preferred">Family Preferred</option>
                         <option value="Bachelors Allowed">Bachelors Allowed</option>
@@ -2112,11 +2117,11 @@ export default function AddPropertyModal() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Pet Policy</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Pet Policy</label>
                       <select
                         value={flatPetPolicy}
                         onChange={(e) => setFlatPetPolicy(e.target.value as any)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs bg-white font-medium"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs bg-white font-medium"
                       >
                         <option value="Pets Allowed">Pets Allowed</option>
                         <option value="No Pets">No Pets</option>
@@ -2125,26 +2130,26 @@ export default function AddPropertyModal() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 pt-1 border-t border-[#eeece5]">
+                  <div className="grid grid-cols-2 gap-3 pt-1 border-t border-[#E0E0E0]">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Move-in Timings</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Move-in Timings</label>
                       <input
                         type="text"
                         placeholder="e.g. Weekdays 9 AM - 6 PM only"
                         value={flatMoveInRule}
                         onChange={(e) => setFlatMoveInRule(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Society Quiet Hours</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Society Quiet Hours</label>
                       <input
                         type="text"
                         placeholder="e.g. 10 PM - 7 AM"
                         value={flatQuietHours}
                         onChange={(e) => setFlatQuietHours(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs"
                       />
                     </div>
                   </div>
@@ -2153,14 +2158,14 @@ export default function AddPropertyModal() {
 
               {/* WAREHOUSE ONLY */}
               {selectedAsset.type === 'Warehouse' && (
-                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e3e1d8] space-y-4 shadow-2xs">
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#B5B5B5] space-y-4 shadow-2xs">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Logistics Operating Hours</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Logistics Operating Hours</label>
                       <select
                         value={whOperationsRule}
                         onChange={(e) => setWhOperationsRule(e.target.value as any)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs bg-white font-medium"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs bg-white font-medium"
                       >
                         <option value="24/7/365 Unrestricted Entry">24/7/365 Unrestricted Entry</option>
                         <option value="Standard Freight Timings">Standard Freight Timings (6 AM - 10 PM)</option>
@@ -2168,11 +2173,11 @@ export default function AddPropertyModal() {
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">HAZMAT Material Policy</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">HAZMAT Material Policy</label>
                       <select
                         value={whHazmatPolicy}
                         onChange={(e) => setWhHazmatPolicy(e.target.value as any)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs bg-white font-medium"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs bg-white font-medium"
                       >
                         <option value="Non-Hazardous Goods Only">Non-Hazardous Goods Only</option>
                         <option value="Class A Hazmat Approved">Class A Hazmat Approved</option>
@@ -2180,14 +2185,14 @@ export default function AddPropertyModal() {
                     </div>
                   </div>
 
-                  <div className="space-y-1 pt-1 border-t border-[#eeece5]">
-                    <label className="text-[11px] font-bold text-[#19251f]">CAM Charges Rate (₹/sq.ft)</label>
+                  <div className="space-y-1 pt-1 border-t border-[#E0E0E0]">
+                    <label className="text-[11px] font-bold text-[#2a2a2a]">CAM Charges Rate (₹/sq.ft)</label>
                     <input
                       type="number"
                       placeholder="e.g. 3.5"
                       value={whCamRateSqFt}
                       onChange={(e) => setWhCamRateSqFt(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs font-bold"
+                      className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs font-bold"
                     />
                   </div>
                 </div>
@@ -2195,20 +2200,20 @@ export default function AddPropertyModal() {
 
               {/* COMMERCIAL / OFFICE ONLY */}
               {selectedAsset.type === 'Office' && (
-                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e3e1d8] space-y-4 shadow-2xs">
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#B5B5B5] space-y-4 shadow-2xs">
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-[#19251f]">Corporate Access Timings</label>
+                    <label className="text-[11px] font-bold text-[#2a2a2a]">Corporate Access Timings</label>
                     <select
                       value={commOperatingHours}
                       onChange={(e) => setCommOperatingHours(e.target.value as any)}
-                      className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs bg-white font-medium"
+                      className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs bg-white font-medium"
                     >
                       <option value="24/7 ITeS Access Allowed">24/7 ITeS Access Allowed (2-Shift/3-Shift)</option>
                       <option value="Standard 8 AM - 9 PM">Standard Business Hours (8 AM - 9 PM)</option>
                     </select>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-[#eef3f0] border border-[#274235]/20 text-[11px] text-[#274235] leading-relaxed">
+                  <div className="p-3 rounded-xl bg-[#f0f0f0] border border-[#2a2a2a]/20 text-[11px] text-[#2a2a2a] leading-relaxed">
                     <span className="font-bold">Sub-Meter Energy Protocol: </span>
                     Primary HVAC billed in CAM. High-density server room power & internal light fixtures metered separately at state Discom commercial tariff.
                   </div>
@@ -2217,27 +2222,27 @@ export default function AddPropertyModal() {
 
               {/* VILLA ONLY */}
               {selectedAsset.type === 'Independent House' && (
-                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#e3e1d8] space-y-4 shadow-2xs">
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#B5B5B5] space-y-4 shadow-2xs">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Maximum Guest Capacity</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Maximum Guest Capacity</label>
                       <input
                         type="number"
                         placeholder="e.g. 12"
                         value={villaMaxGuests}
                         onChange={(e) => setVillaMaxGuests(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs font-bold"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs font-bold"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-[#19251f]">Outdoor Music Cutoff</label>
+                      <label className="text-[11px] font-bold text-[#2a2a2a]">Outdoor Music Cutoff</label>
                       <input
                         type="text"
                         placeholder="e.g. No loud music after 10 PM"
                         value={villaQuietHours}
                         onChange={(e) => setVillaQuietHours(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl border border-[#d8d6cd] text-xs font-bold"
+                        className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] text-xs font-bold"
                       />
                     </div>
                   </div>
@@ -2252,23 +2257,23 @@ export default function AddPropertyModal() {
           {currentStep === 6 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-xl sm:text-2xl font-black text-[#19251f] tracking-tight">
+                <h2 className="text-xl sm:text-2xl font-black text-[#2a2a2a] tracking-tight">
                   Almost there.
                 </h2>
-                <p className="text-xs text-[#6e7972] mt-0.5">
+                <p className="text-xs text-[#666666] mt-0.5">
                   Verify your identity to publish your listing and activate automated rent collection.
                 </p>
               </div>
 
               {/* Aadhaar Verification Box (Staywise Forest Theme) */}
-              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#274235]/30 space-y-4 shadow-sm">
+              <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#2a2a2a]/30 space-y-4 shadow-sm">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-8 w-8 rounded-full bg-[#eef3f0] text-[#274235] flex items-center justify-center shrink-0">
+                  <div className="h-8 w-8 rounded-full bg-[#f0f0f0] text-[#2a2a2a] flex items-center justify-center shrink-0">
                     <ShieldCheck className="h-4.5 w-4.5" />
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-[#19251f]">Verify ownership with Aadhaar</h3>
-                    <p className="text-[11px] text-[#6e7972]">Government-backed instant verification to list on Staywise.</p>
+                    <h3 className="text-xs font-bold text-[#2a2a2a]">Verify ownership with Aadhaar</h3>
+                    <p className="text-[11px] text-[#666666]">Government-backed instant verification to list on Staywise.</p>
                   </div>
                 </div>
 
@@ -2276,27 +2281,27 @@ export default function AddPropertyModal() {
                   {/* DigiLocker (Recommended) */}
                   <div className={`p-4 rounded-xl border transition flex flex-col justify-between space-y-3 ${
                     isKycVerified && kycMethod === 'digilocker'
-                      ? 'border-[#274235] bg-[#eef3f0]'
-                      : 'border-[#d8d6cd] bg-white hover:border-[#274235]'
+                      ? 'border-[#2a2a2a] bg-[#f0f0f0]'
+                      : 'border-[#B5B5B5] bg-white hover:border-[#2a2a2a]'
                   }`}>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="font-extrabold text-sm text-[#274235]">DigiLocker</span>
-                        <span className="px-2 py-0.5 rounded-full bg-[#274235] text-white text-[9px] font-black uppercase">
+                        <span className="font-extrabold text-sm text-[#2a2a2a]">DigiLocker</span>
+                        <span className="px-2 py-0.5 rounded-full bg-[#2a2a2a] text-white text-[9px] font-black uppercase">
                           Recommended
                         </span>
                       </div>
-                      <p className="text-[11px] text-[#4d5a52]">
+                      <p className="text-[11px] text-[#666666]">
                         Instant 1-minute verification via UIDAI DigiLocker service
                       </p>
 
-                      <div className="space-y-1 text-[10px] text-[#274235] font-medium pt-1">
+                      <div className="space-y-1 text-[10px] text-[#2a2a2a] font-medium pt-1">
                         <div className="flex items-center gap-1.5">
-                          <Check className="h-3 w-3 text-[#274235] shrink-0" />
+                          <Check className="h-3 w-3 text-[#2a2a2a] shrink-0" />
                           <span>Auto-fetches Aadhaar & verified address</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <Check className="h-3 w-3 text-[#274235] shrink-0" />
+                          <Check className="h-3 w-3 text-[#2a2a2a] shrink-0" />
                           <span>100% government-backed & paperless</span>
                         </div>
                       </div>
@@ -2308,8 +2313,8 @@ export default function AddPropertyModal() {
                       onClick={handleDigiLockerVerify}
                       className={`w-full py-2.5 rounded-xl font-bold text-xs transition cursor-pointer text-center ${
                         isKycVerified && kycMethod === 'digilocker'
-                          ? 'bg-[#274235] text-white cursor-default'
-                          : 'bg-[#274235] hover:bg-[#1e352a] text-white shadow-xs'
+                          ? 'bg-[#2a2a2a] text-white cursor-default'
+                          : 'bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white shadow-xs'
                       }`}
                     >
                       {isVerifyingDigiLocker ? 'Connecting to DigiLocker...' : isKycVerified && kycMethod === 'digilocker' ? 'Verified with DigiLocker ✓' : 'Verify with DigiLocker'}
@@ -2319,12 +2324,12 @@ export default function AddPropertyModal() {
                   {/* Manual Upload */}
                   <div className={`p-4 rounded-xl border transition flex flex-col justify-between space-y-3 ${
                     isKycVerified && kycMethod === 'manual'
-                      ? 'border-[#274235] bg-[#eef3f0]'
-                      : 'border-[#d8d6cd] bg-white hover:border-[#19251f]'
+                      ? 'border-[#2a2a2a] bg-[#f0f0f0]'
+                      : 'border-[#B5B5B5] bg-white hover:border-[#2a2a2a]'
                   }`}>
                     <div className="space-y-2">
-                      <h4 className="font-bold text-xs text-[#19251f]">Manual Upload</h4>
-                      <p className="text-[11px] text-[#4d5a52]">
+                      <h4 className="font-bold text-xs text-[#2a2a2a]">Manual Upload</h4>
+                      <p className="text-[11px] text-[#666666]">
                         Upload photos of your Aadhaar card for manual audit (24h)
                       </p>
                     </div>
@@ -2334,8 +2339,8 @@ export default function AddPropertyModal() {
                       onClick={handleManualUpload}
                       className={`w-full py-2.5 rounded-xl font-bold text-xs border transition cursor-pointer text-center ${
                         isKycVerified && kycMethod === 'manual'
-                          ? 'bg-[#274235] border-[#274235] text-white cursor-default'
-                          : 'border-[#d8d6cd] text-[#19251f] hover:bg-[#f4f3ef]'
+                          ? 'bg-[#2a2a2a] border-[#2a2a2a] text-white cursor-default'
+                          : 'border-[#B5B5B5] text-[#2a2a2a] hover:bg-[#f0f0f0]'
                       }`}
                     >
                       {isKycVerified && kycMethod === 'manual' ? 'Document Uploaded ✓' : 'Upload Aadhaar Photo'}
@@ -2346,7 +2351,7 @@ export default function AddPropertyModal() {
 
               {/* Status Lock Warning Banner */}
               {!isKycVerified ? (
-                <div className="p-3.5 rounded-2xl bg-[#fbf5e6] border border-amber-300 flex items-center gap-2.5 text-amber-900 text-xs">
+                <div className="p-3.5 rounded-2xl bg-[#f5f5f5] border border-amber-300 flex items-center gap-2.5 text-amber-900 text-xs">
                   <AlertCircle className="h-4 w-4 shrink-0 text-amber-700" />
                   <div>
                     <span className="font-bold block">Building launch locked</span>
@@ -2354,22 +2359,22 @@ export default function AddPropertyModal() {
                   </div>
                 </div>
               ) : (
-                <div className="p-3.5 rounded-2xl bg-[#eef3f0] border border-[#274235]/30 flex items-center gap-2.5 text-[#274235] text-xs">
-                  <CheckCircle className="h-4 w-4 text-[#274235] shrink-0" />
+                <div className="p-3.5 rounded-2xl bg-[#f0f0f0] border border-[#2a2a2a]/30 flex items-center gap-2.5 text-[#2a2a2a] text-xs">
+                  <CheckCircle className="h-4 w-4 text-[#2a2a2a] shrink-0" />
                   <div>
                     <span className="font-bold block">Identity Verified via UIDAI DigiLocker</span>
-                    <span className="text-[11px] text-[#274235]">Shyam J • Aadhaar XXXX-XXXX-8832 • Ready to launch building!</span>
+                    <span className="text-[11px] text-[#2a2a2a]">Shyam J • Aadhaar XXXX-XXXX-8832 • Ready to launch building!</span>
                   </div>
                 </div>
               )}
 
               {/* Live Preview Card */}
               <div className="space-y-2">
-                <h3 className="text-xs font-bold text-[#19251f]">What tenants will see</h3>
-                <div className="rounded-2xl border border-[#e3e1d8] bg-white overflow-hidden shadow-xs">
-                  <div className="h-24 bg-gradient-to-r from-[#19251f] via-[#203429] to-[#274235] p-3 text-white flex flex-col justify-between">
+                <h3 className="text-xs font-bold text-[#2a2a2a]">What tenants will see</h3>
+                <div className="rounded-2xl border border-[#B5B5B5] bg-white overflow-hidden shadow-xs">
+                  <div className="h-24 bg-gradient-to-r from-[#2a2a2a] via-[#2a2a2a] to-[#2a2a2a] p-3 text-white flex flex-col justify-between">
                     <div className="flex items-center justify-between">
-                      <span className="px-2 py-0.5 rounded-md bg-[#274235] text-white text-[10px] font-black uppercase">
+                      <span className="px-2 py-0.5 rounded-md bg-[#2a2a2a] text-white text-[10px] font-black uppercase">
                         {selectedAsset.label}
                       </span>
                       <span className="px-2 py-0.5 rounded-md bg-white/10 backdrop-blur-xs text-[10px] font-bold">
@@ -2386,25 +2391,25 @@ export default function AddPropertyModal() {
                     </div>
                   </div>
 
-                  <div className="p-3 flex items-center justify-between bg-white border-t border-[#eeece5]">
+                  <div className="p-3 flex items-center justify-between bg-white border-t border-[#E0E0E0]">
                     <div className="space-y-0.5">
-                      <div className="flex items-center gap-2 text-[10px] text-[#6e7972]">
-                        <span className="font-bold text-[#19251f]">{calculatedTotalUnits()} {selectedAsset.type === 'PG' ? 'beds' : 'units/bays'}</span>
+                      <div className="flex items-center gap-2 text-[10px] text-[#666666]">
+                        <span className="font-bold text-[#2a2a2a]">{calculatedTotalUnits()} {selectedAsset.type === 'PG' ? 'beds' : 'units/bays'}</span>
                         <span>•</span>
                         <span>{city || 'Bengaluru'}</span>
                       </div>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-[10px] text-[#6e7972] uppercase font-bold">RENT</span>
-                        <span className="text-base font-black text-[#19251f]">
+                        <span className="text-[10px] text-[#666666] uppercase font-bold">RENT</span>
+                        <span className="text-base font-black text-[#2a2a2a]">
                           ₹{(selectedAsset.type === 'PG' ? (Number(pgRentPerBed) || 0) : selectedAsset.type === 'Flat' ? (Number(flatMonthlyRent) || 0) : calculatedMonthlyRent()).toLocaleString('en-IN')}
                         </span>
-                        <span className="text-[10px] text-[#6e7972]">/mo</span>
+                        <span className="text-[10px] text-[#666666]">/mo</span>
                       </div>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-[9px] uppercase tracking-wider text-[#6e7972] block font-bold">AUM / MONTH</span>
-                      <span className="text-base font-black text-[#274235]">
+                      <span className="text-[9px] uppercase tracking-wider text-[#666666] block font-bold">AUM / MONTH</span>
+                      <span className="text-base font-black text-[#2a2a2a]">
                         ₹{calculatedMonthlyRent().toLocaleString('en-IN')}
                       </span>
                     </div>
@@ -2413,18 +2418,18 @@ export default function AddPropertyModal() {
               </div>
 
               {/* Review Accordions */}
-              <div className="rounded-xl border border-[#e3e1d8] bg-white divide-y divide-[#eeece5] text-xs">
+              <div className="rounded-xl border border-[#B5B5B5] bg-white divide-y divide-[#E0E0E0] text-xs">
                 <div>
                   <button
                     type="button"
                     onClick={() => setExpandedSection(expandedSection === 'basics' ? null : 'basics')}
-                    className="w-full px-4 py-2.5 flex items-center justify-between font-bold text-[#19251f] cursor-pointer hover:bg-[#fbfbfa]"
+                    className="w-full px-4 py-2.5 flex items-center justify-between font-bold text-[#2a2a2a] cursor-pointer hover:bg-[#ffffff]"
                   >
                     <span>1. Basics & Asset Class</span>
                     {expandedSection === 'basics' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </button>
                   {expandedSection === 'basics' && (
-                    <div className="px-4 pb-3 pt-1 text-[11px] text-[#4d5a52] space-y-1 bg-[#fbfbfa]">
+                    <div className="px-4 pb-3 pt-1 text-[11px] text-[#666666] space-y-1 bg-[#ffffff]">
                       <p>Property Name: <b>{propertyName || 'Not set'}</b></p>
                       <p>Class: <b>{selectedAsset.label}</b></p>
                       <p>Address: <b>{addressSearch || 'Not set'}</b></p>
@@ -2436,13 +2441,13 @@ export default function AddPropertyModal() {
                   <button
                     type="button"
                     onClick={() => setExpandedSection(expandedSection === 'inventory' ? null : 'inventory')}
-                    className="w-full px-4 py-2.5 flex items-center justify-between font-bold text-[#19251f] cursor-pointer hover:bg-[#fbfbfa]"
+                    className="w-full px-4 py-2.5 flex items-center justify-between font-bold text-[#2a2a2a] cursor-pointer hover:bg-[#ffffff]"
                   >
                     <span>2. Capacity & Financials</span>
                     {expandedSection === 'inventory' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </button>
                   {expandedSection === 'inventory' && (
-                    <div className="px-4 pb-3 pt-1 text-[11px] text-[#4d5a52] space-y-1 bg-[#fbfbfa]">
+                    <div className="px-4 pb-3 pt-1 text-[11px] text-[#666666] space-y-1 bg-[#ffffff]">
                       <p>Total Capacity: <b>{calculatedTotalUnits()} units/beds</b></p>
                       <p>Expected Monthly Rent: <b>₹{calculatedMonthlyRent().toLocaleString('en-IN')}</b></p>
                     </div>
@@ -2455,12 +2460,12 @@ export default function AddPropertyModal() {
         </div>
 
         {/* Modal Bottom Footer Navigation in Staywise Forest Theme */}
-        <div className="px-4 sm:px-6 py-3 bg-white border-t border-[#eeece5] flex items-center justify-between gap-3">
+        <div className="px-4 sm:px-6 py-3 bg-white border-t border-[#E0E0E0] flex items-center justify-between gap-3">
           {currentStep > 1 ? (
             <button
               type="button"
               onClick={handlePrevStep}
-              className="px-4 py-2 rounded-full border border-[#d8d6cd] text-[#4d5a52] hover:bg-[#f4f3ef] font-bold text-xs transition cursor-pointer"
+              className="px-4 py-2 rounded-full border border-[#B5B5B5] text-[#666666] hover:bg-[#f0f0f0] font-bold text-xs transition cursor-pointer"
             >
               Back
             </button>
@@ -2468,7 +2473,7 @@ export default function AddPropertyModal() {
             <button
               type="button"
               onClick={handleCloseWithoutSaving}
-              className="px-4 py-2 rounded-full border border-[#d8d6cd] text-[#6e7972] hover:bg-[#f4f3ef] font-bold text-xs transition cursor-pointer"
+              className="px-4 py-2 rounded-full border border-[#B5B5B5] text-[#666666] hover:bg-[#f0f0f0] font-bold text-xs transition cursor-pointer"
             >
               Cancel
             </button>
@@ -2478,7 +2483,7 @@ export default function AddPropertyModal() {
             <button
               type="button"
               onClick={handleSaveDraft}
-              className="px-3.5 py-2 rounded-full border border-[#e3e1d8] bg-white hover:border-[#274235] text-xs font-bold text-[#274235] transition cursor-pointer"
+              className="px-3.5 py-2 rounded-full border border-[#B5B5B5] bg-white hover:border-[#2a2a2a] text-xs font-bold text-[#2a2a2a] transition cursor-pointer"
             >
               Save Draft
             </button>
@@ -2487,7 +2492,7 @@ export default function AddPropertyModal() {
               <button
                 type="button"
                 onClick={handleNextStep}
-                className="px-6 py-2 rounded-full bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                className="px-6 py-2 rounded-full bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-bold text-xs transition flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <span>Continue</span>
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -2499,7 +2504,7 @@ export default function AddPropertyModal() {
                 onClick={handlePublishProperty}
                 className={`px-6 py-2 rounded-full font-bold text-xs transition flex items-center gap-2 shadow-md cursor-pointer ${
                   isKycVerified
-                    ? 'bg-[#274235] hover:bg-[#1e352a] text-white'
+                    ? 'bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white'
                     : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                 }`}
               >

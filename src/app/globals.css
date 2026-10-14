@@ -3,67 +3,67 @@
 @layer base {
   :root {
     /* User's Exact Color Palette */
-    --color-pine-dark: #132A13; /* Primary Deep Dark Pine */
-    --color-forest: #31572C;    /* Deep Hunter / Forest Green */
-    --color-moss: #4F772D;      /* Moss / Olive Accent */
-    --color-lime-glow: #ECF39E; /* Pale Lime / Glow Accent */
+    --color-pine-dark: #2a2a2a; /* Primary Deep Dark Charcoal */
+    --color-forest: #383838;    /* Charcoal Surface / Secondary Dark */
+    --color-moss: #e10600;      /* Highlight / Red Accent */
+    --color-lime-glow: #e10600; /* Highlight Accent */
 
     /* Canvas & Surfaces */
-    --color-background-canvas: #EBF0E6; /* Soft natural canvas */
-    --color-background: #F6F8F4;        /* Dashboard background */
+    --color-background-canvas: #c0c0c0; /* Silver canvas background */
+    --color-background: #c0c0c0;        /* Silver dashboard background */
     --color-surface: #FFFFFF;           /* Crisp white card surface */
-    --color-surface-subtle: #F3F6EE;    /* Soft pale olive/lime tinted card */
-    --color-surface-hover: #EBF0E6;
+    --color-surface-subtle: #f0f0f0;    /* Soft silver/grey tinted card */
+    --color-surface-hover: #e0e0e0;
     
-    --color-border: #DCE5D3;
-    --color-border-subtle: #E8EFE2;
+    --color-border: #B5B5B5;
+    --color-border-subtle: #D1D5DB;
 
     /* Text Hierarchy */
-    --color-text-primary: #132A13;      /* Deep Dark Pine */
-    --color-text-secondary: #31572C;    /* Forest Green */
-    --color-text-muted: #657D5C;        /* Olive Muted */
+    --color-text-primary: #2a2a2a;      /* Charcoal text */
+    --color-text-secondary: #404040;    /* Dark secondary */
+    --color-text-muted: #666666;        /* Muted grey */
 
     /* Accent & Functional */
-    --color-accent-lime: #ECF39E;
-    --color-accent-forest: #31572C;
-    --color-accent-moss: #4F772D;
-    --color-accent-orange: #E07A5F;
-    --color-accent-emerald: #31572C;
+    --color-accent-lime: #e10600;
+    --color-accent-forest: #2a2a2a;
+    --color-accent-moss: #e10600;
+    --color-accent-orange: #e10600;
+    --color-accent-emerald: #e10600;
   }
 }
 
 body {
-  background-color: #EBF0E6;
-  color: #132A13;
+  background-color: #c0c0c0;
+  color: #2a2a2a;
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Inter", -apple-system, Roboto, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Organic Forest Cards */
+/* Organic Cards */
 .organic-card, .logip-card {
   background-color: #ffffff;
   border-radius: 1.5rem; /* rounded-3xl */
-  box-shadow: 0 1px 4px 0 rgba(19, 42, 19, 0.03), 0 1px 2px -1px rgba(19, 42, 19, 0.02);
-  border: 1px solid #DCE5D3;
+  box-shadow: 0 1px 4px 0 rgba(42, 42, 42, 0.06), 0 1px 2px -1px rgba(42, 42, 42, 0.04);
+  border: 1px solid #B5B5B5;
   transition: all 0.2s ease-in-out;
 }
 
 .organic-card:hover, .logip-card:hover {
-  box-shadow: 0 6px 16px -2px rgba(19, 42, 19, 0.06);
+  box-shadow: 0 6px 16px -2px rgba(42, 42, 42, 0.12);
 }
 
 .organic-card-dark {
-  background-color: #132A13;
+  background-color: #2a2a2a;
   color: #ffffff;
   border-radius: 1.5rem;
-  border: 1px solid #31572C;
+  border: 1px solid #383838;
 }
 
 .logip-card-subtle {
-  background-color: #F3F6EE;
+  background-color: #f0f0f0;
   border-radius: 1.5rem;
-  border: 1px solid #DCE5D3;
+  border: 1px solid #B5B5B5;
 }
 
 /* Custom Sleek Scrollbar */
@@ -73,16 +73,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #EBF0E6;
+  background: #c0c0c0;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #B8CCA8;
+  background: #888888;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4F772D;
+  background: #e10600;
 }
 
 .font-tabular {

@@ -22,6 +22,16 @@
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { UserAccount } from '../lib/db/database';
+import { 
+  generatePropertyId, 
+  generateTenantId, 
+  generateInvoiceId, 
+  generateInvoiceNumber, 
+  generateLedgerId, 
+  generateTicketId, 
+  generateTicketNumber 
+} from '../lib/utils/uniqueId';
 import { 
   UserRole, 
   Property, 
@@ -54,31 +64,56 @@ import {
   SubscriptionTierId,
   TrialSignupPayload
 } from '../types';
-import { 
-  INITIAL_PROPERTIES, 
-  INITIAL_TENANTS, 
-  INITIAL_INVOICES, 
-  INITIAL_LEDGER, 
-  INITIAL_TICKETS, 
-  INITIAL_LEADS, 
-  INITIAL_ESTATE_ASSETS, 
-  INITIAL_STAFF, 
-  INITIAL_UTILITIES, 
-  INITIAL_AI_INSIGHTS,
-  INITIAL_PG_BEDS,
-  INITIAL_PG_ROOMS,
-  INITIAL_PG_MEALS,
-  INITIAL_COMMERCIAL_UNITS,
-  INITIAL_CAM_EXPENSES,
-  INITIAL_COMMERCIAL_VISITORS,
-  INITIAL_MOVEFLOW_CHECKLIST,
-  INITIAL_DEPOSIT_DISPUTES,
-  INITIAL_REFERRALS,
-  SAMPLE_PROPERTY_PASSPORT,
-  SAMPLE_TENANT_PASSPORT,
-  INITIAL_MONEY_LEAKS,
-  INITIAL_VACANCY_COSTS
-} from '../data/mockData';
+// Standalone typed defaults (Zero mockData dependency)
+const DEFAULT_PROPERTY_PASSPORT: PropertyPassportData = {
+  passportId: 'PASSPORT-PROP-BR-8921',
+  propertyId: 'prop-beach-road',
+  propertyName: 'Beach Road Apartments',
+  digitalIdentityNumber: 'IN-KL-KZK-2024-REG-00918',
+  establishedYear: 2021,
+  ownershipType: 'Clear Freehold Title (Verified)',
+  complianceCertificates: ['Fire NOC 2026', 'Structural Safety Audit', 'Lift License (Otis)', 'Pollution Control Consent'],
+  maintenanceLogCount: 47,
+  lifetimeOccupancyRate: 94.6,
+  historicalRoi: 8.8
+};
+
+const DEFAULT_TENANT_PASSPORT: TenantPassportData = {
+  passportId: 'PASSPORT-TEN-SS-9901',
+  tenantName: 'Shyam Sundar',
+  verifiedKyc: true,
+  trustScore: 98,
+  onTimePaymentPercent: 100,
+  stayHistoryCount: 3,
+  referenceRating: 4.9,
+  reusableIdentityCard: 'VERIFIED-RESIDENT-GOLD'
+};
+
+const DEFAULT_MONEY_LEAKS: MoneyLeakAlert[] = [
+  {
+    id: 'leak-1',
+    title: 'High Vacancy Duration on Unit 304',
+    assetName: 'Beach Road Apartments #304',
+    leakCategory: 'High Vacancy',
+    estimatedLoss: 18200,
+    recommendation: 'Unit vacant for 21 days. Market demand in Kozhikode Beach Road is high; consider reducing asking price by ₹1,500.',
+    severity: 'High'
+  },
+  {
+    id: 'leak-2',
+    title: 'Under-Recovered CAM Charges in Tech Wing',
+    assetName: 'Infovision Commercial Hub',
+    leakCategory: 'Under-recovered CAM',
+    estimatedLoss: 14200,
+    recommendation: 'Actual common electricity & DG fuel exceeded CAM billed by 12%. Apply revised ₹20/sq.ft CAM adjustment clause.',
+    severity: 'Medium'
+  }
+];
+
+const DEFAULT_VACANCY_COSTS: VacancyCostReport[] = [
+  { id: 'vac-1', unitOrBed: 'Unit 304 (2 BHK Sea View)', assetName: 'Beach Road Apartments', assetCategory: 'residential', daysVacant: 21, monthlyRent: 26000, estimatedLostRent: 18200, actionStatus: 'Lead Matched' },
+  { id: 'vac-2', unitOrBed: 'Bed R201-C (Quad Dorm)', assetName: 'Staywise Urban PG', assetCategory: 'shared_living', daysVacant: 12, monthlyRent: 8000, estimatedLostRent: 3200, actionStatus: 'Marketed' }
+];
 
 export interface NotificationItem {
   id: string;
@@ -90,6 +125,7 @@ export interface NotificationItem {
 }
 
 export interface DemoCredential {
+  id?: string;
   role: UserRole;
   roleLabel: string;
   email: string;
@@ -102,6 +138,7 @@ export interface DemoCredential {
 
 export const DEMO_CREDENTIALS: Record<UserRole, DemoCredential> = {
   owner: {
+    id: 'user-owner-vikram',
     role: 'owner',
     roleLabel: 'Property Owner',
     email: 'owner@staywise.com',
@@ -112,6 +149,7 @@ export const DEMO_CREDENTIALS: Record<UserRole, DemoCredential> = {
     description: '3 Portfolios • 21 Units • Escrow Account Active'
   },
   tenant: {
+    id: 'user-tenant-shyam',
     role: 'tenant',
     roleLabel: 'Tenant / Resident',
     email: 'tenant@staywise.com',
@@ -122,6 +160,7 @@ export const DEMO_CREDENTIALS: Record<UserRole, DemoCredential> = {
     description: 'Beach Road Apartments • Lease Active'
   },
   manager: {
+    id: 'user-manager-arjun',
     role: 'manager',
     roleLabel: 'Property Manager',
     email: 'manager@staywise.com',
@@ -132,6 +171,7 @@ export const DEMO_CREDENTIALS: Record<UserRole, DemoCredential> = {
     description: 'Triage Queue • 12 Visits • 4 Portfolios'
   },
   vendor: {
+    id: 'user-vendor-hvac',
     role: 'vendor',
     roleLabel: 'Service Vendor',
     email: 'vendor@staywise.com',
@@ -142,6 +182,7 @@ export const DEMO_CREDENTIALS: Record<UserRole, DemoCredential> = {
     description: '5 Jobs Today • Escrow Payouts Pending'
   },
   admin: {
+    id: 'user-admin-chief',
     role: 'admin',
     roleLabel: 'Super Admin',
     email: 'admin@staywise.com',
@@ -152,6 +193,7 @@ export const DEMO_CREDENTIALS: Record<UserRole, DemoCredential> = {
     description: 'Statutory Double-Entry Ledger Surveillance'
   },
   estate_manager: {
+    id: 'user-estate-manoj',
     role: 'estate_manager',
     roleLabel: 'EstateOS & Hospitality',
     email: 'estate@staywise.com',
@@ -172,9 +214,11 @@ interface AppStateContextType {
     email: string;
     password: string;
     phone?: string;
-    role: 'owner' | 'estate_manager';
+    role: UserRole;
     portfolioName?: string;
     city?: string;
+    propertyId?: string;
+    unitNumber?: string;
   }) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   activeRole: UserRole;
@@ -197,6 +241,8 @@ interface AppStateContextType {
   electricityBills: ElectricityBill[];
   aiInsights: AIInsight[];
   notifications: NotificationItem[];
+  users: UserAccount[];
+  refreshData: () => Promise<void>;
   
   // Asset Universe Engines
   pgBeds: PGBed[];
@@ -263,7 +309,7 @@ interface AppStateContextType {
     leaseStart: string;
     leaseEnd: string;
     rentDueDate: number;
-  }) => void;
+  }) => Promise<void>;
   payInvoice: (invoiceId: string, method: 'UPI' | 'Bank Transfer' | 'Card' | 'Autopay' | 'FlexPay') => void;
   approveTicket: (ticketId: string) => void;
   createMaintenanceTicket: (ticket: Partial<MaintenanceTicket>) => void;
@@ -286,83 +332,27 @@ interface AppStateContextType {
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
 
-const INITIAL_ELECTRICITY_BILLS: ElectricityBill[] = [
-  {
-    id: 'eb-302',
-    propertyId: 'prop-beach-road',
-    propertyName: 'Beach Road Luxury Apartments',
-    unitNumber: '302',
-    tenantName: 'Shyam Sundar',
-    meterNumber: 'MTR-BLR-8921-A',
-    billingMonth: 'October 2026',
-    previousReading: 1420,
-    currentReading: 1630,
-    unitsConsumed: 210,
-    ratePerUnit: 8.5,
-    fixedCharges: 150,
-    totalAmount: 1935,
-    dueDate: '15 Oct 2026',
-    status: 'Due',
-    discom: 'BESCOM Bangalore',
-    attachmentName: 'BESCOM_Oct2026_Bill_Unit302.pdf',
-    fileSize: '420 KB',
-    billDocumentUrl: '#',
-    uploadedAt: '01 Oct 2026',
-    notes: 'Sub-meter kWh + 10% common area lift/lobby power split'
-  },
-  {
-    id: 'eb-201',
-    propertyId: 'prop-beach-road',
-    propertyName: 'Beach Road Luxury Apartments',
-    unitNumber: '201',
-    tenantName: 'Dr. Faisal Ahmed',
-    meterNumber: 'MTR-BLR-8921-B',
-    billingMonth: 'October 2026',
-    previousReading: 2100,
-    currentReading: 2440,
-    unitsConsumed: 340,
-    ratePerUnit: 8.5,
-    fixedCharges: 150,
-    totalAmount: 3040,
-    dueDate: '15 Oct 2026',
-    status: 'Paid',
-    discom: 'BESCOM Bangalore',
-    paidDate: '01 Oct 2026',
-    attachmentName: 'BESCOM_Oct2026_Bill_Unit201.pdf',
-    fileSize: '390 KB',
-    billDocumentUrl: '#',
-    uploadedAt: '01 Oct 2026',
-    notes: 'Direct sub-meter reading verified by caretaker'
-  },
-  {
-    id: 'eb-101',
-    propertyId: 'prop-beach-road',
-    propertyName: 'Beach Road Luxury Apartments',
-    unitNumber: '101',
-    tenantName: 'Rahul Menon',
-    meterNumber: 'MTR-BLR-8921-C',
-    billingMonth: 'October 2026',
-    previousReading: 950,
-    currentReading: 1110,
-    unitsConsumed: 160,
-    ratePerUnit: 8.5,
-    fixedCharges: 150,
-    totalAmount: 1510,
-    dueDate: '15 Oct 2026',
-    status: 'Due',
-    discom: 'BESCOM Bangalore',
-    attachmentName: 'BESCOM_Oct2026_Bill_Unit101.pdf',
-    fileSize: '445 KB',
-    billDocumentUrl: '#',
-    uploadedAt: '01 Oct 2026',
-    notes: 'Ground floor unit sub-meter'
+
+
+// Tab-scoped Session Storage Helpers
+// sessionStorage provides strict tab isolation (Tab 1 cannot overwrite Tab 2)
+function getTabSessionItem(key: string): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const sessionVal = sessionStorage.getItem(key);
+    if (sessionVal !== null) return sessionVal;
+    return localStorage.getItem(key);
+  } catch (e) {
+    return null;
   }
-];
+}
 
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     try {
+      const sessionAuth = sessionStorage.getItem('staywise_is_authenticated');
+      if (sessionAuth !== null) return sessionAuth === 'true';
       return localStorage.getItem('staywise_is_authenticated') === 'true';
     } catch (e) {
       return false;
@@ -375,7 +365,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [activeView, setActiveView] = useState<string>('dashboard');
   const [subscription, setSubscription] = useState<OwnerSubscription | null>(null);
 
-  // 1. Initial Client-Side Hydration: Preserve active view, persona, and filters across page reloads
+  // 1. Initial Tab-Scoped Client-Side Hydration: Preserve active view and persona per tab
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -384,11 +374,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       const urlRole = urlParams.get('role') as UserRole | null;
       const urlPortfolio = urlParams.get('portfolio');
 
-      const savedAuth = localStorage.getItem('staywise_is_authenticated');
-      const savedView = urlView || localStorage.getItem('staywise_active_view');
-      const savedRole = (urlRole && DEMO_CREDENTIALS[urlRole] ? urlRole : (localStorage.getItem('staywise_active_role') as UserRole | null));
-      const savedUser = localStorage.getItem('staywise_current_user');
-      const savedPortfolio = urlPortfolio || localStorage.getItem('staywise_active_portfolio');
+      const savedAuth = getTabSessionItem('staywise_is_authenticated');
+      const savedView = urlView || getTabSessionItem('staywise_active_view');
+      const savedRole = (urlRole && DEMO_CREDENTIALS[urlRole] ? urlRole : (getTabSessionItem('staywise_active_role') as UserRole | null));
+      const savedUser = getTabSessionItem('staywise_current_user');
+      const savedPortfolio = urlPortfolio || getTabSessionItem('staywise_active_portfolio');
 
       if (savedAuth === 'true') {
         setIsAuthenticated(true);
@@ -409,17 +399,17 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         setActivePortfolio(savedPortfolio);
       }
     } catch (e) {
-      console.warn('[Staywise State] Failed to hydrate session:', e);
+      console.warn('[Staywise State] Failed to hydrate tab session:', e);
     } finally {
       setIsHydrated(true);
     }
   }, []);
 
-  // 2. Synchronize active state changes to localStorage and URL query params
+  // 2. Synchronize active state changes to sessionStorage (tab-isolated) & URL query params
   useEffect(() => {
     if (typeof window === 'undefined' || !isHydrated) return;
     try {
-      localStorage.setItem('staywise_is_authenticated', String(isAuthenticated));
+      sessionStorage.setItem('staywise_is_authenticated', String(isAuthenticated));
       
       if (!isAuthenticated) {
         // Clean URL parameters when on the unauthenticated landing page
@@ -433,10 +423,20 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      localStorage.setItem('staywise_active_view', activeView);
-      localStorage.setItem('staywise_active_role', activeRole);
-      localStorage.setItem('staywise_active_portfolio', activePortfolio);
-      localStorage.setItem('staywise_current_user', JSON.stringify(currentUser));
+      sessionStorage.setItem('staywise_active_view', activeView);
+      sessionStorage.setItem('staywise_active_role', activeRole);
+      sessionStorage.setItem('staywise_active_portfolio', activePortfolio);
+      sessionStorage.setItem('staywise_current_user', JSON.stringify(currentUser));
+
+      // CRITICAL: NEVER overwrite client sessions in localStorage when in Admin role or /admin portal.
+      // This guarantees Tab 1 (Client/Owner/Tenant) and Tab 2 (Chief Admin) are strictly isolated!
+      if (activeRole !== 'admin') {
+        localStorage.setItem('staywise_active_view', activeView);
+        localStorage.setItem('staywise_active_role', activeRole);
+        localStorage.setItem('staywise_active_portfolio', activePortfolio);
+        localStorage.setItem('staywise_current_user', JSON.stringify(currentUser));
+        localStorage.setItem('staywise_is_authenticated', String(isAuthenticated));
+      }
 
       // Keep address bar query params in sync without reloading
       const url = new URL(window.location.href);
@@ -453,12 +453,24 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   const handleRoleChange = (role: UserRole) => {
     setActiveRole(role);
+    // If switching back to the role that matches the logged-in user, restore their real account
+    const savedUserStr = getTabSessionItem('staywise_current_user');
+    if (savedUserStr) {
+      try {
+        const saved = JSON.parse(savedUserStr);
+        if (saved && saved.role === role) {
+          setCurrentUser(saved);
+          return;
+        }
+      } catch (e) {}
+    }
     setCurrentUser(DEMO_CREDENTIALS[role] || DEMO_CREDENTIALS.owner);
   };
 
   const login = (role: UserRole, customUser?: Partial<DemoCredential>) => {
     setActiveRole(role);
-    const userToSet = customUser ? {
+    const userToSet: DemoCredential = customUser ? {
+      id: customUser.id || DEMO_CREDENTIALS[role]?.id || `user-${role}`,
       role,
       email: customUser.email || DEMO_CREDENTIALS[role]?.email || 'user@staywise.com',
       pass: customUser.pass || '******',
@@ -475,10 +487,20 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem('staywise_is_authenticated', 'true');
-        localStorage.setItem('staywise_active_role', role);
-        localStorage.setItem('staywise_active_view', 'dashboard');
-        localStorage.setItem('staywise_current_user', JSON.stringify(userToSet));
+        // Tab-isolated storage
+        sessionStorage.setItem('staywise_is_authenticated', 'true');
+        sessionStorage.setItem('staywise_active_role', role);
+        sessionStorage.setItem('staywise_active_view', 'dashboard');
+        sessionStorage.setItem('staywise_current_user', JSON.stringify(userToSet));
+
+        // Only persist normal user logins (owner, tenant, manager) to localStorage.
+        // Admin logins remain in tab's sessionStorage to prevent hijacking client tabs.
+        if (role !== 'admin') {
+          localStorage.setItem('staywise_is_authenticated', 'true');
+          localStorage.setItem('staywise_active_role', role);
+          localStorage.setItem('staywise_active_view', 'dashboard');
+          localStorage.setItem('staywise_current_user', JSON.stringify(userToSet));
+        }
       } catch (e) {}
     }
   };
@@ -488,9 +510,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     email: string;
     password: string;
     phone?: string;
-    role: 'owner' | 'estate_manager';
+    role: UserRole;
     portfolioName?: string;
     city?: string;
+    propertyId?: string;
+    unitNumber?: string;
   }): Promise<{ success: boolean; error?: string }> => {
     try {
       const res = await fetch('/api/auth/signup', {
@@ -508,6 +532,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         setActivePortfolio(data.property.portfolio || 'all');
       }
 
+      if (data.tenant) {
+        setTenants(prev => [data.tenant, ...prev]);
+      }
+
       const newCred: DemoCredential = {
         role: userData.role,
         email: data.user.email,
@@ -522,7 +550,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
       addNotification(
         'Workspace Initialized!',
-        `Welcome ${data.user.name}! Your ${data.user.roleLabel} portal and starter asset have been created.`,
+        `Welcome ${data.user.name}! Your ${data.user.roleLabel} portal has been initialized in SQLite database.`,
         'SYSTEM'
       );
 
@@ -542,34 +570,34 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {}
   };
   
-  const [properties, setProperties] = useState<Property[]>(INITIAL_PROPERTIES);
-  const [tenants, setTenants] = useState<Tenant[]>(INITIAL_TENANTS);
-  const [invoices, setInvoices] = useState<RentInvoice[]>(INITIAL_INVOICES);
-  const [ledger, setLedger] = useState<LedgerEntry[]>(INITIAL_LEDGER);
-  const [tickets, setTickets] = useState<MaintenanceTicket[]>(INITIAL_TICKETS);
-  const [leads, setLeads] = useState<Lead[]>(INITIAL_LEADS);
-  const [estateAssets] = useState<EstateAsset[]>(INITIAL_ESTATE_ASSETS);
-  const [staff] = useState<StaffMember[]>(INITIAL_STAFF);
-  const [utilities] = useState<UtilityReading[]>(INITIAL_UTILITIES);
-  const [electricityBills, setElectricityBills] = useState<ElectricityBill[]>(INITIAL_ELECTRICITY_BILLS);
-  const [aiInsights, setAiInsights] = useState<AIInsight[]>(INITIAL_AI_INSIGHTS);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [invoices, setInvoices] = useState<RentInvoice[]>([]);
+  const [ledger, setLedger] = useState<LedgerEntry[]>([]);
+  const [tickets, setTickets] = useState<MaintenanceTicket[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [estateAssets, setEstateAssets] = useState<EstateAsset[]>([]);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [utilities, setUtilities] = useState<UtilityReading[]>([]);
+  const [electricityBills, setElectricityBills] = useState<ElectricityBill[]>([]);
+  const [aiInsights, setAiInsights] = useState<AIInsight[]>([]);
   const [isUploadBillModalOpen, setIsUploadBillModalOpen] = useState(false);
   const [preselectedUnitForUpload, setPreselectedUnitForUpload] = useState<string | null>(null);
 
   // Asset Universe Engines
-  const [pgBeds, setPgBeds] = useState<PGBed[]>(INITIAL_PG_BEDS);
-  const [pgRooms] = useState<PGRoom[]>(INITIAL_PG_ROOMS);
-  const [pgMeals] = useState<PGMealPlan[]>(INITIAL_PG_MEALS);
-  const [commercialUnits] = useState<CommercialUnit[]>(INITIAL_COMMERCIAL_UNITS);
-  const [camExpenses] = useState<CAMExpenseItem[]>(INITIAL_CAM_EXPENSES);
-  const [commercialVisitors, setCommercialVisitors] = useState<CommercialVisitor[]>(INITIAL_COMMERCIAL_VISITORS);
-  const [moveFlowChecklist, setMoveFlowChecklist] = useState<MoveFlowChecklistItem[]>(INITIAL_MOVEFLOW_CHECKLIST);
-  const [depositDisputes, setDepositDisputes] = useState<DepositSettlementDispute[]>(INITIAL_DEPOSIT_DISPUTES);
-  const [referrals, setReferrals] = useState<TenantReferralItem[]>(INITIAL_REFERRALS);
-  const [moneyLeaks] = useState<MoneyLeakAlert[]>(INITIAL_MONEY_LEAKS);
-  const [vacancyCosts] = useState<VacancyCostReport[]>(INITIAL_VACANCY_COSTS);
-  const [propertyPassport] = useState<PropertyPassportData>(SAMPLE_PROPERTY_PASSPORT);
-  const [tenantPassport] = useState<TenantPassportData>(SAMPLE_TENANT_PASSPORT);
+  const [pgBeds, setPgBeds] = useState<PGBed[]>([]);
+  const [pgRooms, setPgRooms] = useState<PGRoom[]>([]);
+  const [pgMeals, setPgMeals] = useState<PGMealPlan[]>([]);
+  const [commercialUnits, setCommercialUnits] = useState<CommercialUnit[]>([]);
+  const [camExpenses, setCamExpenses] = useState<CAMExpenseItem[]>([]);
+  const [commercialVisitors, setCommercialVisitors] = useState<CommercialVisitor[]>([]);
+  const [moveFlowChecklist, setMoveFlowChecklist] = useState<MoveFlowChecklistItem[]>([]);
+  const [depositDisputes, setDepositDisputes] = useState<DepositSettlementDispute[]>([]);
+  const [referrals, setReferrals] = useState<TenantReferralItem[]>([]);
+  const [moneyLeaks] = useState<MoneyLeakAlert[]>(DEFAULT_MONEY_LEAKS);
+  const [vacancyCosts] = useState<VacancyCostReport[]>(DEFAULT_VACANCY_COSTS);
+  const [propertyPassport] = useState<PropertyPassportData>(DEFAULT_PROPERTY_PASSPORT);
+  const [tenantPassport] = useState<TenantPassportData>(DEFAULT_TENANT_PASSPORT);
   const [influencerOffers, setInfluencerOffers] = useState<InfluencerOffer[]>([
     {
       id: 'inf-1',
@@ -646,29 +674,88 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Hydrate application state directly from persistent database via /api/bootstrap
-  useEffect(() => {
-    async function loadDatabaseData() {
+  const [users, setUsers] = useState<UserAccount[]>([]);
+
+  // Cross-tab real-time event broadcasting helper
+  const broadcastSync = (action: string, payload?: any) => {
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       try {
-        const res = await fetch('/api/bootstrap');
-        const json = await res.json();
-        if (json.success && json.data) {
-          const d = json.data;
-          if (Array.isArray(d.properties) && d.properties.length > 0) setProperties(d.properties);
-          if (Array.isArray(d.tenants) && d.tenants.length > 0) setTenants(d.tenants);
-          if (Array.isArray(d.invoices) && d.invoices.length > 0) setInvoices(d.invoices);
-          if (Array.isArray(d.ledger) && d.ledger.length > 0) setLedger(d.ledger);
-          if (Array.isArray(d.depositDisputes) && d.depositDisputes.length > 0) setDepositDisputes(d.depositDisputes);
-          if (Array.isArray(d.influencerOffers) && d.influencerOffers.length > 0) setInfluencerOffers(d.influencerOffers);
-          if (Array.isArray(d.tickets) && d.tickets.length > 0) setTickets(d.tickets);
-          if (Array.isArray(d.electricityBills) && d.electricityBills.length > 0) setElectricityBills(d.electricityBills);
-          if (d.subscription) setSubscription(d.subscription);
-        }
-      } catch (err) {
-        console.warn('[Staywise Database] Hydrated using local store fallback:', err);
-      }
+        const channel = new BroadcastChannel('staywise_db_sync');
+        channel.postMessage({ type: 'DATA_UPDATED', action, payload, timestamp: Date.now() });
+        channel.close();
+      } catch (e) {}
     }
+  };
+
+  // Authoritative data loading function directly from persistent SQLite via /api/bootstrap
+  const loadDatabaseData = async () => {
+    try {
+      const res = await fetch('/api/bootstrap');
+      const json = await res.json();
+      if (json.success && json.data) {
+        const d = json.data;
+        if (Array.isArray(d.properties)) setProperties(d.properties);
+        if (Array.isArray(d.tenants)) setTenants(d.tenants);
+        if (Array.isArray(d.invoices)) setInvoices(d.invoices);
+        if (Array.isArray(d.ledger)) setLedger(d.ledger);
+        if (Array.isArray(d.depositDisputes)) setDepositDisputes(d.depositDisputes);
+        if (Array.isArray(d.influencerOffers)) setInfluencerOffers(d.influencerOffers);
+        if (Array.isArray(d.tickets)) setTickets(d.tickets);
+        if (Array.isArray(d.electricityBills)) setElectricityBills(d.electricityBills);
+        if (Array.isArray(d.leads)) setLeads(d.leads);
+        if (Array.isArray(d.estateAssets)) setEstateAssets(d.estateAssets);
+        if (Array.isArray(d.staff)) setStaff(d.staff);
+        if (Array.isArray(d.utilities)) setUtilities(d.utilities);
+        if (Array.isArray(d.aiInsights)) setAiInsights(d.aiInsights);
+        if (Array.isArray(d.pgBeds)) setPgBeds(d.pgBeds);
+        if (Array.isArray(d.pgRooms)) setPgRooms(d.pgRooms);
+        if (Array.isArray(d.pgMeals)) setPgMeals(d.pgMeals);
+        if (Array.isArray(d.commercialUnits)) setCommercialUnits(d.commercialUnits);
+        if (Array.isArray(d.camExpenses)) setCamExpenses(d.camExpenses);
+        if (Array.isArray(d.commercialVisitors)) setCommercialVisitors(d.commercialVisitors);
+        if (Array.isArray(d.moveFlowChecklist)) setMoveFlowChecklist(d.moveFlowChecklist);
+        if (Array.isArray(d.referrals)) setReferrals(d.referrals);
+        if (Array.isArray(d.users)) setUsers(d.users);
+        if (d.subscription) setSubscription(d.subscription);
+      }
+    } catch (err) {
+      console.warn('[Staywise Database] Hydrated using local store fallback:', err);
+    }
+  };
+
+  // Multi-tab real-time sync engine
+  useEffect(() => {
     loadDatabaseData();
+
+    // 1. BroadcastChannel: instant (<50ms) reaction across open tabs
+    let channel: BroadcastChannel | null = null;
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        channel = new BroadcastChannel('staywise_db_sync');
+        channel.onmessage = (event) => {
+          if (event.data && event.data.type === 'DATA_UPDATED') {
+            loadDatabaseData();
+          }
+        };
+      }
+    } catch (e) {}
+
+    // 2. Window focus listener: immediately pulls latest data when user clicks between tabs
+    const handleFocus = () => {
+      loadDatabaseData();
+    };
+    window.addEventListener('focus', handleFocus);
+
+    // 3. Fallback polling every 4 seconds to guarantee consistency across roles
+    const interval = setInterval(() => {
+      loadDatabaseData();
+    }, 4000);
+
+    return () => {
+      if (channel) channel.close();
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(interval);
+    };
   }, []);
 
   const addNotification = (title: string, message: string, type: NotificationItem['type']) => {
@@ -688,11 +775,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addProperty = async (newPropData: Partial<Property>) => {
+    const assignedOwnerId = newPropData.ownerId || currentUser.id || 'user-owner-vikram';
+    const newPropId = newPropData.id || generatePropertyId();
     const newProp: Property = {
-      id: `prop-${Date.now()}`,
+      id: newPropId,
+      ownerId: assignedOwnerId,
       name: newPropData.name || 'New Property',
       type: newPropData.type || 'Apartment',
-      portfolio: newPropData.portfolio || 'Kozhikode Coastal',
+      portfolio: newPropData.portfolio || (currentUser.name && currentUser.name !== 'Member' ? `${currentUser.name}'s Portfolio` : 'Kozhikode Coastal'),
       address: newPropData.address || 'Address',
       city: newPropData.city || 'Kozhikode',
       state: newPropData.state || 'Kerala',
@@ -713,7 +803,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     
     // Optimistic UI update
     setProperties(prev => [newProp, ...prev]);
+    // CRITICAL: Reset activePortfolio to 'all' so new property is immediately visible in owner view
+    setActivePortfolio('all');
     addNotification('Property Submitted for Verification', `${newProp.name} has been added. Pending Admin document audit and approval.`, 'SYSTEM');
+    broadcastSync('PROPERTY_ADDED', newProp);
 
     // Persist to database via API
     try {
@@ -722,6 +815,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newProp)
       });
+      broadcastSync('PROPERTY_ADDED', newProp);
     } catch (err) {
       console.error('[API /api/properties] Persist failed:', err);
     }
@@ -731,6 +825,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     // Optimistic UI update
     setProperties(prev => prev.map(p => p.id === propertyId ? { ...p, verificationStatus: 'APPROVED', status: 'ACTIVE' } : p));
     addNotification('Property Verified & Approved', `Property documents approved. Active across Staywise platform.`, 'SYSTEM');
+    broadcastSync('PROPERTY_APPROVED', { propertyId });
 
     // Persist to database via API
     try {
@@ -739,6 +834,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'APPROVED' })
       });
+      broadcastSync('PROPERTY_APPROVED', { propertyId });
     } catch (err) {
       console.error('[API /api/properties/[id]/verify] Verification failed:', err);
     }
@@ -748,6 +844,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     // Optimistic UI update
     setProperties(prev => prev.map(p => p.id === propertyId ? { ...p, ...updates } : p));
     addNotification('Property Updated', `Property details updated successfully.`, 'SYSTEM');
+    broadcastSync('PROPERTY_UPDATED', { propertyId, updates });
 
     // Persist to database via API
     try {
@@ -756,6 +853,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
       });
+      broadcastSync('PROPERTY_UPDATED', { propertyId, updates });
     } catch (err) {
       console.error('[API /api/properties/[id]] Update failed:', err);
     }
@@ -765,12 +863,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     // Optimistic UI update
     setProperties(prev => prev.filter(p => p.id !== propertyId));
     addNotification('Property Removed', `Property was removed from portfolio.`, 'SYSTEM');
+    broadcastSync('PROPERTY_DELETED', { propertyId });
 
     // Persist to database via API
     try {
       await fetch(`/api/properties/${propertyId}`, {
         method: 'DELETE'
       });
+      broadcastSync('PROPERTY_DELETED', { propertyId });
     } catch (err) {
       console.error('[API /api/properties/[id]] Delete failed:', err);
     }
@@ -819,7 +919,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Feature #15: Add Existing Tenant Flow
-  const addExistingTenant = (data: {
+  const addExistingTenant = async (data: {
     name: string;
     phone: string;
     email: string;
@@ -831,9 +931,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     leaseEnd: string;
     rentDueDate: number;
   }) => {
-    const tenantId = `t-${Date.now()}`;
+    const tenantId = generateTenantId();
     const targetProp = properties.find(p => p.id === data.propertyId);
-    const propName = targetProp ? targetProp.name : 'Beach Road Apartments';
+    const propName = targetProp ? targetProp.name : 'Staywise Property';
 
     const newTenant: Tenant = {
       id: tenantId,
@@ -883,10 +983,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return p;
     }));
 
-    // Auto-generate First Rent Invoice
+    // Auto-generate First Rent Invoice with collision-free IDs
     const newInvoice: RentInvoice = {
-      id: `inv-${Date.now()}`,
-      invoiceNumber: `STW-2026-10-${data.unitNumber}`,
+      id: generateInvoiceId(),
+      invoiceNumber: generateInvoiceNumber(),
       tenantId: tenantId,
       tenantName: data.name,
       propertyId: data.propertyId,
@@ -901,9 +1001,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     };
     setInvoices(prev => [newInvoice, ...prev]);
 
-    // Record Security Deposit in double-entry ledger
+    // Record Security Deposit in double-entry ledger with collision-free ID
     const ledgerEntry: LedgerEntry = {
-      id: `ledg-${Date.now()}`,
+      id: generateLedgerId(),
       timestamp: 'Just now',
       description: `Security Deposit Onboarded - Unit ${data.unitNumber} (${data.name})`,
       type: 'CREDIT',
@@ -914,8 +1014,36 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       settlementStatus: 'CLEARED'
     };
     setLedger(prev => [ledgerEntry, ...prev]);
-
     addNotification('Tenant Connected', `${data.name} has accepted the digital onboarding invite for Unit ${data.unitNumber}.`, 'RENT');
+    broadcastSync('TENANT_ONBOARDED', { tenantId });
+
+    // Authoritative API call to persist to SQLite database
+    try {
+      const res = await fetch('/api/tenants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const resJson = await res.json();
+      if (resJson.success && resJson.data) {
+        const d = resJson.data;
+        if (d.tenant) {
+          setTenants(prev => prev.map(t => t.id === tenantId ? d.tenant : t));
+        }
+        if (d.property) {
+          setProperties(prev => prev.map(p => p.id === d.property.id ? d.property : p));
+        }
+        if (d.invoice) {
+          setInvoices(prev => [d.invoice, ...prev.filter(i => i.id !== newInvoice.id)]);
+        }
+        if (d.ledgerEntry) {
+          setLedger(prev => [d.ledgerEntry, ...prev.filter(l => l.id !== ledgerEntry.id)]);
+        }
+      }
+      broadcastSync('TENANT_ONBOARDED', { tenantId });
+    } catch (err) {
+      console.error('[API /api/tenants] Onboarding persist failed:', err);
+    }
   };
 
   const payInvoice = async (invoiceId: string, method: 'UPI' | 'Bank Transfer' | 'Card' | 'Autopay' | 'FlexPay') => {
@@ -938,10 +1066,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     const targetInv = invoices.find(i => i.id === invoiceId);
     if (targetInv) {
-      // Create immutable Double Ledger record in UI
+      // Create immutable Double Ledger record in UI with collision-free ID
       const ledgerRecord: LedgerEntry = {
-        id: `ledg-pay-${Date.now()}`,
-        timestamp: '2026-10-01 12:00 PM',
+        id: generateLedgerId(),
+        timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
         description: `Rent Settlement (${method}) - ${targetInv.propertyName} #${targetInv.unitNumber} (${targetInv.tenantName})`,
         type: 'CREDIT',
         amount: targetInv.totalAmount,
@@ -965,6 +1093,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       }));
 
       addNotification('Payment Cleared', `₹${targetInv.totalAmount.toLocaleString('en-IN')} received via ${method} for Unit ${targetInv.unitNumber}. Receipt generated.`, 'RENT');
+      broadcastSync('INVOICE_PAID', { invoiceId, method });
     }
 
     // Persist payment to database via API
@@ -974,12 +1103,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ paymentMethod: method })
       });
+      broadcastSync('INVOICE_PAID', { invoiceId, method });
     } catch (err) {
       console.error('[API /api/invoices/[id]/pay] Payment persist failed:', err);
     }
   };
 
-  const approveTicket = (ticketId: string) => {
+  const approveTicket = async (ticketId: string) => {
     setTickets(prev => prev.map(t => {
       if (t.id === ticketId) {
         return {
@@ -993,15 +1123,32 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return t;
     }));
     addNotification('Ticket Approved', `Maintenance Quote for ticket #${ticketId} was approved. Vendor dispatched.`, 'MAINTENANCE');
+    broadcastSync('TICKET_APPROVED', { ticketId });
     
     // Also remove or resolve the corresponding AI insight
     setAiInsights(prev => prev.filter(ins => !ins.actionPayload?.includes(ticketId)));
+
+    try {
+      await fetch(`/api/tickets/${ticketId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'Approved',
+          ownerApproved: true,
+          scheduledDate: 'Tomorrow at 10:00 AM',
+          vendorName: 'Apex Precision Plumbing'
+        })
+      });
+      broadcastSync('TICKET_APPROVED', { ticketId });
+    } catch (err) {
+      console.error('[API /api/tickets/[id]] Approve failed:', err);
+    }
   };
 
-  const createMaintenanceTicket = (ticketData: Partial<MaintenanceTicket>) => {
+  const createMaintenanceTicket = async (ticketData: Partial<MaintenanceTicket>) => {
     const newTkt: MaintenanceTicket = {
-      id: `tkt-${Date.now()}`,
-      ticketNumber: `TKT-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: ticketData.id || generateTicketId(),
+      ticketNumber: ticketData.ticketNumber || generateTicketNumber(),
       propertyId: ticketData.propertyId || 'prop-beach-road',
       propertyName: ticketData.propertyName || 'Beach Road Apartments',
       unitNumber: ticketData.unitNumber || '302',
@@ -1014,13 +1161,25 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       estimatedCost: ticketData.estimatedCost || 1500,
       requiresOwnerApproval: (ticketData.estimatedCost || 1500) > 2000,
       ownerApproved: (ticketData.estimatedCost || 1500) <= 2000,
-      createdAt: '2026-10-01'
+      createdAt: new Date().toISOString().split('T')[0]
     };
     setTickets(prev => [newTkt, ...prev]);
     addNotification('Ticket Raised', `${newTkt.category} ticket #${newTkt.ticketNumber} logged for Unit ${newTkt.unitNumber}.`, 'MAINTENANCE');
+    broadcastSync('TICKET_CREATED', newTkt);
+
+    try {
+      await fetch('/api/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTkt)
+      });
+      broadcastSync('TICKET_CREATED', newTkt);
+    } catch (err) {
+      console.error('[API /api/tickets] Create failed:', err);
+    }
   };
 
-  const advanceLeadStage = (leadId: string, nextStage: Lead['stage']) => {
+  const advanceLeadStage = async (leadId: string, nextStage: Lead['stage']) => {
     setLeads(prev => prev.map(l => {
       if (l.id === leadId) {
         return { ...l, stage: nextStage };
@@ -1028,6 +1187,16 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return l;
     }));
     addNotification('Lead Advanced', `Lead status updated to ${nextStage}.`, 'LEAD');
+
+    try {
+      await fetch(`/api/leads/${leadId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stage: nextStage })
+      });
+    } catch (err) {
+      console.error('[API /api/leads/[id]] Update failed:', err);
+    }
   };
 
   const executeInsightAction = (insight: AIInsight) => {
@@ -1043,41 +1212,92 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addElectricityBill = (bill: ElectricityBill) => {
+  const addElectricityBill = async (bill: ElectricityBill) => {
     setElectricityBills(prev => [bill, ...prev]);
     addNotification('Electricity Bill Uploaded', `Uploaded bill of ₹${bill.totalAmount.toLocaleString('en-IN')} for ${bill.tenantName} (Unit ${bill.unitNumber}). Attached: ${bill.attachmentName || 'Bill Document'}`, 'RENT');
+
+    try {
+      await fetch('/api/bills', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bill)
+      });
+    } catch (err) {
+      console.error('[API /api/bills] Create failed:', err);
+    }
   };
 
   const updateElectricityBill = (id: string, updates: Partial<ElectricityBill>) => {
     setElectricityBills(prev => prev.map(b => b.id === id ? { ...b, ...updates } : b));
   };
 
-  const updatePGBedStatus = (bedId: string, newStatus: PGBedStatus) => {
+  const updatePGBedStatus = async (bedId: string, newStatus: PGBedStatus) => {
     setPgBeds(prev => prev.map(b => b.id === bedId ? { ...b, status: newStatus } : b));
     addNotification('Bed Status Updated', `Bed ${bedId} updated to ${newStatus}`, 'SYSTEM');
+
+    try {
+      await fetch('/api/pg/beds', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bedId, status: newStatus })
+      });
+    } catch (err) {
+      console.error('[API /api/pg/beds] Update failed:', err);
+    }
   };
 
-  const addCommercialVisitor = (visitor: Omit<CommercialVisitor, 'id' | 'passCode' | 'status'>) => {
+  const addCommercialVisitor = async (visitor: Omit<CommercialVisitor, 'id' | 'passCode' | 'status'>) => {
     const newVis: CommercialVisitor = {
       ...visitor,
       id: `vis-${Date.now()}`,
       passCode: `PASS-${Math.floor(1000 + Math.random() * 9000)}`,
-      status: 'Checked In'
+      status: 'Checked In',
+      checkInTime: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
     };
     setCommercialVisitors(prev => [newVis, ...prev]);
     addNotification('Visitor Pass Generated', `QR Gate pass issued for ${visitor.visitorName} (${visitor.hostCompany})`, 'SYSTEM');
+
+    try {
+      await fetch('/api/commercial/visitors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(visitor)
+      });
+    } catch (err) {
+      console.error('[API /api/commercial/visitors] Create failed:', err);
+    }
   };
 
-  const toggleMoveFlowTask = (taskId: string) => {
+  const toggleMoveFlowTask = async (taskId: string) => {
     setMoveFlowChecklist(prev => prev.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t));
+
+    try {
+      await fetch('/api/moveflow', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: taskId })
+      });
+    } catch (err) {
+      console.error('[API /api/moveflow] Toggle failed:', err);
+    }
   };
 
-  const resolveDepositDispute = (disputeId: string, status: DepositSettlementDispute['status']) => {
+  const resolveDepositDispute = async (disputeId: string, status: DepositSettlementDispute['status']) => {
     setDepositDisputes(prev => prev.map(d => d.id === disputeId ? { ...d, status } : d));
     addNotification('Deposit Settlement Updated', `Dispute ${disputeId} status transitioned to: ${status}`, 'RENT');
+
+    try {
+      await fetch('/api/disputes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: disputeId, updates: { status } })
+      });
+    } catch (err) {
+      console.error('[API /api/disputes] Update failed:', err);
+    }
   };
 
-  const addReferral = (referral: Omit<TenantReferralItem, 'id' | 'date'>) => {
+  const addReferral = async (referral: Omit<TenantReferralItem, 'id' | 'date'>) => {
     const newRef: TenantReferralItem = {
       ...referral,
       id: `ref-${Date.now()}`,
@@ -1085,6 +1305,16 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     };
     setReferrals(prev => [newRef, ...prev]);
     addNotification('Referral Logged', `Referral registered for ${referral.referredName}. Reward balance credited!`, 'SYSTEM');
+
+    try {
+      await fetch('/api/referrals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(referral)
+      });
+    } catch (err) {
+      console.error('[API /api/referrals] Create failed:', err);
+    }
   };
 
   const refreshSubscription = async () => {
@@ -1253,6 +1483,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       electricityBills,
       aiInsights,
       notifications,
+      users,
+      refreshData: loadDatabaseData,
       pgBeds,
       pgRooms,
       pgMeals,

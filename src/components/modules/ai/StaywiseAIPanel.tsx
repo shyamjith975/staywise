@@ -131,13 +131,13 @@ export default function StaywiseAIPanel() {
   return (
     <div className="space-y-6 pb-12 font-sans">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#e3e1d8]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#B5B5B5]">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#19251f] flex items-center gap-2.5">
-            <Sparkles className="h-6 w-6 text-[#274235]" />
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#2a2a2a] flex items-center gap-2.5">
+            <Sparkles className="h-6 w-6 text-[#2a2a2a]" />
             <span>Staywise Autonomous AI Assistant</span>
           </h1>
-          <div className="text-xs text-[#6e7972] font-semibold uppercase tracking-wider mt-0.5">
+          <div className="text-xs text-[#666666] font-semibold uppercase tracking-wider mt-0.5">
             Real-Time Operations • Powered by Gemini & Staywise OS
           </div>
         </div>
@@ -145,7 +145,7 @@ export default function StaywiseAIPanel() {
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setMessages(prev => prev.slice(0, 1))}
-            className="p-2.5 rounded-2xl bg-white hover:bg-[#f4f3ef] text-[#19251f] border border-[#e3e1d8] transition shadow-sm"
+            className="p-2.5 rounded-2xl bg-white hover:bg-[#f0f0f0] text-[#2a2a2a] border border-[#B5B5B5] transition shadow-sm"
             title="Refresh Conversation"
           >
             <RefreshCw className="h-4 w-4" />
@@ -156,20 +156,20 @@ export default function StaywiseAIPanel() {
       {/* Main AI Assistant Card */}
       <div className="organic-card overflow-hidden flex flex-col min-h-[580px]">
         {/* Card Sub-Header */}
-        <div className="px-6 py-4 border-b border-[#eeece5] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#fbfbfa]">
+        <div className="px-6 py-4 border-b border-[#E0E0E0] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#ffffff]">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-[#274235] text-white flex items-center justify-center shadow-md shadow-[#274235]/20">
+            <div className="h-10 w-10 rounded-2xl bg-[#2a2a2a] text-white flex items-center justify-center shadow-md shadow-[#2a2a2a]/20">
               <Bot className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-[#19251f] text-sm">Staywise Autonomous AI</span>
+                <span className="font-extrabold text-[#2a2a2a] text-sm">Staywise Autonomous AI</span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
                   Online
                 </span>
               </div>
-              <p className="text-[11px] text-[#6e7972]">Proactive alerts, tenant rent verification & instant property actions</p>
+              <p className="text-[11px] text-[#666666]">Proactive alerts, tenant rent verification & instant property actions</p>
             </div>
           </div>
 
@@ -192,8 +192,8 @@ export default function StaywiseAIPanel() {
                   }}
                   className={`px-3 py-1 rounded-xl text-xs font-bold transition ${
                     filterPill === pill.id 
-                      ? 'bg-[#274235] text-white shadow-sm' 
-                      : 'bg-[#f4f3ef] text-[#6e7972] hover:text-[#19251f]'
+                      ? 'bg-[#2a2a2a] text-white shadow-sm' 
+                      : 'bg-[#f0f0f0] text-[#666666] hover:text-[#2a2a2a]'
                   }`}
                 >
                   {pill.label}
@@ -213,7 +213,7 @@ export default function StaywiseAIPanel() {
                 className={`flex gap-3 max-w-[85%] ${isUser ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}
               >
                 {!isUser && (
-                  <div className="h-8 w-8 rounded-2xl bg-[#274235] text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <div className="h-8 w-8 rounded-2xl bg-[#2a2a2a] text-white flex items-center justify-center shrink-0 shadow-sm">
                     <Bot className="h-4 w-4" />
                   </div>
                 )}
@@ -222,15 +222,15 @@ export default function StaywiseAIPanel() {
                   <div
                     className={`p-4 rounded-3xl text-xs leading-relaxed ${
                       isUser
-                        ? 'bg-[#274235] text-white font-medium rounded-tr-none shadow-md'
-                        : 'bg-[#f7f6f2] text-[#19251f] border border-[#e3e1d8] rounded-tl-none shadow-sm'
+                        ? 'bg-[#2a2a2a] text-white font-medium rounded-tr-none shadow-md'
+                        : 'bg-[#f0f0f0] text-[#2a2a2a] border border-[#B5B5B5] rounded-tl-none shadow-sm'
                     }`}
                   >
                     <p className="whitespace-pre-line text-[13px]">{m.text}</p>
 
                     {/* Execution Badges */}
                     {m.badges && (
-                      <div className="flex flex-wrap gap-2 pt-2.5 mt-2.5 border-t border-[#eeece5]">
+                      <div className="flex flex-wrap gap-2 pt-2.5 mt-2.5 border-t border-[#E0E0E0]">
                         {m.badges.map((b, idx) => (
                           <span
                             key={idx}
@@ -251,7 +251,7 @@ export default function StaywiseAIPanel() {
                         <button
                           key={idx}
                           onClick={() => handlePillAction(p.action)}
-                          className="px-3.5 py-1.5 rounded-2xl bg-[#eef3f0] hover:bg-[#274235] hover:text-white text-[#274235] border border-[#274235]/30 text-[11px] font-bold transition flex items-center gap-1.5 shadow-sm"
+                          className="px-3.5 py-1.5 rounded-2xl bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white text-[#2a2a2a] border border-[#2a2a2a]/30 text-[11px] font-bold transition flex items-center gap-1.5 shadow-sm"
                         >
                           <span>{p.label}</span>
                           <ArrowRight className="h-3 w-3" />
@@ -260,7 +260,7 @@ export default function StaywiseAIPanel() {
                     </div>
                   )}
 
-                  <span className={`block text-[10px] text-[#95a099] ${isUser ? 'text-right' : 'text-left'}`}>
+                  <span className={`block text-[10px] text-[#888888] ${isUser ? 'text-right' : 'text-left'}`}>
                     {m.time}
                   </span>
                 </div>
@@ -270,22 +270,22 @@ export default function StaywiseAIPanel() {
         </div>
 
         {/* Input Bar */}
-        <div className="p-4 bg-[#fbfbfa] border-t border-[#eeece5]">
+        <div className="p-4 bg-[#ffffff] border-t border-[#E0E0E0]">
           <form
             onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-            className="flex items-center gap-2 rounded-2xl bg-white border border-[#e3e1d8] p-1.5 pl-4 shadow-sm focus-within:border-[#274235] transition"
+            className="flex items-center gap-2 rounded-2xl bg-white border border-[#B5B5B5] p-1.5 pl-4 shadow-sm focus-within:border-[#2a2a2a] transition"
           >
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={activeRole === 'tenant' ? 'Ask anything about rent, receipts, or maintenance...' : 'Ask anything about your properties or tenants...'}
-              className="flex-1 bg-transparent text-xs text-[#19251f] placeholder-[#95a099] focus:outline-none"
+              className="flex-1 bg-transparent text-xs text-[#2a2a2a] placeholder-[#888888] focus:outline-none"
             />
 
             <button
               type="submit"
-              className="h-9 w-9 rounded-xl bg-[#274235] hover:bg-[#1e352a] text-white flex items-center justify-center shadow-md shadow-[#274235]/20 transition shrink-0"
+              className="h-9 w-9 rounded-xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white flex items-center justify-center shadow-md shadow-[#2a2a2a]/20 transition shrink-0"
               title="Send to Staywise AI"
             >
               <Sparkles className="h-4 w-4" />
@@ -293,25 +293,25 @@ export default function StaywiseAIPanel() {
           </form>
 
           {/* Suggested Quick Inquiry Chips */}
-          <div className="flex items-center gap-2 pt-2.5 overflow-x-auto text-[11px] text-[#6e7972]">
-            <span className="font-bold text-[#19251f] shrink-0">Try asking:</span>
+          <div className="flex items-center gap-2 pt-2.5 overflow-x-auto text-[11px] text-[#666666]">
+            <span className="font-bold text-[#2a2a2a] shrink-0">Try asking:</span>
             {activeRole === 'tenant' ? (
               <>
                 <button
                   onClick={() => handleSend('When is my October rent due and how to pay?')}
-                  className="px-2.5 py-1 rounded-xl bg-white border border-[#e3e1d8] hover:border-[#274235] text-[#19251f] shrink-0 transition"
+                  className="px-2.5 py-1 rounded-xl bg-white border border-[#B5B5B5] hover:border-[#2a2a2a] text-[#2a2a2a] shrink-0 transition"
                 >
                   &quot;When is my rent due?&quot;
                 </button>
                 <button
                   onClick={() => handleSend('Download September paid rent receipt')}
-                  className="px-2.5 py-1 rounded-xl bg-white border border-[#e3e1d8] hover:border-[#274235] text-[#19251f] shrink-0 transition"
+                  className="px-2.5 py-1 rounded-xl bg-white border border-[#B5B5B5] hover:border-[#2a2a2a] text-[#2a2a2a] shrink-0 transition"
                 >
                   &quot;Download September rent receipt&quot;
                 </button>
                 <button
                   onClick={() => handleSend('Request emergency AC servicing for Unit 302')}
-                  className="px-2.5 py-1 rounded-xl bg-white border border-[#e3e1d8] hover:border-[#274235] text-[#19251f] shrink-0 transition"
+                  className="px-2.5 py-1 rounded-xl bg-white border border-[#B5B5B5] hover:border-[#2a2a2a] text-[#2a2a2a] shrink-0 transition"
                 >
                   &quot;Request AC repair&quot;
                 </button>
@@ -320,19 +320,19 @@ export default function StaywiseAIPanel() {
               <>
                 <button
                   onClick={() => handleSend('Push Unit 304 to 99acres and MagicBricks')}
-                  className="px-2.5 py-1 rounded-xl bg-white border border-[#e3e1d8] hover:border-[#274235] text-[#19251f] shrink-0 transition"
+                  className="px-2.5 py-1 rounded-xl bg-white border border-[#B5B5B5] hover:border-[#2a2a2a] text-[#2a2a2a] shrink-0 transition"
                 >
                   &quot;Push Unit 304 to 99acres&quot;
                 </button>
                 <button
                   onClick={() => handleSend('Remind overdue tenants on WhatsApp')}
-                  className="px-2.5 py-1 rounded-xl bg-white border border-[#e3e1d8] hover:border-[#274235] text-[#19251f] shrink-0 transition"
+                  className="px-2.5 py-1 rounded-xl bg-white border border-[#B5B5B5] hover:border-[#2a2a2a] text-[#2a2a2a] shrink-0 transition"
                 >
                   &quot;Remind overdue tenants on WhatsApp&quot;
                 </button>
                 <button
                   onClick={() => handleSend('Show me my net yield in Wayanad Estate')}
-                  className="px-2.5 py-1 rounded-xl bg-white border border-[#e3e1d8] hover:border-[#274235] text-[#19251f] shrink-0 transition"
+                  className="px-2.5 py-1 rounded-xl bg-white border border-[#B5B5B5] hover:border-[#2a2a2a] text-[#2a2a2a] shrink-0 transition"
                 >
                   &quot;Show net yield in Wayanad&quot;
                 </button>

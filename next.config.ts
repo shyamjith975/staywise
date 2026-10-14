@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
     cpus: 1,
     workerThreads: false,
   },
+  serverExternalPackages: ["node:sqlite"],
   async headers() {
     return [
       {

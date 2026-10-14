@@ -20,7 +20,13 @@ export async function GET() {
       estateAssets,
       staff,
       bills,
-      subscription
+      subscription,
+      leads,
+      utilities,
+      aiInsights,
+      moveFlowChecklist,
+      referrals,
+      users
     ] = await Promise.all([
       db.properties.findMany(),
       db.tenants.findMany(),
@@ -38,7 +44,13 @@ export async function GET() {
       db.estate.getAssets(),
       db.estate.getStaff(),
       db.bills.findMany(),
-      db.subscriptions.getForUser()
+      db.subscriptions.getForUser(),
+      db.leads.findMany(),
+      db.utilities.findMany(),
+      db.aiInsights.findMany(),
+      db.moveFlow.findMany(),
+      db.referrals.findMany(),
+      db.users.findMany()
     ]);
 
     return NextResponse.json({
@@ -60,7 +72,13 @@ export async function GET() {
         estateAssets,
         staff,
         electricityBills: bills,
-        subscription
+        subscription,
+        leads,
+        utilities,
+        aiInsights,
+        moveFlowChecklist,
+        referrals,
+        users
       }
     });
   } catch (error) {

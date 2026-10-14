@@ -184,12 +184,12 @@ function MainAppShell() {
   };
 
   return (
-    <div className="min-h-screen bg-[#EBF0E6] text-[#132A13] flex font-sans selection:bg-[#ECF39E] selection:text-[#132A13] overflow-x-hidden">
+    <div className="min-h-screen bg-[#c0c0c0] text-[#2a2a2a] flex font-sans selection:bg-[#e10600] selection:text-white overflow-x-hidden">
       {/* Left Sidebar Navigation matching reference design */}
       <FloatingNavRail />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white lg:rounded-l-[2.5rem] my-0 lg:my-3 lg:mr-3 shadow-xs border-l border-[#DCE5D3] overflow-hidden min-h-[calc(100vh-1.5rem)]">
+      <div className="flex-1 flex flex-col min-w-0 bg-white lg:rounded-l-[2.5rem] my-0 lg:my-3 lg:mr-3 shadow-md border-l border-[#B5B5B5] overflow-hidden min-h-[calc(100vh-1.5rem)]">
         {/* Top Header */}
         <TopHeader />
 

@@ -442,3 +442,213 @@ model RentInvoice {
   dueDate            DateTime
 }
 ```
+
+---
+
+## 5. Live SQLite 3 Real Database (`database.db`)
+
+The Staywise application is backed by a genuine, production-standard **SQLite 3 relational binary database file** located directly in the workspace root.
+
+### 5.1 Direct Binary Storage Architecture
+- **Active Database File**: `database.db` (Located in the root directory: `c:\Users\Lenovo\Documents\Staywise\database.db`)
+- **Zero In-Memory Mock Data**: `src/data/mockData.ts` and `data/staywise_db.json` have been **completely eliminated**. All application state across all pages and views is hydrated dynamically from `database.db` via the `/api/bootstrap` endpoint.
+- **Immediate Synchronous Disk Writes**:
+  - `PRAGMA journal_mode = DELETE;` — Every transaction writes directly and immediately to `database.db`. No intermediate WAL buffers or lag.
+  - `PRAGMA synchronous = FULL;` — Commits are flushed synchronously to physical storage before the HTTP response is returned.
+  - `PRAGMA busy_timeout = 5000;` — High-concurrency safe; GUI database tools (e.g. DB Browser for SQLite) can read and inspect while the web app is running without `database is locked` conflicts.
+  - `PRAGMA foreign_keys = ON;` — Enforces full relational integrity across properties, units, tenants, invoices, and ledger entries.
+
+### 5.2 Opening in Real Database Management Tools
+You can open `database.db` directly using any standard SQL GUI tool:
+1. **DB Browser for SQLite** (Recommended GUI):
+   - Download: [https://sqlitebrowser.org](https://sqlitebrowser.org)
+   - File -> Open Database -> Select `database.db` from your project folder.
+   - **Browse Data tab**: Switch between all 25 tables (`users`, `properties`, `property_units`, `tenants`, `invoices`, `ledger`, etc.), filter rows, and inspect columns.
+   - **Live Updates**: Whenever a user registers or onboarding occurs in the web app, simply click **Refresh** in DB Browser for SQLite to see the new rows instantly!
+2. **DBeaver Universal Database Tool**:
+   - New Connection -> SQLite -> Browse to `database.db` -> Test Connection -> Finish.
+3. **SQLiteStudio**:
+   - Download: [https://sqlitestudio.pl](https://sqlitestudio.pl)
+   - Database -> Add a database -> Choose `database.db`.
+4. **VS Code Extensions**:
+   - Install `SQLite Viewer` (Florian Klampfer) or `SQLite` (alexcvzz).
+   - Click directly on `database.db` in the file tree to browse all tables.
+5. **SQLite Command Line Interface**:
+   ```bash
+   sqlite3 database.db ".tables"
+   sqlite3 database.db "SELECT id, email, role, name, created_at FROM users;"
+   ```
+
+### 5.3 Active Relational SQL Tables (25 Total)
+| Table | Description | Primary Key | Foreign Keys / Indexes |
+|---|---|---|---|
+| `users` | Platform authentication, password hashes, and persona roles (Owner, Tenant, Manager, Vendor, Estate Manager, Admin) | `id` | Unique `email` |
+| `properties` | Multi-asset properties (Residential, PG, Commercial, Luxury Villas) | `id` | Indexed `portfolio`, `city` |
+| `property_units` | Units & flats with occupancy, rent amount, and lease terms | `id` | `FOREIGN KEY (property_id) REFERENCES properties (id)` |
+| `tenants` | Onboarded tenants, lease dates, KYC verification, and reliability scores | `id` | `property_id`, `unit_number` |
+| `invoices` | Monthly RentFlow invoices with payment method, status & timestamps | `id` | `tenant_id`, `property_id`, `invoice_number` |
+| `ledger` | Statutory double-entry audit ledger entries with anti-tamper tracking | `id` | `account`, `reference_id`, `timestamp` |
+| `tickets` | Maintenance triage, vendor quote approvals, and repair verification | `id` | `property_id`, `vendor_id`, `ticket_number` |
+| `leads` | Inbound pipeline, showing visits, and scoring | `id` | `stage`, `assigned_agent` |
+| `estate_assets` | High-value estate equipment, AMC & warranties | `id` | `estate_name`, `tag` |
+| `staff` | On-site security, caretakers, and facility staff | `id` | `estate_name`, `shift` |
+| `utilities` | Power, solar grid, and water bulk meter readings | `id` | `meter_number`, `estate_name` |
+| `electricity_bills` | Sub-meter electricity bills, discom readings, & PDF attachments | `id` | `property_id`, `unit_number` |
+| `ai_insights` | Automated vacancy and financial mitigation insights | `id` | `category` |
+| `pg_beds` | Co-living & PG individual bed inventory & amenities | `id` | `room_id`, `status` |
+| `pg_rooms` | Shared rooms with sub-meter power splits | `id` | `property_id`, `floor` |
+| `pg_meals` | Daily meal plans and kitchen vendor tracking | `id` | `date`, `meal_type` |
+| `commercial_units` | Retail & office units with CAM charges & lock-in terms | `id` | `unit_number`, `status` |
+| `cam_expenses` | Common Area Maintenance expense items & allocation pools | `id` | `category`, `vendor_name` |
+| `commercial_visitors` | Security visitor logs and QR gate passes | `id` | `pass_code`, `status` |
+| `moveflow_checklist` | Photographic check-in & move-out condition audits | `id` | `category`, `completed` |
+| `deposit_disputes` | Escrow security deposit deductions & arbitration | `id` | `property_id`, `status` |
+| `referrals` | Tenant & owner peer referral rewards | `id` | `referral_code`, `status` |
+| `influencer_offers` | Affiliate promoter codes and conversion tracking | `id` | Unique `code`, `status` |
+| `subscriptions` | SaaS platform tier licensing, GST, & 7-day trials | `id` | `user_id`, `tamper_proof_hash` |
+| `meta` | Database schema version and migration metadata | `key` | None |
+
+### 5.4 Comprehensive Backend REST API Reference
+All actions in the Staywise platform execute through authenticated Next.js backend API routes and write directly to `database.db`:
+
+#### 1. Authentication & Onboarding
+- **`POST /api/auth/signup`**:
+  - Validates and sanitizes registration payload (name, email, password, role, phone, portfolioName, city).
+  - Inserts user record directly into `database.db` `users` table.
+  - If Owner/Estate Manager: initializes starter property in `properties` and 7-day SaaS trial in `subscriptions`.
+  - If Tenant: creates tenant lease record in `tenants`.
+- **`POST /api/auth/login`**:
+  - Authenticates credentials against SQLite `users` table (`email` + `password`).
+  - Supports role-based demo switching with credentials verified from SQLite.
+- **`POST /api/auth/trial-signup`**:
+  - Initializes 7-day platform free trial with payment card/mandate tokenization.
+  - Creates statutory double-entry trial tracking in `ledger`.
+
+#### 2. System Bootstrap & State Hydration
+- **`GET /api/bootstrap`**:
+  - Single atomic call to hydrate entire client-side state directly from SQLite.
+  - Returns `properties`, `tenants`, `invoices`, `ledger`, `tickets`, `leads`, `bills`, `pgBeds`, `commercialUnits`, `disputes`, `subscriptions`, and `utilities`.
+
+#### 3. Real Estate Properties
+- **`GET /api/properties`**: Returns properties filtered by portfolio or verification status.
+- **`POST /api/properties`**: Creates new property with submitted documents and amenities.
+- **`GET /api/properties/[id]`**: Retrieves individual property and child unit inventory.
+- **`PUT /api/properties/[id]`**: Updates property metadata, units, and metrics.
+- **`DELETE /api/properties/[id]`**: Cascading deletion of property and associated units.
+- **`POST /api/properties/[id]/verify`**: Admin approval workflow transitioning status to `APPROVED`.
+
+#### 4. Tenants & Lease Onboarding
+- **`GET /api/tenants`**: Returns all active tenants and lease terms.
+- **`POST /api/tenants`**: Adds existing tenant, transitions unit to `OCCUPIED`, issues first monthly rent invoice in `invoices`, and records deposit trust in `ledger`.
+- **`POST /api/tenants/onboard`**: Unified self-serve tenant onboarding flow.
+
+#### 5. Invoices & Rent Settlements
+- **`GET /api/invoices`**: Returns all rent invoices filtered by tenant or property.
+- **`POST /api/invoices/[id]/pay`**:
+  - Authoritative payment execution preventing price-tampering.
+  - Sets invoice status to `Paid` with transaction reference in `invoices`.
+  - Automatically credits statutory escrow account in `ledger`.
+
+#### 6. Double-Entry Accounting Ledger
+- **`GET /api/ledger`**: Returns complete double-entry ledger audit trail.
+- **`POST /api/ledger`**: Records immutable debit/credit entries for rent, deposits, and SaaS licenses.
+
+#### 7. Maintenance & Service Tickets
+- **`GET /api/tickets`**: Retrieves maintenance triage queue.
+- **`POST /api/tickets`**: Raises service request with category, priority, and estimated cost.
+- **`PATCH /api/tickets/[id]`**: Approves quotes, assigns contractors, and updates repair schedules.
+
+#### 8. CRM Leads & Showings
+- **`GET /api/leads`**: Returns inbound prospect pipeline.
+- **`POST /api/leads`**: Records new inquiry with scoring.
+- **`PATCH /api/leads/[id]`**: Advances lead stage (`Visit Scheduled` -> `Visited` -> `Converted`).
+
+#### 9. Utilities & Electricity Sub-meters
+- **`GET /api/bills`**: Fetches electricity bills with consumption and discom details.
+- **`POST /api/bills`**: Records sub-meter reading and attaches invoice documentation.
+
+#### 10. Disputes, Growth & Co-Living
+- **`GET /api/disputes`** / **`POST /api/disputes`**: Manages deposit settlement deductions.
+- **`GET /api/influencer-offers`** / **`POST /api/influencer-offers`** / **`PATCH /api/influencer-offers`**: Affiliate creator codes.
+- **`GET /api/referrals`** / **`POST /api/referrals`**: Resident referral reward credits.
+- **`PATCH /api/pg/beds`**: Updates PG bed status (`Vacant` / `Occupied` / `Reserved`).
+- **`POST /api/commercial/visitors`**: Generates QR visitor gate pass in database.
+- **`GET /api/moveflow`** / **`PATCH /api/moveflow`**: Toggles check-in inspection tasks.
+- **`GET /api/subscription`** / **`POST /api/subscription/checkout`** / **`POST /api/subscription/verify`**: Cryptographically verified SaaS licensing.
+
+---
+
+### 5.5 Relational Architecture, Unique ID Engine & Cross-Validation Rules
+
+#### 1. Foreign Key & Relational Schema Mapping
+To guarantee tenant, owner, and property isolation without cross-user contamination:
+- **`properties.owner_id`**: Foreign key to `users.id`. Defines absolute ownership of property assets. When an owner (e.g., Angith) signs in, all dashboard statistics (units, occupancy, monthly rent yield, pending rent) and property management tabs automatically filter and calculate based on their assigned `owner_id`.
+- **`tenants.user_id`**: Foreign key to `users.id`. Links tenant profiles directly to authenticated portal user accounts.
+- **`tenants.property_id`**: Foreign key to `properties.id`. Relates resident leases to physical buildings and units.
+- **`invoices.tenant_id` & `invoices.property_id`**: Strictly relational billing ties between resident, property, and ledger.
+- **`tickets.property_id`**: Direct service linkage between maintenance requests and physical assets.
+
+#### 2. Enterprise Collision-Free Unique ID Generator (`src/lib/utils/uniqueId.ts`)
+To prevent sub-millisecond collisions and ensure global uniqueness across all entities:
+- **Format**: `<prefix>-<timestamp_base36>-<high_entropy_random>`
+- **User IDs**: `user-<role>-<ts>-<rand>` (e.g. `user-owner-1791977203142`)
+- **Property IDs**: `prop-<ts>-<rand>` (e.g. `prop-mv847hq6-gHKlsA`)
+- **Unit IDs**: `unit-<propId>-<unitNumber>` (e.g. `unit-prop-1791977203156-unit_301`)
+- **Tenant IDs**: `tenant-<ts>-<rand>` (e.g. `tenant-mv847hq6-aB12cd`)
+- **Invoice IDs**: `inv-<ts>-<rand>` and sequential alphanumeric numbers: `INV-202610-1-ABCD`
+- **Ticket IDs**: `tkt-<ts>-<rand>` and sequential reference numbers: `TKT-2026-8942`
+- **Ledger IDs**: `led-<ts>-<rand>`
+- **Transaction IDs**: `TXN-<rail>-<ts>-<rand>`
+
+#### 3. User Identity Validation & Authentication Fix
+- **Root Cause of Rohan Mehra Collision**: Previous role fallback in `validateLoginPayload` short-circuited when role was provided alongside email/password, returning the most recently inserted owner in the database (`Rohan Mehra`) rather than validating the user's specific credentials.
+- **Resolution**:
+  - `validateLoginPayload` validates `email` and `password` with absolute priority whenever `email` is present.
+  - `POST /api/auth/login` uses strict database password verification via `db.users.authenticate(email, password)` and returns 401 on credential mismatch without fallback.
+  - Role-based demo switcher strictly maps to canonical demo accounts (`owner@staywise.com`, `tenant@staywise.com`, etc.), ensuring demo switches never select newly registered accounts.
+  - `AppStateContext.login()` maintains `currentUser.id` and preserves `name: 'Angith'` throughout all client-side views.
+
+---
+
+### 5.6 Multi-Tab Session Isolation, Real-Time Sync & Role Scoping
+
+#### 1. Multi-Tab Session Isolation (`sessionStorage`)
+- **Problem Solved ("Account Takeover" in Multi-Tab Usage)**: In standard browser environments, `localStorage` is shared across all tabs on `localhost:3005`. Opening `/admin` in Tab 2 previously overwrote `localStorage.setItem('staywise_current_user', ...)`, causing Tab 1 (logged in as an Owner or Tenant) to suddenly become Admin upon re-focus or reload.
+- **Architecture**:
+  - Tab sessions are strictly scoped to `sessionStorage` (`staywise_active_role`, `staywise_current_user`, `staywise_active_view`, `staywise_active_portfolio`).
+  - Standard user logins sync to `localStorage` for cross-session convenience, but Admin portal sessions (`/admin`) write strictly to `sessionStorage`.
+  - Tab 1 (e.g., Angith) and Tab 2 (Super Admin) maintain completely independent, isolated sessions without cross-tab session contamination or account hijack.
+
+#### 2. Cross-Tab Real-Time Sync Engine (`BroadcastChannel` + Window Focus)
+- **Problem Solved**: When an owner adds a property in Tab 1, Admin in Tab 2 needs to see it immediately for document verification. When Admin approves the property in Tab 2, Owner in Tab 1 must see the status flip from "Doc Audit Pending" to "Verified & Active" without manual page reload.
+- **Architecture**:
+  - Implemented `BroadcastChannel('staywise_db_sync')` for immediate, low-latency (<50ms) inter-tab messaging.
+  - When mutations occur (`addProperty`, `approveProperty`, `addExistingTenant`, `payInvoice`, `approveTicket`), a `DATA_UPDATED` event is dispatched.
+  - All open tabs listen for broadcast messages and trigger `loadDatabaseData()` from `/api/bootstrap`.
+  - Window `focus` event listener re-fetches latest state when switching tabs.
+  - 4-second fallback polling interval guarantees absolute consistency across all connected clients.
+
+#### 3. Owner Property Visibility & Dynamic Portfolio Filtering
+- **Problem Solved**: Newly added properties under Angith had `portfolio: "${finalCity} Central"` while the owner's filter was set to `"Angith's Portfolio"`. The property was stored in SQLite and visible in Admin, but hidden from the owner's page because the portfolio name did not match the active filter.
+- **Architecture**:
+  - `AddPropertyModal` automatically defaults `portfolio` to the owner's active portfolio (e.g. `"Angith's Portfolio"`) or `${name}'s Portfolio`, and assigns `ownerId: currentUser.id`.
+  - `addProperty()` resets `activePortfolio` to `'all'`, guaranteeing newly created properties appear immediately on the owner's properties page.
+  - `PropertyList.tsx` derives dynamic portfolio pills from the owner's real properties, with an automated fallback to show all properties if an active filter yields 0 matches.
+
+#### 4. Dynamic Platform Surveillance in Admin Governance Dashboard
+- **Problem Solved**: The Admin Dashboard's "Owners & Portfolios Directory" previously contained a hardcoded list of demo accounts (`Vikram Singhania`, `Manoj Kumar`, `Prestige Realty Holdings`), hiding real clients like Angith.
+- **Architecture**:
+  - `/api/bootstrap` returns the sanitized registered `users` list from SQLite.
+  - `AdminDashboard.tsx` dynamically aggregates real registered owners from `users` and `properties`.
+  - Real owners (e.g., Angith) display with their actual properties count, total room capacity, occupancy percentage, and expected monthly rent.
+  - Surveillance is clearly partitioned as read-only platform governance surveillance without modifying the client's session.
+
+#### 5. Role-Scoped Data Boundaries
+- **Properties**: Owners view properties matching `p.ownerId === currentUser.id`. Tenants view their rented building. Admins view platform-wide inventory.
+- **Tenants**: Owners view only residents living in properties they own. Tenants view only their own tenancy profile.
+- **Rent & Invoices**: Owners view collections and rent rolls for their properties. Tenants view only their invoices and receipts.
+- **Maintenance Tickets**: Owners view triage requests for their assets. Tenants view service tickets for their unit.
+- **Unique IDs**: All new entities generate collision-free, sortable IDs via `src/lib/utils/uniqueId.ts`.
+
+
+

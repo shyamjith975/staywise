@@ -25,16 +25,36 @@ export async function POST(req: NextRequest) {
     let user = null;
     if (email && password) {
       user = await db.users.authenticate(email, password);
+      if (!user) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid email or password. Please verify your credentials.' },
+          { status: 401 }
+        );
+      }
     } else if (role) {
-      // Role-based demo switcher support
-      const allUsers = await db.users.findMany();
-      user = allUsers.find(u => u.role === role) || null;
+      // Role-based demo switcher: strictly map to canonical demo accounts
+      const CANONICAL_DEMO_EMAILS: Record<string, string> = {
+        owner: 'owner@staywise.com',
+        tenant: 'tenant@staywise.com',
+        manager: 'manager@staywise.com',
+        vendor: 'vendor@staywise.com',
+        admin: 'admin@staywise.com',
+        estate_manager: 'estate@staywise.com'
+      };
+      const canonicalEmail = CANONICAL_DEMO_EMAILS[role];
+      if (canonicalEmail) {
+        user = await db.users.findByEmail(canonicalEmail);
+      }
+      if (!user) {
+        const allUsers = await db.users.findMany();
+        user = allUsers.find(u => u.role === role) || null;
+      }
     }
 
     if (!user) {
       return NextResponse.json(
-        { success: false, error: 'Invalid email or password' },
-        { status: 401 }
+        { success: false, error: 'User account not found' },
+        { status: 404 }
       );
     }
 

@@ -133,9 +133,11 @@ export interface SignupPayload {
   email: string;
   password: string;
   phone?: string;
-  role: 'owner' | 'estate_manager';
+  role: UserRole;
   portfolioName?: string;
   city?: string;
+  propertyId?: string;
+  unitNumber?: string;
 }
 
 export function validateSignupPayload(body: any): ValidationResult<SignupPayload> {
@@ -160,11 +162,11 @@ export function validateSignupPayload(body: any): ValidationResult<SignupPayload
     errors.push({ field: 'password', message: passRes.message! });
   }
 
-  // Only Owner and EstateOS are allowed to self-register
-  if (body.role !== 'owner' && body.role !== 'estate_manager') {
+  const ALLOWED_SIGNUP_ROLES: UserRole[] = ['owner', 'tenant', 'manager', 'vendor', 'estate_manager', 'admin'];
+  if (!body.role || !ALLOWED_SIGNUP_ROLES.includes(body.role)) {
     errors.push({
       field: 'role',
-      message: 'Registration is restricted strictly to "owner" (Property Owner) or "estate_manager" (EstateOS Host).'
+      message: `Invalid role. Allowed roles for onboarding: ${ALLOWED_SIGNUP_ROLES.join(', ')}`
     });
   }
 
@@ -200,6 +202,37 @@ export function validateLoginPayload(body: any): ValidationResult<{ email?: stri
     return { isValid: false, errors: [{ field: 'root', message: 'Request body must be a valid JSON object.' }] };
   }
 
+  // 1. If email is provided, validate credentials strictly
+  if (body.email) {
+    const emailRes = validateEmail(body.email);
+    if (!emailRes.isValid) {
+      errors.push({ field: 'email', message: emailRes.message! });
+    }
+
+    if (!body.password || typeof body.password !== 'string') {
+      errors.push({ field: 'password', message: 'Password is required.' });
+    }
+
+    let roleVal: UserRole | undefined = undefined;
+    if (body.role) {
+      const roleRes = validateUserRole(body.role);
+      if (roleRes.isValid) {
+        roleVal = body.role as UserRole;
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      sanitizedData: {
+        email: sanitizeEmail(body.email),
+        password: body.password,
+        role: roleVal
+      },
+      errors
+    };
+  }
+
+  // 2. Demo role switcher (when email is not provided)
   if (body.role) {
     const roleRes = validateUserRole(body.role);
     if (!roleRes.isValid) {
@@ -212,23 +245,8 @@ export function validateLoginPayload(body: any): ValidationResult<{ email?: stri
     };
   }
 
-  const emailRes = validateEmail(body.email);
-  if (!emailRes.isValid) {
-    errors.push({ field: 'email', message: emailRes.message! });
-  }
-
-  if (!body.password || typeof body.password !== 'string') {
-    errors.push({ field: 'password', message: 'Password is required.' });
-  }
-
-  return {
-    isValid: errors.length === 0,
-    sanitizedData: {
-      email: sanitizeEmail(body.email),
-      password: body.password
-    },
-    errors
-  };
+  errors.push({ field: 'email', message: 'Email address or role is required.' });
+  return { isValid: false, errors };
 }
 
 export function validatePropertyPayload(body: any): ValidationResult<any> {

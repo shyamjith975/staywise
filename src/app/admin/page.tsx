@@ -109,7 +109,7 @@ function AdminShell() {
   };
 
   return (
-    <div className="min-h-screen bg-[#edece6] text-[#19251f] flex font-sans selection:bg-[#274235]/20 selection:text-[#274235] overflow-x-hidden">
+    <div className="min-h-screen bg-[#c0c0c0] text-[#2a2a2a] flex font-sans selection:bg-[#e10600] selection:text-white overflow-x-hidden">
       {/* Floating Vertical Navigation Rail from reference image */}
       <FloatingNavRail />
 

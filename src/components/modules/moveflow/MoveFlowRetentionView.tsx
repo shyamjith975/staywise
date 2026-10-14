@@ -54,7 +54,7 @@ export default function MoveFlowRetentionView() {
     <div className="space-y-6 font-sans">
       
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-[#e3e1d8] shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-[#B5B5B5] shadow-sm">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200">
@@ -64,10 +64,10 @@ export default function MoveFlowRetentionView() {
               {isOwner ? 'Landlord Referral Network • Escrow Deposit Settlements' : 'Deposit Disputes & Referrals'}
             </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-[#19251f]">
+          <h1 className="text-xl sm:text-2xl font-black text-[#2a2a2a]">
             {isOwner ? 'Owner Referral Network & Deposit Settlements' : 'Escrow Deposit Settlements & Referrals'}
           </h1>
-          <p className="text-xs text-[#6e7972]">
+          <p className="text-xs text-[#666666]">
             {isOwner 
               ? 'Refer fellow property owners to earn ₹5,000 cash credit, and resolve escrow deposit settlements with digital proof.' 
               : 'Review itemized deposit deductions, inspect audit photos, and settle escrow balances with zero broker mediation.'}
@@ -75,11 +75,11 @@ export default function MoveFlowRetentionView() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#f7f6f2] border border-[#e8e6de] self-start md:self-auto overflow-x-auto max-w-full">
+        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] self-start md:self-auto overflow-x-auto max-w-full">
           <button
             onClick={() => setActiveTab('REFERRALS')}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
-              activeTab === 'REFERRALS' ? 'bg-[#19251f] text-white shadow-sm' : 'text-[#6e7972] hover:text-[#19251f]'
+              activeTab === 'REFERRALS' ? 'bg-[#2a2a2a] text-white shadow-sm' : 'text-[#666666] hover:text-[#2a2a2a]'
             }`}
           >
             <Gift className="h-3.5 w-3.5" />
@@ -89,7 +89,7 @@ export default function MoveFlowRetentionView() {
           <button
             onClick={() => setActiveTab('DISPUTES')}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
-              activeTab === 'DISPUTES' ? 'bg-[#19251f] text-white shadow-sm' : 'text-[#6e7972] hover:text-[#19251f]'
+              activeTab === 'DISPUTES' ? 'bg-[#2a2a2a] text-white shadow-sm' : 'text-[#666666] hover:text-[#2a2a2a]'
             }`}
           >
             <ShieldCheck className="h-3.5 w-3.5" />
@@ -101,7 +101,7 @@ export default function MoveFlowRetentionView() {
       {/* TAB 1: OWNER / TENANT REFERRAL ENGINE */}
       {activeTab === 'REFERRALS' && (
         <div className="space-y-4">
-          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[#e3e1d8] space-y-5">
+          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[#B5B5B5] space-y-5">
             <div>
               <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider bg-purple-50 px-2.5 py-0.5 rounded-full">
                 {isOwner ? 'Owner Landlord Referral Network' : 'Tenant Referral Hub'}
@@ -117,7 +117,7 @@ export default function MoveFlowRetentionView() {
             </div>
 
             {/* Referral Code Card */}
-            <div className="p-6 rounded-3xl bg-gradient-to-br from-[#19251f] to-[#274235] text-white space-y-5 shadow-xl">
+            <div className="p-6 rounded-3xl bg-gradient-to-br from-[#2a2a2a] to-[#2a2a2a] text-white space-y-5 shadow-xl">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <div className="text-[10px] uppercase font-bold tracking-widest text-teal-400">
@@ -134,7 +134,7 @@ export default function MoveFlowRetentionView() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleCopyCode}
-                    className="px-4 py-2.5 rounded-2xl bg-white text-[#19251f] hover:bg-slate-100 font-extrabold text-xs transition flex items-center gap-1.5 shadow-md"
+                    className="px-4 py-2.5 rounded-2xl bg-white text-[#2a2a2a] hover:bg-slate-100 font-extrabold text-xs transition flex items-center gap-1.5 shadow-md"
                   >
                     <Copy className="h-4 w-4" />
                     <span>Copy Code</span>
@@ -216,7 +216,7 @@ export default function MoveFlowRetentionView() {
       {/* TAB 2: ESCROW DEPOSIT DISPUTES */}
       {activeTab === 'DISPUTES' && (
         <div className="space-y-4">
-          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[#e3e1d8] space-y-4">
+          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[#B5B5B5] space-y-4">
             <div>
               <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider bg-emerald-50 px-2.5 py-0.5 rounded-full">
                 Statutory Security Deposit Protection
@@ -298,7 +298,7 @@ export default function MoveFlowRetentionView() {
                       resolveDepositDispute(dispute.id, 'Agreed');
                       addNotification('Dispute Resolved', `Escrow deposit settlement approved for ${dispute.tenantName}.`, 'RENT');
                     }}
-                    className="px-4 py-2 rounded-xl bg-[#274235] hover:bg-[#19251f] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                    className="px-4 py-2 rounded-xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
                   >
                     <CheckCircle2 className="h-4 w-4" />
                     <span>Approve Escrow Refund Settlement</span>
