@@ -1,32 +1,50 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
+import { getAuthenticatedUser } from '../../../lib/security/authorization';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const auth = await getAuthenticatedUser(req);
+    const queryUserId = req.nextUrl.searchParams.get('userId');
+    const targetUserId = auth?.user.id || queryUserId || null;
+
+    let userRole = auth?.user.role;
+    let userEmail = auth?.user.email;
+    if (!userRole && targetUserId) {
+      const u = await db.users.findById(targetUserId);
+      if (u) {
+        userRole = u.role;
+        userEmail = u.email;
+      }
+    }
+
+    const isSuperAdmin = userRole === 'admin';
+    const isDemoAccount = !targetUserId || userEmail === 'owner@staywise.com' || targetUserId === 'user-owner-vikram';
+
     const [
-      properties,
-      tenants,
-      invoices,
-      ledger,
-      disputes,
-      influencerOffers,
-      tickets,
-      pgBeds,
-      pgRooms,
-      pgMeals,
-      commercialUnits,
-      camExpenses,
-      commercialVisitors,
-      estateAssets,
-      staff,
-      bills,
-      subscription,
-      leads,
-      utilities,
-      aiInsights,
-      moveFlowChecklist,
-      referrals,
-      users
+      allProperties,
+      allTenants,
+      allInvoices,
+      allLedger,
+      allDisputes,
+      allInfluencerOffers,
+      allTickets,
+      allPgBeds,
+      allPgRooms,
+      allPgMeals,
+      allCommercialUnits,
+      allCamExpenses,
+      allCommercialVisitors,
+      allEstateAssets,
+      allStaff,
+      allBills,
+      allSubscription,
+      allLeads,
+      allUtilities,
+      allAiInsights,
+      allMoveFlowChecklist,
+      allReferrals,
+      allUsers
     ] = await Promise.all([
       db.properties.findMany(),
       db.tenants.findMany(),
@@ -53,34 +71,100 @@ export async function GET() {
       db.users.findMany()
     ]);
 
+    // For Super Admin or Demo Account: return platform-wide catalog
+    if (isSuperAdmin || isDemoAccount) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          properties: allProperties,
+          tenants: allTenants,
+          invoices: allInvoices,
+          ledger: allLedger,
+          depositDisputes: allDisputes,
+          influencerOffers: allInfluencerOffers,
+          tickets: allTickets,
+          pgBeds: allPgBeds,
+          pgRooms: allPgRooms,
+          pgMeals: allPgMeals,
+          commercialUnits: allCommercialUnits,
+          camExpenses: allCamExpenses,
+          commercialVisitors: allCommercialVisitors,
+          estateAssets: allEstateAssets,
+          staff: allStaff,
+          electricityBills: allBills,
+          subscription: allSubscription,
+          leads: allLeads,
+          utilities: allUtilities,
+          aiInsights: allAiInsights,
+          moveFlowChecklist: allMoveFlowChecklist,
+          referrals: allReferrals,
+          users: allUsers.map(({ password, ...u }) => u)
+        }
+      });
+    }
+
+    // FOR NEW / REAL ONBOARDED USERS: Strict user isolation (zero mock data bleed)
+    const userProperties = allProperties.filter(p => p.ownerId === targetUserId);
+    const userPropIds = userProperties.map(p => p.id);
+
+    const userTenants = allTenants.filter(t => userPropIds.includes(t.propertyId) || t.userId === targetUserId);
+    const userTenantIds = userTenants.map(t => t.id);
+
+    const userInvoices = allInvoices.filter(i => 
+      userPropIds.includes(i.propertyId) || userTenantIds.includes(i.tenantId)
+    );
+
+    const userTickets = allTickets.filter(t => userPropIds.includes(t.propertyId));
+    const userBills = allBills.filter(b => userPropIds.includes(b.propertyId));
+
+    const userEstateNames = userProperties.map(p => p.name);
+    const userEstateAssets = allEstateAssets.filter(a => userEstateNames.includes(a.estateName));
+    const userStaff = allStaff.filter(s => userEstateNames.includes(s.estateName));
+    const userUtilities = allUtilities.filter(u => userEstateNames.includes(u.estateName));
+
+    const userPgRooms = allPgRooms.filter(r => userPropIds.includes(r.propertyId));
+    const userPgRoomIds = userPgRooms.map(r => r.id);
+    const userPgRoomNumbers = userPgRooms.map(r => r.roomNumber);
+    const userPgBeds = allPgBeds.filter(b => 
+      userPgRoomIds.includes(b.roomId) || userPgRoomNumbers.includes(b.roomNumber)
+    );
+
+    const userCommercialUnits = allCommercialUnits.filter(u => userPropIds.includes(u.propertyId || ''));
+
+    const userMoveFlowChecklist = userTenants.length > 0 ? allMoveFlowChecklist : [];
+    const userDepositDisputes = allDisputes.filter(d => 
+      userPropIds.includes(d.propertyId) || userTenants.some(t => t.name === d.tenantName)
+    );
+
     return NextResponse.json({
       success: true,
       data: {
-        properties,
-        tenants,
-        invoices,
-        ledger,
-        depositDisputes: disputes,
-        influencerOffers,
-        tickets,
-        pgBeds,
-        pgRooms,
-        pgMeals,
-        commercialUnits,
-        camExpenses,
-        commercialVisitors,
-        estateAssets,
-        staff,
-        electricityBills: bills,
-        subscription,
-        leads,
-        utilities,
-        aiInsights,
-        moveFlowChecklist,
-        referrals,
-        users: users.map(({ password, ...u }) => u)
+        properties: userProperties,
+        tenants: userTenants,
+        invoices: userInvoices,
+        ledger: allLedger.filter(l => userPropIds.some(pid => l.referenceId.includes(pid))),
+        depositDisputes: userDepositDisputes,
+        influencerOffers: [],
+        tickets: userTickets,
+        pgBeds: userPgBeds,
+        pgRooms: userPgRooms,
+        pgMeals: userPgRooms.length > 0 ? allPgMeals : [],
+        commercialUnits: userCommercialUnits,
+        camExpenses: userCommercialUnits.length > 0 ? allCamExpenses : [],
+        commercialVisitors: userCommercialUnits.length > 0 ? allCommercialVisitors : [],
+        estateAssets: userEstateAssets,
+        staff: userStaff,
+        electricityBills: userBills,
+        subscription: allSubscription,
+        leads: [],
+        utilities: userUtilities,
+        aiInsights: userProperties.length > 0 ? allAiInsights : [],
+        moveFlowChecklist: userMoveFlowChecklist,
+        referrals: [],
+        users: allUsers.map(({ password, ...u }) => u)
       }
     });
+
   } catch (error) {
     console.error('[API /api/bootstrap] Error loading database data:', error);
     return NextResponse.json(

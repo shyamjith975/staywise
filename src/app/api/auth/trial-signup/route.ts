@@ -81,30 +81,7 @@ export async function POST(req: NextRequest) {
       description: `${city} • 7-Day Free Trial Active • Autopay Secured`
     });
 
-    // 6. Create initial starter property
-    const starterProperty = await db.properties.create({
-      name: `${entityTitle} Residency`,
-      type: userRole === 'owner' ? 'Apartment' : 'Villa',
-      portfolio: entityTitle,
-      address: 'Central Avenue Heights',
-      city: city || 'Bangalore',
-      state: 'Karnataka',
-      pincode: '560001',
-      totalUnits: userRole === 'owner' ? 8 : 4,
-      occupiedUnits: 0,
-      expectedMonthlyRent: userRole === 'owner' ? 180000 : 320000,
-      collectedRent: 0,
-      pendingRent: userRole === 'owner' ? 180000 : 320000,
-      imageUrl: userRole === 'owner' ? '/images/properties/beach-road.jpg' : '/images/properties/estate-villa.jpg',
-      status: 'VACANT',
-      healthScore: 94,
-      verificationStatus: 'PENDING',
-      submittedDocs: ['Title_Ownership_Registration.pdf', 'Municipal_Clearance.pdf'],
-      amenities: ['Covered Parking', '24/7 CCTV & Security', 'Keyless Access', 'Power Backup'],
-      units: []
-    });
-
-    // 7. Initialize 7-Day Free Trial Subscription with Autopay
+    // 6. Initialize 7-Day Free Trial Subscription with Autopay (starts with 0 properties for clean slate)
     const trialSub = await db.subscriptions.createTrial({
       userId: user.id,
       ownerName: user.name,
@@ -117,7 +94,7 @@ export async function POST(req: NextRequest) {
 
     const session = createSessionToken(user.id, user.role, user.email);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: `Welcome to Staywise! Your 7-day free trial of ${validPlan.name} is now active. ₹0 charged today.`,
       user: {
@@ -130,11 +107,23 @@ export async function POST(req: NextRequest) {
         title: user.title,
         description: user.description
       },
-      property: starterProperty,
       subscription: trialSub,
       token: session.token,
       expiresAt: session.expiresAt
     }, { status: 201 });
+
+    // Set secure HTTP-only session cookie
+    response.cookies.set({
+      name: 'staywise_token',
+      value: session.token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 48 * 60 * 60 // 48 hours
+    });
+
+    return response;
 
   } catch (error: any) {
     console.error('[API /api/auth/trial-signup] Error:', error);

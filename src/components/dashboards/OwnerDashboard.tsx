@@ -69,6 +69,7 @@ export default function OwnerDashboard() {
     tickets, 
     leads, 
     currentUser, 
+    activeRole,
     setIsAddPropertyOpen, 
     setActiveView,
     electricityBills,
@@ -284,17 +285,20 @@ export default function OwnerDashboard() {
   });
 
   // Connect owner's user_id with properties
-  // When a registered owner (e.g. Angith) is logged in, show and compute their matched properties
-  const ownerProperties = (currentUser.id && currentUser.id !== 'user-owner-vikram')
+  // Demo accounts (owner@staywise.com / Vikram) see full catalog, but real/new users see only their owned properties
+  const isDemoAccount = !currentUser.id || currentUser.email === 'owner@staywise.com' || currentUser.id === 'user-owner-vikram' || activeRole === 'admin';
+  const ownerProperties = (!isDemoAccount && activeRole === 'owner')
     ? properties.filter(p => p.ownerId === currentUser.id)
     : properties;
 
-  const activeProperties = ownerProperties.length > 0 ? ownerProperties : properties;
+  const activeProperties = ownerProperties;
 
   const totalUnitsCount = activeProperties.reduce((acc, p) => acc + p.totalUnits, 0);
   const occupiedUnitsCount = activeProperties.reduce((acc, p) => acc + p.occupiedUnits, 0);
   const totalRentExpected = activeProperties.reduce((acc, p) => acc + p.expectedMonthlyRent, 0);
   const totalPendingRent = activeProperties.reduce((acc, p) => acc + p.pendingRent, 0);
+  const totalCollectedRent = Math.max(0, totalRentExpected - totalPendingRent);
+  const occupancyPercentage = totalUnitsCount > 0 ? ((occupiedUnitsCount / totalUnitsCount) * 100).toFixed(1) : '0.0';
 
   const filteredProperties = activeProperties.filter((prop) => {
     const occRatio = prop.totalUnits > 0 ? prop.occupiedUnits / prop.totalUnits : 0;
@@ -332,7 +336,7 @@ export default function OwnerDashboard() {
                 : 'text-[#383838] hover:text-[#2a2a2a] hover:bg-[#f0f0f0]'
             }`}
           >
-            Properties &amp; Units ({properties.length})
+            Properties &amp; Units ({activeProperties.length})
           </button>
           <button
             onClick={() => setActiveTab('bank_accounts')}
@@ -423,8 +427,28 @@ export default function OwnerDashboard() {
               </div>
             </div>
 
+            {/* Clean Slate Onboarding State for New Users */}
+            {activeProperties.length === 0 && (
+              <div className="bg-white rounded-3xl p-6 border-2 border-dashed border-[#B5B5B5] text-center space-y-3 animate-in fade-in duration-200">
+                <div className="w-12 h-12 rounded-full bg-[#f0f0f0] flex items-center justify-center mx-auto text-[#e10600]">
+                  <Plus className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold text-[#2a2a2a]">Welcome to Staywise! No properties added yet.</h3>
+                <p className="text-xs text-[#666666] max-w-md mx-auto">
+                  Your workspace starts with a clean slate. Click below to add your first property, residential apartment, or PG hostel.
+                </p>
+                <button
+                  onClick={() => setIsAddPropertyOpen(true)}
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#e10600] text-white text-xs font-bold hover:bg-[#c50500] transition shadow-xs"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add Your First Property</span>
+                </button>
+              </div>
+            )}
+
             {/* ========================================================================= */}
-            {/* TOTAL PORTFOLIO GLANCE (EXACT CLEAN 4-CARD DESIGN FROM REFERENCE IMAGE)   */}
+            {/* TOTAL PORTFOLIO GLANCE (DYNAMIC BASED ON ACTIVE PROPERTIES)              */}
             {/* ========================================================================= */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               
@@ -433,14 +457,17 @@ export default function OwnerDashboard() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-[#666666]">Hospitality &amp; Rent Inflow</span>
                   <span className="text-[10px] font-bold text-[#383838] bg-[#c0c0c0] px-2.5 py-0.5 rounded-full border border-[#383838]/10">
-                    +24% YoY
+                    {activeProperties.length > 0 ? '+24% YoY' : '0%'}
                   </span>
                 </div>
                 <div className="text-2xl sm:text-3xl font-black text-[#2a2a2a] font-tabular mt-2 tracking-tight">
-                  ₹15,90,000
+                  ₹{totalCollectedRent.toLocaleString('en-IN')}
                 </div>
                 <span className="text-[11px] text-[#666666] mt-1 block">
-                  ₹16.4L Expected • 97% Collection Rate
+                  {activeProperties.length > 0 
+                    ? `₹${(totalRentExpected / 100000).toFixed(1)}L Expected • ${totalRentExpected > 0 ? Math.round((totalCollectedRent / totalRentExpected) * 100) : 0}% Collection Rate`
+                    : '₹0 Expected • 0% Collection Rate'
+                  }
                 </span>
               </div>
 
@@ -449,14 +476,14 @@ export default function OwnerDashboard() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-[#666666]">Portfolio Unit Occupancy</span>
                   <span className="text-[10px] font-bold text-[#383838] bg-[#c0c0c0] px-2.5 py-0.5 rounded-full border border-[#383838]/10">
-                    High Season
+                    {activeProperties.length > 0 ? 'Active' : 'No Units'}
                   </span>
                 </div>
                 <div className="text-2xl sm:text-3xl font-black text-[#383838] font-tabular mt-2 tracking-tight">
-                  94.2%
+                  {occupancyPercentage}%
                 </div>
                 <span className="text-[11px] text-[#666666] mt-1 block">
-                  {occupiedUnitsCount}/{totalUnitsCount} Units • 21 PG Beds Active
+                  {occupiedUnitsCount}/{totalUnitsCount} Units • {activeProperties.filter(p => p.type === 'PG' || p.type === 'Hostel').reduce((acc, p) => acc + p.totalUnits, 0)} PG Beds Active
                 </span>
               </div>
 
@@ -465,14 +492,14 @@ export default function OwnerDashboard() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-[#666666]">Active Stays &amp; Leases</span>
                   <span className="text-[10px] font-bold text-[#383838] bg-[#c0c0c0] px-2.5 py-0.5 rounded-full border border-[#383838]/10">
-                    52 Leases
+                    {occupiedUnitsCount} Leases
                   </span>
                 </div>
                 <div className="text-2xl sm:text-3xl font-black text-[#2a2a2a] font-tabular mt-2 tracking-tight">
-                  56 Stays Live
+                  {occupiedUnitsCount} Stays Live
                 </div>
                 <span className="text-[11px] text-[#666666] mt-1 block">
-                  4 Renewals this Month • 5 Buildings
+                  {activeProperties.length} Properties Configured
                 </span>
               </div>
 
@@ -481,14 +508,14 @@ export default function OwnerDashboard() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-[#666666]">Net Operating Cashflow</span>
                   <span className="text-[10px] font-bold text-[#383838] bg-[#c0c0c0] px-2.5 py-0.5 rounded-full border border-[#383838]/10">
-                    Net Surplus
+                    {activeProperties.length > 0 ? 'Net Surplus' : 'No Inflow'}
                   </span>
                 </div>
                 <div className="text-2xl sm:text-3xl font-black text-[#383838] font-tabular mt-2 tracking-tight">
-                  +₹13,41,500
+                  +₹{Math.round(totalCollectedRent * 0.844).toLocaleString('en-IN')}
                 </div>
                 <span className="text-[11px] text-[#666666] mt-1 block">
-                  +84.4% Margin • ₹48.5L in Escrow
+                  {activeProperties.length > 0 ? '+84.4% Margin • In Flow' : '0% Margin • Clean Workspace'}
                 </span>
               </div>
 
@@ -1069,63 +1096,76 @@ export default function OwnerDashboard() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredProperties.map(prop => (
-              <div 
-                key={prop.id}
-                className="rounded-2xl bg-white border border-[#B5B5B5] p-5 shadow-xs hover:border-[#383838] transition space-y-3"
+          {filteredProperties.length === 0 ? (
+            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#B5B5B5] p-8 space-y-3">
+              <p className="text-sm font-bold text-[#2a2a2a]">No properties found in this view</p>
+              <p className="text-xs text-[#666666]">Add your first property to begin tracking units, leases, and tenant rent.</p>
+              <button
+                onClick={() => setIsAddPropertyOpen(true)}
+                className="px-4 py-2 rounded-full bg-[#e10600] text-white text-xs font-bold hover:bg-[#c50500] transition shadow-xs"
               >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-[#e10600] text-white border border-[#2a2a2a]/20">
-                      {prop.type}
+                + Add New Property
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredProperties.map(prop => (
+                <div 
+                  key={prop.id}
+                  className="rounded-2xl bg-white border border-[#B5B5B5] p-5 shadow-xs hover:border-[#383838] transition space-y-3"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-[#e10600] text-white border border-[#2a2a2a]/20">
+                        {prop.type}
+                      </span>
+                      <h3 className="font-extrabold text-base text-[#2a2a2a] mt-1.5">{prop.name}</h3>
+                      <p className="text-xs text-[#666666]">{prop.address}</p>
+                    </div>
+                    <div className="h-8 w-8 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] flex items-center justify-center text-xs font-black text-[#2a2a2a]">
+                      {prop.healthScore}%
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#D1D5DB] text-xs">
+                    <div>
+                      <span className="text-[10px] text-[#666666]">Units Occupancy</span>
+                      <div className="font-bold text-[#2a2a2a]">{prop.occupiedUnits} / {prop.totalUnits} Units</div>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-[#666666]">Monthly Rent</span>
+                      <div className="font-bold text-[#2a2a2a]">₹{prop.expectedMonthlyRent.toLocaleString('en-IN')}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-[#D1D5DB]">
+                    <span className="text-xs text-[#666666]">
+                      Pending: <strong className="text-rose-600">₹{prop.pendingRent.toLocaleString('en-IN')}</strong>
                     </span>
-                    <h3 className="font-extrabold text-base text-[#2a2a2a] mt-1.5">{prop.name}</h3>
-                    <p className="text-xs text-[#666666]">{prop.address}</p>
-                  </div>
-                  <div className="h-8 w-8 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] flex items-center justify-center text-xs font-black text-[#2a2a2a]">
-                    {prop.healthScore}%
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#D1D5DB] text-xs">
-                  <div>
-                    <span className="text-[10px] text-[#666666]">Units Occupancy</span>
-                    <div className="font-bold text-[#2a2a2a]">{prop.occupiedUnits} / {prop.totalUnits} Units</div>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-[#666666]">Monthly Rent</span>
-                    <div className="font-bold text-[#2a2a2a]">₹{prop.expectedMonthlyRent.toLocaleString('en-IN')}</div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-2 border-t border-[#D1D5DB]">
-                  <span className="text-xs text-[#666666]">
-                    Pending: <strong className="text-rose-600">₹{prop.pendingRent.toLocaleString('en-IN')}</strong>
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => {
-                        setPropertyToEdit(prop);
-                        setIsEditPropertyModalOpen(true);
-                      }}
-                      className="px-3 py-1 rounded-full bg-[#f0f0f0] hover:bg-[#e10600] text-xs font-bold text-white border border-[#B5B5B5] transition"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm(`Delete property ${prop.name}?`)) deleteProperty(prop.id);
-                      }}
-                      className="p-1 text-slate-400 hover:text-rose-600 transition"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          setPropertyToEdit(prop);
+                          setIsEditPropertyModalOpen(true);
+                        }}
+                        className="px-3 py-1 rounded-full bg-[#f0f0f0] hover:bg-[#e10600] text-xs font-bold text-white border border-[#B5B5B5] transition"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`Delete property ${prop.name}?`)) deleteProperty(prop.id);
+                        }}
+                        className="p-1 text-slate-400 hover:text-rose-600 transition"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

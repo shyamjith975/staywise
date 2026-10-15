@@ -36,6 +36,8 @@ import {
 
 export default function PGBedManagementView() {
   const { 
+    currentUser,
+    activeRole,
     pgBeds, 
     pgRooms, 
     pgMeals, 
@@ -55,19 +57,31 @@ export default function PGBedManagementView() {
   const [selectedRoomFilter, setSelectedRoomFilter] = useState<string | null>(null);
   const [selectedPropertyFilter, setSelectedPropertyFilter] = useState<string | null>(null);
 
-  // PG Dashboard Metrics
-  const totalBeds = 120; // PG Portfolio Capacity
-  const occupiedBeds = pgBeds.filter(b => b.status === 'Occupied').length + 89; // active inventory
-  const vacantBeds = pgBeds.filter(b => b.status === 'Available').length + 17;
-  const reservedBeds = pgBeds.filter(b => b.status === 'Reserved').length + 4;
-  const noticeBeds = pgBeds.filter(b => b.status === 'Notice Given').length;
-  const occupancyPercent = ((occupiedBeds / totalBeds) * 100).toFixed(1);
-  const expectedRevenue = 840000;
-  const collectedRevenue = 790000;
-  const pendingRevenue = 50000;
+  // Check demo account vs real new onboarded owner
+  const isDemoAccount = !currentUser.id || currentUser.email === 'owner@staywise.com' || currentUser.id === 'user-owner-vikram' || activeRole === 'admin';
+
+  // For non-demo user, scope beds and rooms strictly to properties owned by currentUser
+  const userOwnedPropIds = properties.filter(p => isDemoAccount || p.ownerId === currentUser.id).map(p => p.id);
+  const activePgRooms = isDemoAccount ? pgRooms : pgRooms.filter(r => userOwnedPropIds.includes(r.propertyId));
+  const activePgRoomIds = activePgRooms.map(r => r.id);
+  const activePgRoomNumbers = activePgRooms.map(r => r.roomNumber);
+  const activePgBeds = isDemoAccount 
+    ? pgBeds 
+    : pgBeds.filter(b => activePgRoomIds.includes(b.roomId) || activePgRoomNumbers.includes(b.roomNumber));
+
+  // Dynamic PG Dashboard Metrics (Zero mock additions)
+  const totalBeds = activePgBeds.length;
+  const occupiedBeds = activePgBeds.filter(b => b.status === 'Occupied').length;
+  const vacantBeds = activePgBeds.filter(b => b.status === 'Available').length;
+  const reservedBeds = activePgBeds.filter(b => b.status === 'Reserved').length;
+  const noticeBeds = activePgBeds.filter(b => b.status === 'Notice Given').length;
+  const occupancyPercent = totalBeds > 0 ? ((occupiedBeds / totalBeds) * 100).toFixed(1) : '0.0';
+  const expectedRevenue = activePgBeds.reduce((acc, b) => acc + (b.monthlyRent || 0), 0);
+  const collectedRevenue = activePgBeds.filter(b => b.status === 'Occupied').reduce((acc, b) => acc + (b.monthlyRent || 0), 0);
+  const pendingRevenue = Math.max(0, expectedRevenue - collectedRevenue);
 
   // Filtered Beds - strictly matches selectedRoomFilter if chosen
-  const filteredBeds = pgBeds.filter(bed => {
+  const filteredBeds = activePgBeds.filter(bed => {
     if (selectedRoomFilter && bed.roomNumber !== selectedRoomFilter) return false;
     if (selectedFloor !== 'ALL' && bed.floor !== selectedFloor) return false;
     if (selectedStatus !== 'ALL' && bed.status !== selectedStatus) return false;
@@ -193,7 +207,7 @@ export default function PGBedManagementView() {
         <div className="p-3.5 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm">
           <div className="text-[10px] uppercase font-bold text-slate-400">Total Beds</div>
           <div className="text-xl font-black text-slate-900 mt-1">{totalBeds}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">3 Floors • 24 Rooms</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">{activePgRooms.length} Active Rooms</div>
         </div>
 
         <div className="p-3.5 rounded-2xl bg-white border border-indigo-200/80 shadow-sm">
@@ -205,7 +219,7 @@ export default function PGBedManagementView() {
         <div className="p-3.5 rounded-2xl bg-white border border-emerald-200 shadow-sm">
           <div className="text-[10px] uppercase font-bold text-emerald-700">Vacant Beds</div>
           <div className="text-xl font-black text-emerald-950 mt-1">{vacantBeds}</div>
-          <div className="text-[10px] text-emerald-600 font-medium mt-0.5">Ready for Check-in</div>
+          <div className="text-[10px] text-emerald-600 font-medium mt-0.5">{vacantBeds > 0 ? 'Ready for Check-in' : 'No Vacant Beds'}</div>
         </div>
 
         <div className="p-3.5 rounded-2xl bg-white border border-amber-200 shadow-sm">
@@ -216,20 +230,32 @@ export default function PGBedManagementView() {
 
         <div className="p-3.5 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm">
           <div className="text-[10px] uppercase font-bold text-slate-400">Expected Rev</div>
-          <div className="text-xl font-black text-slate-900 mt-1">₹8.4L</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">₹7,000 avg/bed</div>
+          <div className="text-xl font-black text-slate-900 mt-1">
+            {expectedRevenue >= 100000 ? `₹${(expectedRevenue / 100000).toFixed(1)}L` : `₹${expectedRevenue.toLocaleString('en-IN')}`}
+          </div>
+          <div className="text-[10px] text-slate-500 mt-0.5">
+            {totalBeds > 0 ? `₹${Math.round(expectedRevenue / totalBeds).toLocaleString('en-IN')} avg/bed` : '₹0 avg'}
+          </div>
         </div>
 
         <div className="p-3.5 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm">
           <div className="text-[10px] uppercase font-bold text-emerald-700">Collected</div>
-          <div className="text-xl font-black text-emerald-900 mt-1">₹7.9L</div>
-          <div className="text-[10px] text-emerald-600 font-semibold mt-0.5">94.0% Collected</div>
+          <div className="text-xl font-black text-emerald-900 mt-1">
+            {collectedRevenue >= 100000 ? `₹${(collectedRevenue / 100000).toFixed(1)}L` : `₹${collectedRevenue.toLocaleString('en-IN')}`}
+          </div>
+          <div className="text-[10px] text-emerald-600 font-semibold mt-0.5">
+            {expectedRevenue > 0 ? `${Math.round((collectedRevenue / expectedRevenue) * 100)}% Collected` : '0%'}
+          </div>
         </div>
 
         <div className="p-3.5 rounded-2xl bg-white border border-rose-200 shadow-sm col-span-2 sm:col-span-1">
           <div className="text-[10px] uppercase font-bold text-rose-600">Pending Rent</div>
-          <div className="text-xl font-black text-rose-950 mt-1">₹50K</div>
-          <div className="text-[10px] text-rose-600 font-medium mt-0.5">4 Tenants Overdue</div>
+          <div className="text-xl font-black text-rose-950 mt-1">
+            {pendingRevenue >= 100000 ? `₹${(pendingRevenue / 100000).toFixed(1)}L` : `₹${pendingRevenue.toLocaleString('en-IN')}`}
+          </div>
+          <div className="text-[10px] text-rose-600 font-medium mt-0.5">
+            {pendingRevenue > 0 ? 'Pending Collection' : 'Zero Overdue'}
+          </div>
         </div>
       </div>
 
@@ -272,8 +298,67 @@ export default function PGBedManagementView() {
             </button>
           </div>
 
-          {/* ASSET SECTION 1: PG & Co-Living Properties */}
-          {(listingCategoryFilter === 'ALL' || listingCategoryFilter === 'PG') && (
+          {(!isDemoAccount && properties.length === 0) ? (
+            <div className="bg-white rounded-3xl p-10 border-2 border-dashed border-[#B5B5B5] text-center space-y-4 animate-in fade-in duration-200">
+              <Building2 className="h-12 w-12 text-slate-300 mx-auto" />
+              <div className="space-y-1">
+                <h3 className="text-base font-extrabold text-[#2a2a2a]">No assets or properties registered yet</h3>
+                <p className="text-xs text-[#666666] max-w-md mx-auto">
+                  Your asset universe is currently clean. Add your first PG, residential apartment, or commercial floor to start managing beds and tenants.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsAddPropertyOpen(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#e10600] text-white text-xs font-bold hover:bg-[#c50500] transition shadow-xs"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add Property to Universe</span>
+              </button>
+            </div>
+          ) : !isDemoAccount ? (
+            <div className="space-y-4 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between">
+                <h2 className="font-extrabold text-[#2a2a2a] text-sm">Your Registered Properties ({properties.length})</h2>
+                <button
+                  onClick={() => setIsAddPropertyOpen(true)}
+                  className="px-3.5 py-1.5 rounded-full bg-[#e10600] text-white text-xs font-bold hover:bg-[#c50500] transition shadow-xs"
+                >
+                  + Add Property
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {properties.map(p => (
+                  <div key={p.id} className="bg-white p-5 rounded-3xl border border-[#B5B5B5] shadow-sm space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">
+                          {p.type}
+                        </span>
+                        <h3 className="text-base font-black text-slate-900 mt-1">{p.name}</h3>
+                        <p className="text-xs text-slate-500">{p.address}</p>
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">
+                        {p.totalUnits > 0 ? `${Math.round((p.occupiedUnits / p.totalUnits) * 100)}% Occupied` : '0 Units'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-[#f0f0f0] text-xs">
+                      <div>
+                        <span className="text-[10px] text-slate-500 block">Units</span>
+                        <span className="font-bold text-slate-900">{p.occupiedUnits} / {p.totalUnits}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 block">Expected Rent</span>
+                        <span className="font-bold text-slate-900">₹{p.expectedMonthlyRent.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* ASSET SECTION 1: PG & Co-Living Properties */}
+              {(listingCategoryFilter === 'ALL' || listingCategoryFilter === 'PG') && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -727,6 +812,9 @@ export default function PGBedManagementView() {
             </div>
           )}
 
+            </>
+          )}
+
         </div>
       )}
 
@@ -813,84 +901,102 @@ export default function PGBedManagementView() {
           </div>
 
           {/* Bed Inventory Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
-            {filteredBeds.map((bed) => (
-              <div
-                key={bed.id}
-                className="bg-white rounded-2xl border border-[#B5B5B5] p-3.5 shadow-sm hover:border-[#2a2a2a] hover:shadow-md transition flex flex-col justify-between"
+          {filteredBeds.length === 0 ? (
+            <div className="py-12 text-center bg-white rounded-3xl border border-dashed border-[#B5B5B5] p-8 space-y-3">
+              <BedDouble className="h-10 w-10 text-slate-300 mx-auto" />
+              <h3 className="font-bold text-slate-800 text-sm">No PG Beds Found</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                {selectedRoomFilter 
+                  ? `No beds configured under Room ${selectedRoomFilter}.`
+                  : 'There are no active PG beds in your portfolio. Add a PG property to configure rooms, beds, and sub-meters.'}
+              </p>
+              <button
+                onClick={() => setIsAddPropertyOpen(true)}
+                className="px-4 py-2 rounded-xl bg-[#2a2a2a] text-white text-xs font-bold hover:bg-[#2a2a2a]/90 transition"
               >
-                <div>
-                  <div className="flex items-center justify-between gap-1 mb-2">
-                    <div className="flex items-center gap-1.5">
-                      <DoorOpen className="h-3.5 w-3.5 text-slate-500" />
-                      <span className="font-extrabold text-xs text-slate-900">Room {bed.roomNumber}</span>
-                      <span className="text-[9px] font-mono font-bold text-indigo-700 bg-indigo-50 px-1 rounded">ROOM-{bed.roomNumber}</span>
-                    </div>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${getStatusColor(bed.status)}`}>
-                      {bed.status}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between border-t border-b border-slate-100 py-2 my-2">
-                    <div>
-                      <div className="text-[10px] text-slate-400 font-medium">Bed Identity</div>
-                      <div className="text-sm font-black text-[#2a2a2a]">{bed.bedCode}</div>
-                      <div className="text-[9px] font-mono text-indigo-600 font-bold">BED-{bed.roomNumber}{bed.bedCode.replace(/^R\d+-?/, '') || bed.bedCode}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[10px] text-slate-400 font-medium">Monthly Rent</div>
-                      <div className="text-xs font-black text-emerald-800">₹{bed.monthlyRent.toLocaleString('en-IN')}</div>
-                      <div className="text-[9px] text-slate-400">{bed.sharingType}</div>
-                    </div>
-                  </div>
-
-                  {/* Tenant Details or Vacancy Info */}
-                  {bed.tenantName ? (
-                    <div className="space-y-1 my-1">
-                      <div className="text-xs font-bold text-slate-800 truncate flex items-center gap-1">
-                        <Users className="h-3 w-3 text-indigo-600 shrink-0" />
-                        <span className="truncate">{bed.tenantName}</span>
+                + Add PG Property
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
+              {filteredBeds.map((bed) => (
+                <div
+                  key={bed.id}
+                  className="bg-white rounded-2xl border border-[#B5B5B5] p-3.5 shadow-sm hover:border-[#2a2a2a] hover:shadow-md transition flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-1 mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <DoorOpen className="h-3.5 w-3.5 text-slate-500" />
+                        <span className="font-extrabold text-xs text-slate-900">Room {bed.roomNumber}</span>
+                        <span className="text-[9px] font-mono font-bold text-indigo-700 bg-indigo-50 px-1 rounded">ROOM-{bed.roomNumber}</span>
                       </div>
-                      {bed.tenantPhone && (
-                        <div className="text-[10px] text-slate-500 flex items-center gap-1">
-                          <Phone className="h-2.5 w-2.5" />
-                          <span>{bed.tenantPhone}</span>
-                        </div>
-                      )}
-                      {bed.status === 'Notice Given' && (
-                        <div className="text-[10px] text-purple-700 bg-purple-50 p-1 rounded-md font-semibold mt-1">
-                          Notice: Vacates on {bed.expectedVacantDate}
-                        </div>
-                      )}
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${getStatusColor(bed.status)}`}>
+                        {bed.status}
+                      </span>
                     </div>
-                  ) : (
-                    <div className="text-[11px] text-slate-400 italic py-1">
-                      {bed.status === 'Cleaning' ? 'Housekeeping in progress' : 'Ready for tenant placement'}
-                    </div>
-                  )}
 
-                  {/* Amenities Badges */}
-                  <div className="flex items-center gap-1 mt-2">
-                    {bed.ac && <span title="AC" className="p-1 rounded bg-slate-100 text-slate-700 text-[10px]"><Wind className="h-2.5 w-2.5" /></span>}
-                    {bed.wifiIncluded && <span title="Wi-Fi" className="p-1 rounded bg-slate-100 text-slate-700 text-[10px]"><Wifi className="h-2.5 w-2.5" /></span>}
-                    {bed.foodIncluded && <span title="Food" className="p-1 rounded bg-slate-100 text-slate-700 text-[10px]"><Utensils className="h-2.5 w-2.5" /></span>}
-                    <span className="text-[9px] font-bold text-slate-500 ml-auto">{bed.sharingType}</span>
+                    <div className="flex items-center justify-between border-t border-b border-slate-100 py-2 my-2">
+                      <div>
+                        <div className="text-[10px] text-slate-400 font-medium">Bed Identity</div>
+                        <div className="text-sm font-black text-[#2a2a2a]">{bed.bedCode}</div>
+                        <div className="text-[9px] font-mono text-indigo-600 font-bold">BED-{bed.roomNumber}{bed.bedCode.replace(/^R\d+-?/, '') || bed.bedCode}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[10px] text-slate-400 font-medium">Monthly Rent</div>
+                        <div className="text-xs font-black text-emerald-800">₹{bed.monthlyRent.toLocaleString('en-IN')}</div>
+                        <div className="text-[9px] text-slate-400">{bed.sharingType}</div>
+                      </div>
+                    </div>
+
+                    {/* Tenant Details or Vacancy Info */}
+                    {bed.tenantName ? (
+                      <div className="space-y-1 my-1">
+                        <div className="text-xs font-bold text-slate-800 truncate flex items-center gap-1">
+                          <Users className="h-3 w-3 text-indigo-600 shrink-0" />
+                          <span className="truncate">{bed.tenantName}</span>
+                        </div>
+                        {bed.tenantPhone && (
+                          <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                            <Phone className="h-2.5 w-2.5" />
+                            <span>{bed.tenantPhone}</span>
+                          </div>
+                        )}
+                        {bed.status === 'Notice Given' && (
+                          <div className="text-[10px] text-purple-700 bg-purple-50 p-1 rounded-md font-semibold mt-1">
+                            Notice: Vacates on {bed.expectedVacantDate}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-[11px] text-slate-400 italic py-1">
+                        {bed.status === 'Cleaning' ? 'Housekeeping in progress' : 'Ready for tenant placement'}
+                      </div>
+                    )}
+
+                    {/* Amenities Badges */}
+                    <div className="flex items-center gap-1 mt-2">
+                      {bed.ac && <span title="AC" className="p-1 rounded bg-slate-100 text-slate-700 text-[10px]"><Wind className="h-2.5 w-2.5" /></span>}
+                      {bed.wifiIncluded && <span title="Wi-Fi" className="p-1 rounded bg-slate-100 text-slate-700 text-[10px]"><Wifi className="h-2.5 w-2.5" /></span>}
+                      {bed.foodIncluded && <span title="Food" className="p-1 rounded bg-slate-100 text-slate-700 text-[10px]"><Utensils className="h-2.5 w-2.5" /></span>}
+                      <span className="text-[9px] font-bold text-slate-500 ml-auto">{bed.sharingType}</span>
+                    </div>
+                  </div>
+
+                  {/* State Machine Transition Trigger */}
+                  <div className="mt-3 pt-2 border-t border-slate-100">
+                    <button
+                      onClick={() => setSelectedBedForAction(bed)}
+                      className="w-full py-1.5 rounded-xl bg-slate-100 hover:bg-[#2a2a2a] hover:text-white text-slate-700 text-[10px] font-bold transition flex items-center justify-center gap-1"
+                    >
+                      <span>Update State</span>
+                      <ChevronRight className="h-3 w-3" />
+                    </button>
                   </div>
                 </div>
-
-                {/* State Machine Transition Trigger */}
-                <div className="mt-3 pt-2 border-t border-slate-100">
-                  <button
-                    onClick={() => setSelectedBedForAction(bed)}
-                    className="w-full py-1.5 rounded-xl bg-slate-100 hover:bg-[#2a2a2a] hover:text-white text-slate-700 text-[10px] font-bold transition flex items-center justify-center gap-1"
-                  >
-                    <span>Update State</span>
-                    <ChevronRight className="h-3 w-3" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* State Transition Modal */}
           {selectedBedForAction && (

@@ -87,48 +87,10 @@ export async function POST(req: NextRequest) {
       phone
     });
 
-    let starterProperty = null;
-    let tenantRecord = null;
-
     // 4. Role specific onboarding workflows:
+    // Newly onboarded users start with a clean slate (0 properties, 0 mock data).
+    // Initialize Trial Subscription for Owner if role is owner or estate_manager
     if (role === 'owner' || role === 'estate_manager') {
-      const portfolioTitle = portfolioName || (role === 'owner' ? `${name}'s Portfolio` : `${name}'s Estate Collection`);
-      const operationalCity = city || 'Bangalore';
-      const propertyName = role === 'owner' ? `${portfolioTitle} Residency` : `${portfolioTitle} Luxury Villa`;
-
-      starterProperty = await db.properties.create({
-        ownerId: user.id,
-        name: propertyName,
-        type: role === 'owner' ? 'Apartment' : 'Villa',
-        portfolio: portfolioTitle,
-        address: 'Central Commercial Boulevard',
-        city: operationalCity,
-        state: 'Karnataka',
-        pincode: '560001',
-        totalUnits: role === 'owner' ? 6 : 4,
-        occupiedUnits: 0,
-        expectedMonthlyRent: role === 'owner' ? 150000 : 280000,
-        collectedRent: 0,
-        pendingRent: role === 'owner' ? 150000 : 280000,
-        imageUrl: role === 'owner' ? '/images/properties/beach-road.jpg' : '/images/properties/luxury-estate.jpg',
-        status: 'VACANT',
-        healthScore: 92,
-        verificationStatus: 'PENDING',
-        submittedDocs: [
-          'Title_Deed_Ownership_Registration.pdf',
-          'Municipal_Building_Permit_2026.pdf',
-          'Fire_Safety_NOC_Clearance.pdf'
-        ],
-        amenities: [
-          'Covered Parking',
-          '24/7 Security & CCTV',
-          'Solar Rooftop Grid',
-          'Smart Access Keyless Entry'
-        ],
-        units: []
-      });
-
-      // Initialize Trial Subscription for Owner
       try {
         await db.subscriptions.createTrial({
           userId: user.id,
@@ -142,36 +104,11 @@ export async function POST(req: NextRequest) {
       } catch (subErr) {
         console.warn('Subscription trial init skipped:', subErr);
       }
-    } else if (role === 'tenant') {
-      // If propertyId & unitNumber provided, link tenant
-      const targetPropId = propertyId || 'prop-beach-road';
-      const targetUnit = unitNumber || '101';
-      const prop = await db.properties.findById(targetPropId);
-
-      tenantRecord = await db.tenants.create({
-        id: `t-${user.id}`,
-        name: user.name,
-        email: user.email,
-        phone: phone || '+91 98000 00000',
-        propertyId: targetPropId,
-        propertyName: prop ? prop.name : 'Staywise Residency',
-        unitNumber: targetUnit,
-        monthlyRent: 25000,
-        depositPaid: 50000,
-        leaseStart: new Date().toISOString().split('T')[0],
-        leaseEnd: '2027-09-30',
-        rentDueDate: 5,
-        autopayActive: true,
-        reliabilityScore: 100,
-        kycVerified: true,
-        rewardsBalance: 500,
-        emergencyContact: 'Primary Family Contact'
-      });
     }
 
     const session = createSessionToken(user.id, user.role, user.email);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: `Account created successfully for ${user.name} (${meta.roleLabel}) in SQLite database.`,
       user: {
@@ -184,11 +121,22 @@ export async function POST(req: NextRequest) {
         title: user.title,
         description: user.description
       },
-      property: starterProperty,
-      tenant: tenantRecord,
       token: session.token,
       expiresAt: session.expiresAt
     }, { status: 201 });
+
+    // Set secure HTTP-only session cookie
+    response.cookies.set({
+      name: 'staywise_token',
+      value: session.token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 48 * 60 * 60 // 48 hours
+    });
+
+    return response;
   } catch (error) {
     console.error('[API /api/auth/signup] Error:', error);
     return NextResponse.json(

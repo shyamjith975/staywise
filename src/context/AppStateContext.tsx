@@ -186,7 +186,7 @@ export const DEMO_CREDENTIALS: Record<UserRole, DemoCredential> = {
     role: 'admin',
     roleLabel: 'Super Admin',
     email: 'admin@staywise.com',
-    pass: 'Admin@123',
+    pass: 'admin@123',
     name: 'Chief Admin',
     avatar: '🛡️',
     title: 'Platform Governance & Risk',
@@ -503,6 +503,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (e) {}
     }
+
+    // Immediately reload scoped database data for this user
+    loadDatabaseData(userToSet);
   };
 
   const signupUser = async (userData: {
@@ -527,16 +530,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: data.error || 'Registration failed' };
       }
 
-      if (data.property) {
-        setProperties(prev => [data.property, ...prev]);
-        setActivePortfolio(data.property.portfolio || 'all');
-      }
-
-      if (data.tenant) {
-        setTenants(prev => [data.tenant, ...prev]);
-      }
-
       const newCred: DemoCredential = {
+        id: data.user.id,
         role: userData.role,
         email: data.user.email,
         pass: userData.password,
@@ -549,8 +544,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       login(userData.role, newCred);
 
       addNotification(
-        'Workspace Initialized!',
-        `Welcome ${data.user.name}! Your ${data.user.roleLabel} portal has been initialized in SQLite database.`,
+        'Clean Workspace Initialized!',
+        `Welcome ${data.user.name}! Your workspace is active with 0 properties. Click "+ Add Property" to onboard your first asset.`,
         'SYSTEM'
       );
 
@@ -561,13 +556,45 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
+  const logout = async () => {
     try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {
+      console.warn('[Staywise Auth] Server logout call notice:', e);
+    }
+    setIsAuthenticated(false);
+    setActiveView('login');
+    try {
+      // Purge tab-isolated session storage
+      sessionStorage.removeItem('staywise_active_view');
+      sessionStorage.removeItem('staywise_active_role');
+      sessionStorage.removeItem('staywise_active_portfolio');
+      sessionStorage.removeItem('staywise_current_user');
+      sessionStorage.setItem('staywise_is_authenticated', 'false');
+
+      // Purge cross-tab local storage
       localStorage.removeItem('staywise_active_view');
+      localStorage.removeItem('staywise_active_role');
+      localStorage.removeItem('staywise_active_portfolio');
       localStorage.removeItem('staywise_current_user');
       localStorage.setItem('staywise_is_authenticated', 'false');
+
+      // Clear client-side cookie references as secondary defense
+      document.cookie = 'staywise_token=; Max-Age=0; path=/;';
+      document.cookie = 'staywise_user=; Max-Age=0; path=/;';
     } catch (e) {}
+
+    // Clean all module state
+    setProperties([]);
+    setTenants([]);
+    setInvoices([]);
+    setLedger([]);
+    setTickets([]);
+    setPgBeds([]);
+    setPgRooms([]);
+    setCommercialUnits([]);
+    setLeads([]);
+    setEstateAssets([]);
   };
   
   const [properties, setProperties] = useState<Property[]>([]);
@@ -688,9 +715,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Authoritative data loading function directly from persistent SQLite via /api/bootstrap
-  const loadDatabaseData = async () => {
+  const loadDatabaseData = async (userParam?: DemoCredential) => {
     try {
-      const res = await fetch('/api/bootstrap');
+      const activeUser = userParam || currentUser;
+      const url = activeUser?.id ? `/api/bootstrap?userId=${encodeURIComponent(activeUser.id)}` : '/api/bootstrap';
+      const res = await fetch(url);
       const json = await res.json();
       if (json.success && json.data) {
         const d = json.data;

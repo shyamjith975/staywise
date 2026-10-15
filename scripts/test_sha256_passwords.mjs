@@ -93,7 +93,7 @@ async function runTests() {
   const demoAccounts = [
     { email: 'owner@staywise.com', pass: 'Owner@123' },
     { email: 'tenant@staywise.com', pass: 'Tenant@123' },
-    { email: 'admin@staywise.com', pass: 'Admin@123' },
+    { email: 'admin@staywise.com', pass: 'admin@123' },
     { email: 'manager@staywise.com', pass: 'Manager@123' },
     { email: 'vendor@staywise.com', pass: 'Vendor@123' },
     { email: 'estate@staywise.com', pass: 'Estate@123' },
