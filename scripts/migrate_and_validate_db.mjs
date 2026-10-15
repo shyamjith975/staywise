@@ -15,6 +15,11 @@
 
 import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
+import crypto from 'node:crypto';
+
+function hashPassword(pass) {
+  return crypto.createHash('sha256').update(pass.trim()).digest('hex');
+}
 
 const dbPath = path.join(process.cwd(), 'database.db');
 console.log('[Migration] Opening database at:', dbPath);
@@ -54,8 +59,8 @@ try {
     const angithId = 'user-owner-1791977203142';
     db.prepare(`
       INSERT INTO users (id, email, password, name, role, role_label, avatar, title, description, phone, created_at)
-      VALUES (?, 'angithnk@gmail.com', '12345678@abc', 'Angith', 'owner', 'Property Owner', '👨‍💼', 'Angith Portfolio Owner', 'Bangalore • Registered Asset Workspace', '+91 9876543210', datetime('now'))
-    `).run(angithId);
+      VALUES (?, 'angithnk@gmail.com', ?, 'Angith', 'owner', 'Property Owner', '👨‍💼', 'Angith Portfolio Owner', 'Bangalore • Registered Asset Workspace', '+91 9876543210', datetime('now'))
+    `).run(angithId, hashPassword('12345678@abc'));
     angithUser = db.prepare("SELECT * FROM users WHERE id = ?").get(angithId);
     console.log(' -> Created Angith user account with id:', angithId);
   } else {
@@ -87,8 +92,8 @@ try {
       const uId = `user-tenant-${t.id}`;
       db.prepare(`
         INSERT OR REPLACE INTO users (id, email, password, name, role, role_label, avatar, title, description, created_at)
-        VALUES (?, ?, 'Tenant@123', ?, 'tenant', 'Tenant / Resident', '👨‍🎓', ?, 'Resident Tenant', datetime('now'))
-      `).run(uId, t.email, t.name, `Resident • Apt ${t.unit_number}`);
+        VALUES (?, ?, ?, ?, 'tenant', 'Tenant / Resident', '👨‍🎓', ?, 'Resident Tenant', datetime('now'))
+      `).run(uId, t.email, hashPassword('Tenant@123'), t.name, `Resident • Apt ${t.unit_number}`);
       u = { id: uId };
     }
     db.prepare("UPDATE tenants SET user_id = ? WHERE id = ?").run(u.id, t.id);

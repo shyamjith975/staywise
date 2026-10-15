@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
+import { getAuthenticatedUser } from '../../../lib/security/authorization';
 
 export async function GET(req: NextRequest) {
   try {
@@ -7,7 +8,16 @@ export async function GET(req: NextRequest) {
     const tenantId = searchParams.get('tenantId') || undefined;
     const propertyId = searchParams.get('propertyId') || undefined;
 
-    const invoices = await db.invoices.findMany({ tenantId, propertyId });
+    let invoices = await db.invoices.findMany({ tenantId, propertyId });
+
+    // Multi-tenant isolation (P0.3): Owners only see invoices for their properties
+    const auth = await getAuthenticatedUser(req);
+    if (auth && auth.user.role === 'owner') {
+      const myProperties = await db.properties.findMany({ ownerId: auth.user.id });
+      const myPropIds = new Set(myProperties.map(p => p.id));
+      invoices = invoices.filter(inv => myPropIds.has(inv.propertyId));
+    }
+
     return NextResponse.json({ success: true, count: invoices.length, data: invoices });
   } catch (error) {
     console.error('[API /api/invoices] GET Error:', error);

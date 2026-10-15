@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -450,7 +451,7 @@ if (jsonData.users && jsonData.users.length) {
     insertUser.run(
       b(u.id),
       b(u.email),
-      b(u.password),
+      b(/^[a-f0-9]{64}$/i.test(u.password) ? u.password : crypto.createHash('sha256').update(u.password).digest('hex')),
       b(u.name),
       b(u.role),
       b(u.roleLabel, u.role),

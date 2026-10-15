@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../../../lib/db';
 import { validatePaymentPayload } from '../../../../../lib/validation';
+import { getAuthenticatedUser } from '../../../../../lib/security/authorization';
+
+// In-memory idempotency cache for deduplicating repeated client retries & callbacks (P0.4)
+const idempotencyStore = new Map<string, { result: any; timestamp: number }>();
 
 /**
  * ============================================================================
@@ -25,7 +29,19 @@ export async function POST(
     const { id } = await params;
     const rawBody = await req.json();
 
-    // 1. Rigorous input validation & schema sanitization
+    // 1. Idempotency Check (P0.4) - Deduplicate repeated network retries
+    const idempotencyKey = req.headers.get('idempotency-key') || rawBody.idempotencyKey;
+    if (idempotencyKey && idempotencyStore.has(idempotencyKey)) {
+      const cached = idempotencyStore.get(idempotencyKey)!;
+      return NextResponse.json({
+        success: true,
+        message: 'Payment previously processed successfully (Idempotent response)',
+        isIdempotentReplay: true,
+        data: cached.result
+      }, { status: 200 });
+    }
+
+    // 2. Rigorous input validation & schema sanitization
     const validation = validatePaymentPayload(rawBody);
     if (!validation.isValid) {
       return NextResponse.json(
@@ -40,7 +56,7 @@ export async function POST(
 
     const { paymentMethod, amount } = validation.sanitizedData!;
 
-    // 2. Fetch authoritative invoice from persistent database
+    // 3. Fetch authoritative invoice from persistent database
     const inv = await db.invoices.findById(id);
     if (!inv) {
       return NextResponse.json(
@@ -49,7 +65,19 @@ export async function POST(
       );
     }
 
-    // 3. Prevent double-spending / duplicate settlements
+    // 4. Multi-Tenant Authorization Scope Check (P0.3)
+    const auth = await getAuthenticatedUser(req);
+    if (auth && auth.user.role === 'owner') {
+      const prop = await db.properties.findById(inv.propertyId);
+      if (prop && prop.ownerId && prop.ownerId !== auth.user.id) {
+        return NextResponse.json(
+          { success: false, error: 'FORBIDDEN: You do not have permission to settle invoices for this property portfolio.' },
+          { status: 403 }
+        );
+      }
+    }
+
+    // 5. Prevent double-spending / duplicate settlements
     if (inv.status === 'Paid') {
       return NextResponse.json(
         { 
@@ -97,6 +125,11 @@ export async function POST(
 
     if (!result) {
       return NextResponse.json({ success: false, error: 'Invoice not found' }, { status: 404 });
+    }
+
+    // Cache successful settlement for idempotency guarantee (P0.4)
+    if (idempotencyKey) {
+      idempotencyStore.set(idempotencyKey, { result, timestamp: Date.now() });
     }
 
     return NextResponse.json({

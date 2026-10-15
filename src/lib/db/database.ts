@@ -46,6 +46,7 @@ import {
   PropertyUnit
 } from '../../types';
 import { SUBSCRIPTION_PLANS, calculateSubscriptionHash } from '../security/subscriptionCatalog';
+import { hashPassword, verifyPassword, isSha256 } from '../security/auth';
 import { 
   generateUniqueId, 
   generateUserId, 
@@ -533,6 +534,20 @@ class DatabaseEngine {
     // Automatic non-destructive schema migrations
     try { this.sqlite.exec('ALTER TABLE properties ADD COLUMN owner_id TEXT;'); } catch (e) {}
     try { this.sqlite.exec('ALTER TABLE tenants ADD COLUMN user_id TEXT;'); } catch (e) {}
+
+    // Automatic SHA-256 password migration: ensure all stored passwords are encrypted in SHA-256 format
+    try {
+      const usersToMigrate = this.sqlite.prepare('SELECT id, password FROM users').all() as { id: string; password: string }[];
+      const updateStmt = this.sqlite.prepare('UPDATE users SET password = ? WHERE id = ?');
+      for (const u of usersToMigrate) {
+        if (u.password && !isSha256(u.password)) {
+          const hashed = hashPassword(u.password);
+          updateStmt.run(hashed, u.id);
+        }
+      }
+    } catch (e) {
+      console.warn('[Database] SHA-256 password migration notice:', e);
+    }
   }
 
   // ==========================================
@@ -540,7 +555,7 @@ class DatabaseEngine {
   // ==========================================
   public users = {
     findMany: async (): Promise<UserAccount[]> => {
-      const rows = this.sqlite.prepare('SELECT * FROM users ORDER BY created_at DESC').all();
+      const rows = this.sqlite.prepare('SELECT * FROM users ORDER BY created_at DESC').all() as any[];
       return rows.map(r => ({
         id: r.id,
         email: r.email,
@@ -556,7 +571,7 @@ class DatabaseEngine {
       }));
     },
     findByEmail: async (email: string): Promise<UserAccount | null> => {
-      const row = this.sqlite.prepare('SELECT * FROM users WHERE LOWER(email) = LOWER(?) LIMIT 1').get(email.trim());
+      const row = this.sqlite.prepare('SELECT * FROM users WHERE LOWER(email) = LOWER(?) LIMIT 1').get(email.trim()) as any;
       if (!row) return null;
       return {
         id: row.id,
@@ -573,7 +588,7 @@ class DatabaseEngine {
       };
     },
     findById: async (id: string): Promise<UserAccount | null> => {
-      const row = this.sqlite.prepare('SELECT * FROM users WHERE id = ? LIMIT 1').get(id);
+      const row = this.sqlite.prepare('SELECT * FROM users WHERE id = ? LIMIT 1').get(id) as any;
       if (!row) return null;
       return {
         id: row.id,
@@ -590,8 +605,22 @@ class DatabaseEngine {
       };
     },
     authenticate: async (email: string, pass: string): Promise<UserAccount | null> => {
-      const row = this.sqlite.prepare('SELECT * FROM users WHERE LOWER(email) = LOWER(?) AND password = ? LIMIT 1').get(email.trim(), pass);
+      const cleanEmail = email.toLowerCase().trim();
+      const row = this.sqlite.prepare('SELECT * FROM users WHERE LOWER(email) = ? LIMIT 1').get(cleanEmail) as any;
       if (!row) return null;
+
+      const isValid = verifyPassword(pass, row.password);
+      if (!isValid) return null;
+
+      // If legacy unmigrated password matched, immediately upgrade to SHA-256 in database
+      if (!isSha256(row.password)) {
+        try {
+          const newHash = hashPassword(pass);
+          this.sqlite.prepare('UPDATE users SET password = ? WHERE id = ?').run(newHash, row.id);
+          row.password = newHash;
+        } catch (e) {}
+      }
+
       return {
         id: row.id,
         email: row.email,
@@ -609,6 +638,7 @@ class DatabaseEngine {
     create: async (payload: Omit<UserAccount, 'id' | 'createdAt'> & { id?: string }): Promise<UserAccount> => {
       const id = payload.id || generateUserId(payload.role);
       const createdAt = new Date().toISOString();
+      const passwordHash = isSha256(payload.password) ? payload.password : hashPassword(payload.password);
       const insert = this.sqlite.prepare(`
         INSERT OR REPLACE INTO users (id, email, password, name, role, role_label, avatar, title, description, phone, created_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -616,7 +646,7 @@ class DatabaseEngine {
       insert.run(
         id,
         payload.email.toLowerCase().trim(),
-        payload.password,
+        passwordHash,
         payload.name,
         payload.role,
         payload.roleLabel || payload.role,
@@ -630,8 +660,15 @@ class DatabaseEngine {
       return {
         id,
         ...payload,
+        password: passwordHash,
         createdAt
       };
+    },
+    updatePassword: async (userId: string, newPasswordPlain: string): Promise<boolean> => {
+      const passwordHash = isSha256(newPasswordPlain) ? newPasswordPlain : hashPassword(newPasswordPlain);
+      const res = this.sqlite.prepare('UPDATE users SET password = ? WHERE id = ?').run(passwordHash, userId);
+      this.syncRootDb();
+      return (res as any).changes > 0;
     }
   };
 

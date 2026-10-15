@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../../lib/db';
 import { validateSignupPayload } from '../../../../lib/validation';
 import { UserRole } from '../../../../types';
+import { createSessionToken } from '../../../../lib/security/auth';
 
 export async function POST(req: NextRequest) {
   try {
@@ -168,6 +169,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    const session = createSessionToken(user.id, user.role, user.email);
+
     return NextResponse.json({
       success: true,
       message: `Account created successfully for ${user.name} (${meta.roleLabel}) in SQLite database.`,
@@ -183,7 +186,8 @@ export async function POST(req: NextRequest) {
       },
       property: starterProperty,
       tenant: tenantRecord,
-      token: `token-${user.id}-${Date.now()}`
+      token: session.token,
+      expiresAt: session.expiresAt
     }, { status: 201 });
   } catch (error) {
     console.error('[API /api/auth/signup] Error:', error);

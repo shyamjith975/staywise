@@ -25,7 +25,7 @@ interface LoginViewProps {
 export default function LoginView({ onBackToLanding }: LoginViewProps) {
   const { login, signupUser } = useAppState();
 
-  const [authMode, setAuthMode] = useState<'SIGNIN' | 'SIGNUP'>('SIGNIN');
+  const [authMode, setAuthMode] = useState<'SIGNIN' | 'SIGNUP' | 'FORGOT_PASSWORD'>('SIGNIN');
   const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
 
   // Sign In State
@@ -46,6 +46,71 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupLoading, setSignupLoading] = useState(false);
   const [signupError, setSignupError] = useState<string | null>(null);
+
+  // Password Recovery State (P0.2)
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetTokenInput, setResetTokenInput] = useState('');
+  const [resetNewPassword, setResetNewPassword] = useState('');
+  const [resetStep, setResetStep] = useState<'REQUEST' | 'CONFIRM'>('REQUEST');
+  const [resetStatus, setResetStatus] = useState<{ message: string; isError: boolean } | null>(null);
+  const [resetLoading, setResetLoading] = useState(false);
+
+  const handleRequestReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetLoading(true);
+    setResetStatus(null);
+    try {
+      const res = await fetch('/api/auth/reset-password/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resetEmail })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setResetStatus({ message: data.error || 'Failed to request reset.', isError: true });
+      } else {
+        setResetStatus({ message: data.message, isError: false });
+        if (data.resetToken) {
+          setResetTokenInput(data.resetToken);
+          setResetStep('CONFIRM');
+        }
+      }
+    } catch (e: any) {
+      setResetStatus({ message: e.message || 'Network error.', isError: true });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleConfirmReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetLoading(true);
+    setResetStatus(null);
+    try {
+      const res = await fetch('/api/auth/reset-password/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: resetTokenInput, newPassword: resetNewPassword })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setResetStatus({ message: data.error || 'Failed to reset password.', isError: true });
+      } else {
+        setResetStatus({ message: data.message, isError: false });
+        setTimeout(() => {
+          setAuthMode('SIGNIN');
+          setResetStep('REQUEST');
+          setPassword(resetNewPassword);
+          setEmail(resetEmail);
+          setResetStatus(null);
+        }, 1500);
+      }
+    } catch (e: any) {
+      setResetStatus({ message: e.message || 'Network error.', isError: true });
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const activeCred = DEMO_CREDENTIALS[selectedRole] || DEMO_CREDENTIALS.owner;
 
@@ -306,14 +371,152 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                 </div>
               </div>
 
+              <div className="flex items-center justify-between text-[11px] pt-0.5">
+                <label className="flex items-center gap-1.5 text-[#666666] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="rounded border-[#B5B5B5] text-[#e10600] focus:ring-[#e10600]"
+                  />
+                  <span>Remember session</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('FORGOT_PASSWORD');
+                    setResetEmail(email);
+                    setResetStatus(null);
+                  }}
+                  className="font-bold text-[#e10600] hover:underline cursor-pointer"
+                >
+                  Forgot password?
+                </button>
+              </div>
+
               <button
                 type="submit"
                 disabled={loginLoading}
                 className="w-full py-3 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white font-black text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
               >
-                {loginLoading ? 'Authenticating with SQLite...' : 'Sign In'}
+                {loginLoading ? 'Authenticating with SHA-256...' : 'Sign In'}
               </button>
             </form>
+          </div>
+        ) : authMode === 'FORGOT_PASSWORD' ? (
+          /* MODE 3: FORGOT / RESET PASSWORD */
+          <div className="space-y-4 text-xs">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-black text-[#2a2a2a]">
+                  Reset Your Password
+                </h2>
+                <p className="text-xs text-[#666666] mt-0.5">
+                  Verify your account and create a new secure password
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode('SIGNIN');
+                  setResetStatus(null);
+                  setResetStep('REQUEST');
+                }}
+                className="text-xs font-bold text-[#666666] hover:text-[#e10600] cursor-pointer"
+              >
+                ← Back to Login
+              </button>
+            </div>
+
+            {resetStatus && (
+              <div
+                className={`p-3 rounded-2xl border text-xs flex items-start gap-2 ${
+                  resetStatus.isError
+                    ? 'bg-red-50 border-red-200 text-red-700'
+                    : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                }`}
+              >
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>{resetStatus.message}</span>
+              </div>
+            )}
+
+            {resetStep === 'REQUEST' ? (
+              <form onSubmit={handleRequestReset} className="space-y-3">
+                <div>
+                  <label className="block text-[#666666] font-semibold mb-1">
+                    Registered Email Address
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    placeholder="e.g. rajesh@staywise.app"
+                    className="w-full p-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600]"
+                  />
+                  <p className="text-[10px] text-[#666666] mt-1">
+                    We will generate a time-limited HMAC-SHA256 reset token for this account.
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="w-full py-3 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white font-black text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
+                >
+                  {resetLoading ? 'Generating HMAC Token...' : 'Send Password Reset Token'}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleConfirmReset} className="space-y-3">
+                <div>
+                  <label className="block text-[#666666] font-semibold mb-1">
+                    Security Reset Token
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={resetTokenInput}
+                    onChange={(e) => setResetTokenInput(e.target.value)}
+                    placeholder="Paste your 64-char HMAC token"
+                    className="w-full p-2.5 font-mono text-[11px] rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[#666666] font-semibold mb-1">
+                    New Secure Password (SHA-256 Encrypted)
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={8}
+                    value={resetNewPassword}
+                    onChange={(e) => setResetNewPassword(e.target.value)}
+                    placeholder="Min 8 characters"
+                    className="w-full p-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600]"
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setResetStep('REQUEST')}
+                    className="w-1/3 py-2.5 rounded-full border border-[#B5B5B5] text-[#2a2a2a] font-bold text-xs hover:bg-[#f0f0f0] transition cursor-pointer"
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={resetLoading}
+                    className="flex-1 py-2.5 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white font-black text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
+                  >
+                    {resetLoading ? 'Updating Hash...' : 'Set New Password'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         ) : (
           /* MODE 2: SIGN UP */

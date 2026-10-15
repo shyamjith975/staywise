@@ -78,7 +78,7 @@ export async function GET() {
         aiInsights,
         moveFlowChecklist,
         referrals,
-        users
+        users: users.map(({ password, ...u }) => u)
       }
     });
   } catch (error) {

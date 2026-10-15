@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../../lib/db';
 import { SUBSCRIPTION_PLANS } from '../../../../lib/security/subscriptionCatalog';
 import { SubscriptionTierId } from '../../../../types';
+import { createSessionToken } from '../../../../lib/security/auth';
 
 export async function POST(req: NextRequest) {
   try {
@@ -114,6 +115,8 @@ export async function POST(req: NextRequest) {
       autopayMaskedDetails
     });
 
+    const session = createSessionToken(user.id, user.role, user.email);
+
     return NextResponse.json({
       success: true,
       message: `Welcome to Staywise! Your 7-day free trial of ${validPlan.name} is now active. ₹0 charged today.`,
@@ -129,7 +132,8 @@ export async function POST(req: NextRequest) {
       },
       property: starterProperty,
       subscription: trialSub,
-      token: `token-trial-${user.id}-${Date.now()}`
+      token: session.token,
+      expiresAt: session.expiresAt
     }, { status: 201 });
 
   } catch (error: any) {

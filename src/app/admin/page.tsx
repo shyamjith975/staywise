@@ -56,6 +56,8 @@ import FindHomeView from '../../components/modules/discovery/FindHomeView';
 function AdminShell() {
   const { 
     activeRole, 
+    isAuthenticated,
+    currentUser,
     login, 
     activeView, 
     isUploadBillModalOpen, 
@@ -63,12 +65,108 @@ function AdminShell() {
     preselectedUnitForUpload 
   } = useAppState();
 
-  // Initialize session as Super Admin (Chief Admin) when visiting /admin
-  useEffect(() => {
-    if (activeRole !== 'admin') {
-      login('admin');
+  const [adminEmail, setAdminEmail] = React.useState('admin@staywise.com');
+  const [adminPassword, setAdminPassword] = React.useState('');
+  const [adminLoading, setAdminLoading] = React.useState(false);
+  const [adminError, setAdminError] = React.useState<string | null>(null);
+
+  const handleAdminLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminLoading(true);
+    setAdminError(null);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: adminEmail, password: adminPassword })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setAdminError(data.error || 'Invalid administrator credentials.');
+        setAdminLoading(false);
+        return;
+      }
+      if (data.user.role !== 'admin') {
+        setAdminError('Access Denied: This account does not possess Super Admin privileges.');
+        setAdminLoading(false);
+        return;
+      }
+      login('admin', data.user);
+    } catch (err: any) {
+      setAdminError(err.message || 'Connection failed.');
+    } finally {
+      setAdminLoading(false);
     }
-  }, [activeRole, login]);
+  };
+
+  // Institutional Super Admin Authentication Gate (P0.2)
+  if (!isAuthenticated || activeRole !== 'admin' || currentUser.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-[#181d24] text-white flex flex-col justify-center items-center p-4 font-sans">
+        <div className="w-full max-w-md bg-[#222933] border border-gray-700/60 rounded-3xl p-7 shadow-2xl space-y-6">
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 bg-[#e10600]/15 text-[#e10600] rounded-2xl flex items-center justify-center mx-auto text-2xl font-black border border-[#e10600]/30">
+              🛡️
+            </div>
+            <h1 className="text-xl font-black tracking-tight text-white">Chief Admin Governance Portal</h1>
+            <p className="text-xs text-gray-400">
+              Statutory Platform Surveillance & Ledger Control. Administrative credentials required.
+            </p>
+          </div>
+
+          <form onSubmit={handleAdminLogin} className="space-y-4 text-xs">
+            {adminError && (
+              <div className="p-3 rounded-xl bg-red-950/60 border border-red-500/40 text-red-200 font-semibold">
+                {adminError}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-gray-300 font-semibold mb-1">Administrator Email</label>
+              <input
+                type="email"
+                required
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#e10600]"
+                placeholder="admin@staywise.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-300 font-semibold mb-1">Master Password</label>
+              <input
+                type="password"
+                required
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#e10600]"
+                placeholder="Enter admin password (e.g. Admin@123)"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={adminLoading}
+              className="w-full py-3 rounded-xl bg-[#e10600] hover:bg-[#c50500] disabled:opacity-60 text-white font-bold text-xs tracking-wide transition shadow-lg shadow-red-900/30 flex items-center justify-center space-x-2"
+            >
+              {adminLoading ? (
+                <span>Authenticating with SHA-256...</span>
+              ) : (
+                <span>Authenticate & Access Governance Portal</span>
+              )}
+            </button>
+          </form>
+
+          <div className="pt-2 text-center border-t border-gray-700/50">
+            <a href="/" className="text-xs text-gray-400 hover:text-white transition">
+              ← Return to Client Workspace
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const renderActiveView = () => {
     switch (activeView) {

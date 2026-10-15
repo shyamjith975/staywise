@@ -114,6 +114,49 @@ export default function SettingsView() {
     alert('Exporting complete portfolio ledger, tenant contracts, and audit trail (ZIP/JSON)...');
   };
 
+  // Security Password State
+  const [currentPasswordInput, setCurrentPasswordInput] = useState('');
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordStatus, setPasswordStatus] = useState<{ message: string; isError: boolean } | null>(null);
+
+  const handleUpdatePassword = async () => {
+    if (!currentPasswordInput) {
+      setPasswordStatus({ message: 'Please enter your current password.', isError: true });
+      return;
+    }
+    if (!newPasswordInput || newPasswordInput.length < 6) {
+      setPasswordStatus({ message: 'New password must be at least 6 characters long.', isError: true });
+      return;
+    }
+    setPasswordLoading(true);
+    setPasswordStatus(null);
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: currentUser.email,
+          currentPassword: currentPasswordInput,
+          newPassword: newPasswordInput
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setPasswordStatus({ message: data.error || 'Failed to update password.', isError: true });
+      } else {
+        setPasswordStatus({ message: 'Password updated and encrypted in SHA-256 format.', isError: false });
+        setCurrentPasswordInput('');
+        setNewPasswordInput('');
+        addNotification('Password Updated', 'Your security password was successfully updated and hashed with SHA-256.', 'SYSTEM');
+      }
+    } catch (e: any) {
+      setPasswordStatus({ message: e.message || 'Network error updating password.', isError: true });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   const handleUpgradeTier = async (planId: 'starter' | 'growth_pro' | 'enterprise') => {
     setIsUpgrading(true);
     setUpgradeError(null);
@@ -1199,8 +1242,13 @@ export default function SettingsView() {
 
           <div className="organic-card p-6 flex flex-col justify-between space-y-4">
             <div>
-              <h3 className="text-base font-extrabold text-[#2a2a2a]">Change Password</h3>
-              <p className="text-xs text-[#666666]">Current user: {currentUser.email}</p>
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-extrabold text-[#2a2a2a]">Change Password</h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  SHA-256 Encrypted
+                </span>
+              </div>
+              <p className="text-xs text-[#666666] mt-1">Current user: {currentUser.email}</p>
             </div>
 
             <div className="space-y-3 text-xs">
@@ -1208,25 +1256,40 @@ export default function SettingsView() {
                 <label className="block text-[#2a2a2a] font-semibold mb-1">Current Password</label>
                 <input
                   type="password"
-                  defaultValue="Owner@123"
-                  className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] bg-white text-[#2a2a2a]"
+                  placeholder="Enter current password"
+                  value={currentPasswordInput}
+                  onChange={(e) => setCurrentPasswordInput(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] bg-white text-[#2a2a2a] focus:outline-none focus:ring-1 focus:ring-[#e10600]"
                 />
               </div>
               <div>
                 <label className="block text-[#2a2a2a] font-semibold mb-1">New Password</label>
                 <input
                   type="password"
-                  placeholder="Enter strong new password"
-                  className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] bg-white text-[#2a2a2a]"
+                  placeholder="Enter strong new password (min 6 chars)"
+                  value={newPasswordInput}
+                  onChange={(e) => setNewPasswordInput(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] bg-white text-[#2a2a2a] focus:outline-none focus:ring-1 focus:ring-[#e10600]"
                 />
               </div>
             </div>
 
+            {passwordStatus && (
+              <div className={`p-2.5 rounded-xl text-xs font-semibold ${passwordStatus.isError ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+                {passwordStatus.message}
+              </div>
+            )}
+
             <button
-              onClick={() => alert('Password updated securely.')}
-              className="w-full py-2.5 rounded-2xl bg-[#e10600] hover:bg-[#c50500] text-white font-bold text-xs shadow-sm transition"
+              onClick={handleUpdatePassword}
+              disabled={passwordLoading}
+              className="w-full py-2.5 rounded-2xl bg-[#e10600] hover:bg-[#c50500] disabled:opacity-60 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-2"
             >
-              Update Security Password
+              {passwordLoading ? (
+                <span>Encrypting & Updating...</span>
+              ) : (
+                <span>Update Security Password (SHA-256)</span>
+              )}
             </button>
           </div>
         </div>

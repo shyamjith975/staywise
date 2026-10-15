@@ -1,15 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
 import { validatePropertyPayload } from '../../../lib/validation';
+import { getAuthenticatedUser } from '../../../lib/security/authorization';
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const portfolio = searchParams.get('portfolio') || undefined;
     const verificationStatus = searchParams.get('verificationStatus') || undefined;
-    const ownerId = searchParams.get('ownerId') || undefined;
+    const requestedOwnerId = searchParams.get('ownerId') || undefined;
 
-    const properties = await db.properties.findMany({ portfolio, verificationStatus, ownerId });
+    // Multi-tenant boundary check (P0.3)
+    const auth = await getAuthenticatedUser(req);
+    let effectiveOwnerId = requestedOwnerId;
+
+    if (auth && auth.user.role === 'owner') {
+      // If caller explicitly asked for another owner's portfolio, block cross-tenant access
+      if (requestedOwnerId && requestedOwnerId !== auth.user.id) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'FORBIDDEN: Cross-organization breach attempt blocked. You cannot view properties outside your authorized workspace.',
+            code: 'CROSS_TENANT_ACCESS_DENIED'
+          },
+          { status: 403 }
+        );
+      }
+      effectiveOwnerId = auth.user.id;
+    }
+
+    const properties = await db.properties.findMany({ portfolio, verificationStatus, ownerId: effectiveOwnerId });
     return NextResponse.json({ success: true, count: properties.length, data: properties });
   } catch (error) {
     console.error('[API /api/properties] GET Error:', error);
@@ -35,11 +55,15 @@ export async function POST(req: NextRequest) {
     }
 
     const payload = validation.sanitizedData!;
+    const auth = await getAuthenticatedUser(req);
+    const effectiveOwnerId = (auth && auth.user.role === 'owner')
+      ? auth.user.id
+      : (rawBody.ownerId || payload.ownerId || undefined);
 
     // 2. Owner created property defaults to PENDING verification for admin audit
     const newProperty = await db.properties.create({
       ...payload,
-      ownerId: rawBody.ownerId || payload.ownerId || undefined,
+      ownerId: effectiveOwnerId,
       verificationStatus: 'PENDING',
       submittedDocs: rawBody.submittedDocs || [
         'Title_Deed_Registry.pdf',
