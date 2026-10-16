@@ -40,6 +40,7 @@ import MaintenanceList from '../components/modules/maintenance/MaintenanceList';
 import CreateTicketModal from '../components/modules/maintenance/CreateTicketModal';
 import LeadsCRM from '../components/modules/leasing/LeadsCRM';
 import EstateHospitalityDashboard from '../components/dashboards/EstateHospitalityDashboard';
+import EstateSettingsView from '../components/modules/estate/EstateSettingsView';
 import StaywiseAIPanel from '../components/modules/ai/StaywiseAIPanel';
 import MarketplaceNRI from '../components/modules/services/MarketplaceNRI';
 
@@ -131,6 +132,8 @@ function MainAppShell() {
           return <EstateHospitalityDashboard initialTab="STAFF" />;
         case 'pricing':
           return <EstateHospitalityDashboard initialTab="PRICING" />;
+        case 'settings':
+          return <EstateSettingsView />;
         case 'overview':
         case 'estate':
         case 'dashboard':
