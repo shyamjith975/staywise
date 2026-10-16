@@ -240,6 +240,22 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
     }
   }, [currentUser?.id, currentUser?.email, isDemoEstate]);
 
+  const userEstateNames = properties
+    .filter(p => p.ownerId === currentUser?.id || isDemoEstate)
+    .map(p => p.name.toLowerCase());
+
+  const activeEstateProperties = isDemoEstate
+    ? properties.filter(p => p.portfolio === 'Luxury Villas & Campuses' || p.type === 'Villa' || p.type === 'Estate')
+    : properties.filter(p => p.ownerId === currentUser?.id);
+
+  const activeEstateAssets = isDemoEstate
+    ? estateAssets
+    : estateAssets.filter(a => userEstateNames.includes(a.estateName.toLowerCase()) || (a as any).ownerId === currentUser?.id);
+
+  const activeStaffMembers = isDemoEstate
+    ? staff
+    : staff.filter(s => userEstateNames.includes(s.estateName.toLowerCase()) || (s as any).ownerId === currentUser?.id);
+
   // Modal: Add Reservation
   const [isAddReservationOpen, setIsAddReservationOpen] = useState(false);
   const [newResForm, setNewResForm] = useState({
@@ -950,8 +966,8 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
                   </div>
                 </div>
               </>
-            ) : properties.length > 0 ? (
-              properties.map(p => (
+            ) : activeEstateProperties.length > 0 ? (
+              activeEstateProperties.map(p => (
                 <div key={p.id} className="organic-card p-6 space-y-4">
                   <div className="flex items-start justify-between">
                     <div>
@@ -1092,7 +1108,7 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
             </button>
           </div>
 
-          {estateAssets.length === 0 ? (
+          {activeEstateAssets.length === 0 ? (
             <div className="p-12 text-center rounded-2xl bg-[#E8F0EC]/50 border border-[#D2DDD7] space-y-3">
               <Wrench className="h-10 w-10 text-[#163B36] mx-auto" />
               <div className="font-extrabold text-base text-[#263238]">No Physical Assets Logged</div>
@@ -1109,7 +1125,7 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {estateAssets.map((asset) => (
+              {activeEstateAssets.map((asset) => (
                 <div key={asset.id} className="p-4 rounded-2xl bg-[#E8F0EC]/40 border border-[#D2DDD7] space-y-2.5 text-xs">
                   <div className="flex items-start justify-between">
                     <div>
@@ -1170,7 +1186,7 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
             </button>
           </div>
 
-          {staff.length === 0 ? (
+          {activeStaffMembers.length === 0 ? (
             <div className="p-12 text-center rounded-2xl bg-[#E8F0EC]/50 border border-[#D2DDD7] space-y-3">
               <Users className="h-10 w-10 text-[#163B36] mx-auto" />
               <div className="font-extrabold text-base text-[#263238]">No Staff Registered</div>
@@ -1187,7 +1203,7 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {staff.map((s) => (
+              {activeStaffMembers.map((s) => (
                 <div key={s.id} className="p-4 rounded-2xl bg-[#E8F0EC]/40 border border-[#D2DDD7] flex items-center justify-between gap-3 text-xs">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">

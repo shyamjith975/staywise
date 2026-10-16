@@ -21,6 +21,7 @@ import { EstateAsset } from '../../../types';
 
 export default function EstateOSView() {
   const { 
+    properties,
     estateAssets, 
     staff, 
     utilities, 
@@ -61,11 +62,23 @@ export default function EstateOSView() {
 
   const [activeTab, setActiveTab] = useState<'ASSETS' | 'STAFF' | 'UTILITIES'>('ASSETS');
 
-  const isDemoEstate = currentUser?.email === 'estate@staywise.com' || currentUser?.id === 'user-estate-manoj' || currentUser?.email === 'owner@staywise.com';
+  const isDemoEstate = currentUser?.email === 'estate@staywise.com' || currentUser?.id === 'user-estate-manoj';
 
-  const activeAssets = isDemoEstate ? estateAssets : (estateAssets || []);
-  const activeStaff = isDemoEstate ? staff : (staff || []);
-  const activeUtilities = isDemoEstate ? utilities : (utilities || []);
+  const userEstateNames = properties
+    .filter(p => p.ownerId === currentUser?.id || isDemoEstate)
+    .map(p => p.name.toLowerCase());
+
+  const activeAssets = isDemoEstate 
+    ? estateAssets 
+    : estateAssets.filter(a => userEstateNames.includes(a.estateName.toLowerCase()) || (a as any).ownerId === currentUser?.id);
+
+  const activeStaff = isDemoEstate 
+    ? staff 
+    : staff.filter(s => userEstateNames.includes(s.estateName.toLowerCase()) || (s as any).ownerId === currentUser?.id);
+
+  const activeUtilities = isDemoEstate 
+    ? utilities 
+    : utilities.filter(u => userEstateNames.includes(u.estateName.toLowerCase()) || (u as any).ownerId === currentUser?.id);
 
   const totalMonthlyBudget = activeStaff.reduce((acc, s) => acc + (s.monthlySalary || 0), 0);
   const solarExport = activeUtilities.find(u => u.utilityType === 'Solar Grid')?.currentReading ?? (isDemoEstate ? 1520 : 0);
@@ -89,31 +102,41 @@ export default function EstateOSView() {
           </p>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex items-center p-1 bg-white rounded-2xl border border-[#D2DDD7] text-xs self-start sm:self-auto">
+        {/* Tab Switcher & Manual Add Options */}
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <div className="flex items-center p-1 bg-white rounded-2xl border border-[#D2DDD7] text-xs">
+            <button
+              onClick={() => setActiveTab('ASSETS')}
+              className={`px-3 py-1.5 rounded-xl font-bold transition ${
+                activeTab === 'ASSETS' ? 'bg-[#163B36] text-white shadow-xs' : 'text-[#546E7A] hover:text-[#263238]'
+              }`}
+            >
+              Physical Assets ({activeAssets.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('STAFF')}
+              className={`px-3 py-1.5 rounded-xl font-bold transition ${
+                activeTab === 'STAFF' ? 'bg-[#163B36] text-white shadow-xs' : 'text-[#546E7A] hover:text-[#263238]'
+              }`}
+            >
+              Estate Staff ({activeStaff.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('UTILITIES')}
+              className={`px-3 py-1.5 rounded-xl font-bold transition ${
+                activeTab === 'UTILITIES' ? 'bg-[#163B36] text-white shadow-xs' : 'text-[#546E7A] hover:text-[#263238]'
+              }`}
+            >
+              Utility Meters ({activeUtilities.length})
+            </button>
+          </div>
+
           <button
-            onClick={() => setActiveTab('ASSETS')}
-            className={`px-3 py-1.5 rounded-xl font-bold transition ${
-              activeTab === 'ASSETS' ? 'bg-[#163B36] text-white shadow-xs' : 'text-[#546E7A] hover:text-[#263238]'
-            }`}
+            onClick={() => setIsAddPropertyOpen(true)}
+            className="px-3.5 py-2 rounded-2xl bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer"
           >
-            Physical Assets ({activeAssets.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('STAFF')}
-            className={`px-3 py-1.5 rounded-xl font-bold transition ${
-              activeTab === 'STAFF' ? 'bg-[#163B36] text-white shadow-xs' : 'text-[#546E7A] hover:text-[#263238]'
-            }`}
-          >
-            Estate Staff ({activeStaff.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('UTILITIES')}
-            className={`px-3 py-1.5 rounded-xl font-bold transition ${
-              activeTab === 'UTILITIES' ? 'bg-[#163B36] text-white shadow-xs' : 'text-[#546E7A] hover:text-[#263238]'
-            }`}
-          >
-            Utility Meters ({activeUtilities.length})
+            <Plus className="h-3.5 w-3.5 text-[#C69A55]" />
+            <span>+ Add Villa / Campus</span>
           </button>
         </div>
       </div>

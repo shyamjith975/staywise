@@ -96,6 +96,7 @@ export default function TenantDashboard() {
   // Connect to Landlord Modal State
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
   const [connectForm, setConnectForm] = useState({
+    ownerIdentifier: '',
     ownerEmail: '',
     propertyId: '',
     propertyName: '',
@@ -224,6 +225,157 @@ export default function TenantDashboard() {
   const unitBill = isDemoTenant
     ? electricityBills.find(b => b.unitNumber === '302')
     : (currentTenant ? electricityBills.find(b => b.propertyId === currentTenant.propertyId && b.unitNumber === currentTenant.unitNumber) : null);
+
+  const renderConnectModal = () => {
+    if (!isConnectModalOpen) return null;
+    return (
+      <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white rounded-3xl border border-[#D2DDD7] p-6 space-y-4 shadow-2xl">
+          <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+            <div>
+              <h3 className="text-base font-extrabold text-[#263238]">Connect to Landlord / Property</h3>
+              <p className="text-xs text-[#546E7A]">Connect via Owner Phone Number, ID, or Email</p>
+            </div>
+            <button onClick={() => setIsConnectModalOpen(false)} className="text-[#546E7A] hover:text-[#263238] cursor-pointer">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const identifier = connectForm.ownerIdentifier.trim();
+            const isEmail = identifier.includes('@');
+            const isPhone = /^(\+91[\-\s]?)?[0-9]{10}$/.test(identifier.replace(/[\s\-]/g, '')) || (!isEmail && !identifier.startsWith('usr-') && !identifier.startsWith('owner-') && /\d{6,}/.test(identifier));
+
+            createTenantConnectionRequest({
+              tenantUserId: currentUser.id || 'usr-tenant',
+              tenantName: currentUser.name || 'Tenant',
+              tenantEmail: currentUser.email || '',
+              tenantPhone: (currentUser as any).phone || '+91 98450 11928',
+              ownerEmail: isEmail ? identifier : (connectForm.ownerEmail || undefined),
+              ownerPhone: isPhone ? identifier : undefined,
+              ownerId: (!isEmail && !isPhone) ? identifier : undefined,
+              ownerCode: identifier,
+              propertyId: connectForm.propertyId || properties[0]?.id || '',
+              propertyName: connectForm.propertyName || properties[0]?.name || 'Apartments',
+              unitNumber: connectForm.unitNumber || 'Unit 101',
+              monthlyRent: Number(connectForm.monthlyRent) || 20000,
+              depositAmount: Number(connectForm.depositAmount) || 40000,
+              leaseStartDate: connectForm.leaseStartDate
+            });
+            setIsConnectModalOpen(false);
+          }} className="space-y-3.5 text-xs">
+            <div>
+              <label className="block text-[#263238] font-bold mb-1">
+                Owner Phone Number, Owner ID, or Email
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. +91 98450 11928, user-owner-vikram, or owner@staywise.com"
+                value={connectForm.ownerIdentifier}
+                onChange={(e) => setConnectForm({ ...connectForm, ownerIdentifier: e.target.value })}
+                required
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+              />
+              <span className="text-[10px] text-[#546E7A] mt-0.5 block">
+                Enter your landlord's registered mobile number, email, or unique Owner ID.
+              </span>
+            </div>
+
+            <div>
+              <label className="block text-[#263238] font-bold mb-1">Property Name / Campus (Optional)</label>
+              {properties.length > 0 ? (
+                <div className="space-y-1.5">
+                  <select
+                    value={connectForm.propertyId}
+                    onChange={(e) => {
+                      const p = properties.find(prop => prop.id === e.target.value);
+                      setConnectForm({ ...connectForm, propertyId: e.target.value, propertyName: p?.name || '' });
+                    }}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                  >
+                    <option value="">Select registered property (or enter name below)...</option>
+                    {properties.map(p => (
+                      <option key={p.id} value={p.id}>{p.name} ({p.city})</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Or enter property name (e.g. Prestige Greenwoods)"
+                    value={connectForm.propertyName}
+                    onChange={(e) => setConnectForm({ ...connectForm, propertyName: e.target.value })}
+                    className="w-full px-3.5 py-2 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium text-xs"
+                  />
+                </div>
+              ) : (
+                <input
+                  type="text"
+                  placeholder="e.g. Beach Road Luxury Apartments, Horizon Villa"
+                  value={connectForm.propertyName}
+                  onChange={(e) => setConnectForm({ ...connectForm, propertyName: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                />
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[#263238] font-bold mb-1">Unit / Flat / Room</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 302 or Room 101"
+                  value={connectForm.unitNumber}
+                  onChange={(e) => setConnectForm({ ...connectForm, unitNumber: e.target.value })}
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                />
+              </div>
+              <div>
+                <label className="block text-[#263238] font-bold mb-1">Lease Start Date</label>
+                <input
+                  type="date"
+                  value={connectForm.leaseStartDate}
+                  onChange={(e) => setConnectForm({ ...connectForm, leaseStartDate: e.target.value })}
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[#263238] font-bold mb-1">Monthly Rent (₹)</label>
+                <input
+                  type="number"
+                  value={connectForm.monthlyRent}
+                  onChange={(e) => setConnectForm({ ...connectForm, monthlyRent: Number(e.target.value) })}
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium font-tabular"
+                />
+              </div>
+              <div>
+                <label className="block text-[#263238] font-bold mb-1">Security Deposit (₹)</label>
+                <input
+                  type="number"
+                  value={connectForm.depositAmount}
+                  onChange={(e) => setConnectForm({ ...connectForm, depositAmount: Number(e.target.value) })}
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium font-tabular"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer mt-2"
+            >
+              Send Connection Request to Owner
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  };
 
   // If new tenant is not assigned to any property yet, show dedicated unassigned onboarding dashboard
   if (!currentTenant) {
@@ -451,6 +603,9 @@ export default function TenantDashboard() {
             </div>
           </div>
         )}
+
+        {/* Connect to Landlord Modal */}
+        {renderConnectModal()}
       </div>
     );
   }
@@ -1164,121 +1319,7 @@ export default function TenantDashboard() {
       )}
 
       {/* Modal: Connect to Landlord / Property */}
-      {isConnectModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-3xl border border-[#D2DDD7] p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
-              <div>
-                <h3 className="text-base font-extrabold text-[#263238]">Connect to Landlord / Property</h3>
-                <p className="text-xs text-[#546E7A]">Submit a connection request to your landlord for approval</p>
-              </div>
-              <button onClick={() => setIsConnectModalOpen(false)} className="text-[#546E7A] hover:text-[#263238]">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              createTenantConnectionRequest({
-                tenantUserId: currentUser.id || 'usr-tenant',
-                tenantName: currentUser.name || 'Tenant',
-                tenantEmail: currentUser.email || '',
-                tenantPhone: (currentUser as any).phone || '+91 98450 11928',
-                ownerEmail: connectForm.ownerEmail,
-                propertyId: connectForm.propertyId || properties[0]?.id || '',
-                propertyName: connectForm.propertyName || properties[0]?.name || 'Apartments',
-                unitNumber: connectForm.unitNumber || 'Unit 101',
-                monthlyRent: Number(connectForm.monthlyRent) || 20000,
-                depositAmount: Number(connectForm.depositAmount) || 40000,
-                leaseStartDate: connectForm.leaseStartDate
-              });
-              setIsConnectModalOpen(false);
-            }} className="space-y-3.5 text-xs">
-              <div>
-                <label className="block text-[#263238] font-bold mb-1">Landlord / Owner Email or Property</label>
-                {properties.length > 0 ? (
-                  <select
-                    value={connectForm.propertyId}
-                    onChange={(e) => {
-                      const p = properties.find(prop => prop.id === e.target.value);
-                      setConnectForm({ ...connectForm, propertyId: e.target.value, propertyName: p?.name || '' });
-                    }}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
-                  >
-                    <option value="">Select a registered property...</option>
-                    {properties.map(p => (
-                      <option key={p.id} value={p.id}>{p.name} ({p.city})</option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    placeholder="e.g. owner@staywise.com or Property Code"
-                    value={connectForm.ownerEmail}
-                    onChange={(e) => setConnectForm({ ...connectForm, ownerEmail: e.target.value })}
-                    required
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
-                  />
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[#263238] font-bold mb-1">Unit / Flat / Room</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 302 or Room 101"
-                    value={connectForm.unitNumber}
-                    onChange={(e) => setConnectForm({ ...connectForm, unitNumber: e.target.value })}
-                    required
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[#263238] font-bold mb-1">Lease Start Date</label>
-                  <input
-                    type="date"
-                    value={connectForm.leaseStartDate}
-                    onChange={(e) => setConnectForm({ ...connectForm, leaseStartDate: e.target.value })}
-                    required
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[#263238] font-bold mb-1">Monthly Rent (₹)</label>
-                  <input
-                    type="number"
-                    value={connectForm.monthlyRent}
-                    onChange={(e) => setConnectForm({ ...connectForm, monthlyRent: Number(e.target.value) })}
-                    required
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium font-tabular"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[#263238] font-bold mb-1">Security Deposit (₹)</label>
-                  <input
-                    type="number"
-                    value={connectForm.depositAmount}
-                    onChange={(e) => setConnectForm({ ...connectForm, depositAmount: Number(e.target.value) })}
-                    required
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium font-tabular"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer mt-2"
-              >
-                Submit Connection Request to Landlord
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+      {renderConnectModal()}
 
       {/* Modal: Request Move-Out */}
       {isMoveOutModalOpen && (

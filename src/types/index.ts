@@ -682,6 +682,7 @@ export interface TenantConnectionRequest {
   ownerId?: string;
   ownerCode?: string;
   ownerEmail?: string;
+  ownerPhone?: string;
   propertyId?: string;
   propertyName?: string;
   unitNumber: string;

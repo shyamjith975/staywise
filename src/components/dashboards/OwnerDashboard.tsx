@@ -335,6 +335,9 @@ export default function OwnerDashboard() {
     ? properties.filter(p => p.ownerId === managerDelegate.ownerId)
     : [];
   const activeProperties = ownerProperties;
+  const activeElectricityBills = isDemoAccount
+    ? electricityBills
+    : electricityBills.filter(b => activeProperties.some(p => p.id === b.propertyId));
 
   const pendingConnectionRequests = tenantConnectionRequests.filter(r => r.status === 'PENDING_APPROVAL');
 
@@ -495,7 +498,7 @@ export default function OwnerDashboard() {
                 : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
             }`}
           >
-            Utility OCR Bills ({electricityBills.length})
+            Utility OCR Bills ({activeElectricityBills.length})
           </button>
         </div>
 
@@ -1537,7 +1540,7 @@ export default function OwnerDashboard() {
             </button>
           </div>
 
-          {electricityBills.length === 0 ? (
+          {activeElectricityBills.length === 0 ? (
             <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
               <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#263238] flex items-center justify-center mx-auto">
                 <Zap className="h-6 w-6 text-[#163B36]" />
@@ -1556,7 +1559,7 @@ export default function OwnerDashboard() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {electricityBills.map(bill => (
+              {activeElectricityBills.map(bill => (
                 <div key={bill.id} className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-xs space-y-3">
                   <div className="flex items-start justify-between">
                     <div>
