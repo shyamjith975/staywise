@@ -43,7 +43,8 @@ import {
   OwnerSubscription,
   SubscriptionInvoice,
   SubscriptionTierId,
-  PropertyUnit
+  PropertyUnit,
+  TenantConnectionRequest
 } from '../../types';
 import { SUBSCRIPTION_PLANS, calculateSubscriptionHash } from '../security/subscriptionCatalog';
 import { hashPassword, verifyPassword, isSha256 } from '../security/auth';
@@ -211,6 +212,51 @@ class DatabaseEngine {
         kyc_verified INTEGER NOT NULL DEFAULT 1,
         rewards_balance REAL NOT NULL DEFAULT 0,
         emergency_contact TEXT NOT NULL,
+        tenancy_type TEXT DEFAULT 'RESIDENTIAL',
+        has_food INTEGER DEFAULT 0,
+        room_sharing TEXT DEFAULT 'Single',
+        co_tenant_id TEXT,
+        co_tenant_name TEXT,
+        co_tenant_phone TEXT,
+        co_tenant_email TEXT,
+        rent_share_percentage INTEGER DEFAULT 100,
+        aadhaar_number TEXT,
+        pan_number TEXT,
+        documents_json TEXT DEFAULT '[]',
+        created_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS tenant_connection_requests (
+        id TEXT PRIMARY KEY,
+        tenant_user_id TEXT NOT NULL,
+        tenant_name TEXT NOT NULL,
+        tenant_email TEXT NOT NULL,
+        tenant_phone TEXT NOT NULL,
+        owner_id TEXT,
+        owner_code TEXT,
+        owner_email TEXT,
+        owner_phone TEXT,
+        property_id TEXT,
+        property_name TEXT,
+        unit_number TEXT NOT NULL,
+        monthly_rent REAL NOT NULL,
+        deposit_amount REAL NOT NULL,
+        lease_start_date TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'PENDING_APPROVAL',
+        tenancy_type TEXT DEFAULT 'PG',
+        include_food_plan INTEGER DEFAULT 1,
+        aadhaar_number TEXT,
+        pan_number TEXT,
+        ekyc_verified INTEGER DEFAULT 1,
+        documents_json TEXT DEFAULT '[]',
+        agreement_url TEXT,
+        co_tenant_name TEXT,
+        co_tenant_phone TEXT,
+        co_tenant_email TEXT,
+        move_out_date TEXT,
+        move_out_reason TEXT,
+        inspection_notes TEXT,
+        deposit_settled_amount REAL,
         created_at TEXT NOT NULL
       );
 
@@ -559,6 +605,27 @@ class DatabaseEngine {
     // Automatic non-destructive schema migrations
     try { this.sqlite.exec('ALTER TABLE properties ADD COLUMN owner_id TEXT;'); } catch (e) {}
     try { this.sqlite.exec('ALTER TABLE tenants ADD COLUMN user_id TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenants ADD COLUMN tenancy_type TEXT DEFAULT "RESIDENTIAL";'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenants ADD COLUMN has_food INTEGER DEFAULT 0;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenants ADD COLUMN room_sharing TEXT DEFAULT "Single";'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenants ADD COLUMN co_tenant_id TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenants ADD COLUMN co_tenant_name TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenants ADD COLUMN co_tenant_phone TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenants ADD COLUMN co_tenant_email TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenants ADD COLUMN rent_share_percentage INTEGER DEFAULT 100;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenants ADD COLUMN aadhaar_number TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenants ADD COLUMN pan_number TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenants ADD COLUMN documents_json TEXT DEFAULT "[]";'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN tenancy_type TEXT DEFAULT "PG";'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN include_food_plan INTEGER DEFAULT 1;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN aadhaar_number TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN pan_number TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN ekyc_verified INTEGER DEFAULT 1;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN documents_json TEXT DEFAULT "[]";'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN agreement_url TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN co_tenant_name TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN co_tenant_phone TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN co_tenant_email TEXT;'); } catch (e) {}
 
     // Automatic SHA-256 password migration: ensure all stored passwords are encrypted in SHA-256 format
     try {
@@ -1016,12 +1083,23 @@ class DatabaseEngine {
         reliabilityScore: r.reliability_score,
         kycVerified: Boolean(r.kyc_verified),
         rewardsBalance: r.rewards_balance,
-        emergencyContact: r.emergency_contact
+        emergencyContact: r.emergency_contact,
+        tenancyType: (r.tenancy_type as any) || 'Residential',
+        hasFood: Boolean(r.has_food),
+        roomSharing: (r.room_sharing as any) || 'Single',
+        coTenantId: r.co_tenant_id || undefined,
+        coTenantName: r.co_tenant_name || undefined,
+        coTenantPhone: r.co_tenant_phone || undefined,
+        coTenantEmail: r.co_tenant_email || undefined,
+        rentSharePercentage: r.rent_share_percentage ?? 100,
+        aadhaarNumber: r.aadhaar_number || undefined,
+        panNumber: r.pan_number || undefined,
+        documents: r.documents_json ? (typeof r.documents_json === 'string' ? JSON.parse(r.documents_json) : r.documents_json) : []
       }));
     },
 
     findById: async (id: string): Promise<Tenant | null> => {
-      const row = this.sqlite.prepare('SELECT * FROM tenants WHERE id = ? LIMIT 1').get(id);
+      const row = this.sqlite.prepare('SELECT * FROM tenants WHERE id = ? LIMIT 1').get(id) as any;
       if (!row) return null;
       return {
         id: row.id,
@@ -1042,7 +1120,18 @@ class DatabaseEngine {
         reliabilityScore: row.reliability_score,
         kycVerified: Boolean(row.kyc_verified),
         rewardsBalance: row.rewards_balance,
-        emergencyContact: row.emergency_contact
+        emergencyContact: row.emergency_contact,
+        tenancyType: (row.tenancy_type as any) || 'Residential',
+        hasFood: Boolean(row.has_food),
+        roomSharing: (row.room_sharing as any) || 'Single',
+        coTenantId: row.co_tenant_id || undefined,
+        coTenantName: row.co_tenant_name || undefined,
+        coTenantPhone: row.co_tenant_phone || undefined,
+        coTenantEmail: row.co_tenant_email || undefined,
+        rentSharePercentage: row.rent_share_percentage ?? 100,
+        aadhaarNumber: row.aadhaar_number || undefined,
+        panNumber: row.pan_number || undefined,
+        documents: row.documents_json ? (typeof row.documents_json === 'string' ? JSON.parse(row.documents_json) : row.documents_json) : []
       };
     },
 
@@ -1052,8 +1141,10 @@ class DatabaseEngine {
         INSERT OR REPLACE INTO tenants (
           id, user_id, name, email, phone, property_id, property_name, unit_number,
           monthly_rent, deposit_paid, lease_start, lease_end, rent_due_date, salary_date,
-          autopay_active, reliability_score, kyc_verified, rewards_balance, emergency_contact, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          autopay_active, reliability_score, kyc_verified, rewards_balance, emergency_contact,
+          tenancy_type, has_food, room_sharing, co_tenant_id, co_tenant_name, co_tenant_phone,
+          co_tenant_email, rent_share_percentage, aadhaar_number, pan_number, documents_json, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       insert.run(
@@ -1076,6 +1167,17 @@ class DatabaseEngine {
         tenant.kycVerified ? 1 : 0,
         tenant.rewardsBalance,
         tenant.emergencyContact,
+        tenant.tenancyType || 'Residential',
+        tenant.hasFood ? 1 : 0,
+        tenant.roomSharing || 'Single',
+        sb(tenant.coTenantId, null),
+        sb(tenant.coTenantName, null),
+        sb(tenant.coTenantPhone, null),
+        sb(tenant.coTenantEmail, null),
+        tenant.rentSharePercentage ?? 100,
+        sb(tenant.aadhaarNumber, null),
+        sb(tenant.panNumber, null),
+        tenant.documents ? JSON.stringify(tenant.documents) : '[]',
         new Date().toISOString()
       );
       this.syncRootDb();
@@ -1102,12 +1204,50 @@ class DatabaseEngine {
       leaseEnd: string;
       rentDueDate: number;
       password?: string;
-    }): Promise<{ tenant: Tenant; property: Property | null; invoice: RentInvoice; ledgerEntry: LedgerEntry; user: UserAccount }> => {
+      tenancyType?: 'PG' | 'Residential' | 'Commercial';
+      hasFood?: boolean;
+      roomSharing?: 'Single' | '2_Sharing' | '3_Sharing';
+      coTenant?: {
+        name: string;
+        phone: string;
+        email: string;
+        rentSharePercentage?: number;
+      };
+      aadhaarNumber?: string;
+      panNumber?: string;
+      documents?: any[];
+    }): Promise<{ 
+      tenant: Tenant; 
+      coTenant?: Tenant;
+      property: Property | null; 
+      invoice: RentInvoice; 
+      coInvoice?: RentInvoice;
+      ledgerEntry: LedgerEntry; 
+      user: UserAccount 
+    }> => {
       const tenantId = generateTenantId();
       const prop = await this.properties.findById(data.propertyId);
       const propName = prop ? prop.name : 'Staywise Residency';
 
-      // 1. Ensure Tenant User Account for Login
+      const isSharing = data.roomSharing === '2_Sharing' && Boolean(data.coTenant?.name);
+      const coRentSharePct = isSharing ? (data.coTenant?.rentSharePercentage || 50) : 0;
+      const primaryRentSharePct = isSharing ? (100 - coRentSharePct) : 100;
+
+      const primaryMonthlyRent = isSharing 
+        ? Math.round((data.monthlyRent * primaryRentSharePct) / 100) 
+        : data.monthlyRent;
+      const coMonthlyRent = isSharing 
+        ? (data.monthlyRent - primaryMonthlyRent) 
+        : 0;
+
+      const primaryDeposit = isSharing 
+        ? Math.round((data.deposit * primaryRentSharePct) / 100) 
+        : data.deposit;
+      const coDeposit = isSharing 
+        ? (data.deposit - primaryDeposit) 
+        : 0;
+
+      // 1. Ensure Primary Tenant User Account
       let user = await this.users.findByEmail(data.email);
       if (!user) {
         user = await this.users.create({
@@ -1124,7 +1264,29 @@ class DatabaseEngine {
         });
       }
 
-      // 2. Create Tenant Record with linked userId
+      const coTenantId = isSharing ? generateTenantId() : undefined;
+      let coUser: UserAccount | null | undefined = undefined;
+
+      // 1b. If Co-Tenant Sharing, Ensure Co-Tenant User Account
+      if (isSharing && data.coTenant) {
+        coUser = (await this.users.findByEmail(data.coTenant.email)) || undefined;
+        if (!coUser) {
+          coUser = await this.users.create({
+            id: generateUserId('tenant'),
+            email: data.coTenant.email,
+            password: 'Tenant@123',
+            name: data.coTenant.name,
+            role: 'tenant',
+            roleLabel: 'Tenant / Resident',
+            avatar: '👩‍🎓',
+            title: `Co-Resident • Apt ${data.unitNumber}`,
+            description: `${propName} • Shared Room Lease Connected`,
+            phone: data.coTenant.phone
+          });
+        }
+      }
+
+      // 2. Create Primary Tenant Record
       const newTenant: Tenant = {
         id: tenantId,
         userId: user.id,
@@ -1134,8 +1296,8 @@ class DatabaseEngine {
         propertyId: data.propertyId,
         propertyName: propName,
         unitNumber: data.unitNumber,
-        monthlyRent: data.monthlyRent,
-        depositPaid: data.deposit,
+        monthlyRent: primaryMonthlyRent,
+        depositPaid: primaryDeposit,
         leaseStart: data.leaseStart,
         leaseEnd: data.leaseEnd,
         rentDueDate: data.rentDueDate || 5,
@@ -1143,14 +1305,64 @@ class DatabaseEngine {
         reliabilityScore: 100,
         kycVerified: true,
         rewardsBalance: 500, // Onboarding welcome bonus
-        emergencyContact: 'Family Primary Contact'
+        emergencyContact: 'Family Primary Contact',
+        tenancyType: data.tenancyType || 'Residential',
+        hasFood: data.hasFood ?? false,
+        roomSharing: data.roomSharing || 'Single',
+        coTenantId: coTenantId,
+        coTenantName: data.coTenant?.name,
+        coTenantPhone: data.coTenant?.phone,
+        coTenantEmail: data.coTenant?.email,
+        rentSharePercentage: primaryRentSharePct,
+        aadhaarNumber: data.aadhaarNumber,
+        panNumber: data.panNumber,
+        documents: data.documents || []
       };
       await this.tenants.create(newTenant);
 
+      // 2b. Create Co-Tenant Record if Sharing
+      let newCoTenant: Tenant | undefined = undefined;
+      if (isSharing && data.coTenant && coTenantId && coUser) {
+        newCoTenant = {
+          id: coTenantId,
+          userId: coUser.id,
+          name: data.coTenant.name,
+          email: data.coTenant.email,
+          phone: data.coTenant.phone,
+          propertyId: data.propertyId,
+          propertyName: propName,
+          unitNumber: data.unitNumber,
+          monthlyRent: coMonthlyRent,
+          depositPaid: coDeposit,
+          leaseStart: data.leaseStart,
+          leaseEnd: data.leaseEnd,
+          rentDueDate: data.rentDueDate || 5,
+          autopayActive: true,
+          reliabilityScore: 100,
+          kycVerified: true,
+          rewardsBalance: 500,
+          emergencyContact: `${data.name} (Roommate)`,
+          tenancyType: data.tenancyType || 'Residential',
+          hasFood: data.hasFood ?? false,
+          roomSharing: '2_Sharing',
+          coTenantId: tenantId,
+          coTenantName: data.name,
+          coTenantPhone: data.phone,
+          coTenantEmail: data.email,
+          rentSharePercentage: coRentSharePct,
+          documents: []
+        };
+        await this.tenants.create(newCoTenant);
+      }
+
       // 3. Update Property Unit & Metrics
       if (prop) {
+        const occupantNames = isSharing && data.coTenant 
+          ? `${data.name} & ${data.coTenant.name} (Sharing)` 
+          : data.name;
+
         // Upsert or update unit
-        const existingUnit = this.sqlite.prepare('SELECT id FROM property_units WHERE property_id = ? AND unit_number = ?').get(data.propertyId, data.unitNumber);
+        const existingUnit = this.sqlite.prepare('SELECT id FROM property_units WHERE property_id = ? AND unit_number = ?').get(data.propertyId, data.unitNumber) as any;
         if (existingUnit) {
           this.sqlite.prepare(`
             UPDATE property_units SET
@@ -1161,7 +1373,7 @@ class DatabaseEngine {
               deposit_amount = ?,
               lease_end = ?
             WHERE id = ?
-          `).run(tenantId, data.name, data.monthlyRent, data.deposit, data.leaseEnd, existingUnit.id);
+          `).run(tenantId, occupantNames, data.monthlyRent, data.deposit, data.leaseEnd, existingUnit.id);
         } else {
           this.sqlite.prepare(`
             INSERT INTO property_units (
@@ -1173,12 +1385,12 @@ class DatabaseEngine {
             data.propertyId,
             data.unitNumber,
             1,
-            'Standard Residential',
+            isSharing ? 'Shared Residential Suite' : 'Standard Residential',
             data.monthlyRent,
             data.deposit,
             'OCCUPIED',
             tenantId,
-            data.name,
+            occupantNames,
             data.leaseEnd,
             1200,
             2,
@@ -1196,7 +1408,7 @@ class DatabaseEngine {
         `).run(data.monthlyRent, data.propertyId);
       }
 
-      // 4. Generate Initial Rent Invoice
+      // 4. Generate Initial Rent Invoice for Primary Tenant
       const newInvoice: RentInvoice = {
         id: generateInvoiceId(),
         invoiceNumber: generateInvoiceNumber(),
@@ -1206,17 +1418,40 @@ class DatabaseEngine {
         propertyName: propName,
         unitNumber: data.unitNumber,
         period: 'October 2026',
-        baseRent: data.monthlyRent,
-        totalAmount: data.monthlyRent,
+        baseRent: primaryMonthlyRent,
+        totalAmount: primaryMonthlyRent,
         paidAmount: 0,
         dueDate: `2026-10-${data.rentDueDate.toString().padStart(2, '0')}`,
         status: 'Due'
       };
       await this.invoices.create(newInvoice);
 
+      // 4b. Generate Initial Rent Invoice for Co-Tenant if sharing
+      let coInvoice: RentInvoice | undefined = undefined;
+      if (isSharing && newCoTenant) {
+        coInvoice = {
+          id: generateInvoiceId(),
+          invoiceNumber: generateInvoiceNumber(),
+          tenantId: newCoTenant.id,
+          tenantName: newCoTenant.name,
+          propertyId: data.propertyId,
+          propertyName: propName,
+          unitNumber: data.unitNumber,
+          period: 'October 2026',
+          baseRent: coMonthlyRent,
+          totalAmount: coMonthlyRent,
+          paidAmount: 0,
+          dueDate: `2026-10-${data.rentDueDate.toString().padStart(2, '0')}`,
+          status: 'Due'
+        };
+        await this.invoices.create(coInvoice);
+      }
+
       // 5. Statutory Deposit Entry in Ledger
       const ledgerEntry = await this.ledger.create({
-        description: `Security Deposit Onboarded - Unit ${data.unitNumber} (${data.name})`,
+        description: isSharing && data.coTenant
+          ? `Security Deposit Onboarded (Dual Sharing) - Unit ${data.unitNumber} (${data.name} & ${data.coTenant.name})`
+          : `Security Deposit Onboarded - Unit ${data.unitNumber} (${data.name})`,
         type: 'CREDIT',
         amount: data.deposit,
         account: '1020-STATUTORY-TENANT-DEPOSIT-TRUST',
@@ -1229,8 +1464,10 @@ class DatabaseEngine {
       const updatedProp = await this.properties.findById(data.propertyId);
       return {
         tenant: newTenant,
+        coTenant: newCoTenant,
         property: updatedProp,
         invoice: newInvoice,
+        coInvoice,
         ledgerEntry,
         user
       };
@@ -2108,8 +2345,11 @@ class DatabaseEngine {
         firstChargeDate: r.first_charge_date || undefined
       }));
 
-      const sub = all.find(s => s.userId === userId || s.userId === 'user-owner-vikram');
-      return sub || all[0] || null;
+      if (userId) {
+        const found = all.find(s => s.userId === userId);
+        if (found) return found;
+      }
+      return all.find(s => s.userId === 'user-owner-vikram') || all[0] || null;
     },
 
     getAll: async (): Promise<OwnerSubscription[]> => {
@@ -2512,6 +2752,111 @@ class DatabaseEngine {
       );
       this.syncRootDb();
       return this.settings.getForUser(data.userId);
+    }
+  };
+
+  // ==========================================
+  // TENANT CONNECTION REQUESTS & LIFECYCLE
+  // ==========================================
+  public tenantConnections = {
+    findMany: async (): Promise<TenantConnectionRequest[]> => {
+      const rows = this.sqlite.prepare('SELECT * FROM tenant_connection_requests ORDER BY created_at DESC').all() as any[];
+      return rows.map(r => ({
+        id: r.id,
+        tenantUserId: r.tenant_user_id,
+        tenantName: r.tenant_name,
+        tenantEmail: r.tenant_email,
+        tenantPhone: r.tenant_phone,
+        ownerId: r.owner_id || undefined,
+        ownerCode: r.owner_code || undefined,
+        ownerEmail: r.owner_email || undefined,
+        ownerPhone: r.owner_phone || undefined,
+        propertyId: r.property_id || undefined,
+        propertyName: r.property_name || undefined,
+        unitNumber: r.unit_number,
+        monthlyRent: r.monthly_rent,
+        depositAmount: r.deposit_amount,
+        leaseStartDate: r.lease_start_date,
+        status: r.status as any,
+        createdAt: r.created_at,
+        moveOutDate: r.move_out_date || undefined,
+        moveOutReason: r.move_out_reason || undefined,
+        inspectionNotes: r.inspection_notes || undefined,
+        depositSettledAmount: r.deposit_settled_amount || undefined,
+        tenancyType: (r.tenancy_type as any) || 'PG',
+        includeFoodPlan: Boolean(r.include_food_plan),
+        aadhaarNumber: r.aadhaar_number || undefined,
+        panNumber: r.pan_number || undefined,
+        ekycVerified: Boolean(r.ekyc_verified),
+        documents: r.documents_json ? (typeof r.documents_json === 'string' ? JSON.parse(r.documents_json) : r.documents_json) : [],
+        agreementUrl: r.agreement_url || undefined,
+        coTenantName: r.co_tenant_name || undefined,
+        coTenantPhone: r.co_tenant_phone || undefined,
+        coTenantEmail: r.co_tenant_email || undefined
+      }));
+    },
+
+    create: async (req: TenantConnectionRequest): Promise<TenantConnectionRequest> => {
+      this.sqlite.prepare(`
+        INSERT OR REPLACE INTO tenant_connection_requests (
+          id, tenant_user_id, tenant_name, tenant_email, tenant_phone,
+          owner_id, owner_code, owner_email, owner_phone, property_id, property_name,
+          unit_number, monthly_rent, deposit_amount, lease_start_date, status,
+          tenancy_type, include_food_plan, aadhaar_number, pan_number, ekyc_verified,
+          documents_json, agreement_url, co_tenant_name, co_tenant_phone, co_tenant_email,
+          created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        req.id,
+        req.tenantUserId,
+        req.tenantName,
+        req.tenantEmail,
+        req.tenantPhone,
+        sb(req.ownerId, null),
+        sb(req.ownerCode, null),
+        sb(req.ownerEmail, null),
+        sb(req.ownerPhone, null),
+        sb(req.propertyId, null),
+        sb(req.propertyName, null),
+        req.unitNumber,
+        req.monthlyRent,
+        req.depositAmount,
+        req.leaseStartDate,
+        req.status || 'PENDING_APPROVAL',
+        req.tenancyType || 'PG',
+        req.includeFoodPlan !== false ? 1 : 0,
+        sb(req.aadhaarNumber, null),
+        sb(req.panNumber, null),
+        req.ekycVerified !== false ? 1 : 0,
+        req.documents ? JSON.stringify(req.documents) : '[]',
+        sb(req.agreementUrl, null),
+        sb(req.coTenantName, null),
+        sb(req.coTenantPhone, null),
+        sb(req.coTenantEmail, null),
+        req.createdAt || new Date().toISOString()
+      );
+      this.syncRootDb();
+      return req;
+    },
+
+    updateStatus: async (id: string, status: string, extra?: any): Promise<boolean> => {
+      if (extra?.moveOutDate) {
+        this.sqlite.prepare(`
+          UPDATE tenant_connection_requests SET
+            status = ?, move_out_date = ?, move_out_reason = ?
+          WHERE id = ?
+        `).run(status, extra.moveOutDate, extra.moveOutReason || '', id);
+      } else if (extra?.depositSettledAmount !== undefined) {
+        this.sqlite.prepare(`
+          UPDATE tenant_connection_requests SET
+            status = ?, inspection_notes = ?, deposit_settled_amount = ?
+          WHERE id = ?
+        `).run(status, extra.inspectionNotes || '', extra.depositSettledAmount, id);
+      } else {
+        this.sqlite.prepare(`UPDATE tenant_connection_requests SET status = ? WHERE id = ?`).run(status, id);
+      }
+      this.syncRootDb();
+      return true;
     }
   };
 }

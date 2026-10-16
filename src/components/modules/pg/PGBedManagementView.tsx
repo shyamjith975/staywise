@@ -31,7 +31,8 @@ import {
   Warehouse,
   SlidersHorizontal,
   ExternalLink,
-  MapPin
+  MapPin,
+  UserPlus
 } from 'lucide-react';
 
 export default function PGBedManagementView() {
@@ -48,6 +49,7 @@ export default function PGBedManagementView() {
     updatePGBedStatus, 
     addNotification,
     setIsAddPropertyOpen,
+    setIsExistingTenantWizardOpen,
     setActiveView,
     foodMenuItems,
     addFoodMenuItem,
@@ -361,15 +363,6 @@ export default function PGBedManagementView() {
                 </button>
               ))}
             </div>
-
-            {/* Quick Action: Add Property / Space */}
-            <button
-              onClick={() => setIsAddPropertyOpen(true)}
-              className="py-2 px-4 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition shrink-0"
-            >
-              <Plus className="h-4 w-4" />
-              <span>+ Add to Universe</span>
-            </button>
           </div>
 
           {(!isDemoAccount && userOwnedProperties.length === 0) ? (
@@ -378,27 +371,14 @@ export default function PGBedManagementView() {
               <div className="space-y-1">
                 <h3 className="text-base font-extrabold text-[#263238]">No assets or properties registered yet</h3>
                 <p className="text-xs text-[#666666] max-w-md mx-auto">
-                  Your asset universe is currently clean. Add your first PG, residential apartment, or commercial floor to start managing beds and tenants.
+                  Your asset universe is currently clean. Use the <span className="font-semibold text-[#163B36]">+ Add Property</span> button in the top header to start managing beds and tenants.
                 </p>
               </div>
-              <button
-                onClick={() => setIsAddPropertyOpen(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Add Property to Universe</span>
-              </button>
             </div>
           ) : !isDemoAccount ? (
             <div className="space-y-4 animate-in fade-in duration-200">
               <div className="flex items-center justify-between">
                 <h2 className="font-extrabold text-[#263238] text-sm">Your Registered Properties ({userOwnedProperties.length})</h2>
-                <button
-                  onClick={() => setIsAddPropertyOpen(true)}
-                  className="px-3.5 py-1.5 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
-                >
-                  + Add Property
-                </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {userOwnedProperties.map(p => (
@@ -982,14 +962,8 @@ export default function PGBedManagementView() {
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
                 {selectedRoomFilter 
                   ? `No beds configured under Room ${selectedRoomFilter}.`
-                  : 'There are no active PG beds in your portfolio. Add a PG property to configure rooms, beds, and sub-meters.'}
+                  : 'There are no active PG beds in your portfolio. Use + Add Property in the top header to configure rooms, beds, and sub-meters.'}
               </p>
-              <button
-                onClick={() => setIsAddPropertyOpen(true)}
-                className="px-4 py-2 rounded-xl bg-[#263238] text-white text-xs font-bold hover:bg-[#263238]/90 transition"
-              >
-                + Add PG Property
-              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">

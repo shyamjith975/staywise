@@ -31,7 +31,10 @@ import {
   Building,
   Home,
   AlertCircle,
-  Utensils
+  Utensils,
+  UploadCloud,
+  Check,
+  Trash2
 } from 'lucide-react';
 import { Roommate } from '../../types';
 import ViewElectricityBillDocumentModal from '../modules/rentflow/ViewElectricityBillDocumentModal';
@@ -93,6 +96,9 @@ export default function TenantDashboard() {
 
   const isDemoTenant = currentUser?.email === 'tenant@staywise.com' || currentUser?.id === 'user-tenant-shyam';
 
+  // Tenancy Property Category: PG, Residential, Commercial
+  const [activeTenancyType, setActiveTenancyType] = useState<'PG' | 'Residential' | 'Commercial'>('PG');
+
   // Connect to Landlord Modal State
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
   const [connectForm, setConnectForm] = useState({
@@ -103,8 +109,14 @@ export default function TenantDashboard() {
     unitNumber: '',
     monthlyRent: 25000,
     depositAmount: 50000,
-    leaseStartDate: '2026-11-01'
+    leaseStartDate: '2026-11-01',
+    tenancyType: 'PG' as 'PG' | 'Residential' | 'Commercial',
+    includeFoodPlan: true,
+    aadhaarNumber: '',
+    panNumber: '',
+    documents: [] as Array<{ id: string; name: string; size: string; type: string; uploadDate: string; dataUrl?: string }>
   });
+  const [connectValidationError, setConnectValidationError] = useState('');
 
   // Move-Out Modal State
   const [isMoveOutModalOpen, setIsMoveOutModalOpen] = useState(false);
@@ -155,7 +167,7 @@ export default function TenantDashboard() {
   const [aadhaarNumber, setAadhaarNumber] = useState(isDemoTenant ? '5481 9028 1142' : '');
   const [panNumber, setPanNumber] = useState(isDemoTenant ? 'BLRPS9912A' : '');
 
-  // Reset demo states when switching accounts
+  // Reset demo states or populate from currentTenant and database
   useEffect(() => {
     if (isDemoTenant) {
       setRoommates(DEMO_ROOMMATES);
@@ -163,6 +175,69 @@ export default function TenantDashboard() {
       setEkycStatus('Verified');
       setAadhaarNumber('5481 9028 1142');
       setPanNumber('BLRPS9912A');
+      setActiveTenancyType('PG');
+    } else if (currentTenant) {
+      if (currentTenant.tenancyType) {
+        setActiveTenancyType(currentTenant.tenancyType);
+      }
+      if (currentTenant.aadhaarNumber) {
+        setAadhaarNumber(currentTenant.aadhaarNumber);
+        setEkycStatus('Verified');
+      }
+      if (currentTenant.panNumber) {
+        setPanNumber(currentTenant.panNumber);
+      }
+      if (currentTenant.documents && Array.isArray(currentTenant.documents)) {
+        setResidentDocs(currentTenant.documents.map(d => ({
+          id: d.id,
+          name: d.name,
+          size: d.size || '1.0 MB',
+          date: d.date || (d as any).uploadDate || '2026-10-16'
+        })));
+      }
+
+      // Automatically sync roommates from coTenant or roommates sharing same unit
+      const matchedRoommates: Roommate[] = [];
+      if (currentTenant.coTenantName) {
+        const splitPct = currentTenant.rentSharePercentage ? (100 - currentTenant.rentSharePercentage) : 50;
+        const rShare = Math.round(((currentTenant.monthlyRent || 20000) * splitPct) / 100);
+        matchedRoommates.push({
+          id: currentTenant.coTenantId || 'rm-cotenant',
+          name: currentTenant.coTenantName,
+          phone: currentTenant.coTenantPhone || '',
+          email: currentTenant.coTenantEmail || '',
+          splitPercentage: splitPct,
+          rentShare: rShare,
+          utilityShare: 1200,
+          totalPayable: rShare + 1200,
+          status: 'Paid',
+          isPrimary: false
+        });
+      }
+      // Check other tenants sharing same property & unit
+      const unitRoommates = tenants.filter(t => 
+        t.id !== currentTenant.id && 
+        t.propertyId === currentTenant.propertyId && 
+        t.unitNumber === currentTenant.unitNumber
+      );
+      for (const urm of unitRoommates) {
+        if (!matchedRoommates.some(m => m.id === urm.id || (m.email && m.email === urm.email))) {
+          const rShare = Math.round(urm.monthlyRent || 0);
+          matchedRoommates.push({
+            id: urm.id,
+            name: urm.name,
+            phone: urm.phone,
+            email: urm.email,
+            splitPercentage: urm.rentSharePercentage || 50,
+            rentShare: rShare,
+            utilityShare: 1200,
+            totalPayable: rShare + 1200,
+            status: 'Paid',
+            isPrimary: false
+          });
+        }
+      }
+      setRoommates(matchedRoommates);
     } else {
       setRoommates([]);
       setResidentDocs([]);
@@ -170,7 +245,7 @@ export default function TenantDashboard() {
       setAadhaarNumber('');
       setPanNumber('');
     }
-  }, [isDemoTenant]);
+  }, [isDemoTenant, currentTenant, tenants]);
 
   // Tenant Mess & Food Plan State
   const [isMealCustomizerOpen, setIsMealCustomizerOpen] = useState(false);
@@ -228,46 +303,143 @@ export default function TenantDashboard() {
 
   const renderConnectModal = () => {
     if (!isConnectModalOpen) return null;
+
+    const handleDocumentAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files || e.target.files.length === 0) return;
+      const newDocs = Array.from(e.target.files).map((file, idx) => ({
+        id: `doc-${Date.now()}-${idx}`,
+        name: file.name,
+        size: `${(file.size / 1024).toFixed(1)} KB`,
+        type: file.name.toLowerCase().includes('agreement') ? 'RENTAL_AGREEMENT' : 'EKYC_IDENTITY',
+        uploadDate: new Date().toISOString().split('T')[0]
+      }));
+      setConnectForm(prev => ({ ...prev, documents: [...prev.documents, ...newDocs] }));
+      setConnectValidationError('');
+    };
+
+    const handleAttachSampleDocs = () => {
+      const sampleDocs = [
+        {
+          id: `doc-${Date.now()}-1`,
+          name: 'Aadhaar_Card_eKYC_Verified.pdf',
+          size: '420.5 KB',
+          type: 'EKYC_IDENTITY',
+          uploadDate: new Date().toISOString().split('T')[0]
+        },
+        {
+          id: `doc-${Date.now()}-2`,
+          name: 'Signed_Rental_Agreement_Copy.pdf',
+          size: '1.2 MB',
+          type: 'RENTAL_AGREEMENT',
+          uploadDate: new Date().toISOString().split('T')[0]
+        }
+      ];
+      setConnectForm(prev => ({
+        ...prev,
+        aadhaarNumber: prev.aadhaarNumber || '5481 9028 1142',
+        panNumber: prev.panNumber || 'BLRPS9912A',
+        documents: [...prev.documents, ...sampleDocs]
+      }));
+      setConnectValidationError('');
+    };
+
+    const removeDoc = (id: string) => {
+      setConnectForm(prev => ({
+        ...prev,
+        documents: prev.documents.filter(d => d.id !== id)
+      }));
+    };
+
+    const handleConnectSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      setConnectValidationError('');
+
+      const rawAadhaar = connectForm.aadhaarNumber.replace(/[\s\-]/g, '');
+      if (!/^\d{12}$/.test(rawAadhaar)) {
+        setConnectValidationError('Mandatory eKYC: Please enter a valid 12-digit Aadhaar number.');
+        return;
+      }
+
+      const rawPan = connectForm.panNumber.trim().toUpperCase();
+      if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(rawPan)) {
+        setConnectValidationError('Mandatory eKYC: Please enter a valid 10-character PAN (e.g. ABCDE1234F).');
+        return;
+      }
+
+      if (connectForm.documents.length === 0) {
+        setConnectValidationError('Mandatory Documents: Please upload at least one identity document or signed rental agreement.');
+        return;
+      }
+
+      const identifier = connectForm.ownerIdentifier.trim();
+      const isEmail = identifier.includes('@');
+      const isPhone = /^(\+91[\-\s]?)?[0-9]{10}$/.test(identifier.replace(/[\s\-]/g, '')) || (!isEmail && !identifier.startsWith('usr-') && !identifier.startsWith('owner-') && /\d{6,}/.test(identifier));
+
+      createTenantConnectionRequest({
+        tenantUserId: currentUser.id || 'usr-tenant',
+        tenantName: currentUser.name || 'Tenant',
+        tenantEmail: currentUser.email || '',
+        tenantPhone: (currentUser as any).phone || '+91 98450 11928',
+        ownerEmail: isEmail ? identifier : (connectForm.ownerEmail || undefined),
+        ownerPhone: isPhone ? identifier : undefined,
+        ownerId: (!isEmail && !isPhone) ? identifier : undefined,
+        ownerCode: identifier,
+        propertyId: connectForm.propertyId || properties[0]?.id || '',
+        propertyName: connectForm.propertyName || properties[0]?.name || 'Apartments',
+        unitNumber: connectForm.unitNumber || 'Unit 101',
+        monthlyRent: Number(connectForm.monthlyRent) || 20000,
+        depositAmount: Number(connectForm.depositAmount) || 40000,
+        leaseStartDate: connectForm.leaseStartDate,
+        tenancyType: connectForm.tenancyType,
+        hasFood: connectForm.tenancyType === 'PG' ? connectForm.includeFoodPlan : false,
+        aadhaarNumber: connectForm.aadhaarNumber,
+        panNumber: rawPan,
+        documents: connectForm.documents.map(d => ({
+          id: d.id,
+          name: d.name,
+          size: d.size,
+          date: d.uploadDate || new Date().toISOString().split('T')[0],
+          type: d.type
+        }))
+      });
+
+      setEkycStatus('Verified');
+      setAadhaarNumber(connectForm.aadhaarNumber);
+      setPanNumber(rawPan);
+      setIsConnectModalOpen(false);
+
+      addNotification(
+        'Connection & eKYC Sent',
+        `Your lease connection request with verified Aadhaar, PAN, and ${connectForm.documents.length} document(s) was sent to the landlord.`,
+        'RENT'
+      );
+    };
+
     return (
       <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-3xl border border-[#D2DDD7] p-6 space-y-4 shadow-2xl">
+        <div className="w-full max-w-lg max-h-[92vh] overflow-y-auto bg-white rounded-3xl border border-[#D2DDD7] p-6 space-y-4 shadow-2xl">
           <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
             <div>
-              <h3 className="text-base font-extrabold text-[#263238]">Connect to Landlord / Property</h3>
-              <p className="text-xs text-[#546E7A]">Connect via Owner Phone Number, ID, or Email</p>
+              <h3 className="text-base font-extrabold text-[#263238]">Connect to Landlord &amp; Complete eKYC</h3>
+              <p className="text-xs text-[#546E7A]">Mandatory Digital KYC, Agreement &amp; Unit Linking</p>
             </div>
             <button onClick={() => setIsConnectModalOpen(false)} className="text-[#546E7A] hover:text-[#263238] cursor-pointer">
               <X className="h-5 w-5" />
             </button>
           </div>
 
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            const identifier = connectForm.ownerIdentifier.trim();
-            const isEmail = identifier.includes('@');
-            const isPhone = /^(\+91[\-\s]?)?[0-9]{10}$/.test(identifier.replace(/[\s\-]/g, '')) || (!isEmail && !identifier.startsWith('usr-') && !identifier.startsWith('owner-') && /\d{6,}/.test(identifier));
+          {connectValidationError && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+              <span>{connectValidationError}</span>
+            </div>
+          )}
 
-            createTenantConnectionRequest({
-              tenantUserId: currentUser.id || 'usr-tenant',
-              tenantName: currentUser.name || 'Tenant',
-              tenantEmail: currentUser.email || '',
-              tenantPhone: (currentUser as any).phone || '+91 98450 11928',
-              ownerEmail: isEmail ? identifier : (connectForm.ownerEmail || undefined),
-              ownerPhone: isPhone ? identifier : undefined,
-              ownerId: (!isEmail && !isPhone) ? identifier : undefined,
-              ownerCode: identifier,
-              propertyId: connectForm.propertyId || properties[0]?.id || '',
-              propertyName: connectForm.propertyName || properties[0]?.name || 'Apartments',
-              unitNumber: connectForm.unitNumber || 'Unit 101',
-              monthlyRent: Number(connectForm.monthlyRent) || 20000,
-              depositAmount: Number(connectForm.depositAmount) || 40000,
-              leaseStartDate: connectForm.leaseStartDate
-            });
-            setIsConnectModalOpen(false);
-          }} className="space-y-3.5 text-xs">
+          <form onSubmit={handleConnectSubmit} className="space-y-4 text-xs">
+            {/* Landlord Identification */}
             <div>
               <label className="block text-[#263238] font-bold mb-1">
-                Owner Phone Number, Owner ID, or Email
+                Owner Phone Number, Owner ID, or Email <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
@@ -278,10 +450,11 @@ export default function TenantDashboard() {
                 className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
               />
               <span className="text-[10px] text-[#546E7A] mt-0.5 block">
-                Enter your landlord's registered mobile number, email, or unique Owner ID.
+                Enter your landlord&apos;s registered mobile number, email, or unique Owner ID.
               </span>
             </div>
 
+            {/* Property Selection */}
             <div>
               <label className="block text-[#263238] font-bold mb-1">Property Name / Campus (Optional)</label>
               {properties.length > 0 ? (
@@ -318,12 +491,50 @@ export default function TenantDashboard() {
               )}
             </div>
 
+            {/* Tenancy Type */}
+            <div>
+              <label className="block text-[#263238] font-bold mb-1">
+                Tenancy Category <span className="text-rose-500">*</span>
+              </label>
+              <select
+                value={connectForm.tenancyType}
+                onChange={(e) => {
+                  const newType = e.target.value as 'PG' | 'Residential' | 'Commercial';
+                  setConnectForm({ ...connectForm, tenancyType: newType });
+                  setActiveTenancyType(newType);
+                }}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+              >
+                <option value="PG">PG &amp; Co-Living (Hostel / Bed / Shared Room)</option>
+                <option value="Residential">Residential (Apartment / Flat / Independent Home)</option>
+                <option value="Commercial">Commercial (Office Space / Retail Shop / Warehouse)</option>
+              </select>
+            </div>
+
+            {connectForm.tenancyType === 'PG' && (
+              <div className="p-3 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-between">
+                <div>
+                  <div className="font-bold text-[#263238] text-xs">Include Mess &amp; Daily Meals</div>
+                  <div className="text-[10px] text-[#546E7A]">₹3,600/month for daily breakfast, lunch &amp; dinner pass</div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={connectForm.includeFoodPlan}
+                  onChange={(e) => setConnectForm({ ...connectForm, includeFoodPlan: e.target.checked })}
+                  className="h-4 w-4 rounded accent-[#163B36] cursor-pointer"
+                />
+              </div>
+            )}
+
+            {/* Unit & Lease Date */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[#263238] font-bold mb-1">Unit / Flat / Room</label>
+                <label className="block text-[#263238] font-bold mb-1">
+                  Unit / Flat / Room <span className="text-rose-500">*</span>
+                </label>
                 <input
                   type="text"
-                  placeholder="e.g. 302 or Room 101"
+                  placeholder="e.g. 302 or Bed A-1"
                   value={connectForm.unitNumber}
                   onChange={(e) => setConnectForm({ ...connectForm, unitNumber: e.target.value })}
                   required
@@ -342,6 +553,7 @@ export default function TenantDashboard() {
               </div>
             </div>
 
+            {/* Rent & Deposit */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[#263238] font-bold mb-1">Monthly Rent (₹)</label>
@@ -365,11 +577,119 @@ export default function TenantDashboard() {
               </div>
             </div>
 
+            {/* MANDATORY eKYC SECTION */}
+            <div className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7] space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-black text-[#263238]">
+                  <Fingerprint className="h-4 w-4 text-[#163B36]" />
+                  <span>Mandatory Resident eKYC</span>
+                </div>
+                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                  UIDAI &amp; ITD Mandated
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#546E7A] font-bold mb-1">
+                    Aadhaar Number (12 Digits) <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={14}
+                    placeholder="XXXX XXXX XXXX"
+                    value={connectForm.aadhaarNumber}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^\d]/g, '').slice(0, 12);
+                      const formatted = val.replace(/(\d{4})/g, '$1 ').trim();
+                      setConnectForm({ ...connectForm, aadhaarNumber: formatted });
+                    }}
+                    required
+                    className="w-full px-3 py-2 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-mono font-bold"
+                  />
+                  <span className="text-[10px] text-[#546E7A] mt-0.5 block">12-digit Indian Aadhaar</span>
+                </div>
+
+                <div>
+                  <label className="block text-[#546E7A] font-bold mb-1">
+                    PAN Card (10 Characters) <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={10}
+                    placeholder="e.g. ABCDE1234F"
+                    value={connectForm.panNumber}
+                    onChange={(e) => setConnectForm({ ...connectForm, panNumber: e.target.value.toUpperCase().trim() })}
+                    required
+                    className="w-full px-3 py-2 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-mono font-bold uppercase"
+                  />
+                  <span className="text-[10px] text-[#546E7A] mt-0.5 block">10-digit Permanent Account Number</span>
+                </div>
+              </div>
+            </div>
+
+            {/* MANDATORY DOCUMENTS & RENTAL AGREEMENT UPLOAD */}
+            <div className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7] space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-black text-[#263238]">
+                  <FileText className="h-4 w-4 text-[#163B36]" />
+                  <span>Rental Agreement &amp; Identity Documents <span className="text-rose-500">*</span></span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAttachSampleDocs}
+                  className="text-[11px] font-bold text-[#163B36] hover:underline cursor-pointer flex items-center gap-1"
+                >
+                  <Sparkles className="h-3 w-3 text-[#C69A55]" />
+                  <span>+ Auto-attach Sample eKYC &amp; Agreement</span>
+                </button>
+              </div>
+
+              {/* Upload Dropzone */}
+              <label className="border-2 border-dashed border-[#D2DDD7] hover:border-[#163B36] rounded-2xl p-4 text-center block cursor-pointer transition bg-white">
+                <UploadCloud className="h-6 w-6 text-[#163B36] mx-auto mb-1" />
+                <span className="font-bold text-[#263238] block text-xs">Click to browse or drag and drop</span>
+                <span className="text-[10px] text-[#546E7A] block">Upload Aadhaar / Passport PDF, Voter ID, and signed Rental Agreement (PDF, PNG, JPG)</span>
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                  onChange={handleDocumentAdd}
+                  className="hidden"
+                />
+              </label>
+
+              {/* Attached Documents List */}
+              {connectForm.documents.length > 0 && (
+                <div className="space-y-1.5 pt-1">
+                  <div className="text-[11px] font-bold text-[#546E7A]">Attached Documents ({connectForm.documents.length}):</div>
+                  {connectForm.documents.map((doc) => (
+                    <div key={doc.id} className="p-2.5 rounded-xl bg-white border border-[#D2DDD7] flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <FileText className="h-4 w-4 text-[#163B36] shrink-0" />
+                        <span className="font-bold text-[#263238] truncate text-[11px]">{doc.name}</span>
+                        <span className="text-[10px] text-[#546E7A] shrink-0">({doc.size})</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeDoc(doc.id)}
+                        className="text-rose-600 hover:text-rose-800 p-1 cursor-pointer shrink-0"
+                        title="Remove Document"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <button
               type="submit"
-              className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer mt-2"
+              className="w-full py-3.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-black text-xs transition shadow-md cursor-pointer mt-2 flex items-center justify-center gap-2"
             >
-              Send Connection Request to Owner
+              <ShieldCheck className="h-4 w-4 text-[#C69A55]" />
+              <span>Verify eKYC &amp; Send Connection Request</span>
             </button>
           </form>
         </div>
@@ -483,9 +803,9 @@ export default function TenantDashboard() {
                 <Home className="h-6 w-6" />
               </div>
               <div>
-                <h2 className="text-lg font-black text-[#263238]">Connect to Your Landlord or PG Property</h2>
+                <h2 className="text-lg font-black text-[#263238]">Connect to Your Property (Residential, PG, or Commercial)</h2>
                 <p className="text-xs text-[#546E7A] mt-1.5 leading-relaxed">
-                  Connect your tenant account directly to your property owner to activate your lease agreement, upcoming rent dues, roommate splits, and power meter bills.
+                  Connect your tenant account directly to your property owner to view your lease agreement, upcoming rent dues, roommate splits, electricity bills, and service requests.
                 </p>
               </div>
 
@@ -511,15 +831,15 @@ export default function TenantDashboard() {
             <div className="h-9 w-9 rounded-xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center font-bold text-xs">
               1
             </div>
-            <h3 className="font-extrabold text-sm text-[#263238]">Instant Digital KYC</h3>
+            <h3 className="font-extrabold text-sm text-[#263238]">Quick Identity Verification</h3>
             <p className="text-xs text-[#546E7A]">
-              Verify your Aadhaar and PAN so your landlord can draft a statutory lease agreement without physical paperwork.
+              Verify your Aadhaar and PAN so your landlord can prepare your rental agreement without paperwork.
             </p>
             <button
               onClick={() => setIsEKYCModalOpen(true)}
               className="text-xs font-bold text-[#163B36] hover:underline pt-1 inline-flex items-center gap-1 cursor-pointer"
             >
-              Verify KYC now →
+              Verify identity now →
             </button>
           </div>
 
@@ -527,9 +847,9 @@ export default function TenantDashboard() {
             <div className="h-9 w-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-xs">
               2
             </div>
-            <h3 className="font-extrabold text-sm text-[#263238]">Zero-Dispute Escrow</h3>
+            <h3 className="font-extrabold text-sm text-[#263238]">Safe Security Deposit</h3>
             <p className="text-xs text-[#546E7A]">
-              Security deposits in Staywise are locked in an RBI-compliant bank escrow trust and released automatically upon clean checkout.
+              Your deposit is tracked with a clear digital record and itemized checkout checklist for a smooth, fair refund.
             </p>
           </div>
 
@@ -537,9 +857,9 @@ export default function TenantDashboard() {
             <div className="h-9 w-9 rounded-xl bg-[#FAF5EB] text-[#8C6B2E] flex items-center justify-center font-bold text-xs">
               3
             </div>
-            <h3 className="font-extrabold text-sm text-[#263238]">Rent Rewards</h3>
+            <h3 className="font-extrabold text-sm text-[#263238]">On-Time Rent Rewards</h3>
             <p className="text-xs text-[#546E7A]">
-              Earn Staywise resident points with every on-time UPI or bank autopay rent payment to redeem against maintenance discounts.
+              Earn resident reward points every time you pay rent on time via UPI, card, or autopay.
             </p>
           </div>
         </div>
@@ -835,125 +1155,256 @@ export default function TenantDashboard() {
             </div>
           </div>
 
-          {/* Mess & Dining Subscription Management Card (P1 Requirement) */}
-          <div className="rounded-3xl bg-white border border-[#D2DDD7] p-5 sm:p-6 shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D1D5DB] pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center font-bold">
-                  <Utensils className="h-5 w-5" />
+          {/* Tenancy Category Specific Service Card */}
+          {activeTenancyType === 'PG' ? (
+            currentTenant && currentTenant.hasFood === false ? (
+              /* Mess & Dining Service Disabled / Accommodation Only Message Card */
+              <div className="rounded-3xl bg-white border border-[#D2DDD7] p-5 sm:p-6 shadow-xs space-y-4">
+                <div className="flex items-center gap-3 border-b border-[#D1D5DB] pb-3">
+                  <div className="h-10 w-10 rounded-2xl bg-[#FAF5EB] text-[#8C6B2E] border border-[#ECCFA4] flex items-center justify-center font-bold">
+                    <Utensils className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-extrabold text-[#263238]">Mess &amp; Dining Service — Accommodation Only</h3>
+                    <p className="text-xs text-[#546E7A]">No meal plan is registered for Room {currentTenant.unitNumber || 'assigned'}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-base font-extrabold text-[#263238]">Mess &amp; Dining Subscription</h3>
-                  <p className="text-xs text-[#546E7A]">
-                    {foodOptedOut
-                      ? 'You have opted out of the mess plan (₹3,600 deducted from monthly dues)'
-                      : `Active Plan: ${[subscribedMeals.breakfast && 'Breakfast', subscribedMeals.lunch && 'Lunch', subscribedMeals.dinner && 'Dinner'].filter(Boolean).join(', ') || 'No meals selected'}`}
-                  </p>
+
+                <div className="p-4 rounded-2xl bg-[#FAF5EB] border border-[#ECCFA4] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-white text-[#8C6B2E] border border-[#ECCFA4]">
+                        No Food Facility Active
+                      </span>
+                      <span className="text-xs font-bold text-[#8C6B2E]">Mess charges excluded from your rent</span>
+                    </div>
+                    <p className="text-xs text-[#263238] leading-relaxed">
+                      Your room/bed was onboarded with accommodation-only (No Food). If you would like fresh breakfast, lunch, and dinner delivered daily from Annapoorna Kitchens, submit an activation request to your property manager.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => {
+                        addNotification(
+                          'Meal Plan Requested',
+                          'Your request to activate daily mess & food plan (₹3,600/mo) has been sent to the property manager.',
+                          'RENT'
+                        );
+                      }}
+                      className="px-4 py-2.5 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Utensils className="h-3.5 w-3.5 text-[#C69A55]" />
+                      <span>Request Meal Plan (₹3,600/mo)</span>
+                    </button>
+                    <button
+                      onClick={() => setIsViewMenuModalOpen(true)}
+                      className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-[#E8F0EC] text-[#163B36] border border-[#D2DDD7] text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      <span>View Menu</span>
+                    </button>
+                  </div>
                 </div>
               </div>
+            ) : (
+              /* Mess & Dining Subscription Management Card (PG Tenants with Food Enabled) */
+              <div className="rounded-3xl bg-white border border-[#D2DDD7] p-5 sm:p-6 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D1D5DB] pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center font-bold">
+                      <Utensils className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-extrabold text-[#263238]">Mess &amp; Dining Subscription</h3>
+                      <p className="text-xs text-[#546E7A]">
+                        {foodOptedOut
+                          ? 'You have opted out of the mess plan (₹3,600 deducted from monthly dues)'
+                          : `Active Plan: ${[subscribedMeals.breakfast && 'Breakfast', subscribedMeals.lunch && 'Lunch', subscribedMeals.dinner && 'Dinner'].filter(Boolean).join(', ') || 'No meals selected'}`}
+                      </p>
+                    </div>
+                  </div>
 
-              <div className="flex items-center gap-2 self-start sm:self-auto">
-                <button
-                  onClick={() => setIsViewMenuModalOpen(true)}
-                  className="px-3 py-1.5 rounded-full bg-[#E8F0EC] hover:bg-[#DCE8E1] text-[#163B36] text-xs font-bold transition flex items-center gap-1 cursor-pointer"
-                >
-                  <FileText className="h-3.5 w-3.5" />
-                  <span>View Menu</span>
-                </button>
-                <button
-                  onClick={() => setIsMealCustomizerOpen(true)}
-                  className="px-3.5 py-1.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer"
-                >
-                  <Utensils className="h-3.5 w-3.5 text-[#C69A55]" />
-                  <span>Customize Meals</span>
-                </button>
+                  <div className="flex items-center gap-2 self-start sm:self-auto">
+                    <button
+                      onClick={() => setIsViewMenuModalOpen(true)}
+                      className="px-3 py-1.5 rounded-full bg-[#E8F0EC] hover:bg-[#DCE8E1] text-[#163B36] text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      <span>View Menu</span>
+                    </button>
+                    <button
+                      onClick={() => setIsMealCustomizerOpen(true)}
+                      className="px-3.5 py-1.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer"
+                    >
+                      <Utensils className="h-3.5 w-3.5 text-[#C69A55]" />
+                      <span>Customize Meals</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Plan Details & Cost Strip */}
+                <div className="p-4 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
+                        foodOptedOut
+                          ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                          : 'bg-[#E8F0EC] text-[#163B36] border border-[#D2DDD7]'
+                      }`}>
+                        {foodOptedOut ? 'Opted Out / No Food' : 'Active Resident Plan'}
+                      </span>
+                      <span className="text-xs font-bold text-[#546E7A]">
+                        Vendor: Annapoorna Kitchens
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#263238] mt-1 font-medium">
+                      {foodOptedOut
+                        ? 'No meal charges will be billed to your account. You can opt back in anytime.'
+                        : 'Unlimited mess dining pass during scheduled serving hours.'}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3 self-end sm:self-auto">
+                    <div className="text-right">
+                      <div className="text-[10px] text-[#546E7A] font-semibold">Monthly Mess Fee</div>
+                      <div className="text-base font-black text-[#163B36] font-tabular">
+                        {foodOptedOut ? '₹0' : '₹3,600 / mo'}
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={toggleFoodPlanStatus}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold transition border cursor-pointer ${
+                        foodOptedOut
+                          ? 'bg-[#163B36] text-white hover:bg-[#102B27] border-[#163B36]'
+                          : 'bg-white text-rose-700 hover:bg-rose-50 border-rose-200'
+                      }`}
+                    >
+                      {foodOptedOut ? 'Opt Back In' : 'Remove Food Plan'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Included Daily Meals Pills */}
+                {!foodOptedOut && (
+                  <div className="grid grid-cols-3 gap-2.5 text-xs">
+                    <div className={`p-3 rounded-2xl border transition ${
+                      subscribedMeals.breakfast 
+                        ? 'bg-[#E8F0EC] border-[#163B36]/30 text-[#163B36]' 
+                        : 'bg-white border-[#D2DDD7] text-[#546E7A] opacity-60'
+                    }`}>
+                      <div className="font-extrabold text-[11px] flex items-center justify-between">
+                        <span>Breakfast</span>
+                        <span>{subscribedMeals.breakfast ? '✓ Included' : 'Paused'}</span>
+                      </div>
+                      <div className="text-[10px] text-[#546E7A] mt-0.5">7:30 - 9:30 AM</div>
+                    </div>
+
+                    <div className={`p-3 rounded-2xl border transition ${
+                      subscribedMeals.lunch 
+                        ? 'bg-[#E8F0EC] border-[#163B36]/30 text-[#163B36]' 
+                        : 'bg-white border-[#D2DDD7] text-[#546E7A] opacity-60'
+                    }`}>
+                      <div className="font-extrabold text-[11px] flex items-center justify-between">
+                        <span>Lunch</span>
+                        <span>{subscribedMeals.lunch ? '✓ Included' : 'Paused'}</span>
+                      </div>
+                      <div className="text-[10px] text-[#546E7A] mt-0.5">12:30 - 2:30 PM</div>
+                    </div>
+
+                    <div className={`p-3 rounded-2xl border transition ${
+                      subscribedMeals.dinner 
+                        ? 'bg-[#E8F0EC] border-[#163B36]/30 text-[#163B36]' 
+                        : 'bg-white border-[#D2DDD7] text-[#546E7A] opacity-60'
+                    }`}>
+                      <div className="font-extrabold text-[11px] flex items-center justify-between">
+                        <span>Dinner</span>
+                        <span>{subscribedMeals.dinner ? '✓ Included' : 'Paused'}</span>
+                      </div>
+                      <div className="text-[10px] text-[#546E7A] mt-0.5">7:30 - 9:30 PM</div>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-
-            {/* Plan Details & Cost Strip */}
-            <div className="p-4 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
+            )
+          ) : activeTenancyType === 'Residential' ? (
+            /* Residential Community & Amenities Card (No Food Option) */
+            <div className="rounded-3xl bg-white border border-[#D2DDD7] p-5 sm:p-6 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D1D5DB] pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center font-bold">
+                    <Home className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-extrabold text-[#263238]">Society Amenities &amp; Access</h3>
+                    <p className="text-xs text-[#546E7A]">Residential apartment privileges, visitor gatepass, and parking slot</p>
+                  </div>
+                </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
-                    foodOptedOut
-                      ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                      : 'bg-[#E8F0EC] text-[#163B36] border border-[#D2DDD7]'
-                  }`}>
-                    {foodOptedOut ? 'Opted Out / No Food' : 'Active Resident Plan'}
-                  </span>
-                  <span className="text-xs font-bold text-[#546E7A]">
-                    Vendor: Annapoorna Kitchens
+                  <span className="text-[10px] font-extrabold px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    Active Resident
                   </span>
                 </div>
-                <p className="text-xs text-[#263238] mt-1 font-medium">
-                  {foodOptedOut
-                    ? 'No meal charges will be billed to your account. You can opt back in anytime.'
-                    : 'Unlimited mess dining pass during scheduled serving hours.'}
-                </p>
               </div>
 
-              <div className="flex items-center gap-3 self-end sm:self-auto">
-                <div className="text-right">
-                  <div className="text-[10px] text-[#546E7A] font-semibold">Monthly Mess Fee</div>
-                  <div className="text-base font-black text-[#163B36] font-tabular">
-                    {foodOptedOut ? '₹0' : '₹3,600 / mo'}
-                  </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7]">
+                  <div className="font-bold text-[#263238]">Designated Parking</div>
+                  <div className="text-[11px] text-[#163B36] mt-1 font-mono font-bold">Slot P-204 (Basement 1)</div>
+                  <div className="text-[10px] text-[#546E7A] mt-0.5">Four-wheeler &amp; two-wheeler permit</div>
                 </div>
-
-                <button
-                  onClick={toggleFoodPlanStatus}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold transition border cursor-pointer ${
-                    foodOptedOut
-                      ? 'bg-[#163B36] text-white hover:bg-[#102B27] border-[#163B36]'
-                      : 'bg-white text-rose-700 hover:bg-rose-50 border-rose-200'
-                  }`}
-                >
-                  {foodOptedOut ? 'Opt Back In' : 'Remove Food Plan'}
-                </button>
+                <div className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7]">
+                  <div className="font-bold text-[#263238]">Visitor Gatepass Code</div>
+                  <div className="text-[11px] text-[#163B36] mt-1 font-mono font-bold">#SW-9842</div>
+                  <div className="text-[10px] text-[#546E7A] mt-0.5">Share with guests for security entry</div>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7]">
+                  <div className="font-bold text-[#263238]">Clubhouse &amp; Gym</div>
+                  <div className="text-[11px] text-[#163B36] mt-1 font-mono font-bold">Digital Access Active</div>
+                  <div className="text-[10px] text-[#546E7A] mt-0.5">6:00 AM – 10:00 PM Daily</div>
+                </div>
               </div>
             </div>
-
-            {/* Included Daily Meals Pills */}
-            {!foodOptedOut && (
-              <div className="grid grid-cols-3 gap-2.5 text-xs">
-                <div className={`p-3 rounded-2xl border transition ${
-                  subscribedMeals.breakfast 
-                    ? 'bg-[#E8F0EC] border-[#163B36]/30 text-[#163B36]' 
-                    : 'bg-white border-[#D2DDD7] text-[#546E7A] opacity-60'
-                }`}>
-                  <div className="font-extrabold text-[11px] flex items-center justify-between">
-                    <span>Breakfast</span>
-                    <span>{subscribedMeals.breakfast ? '✓ Included' : 'Paused'}</span>
+          ) : (
+            /* Commercial Tenancy & GST Card (No Food Option) */
+            <div className="rounded-3xl bg-white border border-[#D2DDD7] p-5 sm:p-6 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D1D5DB] pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center font-bold">
+                    <Building className="h-5 w-5" />
                   </div>
-                  <div className="text-[10px] text-[#546E7A] mt-0.5">7:30 - 9:30 AM</div>
+                  <div>
+                    <h3 className="text-base font-extrabold text-[#263238]">Commercial Lease &amp; Business GST</h3>
+                    <p className="text-xs text-[#546E7A]">Registered GSTIN, Input Tax Credit (ITC) tax invoice, and CAM schedule</p>
+                  </div>
                 </div>
-
-                <div className={`p-3 rounded-2xl border transition ${
-                  subscribedMeals.lunch 
-                    ? 'bg-[#E8F0EC] border-[#163B36]/30 text-[#163B36]' 
-                    : 'bg-white border-[#D2DDD7] text-[#546E7A] opacity-60'
-                }`}>
-                  <div className="font-extrabold text-[11px] flex items-center justify-between">
-                    <span>Lunch</span>
-                    <span>{subscribedMeals.lunch ? '✓ Included' : 'Paused'}</span>
-                  </div>
-                  <div className="text-[10px] text-[#546E7A] mt-0.5">12:30 - 2:30 PM</div>
-                </div>
-
-                <div className={`p-3 rounded-2xl border transition ${
-                  subscribedMeals.dinner 
-                    ? 'bg-[#E8F0EC] border-[#163B36]/30 text-[#163B36]' 
-                    : 'bg-white border-[#D2DDD7] text-[#546E7A] opacity-60'
-                }`}>
-                  <div className="font-extrabold text-[11px] flex items-center justify-between">
-                    <span>Dinner</span>
-                    <span>{subscribedMeals.dinner ? '✓ Included' : 'Paused'}</span>
-                  </div>
-                  <div className="text-[10px] text-[#546E7A] mt-0.5">7:30 - 9:30 PM</div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-extrabold px-3 py-1 rounded-full bg-[#163B36] text-white">
+                    Commercial Lease
+                  </span>
                 </div>
               </div>
-            )}
-          </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7]">
+                  <div className="font-bold text-[#263238]">Registered Business GSTIN</div>
+                  <div className="text-[11px] text-[#163B36] mt-1 font-mono font-bold">29AABCS1429K1Z5</div>
+                  <div className="text-[10px] text-[#546E7A] mt-0.5">18% GST Input Credit applicable</div>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7]">
+                  <div className="font-bold text-[#263238]">Monthly CAM Charges</div>
+                  <div className="text-[11px] text-[#163B36] mt-1 font-mono font-bold">₹4,500 / month</div>
+                  <div className="text-[10px] text-[#546E7A] mt-0.5">Common area maintenance &amp; HVAC</div>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7]">
+                  <div className="font-bold text-[#263238]">Loading Dock &amp; Safety</div>
+                  <div className="text-[11px] text-[#163B36] mt-1 font-mono font-bold">NOC Compliant (Active)</div>
+                  <div className="text-[10px] text-[#546E7A] mt-0.5">Commercial cargo access Bay 2</div>
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
 
@@ -1170,8 +1621,8 @@ export default function TenantDashboard() {
           </div>
         </div>
       )}
-      {/* Modal: Customize Meals */}
-      {isMealCustomizerOpen && (
+      {/* Modal: Customize Meals (PG Tenants Only) */}
+      {activeTenancyType === 'PG' && isMealCustomizerOpen && (
         <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl border border-[#D2DDD7] p-6 max-w-md w-full shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
@@ -1236,8 +1687,8 @@ export default function TenantDashboard() {
         </div>
       )}
 
-      {/* Modal: View Food Menu */}
-      {isViewMenuModalOpen && (
+      {/* Modal: View Food Menu (PG Tenants Only) */}
+      {activeTenancyType === 'PG' && isViewMenuModalOpen && (
         <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl border border-[#D2DDD7] p-6 max-w-lg w-full shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">

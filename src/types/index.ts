@@ -166,6 +166,17 @@ export interface Tenant {
   rewardsBalance: number;
   emergencyContact: string;
   status?: 'Active' | 'Pending' | 'Moved Out' | 'Notice';
+  tenancyType?: 'PG' | 'Residential' | 'Commercial';
+  hasFood?: boolean;
+  roomSharing?: 'Single' | '2_Sharing' | '3_Sharing';
+  coTenantId?: string;
+  coTenantName?: string;
+  coTenantPhone?: string;
+  coTenantEmail?: string;
+  rentSharePercentage?: number;
+  aadhaarNumber?: string;
+  panNumber?: string;
+  documents?: { id: string; name: string; size?: string; date: string; type?: string; url?: string }[];
 }
 
 export type RentStatus = 
@@ -695,6 +706,17 @@ export interface TenantConnectionRequest {
   moveOutReason?: string;
   inspectionNotes?: string;
   depositSettledAmount?: number;
+  tenancyType?: 'PG' | 'Residential' | 'Commercial';
+  includeFoodPlan?: boolean;
+  hasFood?: boolean;
+  aadhaarNumber?: string;
+  panNumber?: string;
+  ekycVerified?: boolean;
+  documents?: { id: string; name: string; size?: string; date: string; type?: string; url?: string }[];
+  agreementUrl?: string;
+  coTenantName?: string;
+  coTenantPhone?: string;
+  coTenantEmail?: string;
 }
 
 export interface FoodMenuItem {

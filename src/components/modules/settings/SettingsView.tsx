@@ -36,6 +36,10 @@ import { SUBSCRIPTION_PLANS } from '../../../lib/security/subscriptionCatalog';
 export default function SettingsView() {
   const { 
     currentUser, 
+    properties,
+    pgBeds,
+    commercialUnits,
+    estateAssets,
     addNotification, 
     subscription, 
     upgradeSubscription, 
@@ -46,7 +50,7 @@ export default function SettingsView() {
     revokeDelegate
   } = useAppState();
 
-  const [activeTab, setActiveTab] = useState<'PORTFOLIO' | 'SUBSCRIPTION' | 'RENT_RULES' | 'UTILITIES' | 'BANKING' | 'DELEGATES' | 'SECURITY'>('PORTFOLIO');
+  const [activeTab, setActiveTab] = useState<'PORTFOLIO' | 'SUBSCRIPTION' | 'RENT_RULES' | 'UTILITIES' | 'BANKING' | 'DELEGATES' | 'SECURITY'>('SUBSCRIPTION');
   const [isSavedToast, setIsSavedToast] = useState(false);
   const [isCancellingTrial, setIsCancellingTrial] = useState(false);
 
@@ -92,6 +96,18 @@ export default function SettingsView() {
   };
 
   const isDemoAccount = currentUser.email === 'vikram@staywise.in' || currentUser.email === 'owner@staywise.com' || currentUser.id === 'user-owner-vikram';
+
+  // Dynamic Real Database Quotas & Metrics
+  const userProperties = properties.filter(p => p.ownerId === currentUser?.id || isDemoAccount);
+  const totalUnitsManaged = userProperties.reduce((acc, p) => acc + (p.totalUnits || 1), 0);
+  const maxUnitsAllowed = subscription?.maxUnits || (subscription?.planId === 'enterprise' ? 250 : subscription?.planId === 'growth_pro' ? 50 : 15);
+  const quotaUsagePercent = maxUnitsAllowed > 0 ? Math.min(100, Math.round((totalUnitsManaged / maxUnitsAllowed) * 100)) : 0;
+  
+  const totalPGBeds = pgBeds.length;
+  const occupiedPGBeds = pgBeds.filter(b => b.status === 'Occupied').length;
+  const totalCommercialArea = commercialUnits.reduce((acc, u) => acc + (u.areaSqFt || 0), 0);
+  const totalAssetsCount = estateAssets.length;
+  const subscriptionInvoices = subscription?.history || [];
 
   // Form State: Portfolio & Entity
   const [entityName, setEntityName] = useState(isDemoAccount ? 'Singhania Asset Holdings LLP' : (currentUser.name ? `${currentUser.name} Properties` : ''));
@@ -335,7 +351,7 @@ export default function SettingsView() {
           <button
             disabled={isSavingSettings}
             onClick={handleSaveSettings}
-            className="px-5 py-2 rounded-2xl bg-[#D32F2F] hover:bg-[#B71C1C] text-white text-xs font-bold shadow-md shadow-red-900/20 flex items-center gap-2 transition cursor-pointer"
+            className="px-5 py-2 rounded-2xl bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold shadow-md shadow-[#163B36]/20 flex items-center gap-2 transition cursor-pointer"
           >
             <Save className="h-4 w-4" />
             <span>{isSavingSettings ? 'Saving...' : 'Save Configurations'}</span>
@@ -353,9 +369,9 @@ export default function SettingsView() {
               : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
           }`}
         >
-          <Crown className={`h-4 w-4 ${activeTab === 'SUBSCRIPTION' ? 'text-[#C69A55]' : 'text-amber-500'}`} />
+          <Crown className={`h-4 w-4 ${activeTab === 'SUBSCRIPTION' ? 'text-[#C69A55]' : 'text-[#163B36]'}`} />
           <span>Subscription &amp; Plans</span>
-          <span className="px-2 py-0.5 rounded-full bg-[#D32F2F] text-white text-[10px] font-black">
+          <span className="px-2 py-0.5 rounded-full bg-[#C69A55] text-[#163B36] text-[10px] font-black">
             Active
           </span>
         </button>
@@ -436,35 +452,35 @@ export default function SettingsView() {
       {/* TAB: Owner Subscription Model & White-Hat Security Hardening */}
       {activeTab === 'SUBSCRIPTION' && (
         <div className="space-y-6">
-          {/* Dark Hero Plan Summary Card - Matching User Screenshot */}
-          <div className="rounded-3xl bg-[#261E1A] p-6 sm:p-8 text-white relative overflow-hidden space-y-5 border border-[#3E322D] shadow-lg">
+          {/* Dark Hero Plan Summary Card - Matching User Brand Palette */}
+          <div className="rounded-3xl bg-[#162724] p-6 sm:p-8 text-white relative overflow-hidden space-y-5 border border-[#224A42] shadow-lg">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
                 <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <span className="px-3 py-1 rounded-full bg-[#4D1F24] text-[#FFA4A4] border border-[#6E2A32] text-[11px] font-extrabold tracking-wide">
+                  <span className="px-3 py-1 rounded-full bg-[#1B3E37] text-[#A3D9C9] border border-[#2B5E54] text-[11px] font-extrabold tracking-wide">
                     {subscription?.status === 'CANCELLED' 
                       ? 'Trial Cancelled • Autopay Revoked' 
                       : subscription?.status === 'TRIAL' 
                         ? 'Trial Cancelled • Autopay Revoked' 
                         : 'Active Plan • Auto-renew Active'}
                   </span>
-                  <span className="px-3 py-1 rounded-full bg-[#3D2C1B] text-[#FFC876] border border-[#5A4026] text-[11px] font-bold flex items-center gap-1.5">
-                    <Crown className="h-3.5 w-3.5 text-[#FFC876]" />
+                  <span className="px-3 py-1 rounded-full bg-[#2A3528] text-[#C69A55] border border-[#C69A55]/30 text-[11px] font-bold flex items-center gap-1.5">
+                    <Crown className="h-3.5 w-3.5 text-[#C69A55]" />
                     <span>Annual Commitment (Saved 17%)</span>
                   </span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                   {subscription?.planName || 'Growth Portfolio Pro OS'}
                 </h2>
-                <p className="text-xs sm:text-sm text-rose-300/80 mt-1 max-w-2xl leading-relaxed">
-                  Unified multi-asset property management operating system with statutory double-entry ledger, sub-meter OCR tariff splitting, automated WhatsApp dunning, and Axis Bank Escrow clearance.
+                <p className="text-xs sm:text-sm text-[#A3B8B0] mt-1 max-w-2xl leading-relaxed">
+                  Manage all your properties, tenants, rent collection, power bill splits, and income records in one simple place.
                 </p>
               </div>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
                 <button
                   onClick={() => setIsUpgradeModalOpen(true)}
-                  className="px-5 py-2.5 rounded-2xl bg-[#D32F2F] hover:bg-[#B71C1C] text-white text-xs font-black transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="px-5 py-2.5 rounded-2xl bg-[#C69A55] hover:bg-[#B58944] text-[#163B36] text-xs font-black transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Sparkles className="h-4 w-4" />
                   <span>Reactivate Subscription</span>
@@ -475,7 +491,7 @@ export default function SettingsView() {
                     await refreshSubscription();
                     setIsSyncing(false);
                   }}
-                  className="px-4 py-2.5 rounded-2xl bg-[#3D332F] hover:bg-[#4E433E] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2.5 rounded-2xl bg-[#224A42] hover:bg-[#2C5E54] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
                   <span>Sync Server Status</span>
@@ -485,7 +501,7 @@ export default function SettingsView() {
 
             <div className="flex flex-wrap items-center gap-6 pt-3 border-t border-white/10 text-xs text-white/80">
               <div className="flex items-center gap-2">
-                <Calendar className="h-3.5 w-3.5 text-rose-300" />
+                <Calendar className="h-3.5 w-3.5 text-[#C69A55]" />
                 <span>Plan Started: <b className="text-white font-tabular">{subscription?.startDate || '2026-10-04'}</b></span>
               </div>
               <div className="flex items-center gap-2">
@@ -493,8 +509,8 @@ export default function SettingsView() {
                 <span>Next Renewal: <b className="text-white font-tabular">{subscription?.endDate || '2026-10-11'}</b></span>
               </div>
               <div className="flex items-center gap-2">
-                <Zap className="h-3.5 w-3.5 text-red-400" />
-                <span>Validity Countdown: <b className="text-red-400 font-tabular">{subscription?.daysRemaining ?? 7} Days Left</b></span>
+                <Zap className="h-3.5 w-3.5 text-[#C69A55]" />
+                <span>Validity Countdown: <b className="text-[#C69A55] font-tabular">{subscription?.daysRemaining ?? 7} Days Left</b></span>
               </div>
             </div>
           </div>
@@ -510,7 +526,7 @@ export default function SettingsView() {
                   </div>
                   <h4 className="font-extrabold text-sm text-[#263238]">Subscription Billing</h4>
                 </div>
-                <span className="text-[11px] font-bold text-[#546E7A] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
+                <span className="text-[11px] font-bold text-[#163B36] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
                   Cleared
                 </span>
               </div>
@@ -518,13 +534,13 @@ export default function SettingsView() {
               <div className="space-y-2.5 text-xs">
                 <div className="flex justify-between items-center text-[#546E7A]">
                   <span>Annual Invoiced Fee:</span>
-                  <span className="font-black text-[#263238] text-sm">
+                  <span className="font-black text-[#263238] text-sm font-tabular">
                     ₹{(subscription?.amount ?? 79990).toLocaleString('en-IN')}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-[#546E7A]">
                   <span>GST Applicable (18%):</span>
-                  <span className="font-bold text-[#263238]">Included (₹12,202)</span>
+                  <span className="font-bold text-[#263238] font-tabular">Included (₹{Math.round(((subscription?.amount ?? 79990) * 0.18) / 1.18).toLocaleString('en-IN')})</span>
                 </div>
                 <div className="flex justify-between items-center text-[#546E7A]">
                   <span>Active Payment Method:</span>
@@ -543,17 +559,17 @@ export default function SettingsView() {
               </div>
             </div>
 
-            {/* Card 2: Quota & Capacity Usage */}
+            {/* Card 2: Quota & Capacity Usage — Connected to SQLite Database */}
             <div className="organic-card p-5 space-y-3.5 border border-[#D2DDD7] bg-white rounded-3xl">
               <div className="flex items-center justify-between pb-2 border-b border-[#D1D5DB]">
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center">
                     <Building2 className="h-4 w-4" />
                   </div>
                   <h4 className="font-extrabold text-sm text-[#263238]">Unit &amp; Asset Quota</h4>
                 </div>
-                <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
-                  {Math.round(((subscription?.currentUnits || 1) / (subscription?.maxUnits || 50)) * 100)}% Used
+                <span className="text-[11px] font-bold text-[#163B36] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
+                  {quotaUsagePercent}% Used
                 </span>
               </div>
 
@@ -561,14 +577,14 @@ export default function SettingsView() {
                 <div>
                   <div className="flex justify-between text-[#546E7A] mb-1">
                     <span>Managed Units Allocation:</span>
-                    <span className="font-bold text-[#263238]">
-                      {subscription?.currentUnits || 1} of {subscription?.maxUnits || 50} Units
+                    <span className="font-bold text-[#263238] font-tabular">
+                      {totalUnitsManaged} of {maxUnitsAllowed} Units
                     </span>
                   </div>
                   <div className="w-full h-2 rounded-full bg-[#E8F0EC] overflow-hidden">
                     <div 
-                      className="h-full bg-[#263238] rounded-full transition-all duration-500"
-                      style={{ width: `${Math.max(2, Math.min(100, Math.round(((subscription?.currentUnits || 1) / (subscription?.maxUnits || 50)) * 100)))}%` }}
+                      className="h-full bg-[#163B36] rounded-full transition-all duration-500"
+                      style={{ width: `${Math.max(quotaUsagePercent > 0 ? 2 : 0, Math.min(100, quotaUsagePercent))}%` }}
                     />
                   </div>
                 </div>
@@ -576,19 +592,25 @@ export default function SettingsView() {
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <div className="p-2.5 rounded-xl bg-[#E8F0EC]/60 border border-[#D2DDD7]">
                     <div className="text-[10px] text-[#546E7A]">PG Co-living Beds</div>
-                    <div className="text-xs font-black text-[#263238]">18 Active Beds</div>
+                    <div className="text-xs font-black text-[#263238]">
+                      {totalPGBeds > 0 ? `${totalPGBeds} Beds (${occupiedPGBeds} Active)` : '0 Active Beds'}
+                    </div>
                   </div>
                   <div className="p-2.5 rounded-xl bg-[#E8F0EC]/60 border border-[#D2DDD7]">
                     <div className="text-[10px] text-[#546E7A]">Commercial Area</div>
-                    <div className="text-xs font-black text-[#263238]">15,000 sq.ft</div>
+                    <div className="text-xs font-black text-[#263238]">
+                      {totalCommercialArea > 0 ? `${totalCommercialArea.toLocaleString('en-IN')} sq.ft` : '0 sq.ft'}
+                    </div>
                   </div>
                   <div className="p-2.5 rounded-xl bg-[#E8F0EC]/60 border border-[#D2DDD7]">
-                    <div className="text-[10px] text-[#546E7A]">WhatsApp Dunning</div>
-                    <div className="text-xs font-black text-[#263238]">Unlimited</div>
+                    <div className="text-[10px] text-[#546E7A]">Campus Assets &amp; Gatepass</div>
+                    <div className="text-xs font-black text-[#263238]">
+                      {totalAssetsCount > 0 ? `${totalAssetsCount} Physical Assets` : 'Unlimited WhatsApp'}
+                    </div>
                   </div>
-                  <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+                  <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center">
                     <span className="font-mono text-[10px] text-emerald-800 font-bold truncate">
-                      {subscription?.lastPaymentTxnId || 'TXN-TRIAL-MANDATE-1791103833091'}
+                      {subscription?.lastPaymentTxnId || 'Direct Bank Escrow Active'}
                     </span>
                   </div>
                 </div>
@@ -596,92 +618,79 @@ export default function SettingsView() {
             </div>
           </div>
 
-
-          {/* Subscription Invoices History */}
-          <div className="organic-card p-6 border border-[#D2DDD7] bg-white space-y-4">
+          {/* Subscription Invoices History — Connected to Database without mock data */}
+          <div className="organic-card p-6 border border-[#D2DDD7] bg-white space-y-4 rounded-3xl">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="text-base font-extrabold text-[#263238]">Subscription Tax Invoices &amp; Receipts</h3>
-                <p className="text-xs text-[#666666]">
+                <p className="text-xs text-[#546E7A]">
                   RBI-compliant GST tax invoices generated for all subscription periods and upgrades
                 </p>
               </div>
 
-              <button
-                onClick={() => alert('Downloading official GST Tax Invoices ZIP archive...')}
-                className="px-3.5 py-2 rounded-xl bg-[#E8F0EC] hover:bg-[#E0E0E0] border border-[#D2DDD7] text-xs font-bold text-[#263238] flex items-center gap-1.5 transition"
-              >
-                <Download className="h-3.5 w-3.5 text-[#263238]" />
-                <span>Export Tax Invoices (PDF)</span>
-              </button>
+              {subscriptionInvoices.length > 0 && (
+                <button
+                  onClick={() => alert('Downloading official GST Tax Invoices ZIP archive...')}
+                  className="px-3.5 py-2 rounded-xl bg-[#E8F0EC] hover:bg-[#D2DDD7] border border-[#D2DDD7] text-xs font-bold text-[#163B36] flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <Download className="h-3.5 w-3.5 text-[#163B36]" />
+                  <span>Export Tax Invoices (PDF)</span>
+                </button>
+              )}
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-[#E0E0E0] text-[#666666] font-bold">
-                    <th className="pb-2.5">Invoice #</th>
-                    <th className="pb-2.5">Date</th>
-                    <th className="pb-2.5">Plan Description</th>
-                    <th className="pb-2.5">Cycle</th>
-                    <th className="pb-2.5">Transaction ID</th>
-                    <th className="pb-2.5">Amount</th>
-                    <th className="pb-2.5">Status</th>
-                    <th className="pb-2.5 text-right">Receipt</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#E0E0E0]">
-                  {((subscription?.history && subscription.history.length > 0)
-                    ? subscription.history 
-                    : (isDemoAccount ? [
-                      {
-                        invoiceId: 'INV-STAY-SUB-2026-001',
-                        date: '01 Oct 2026',
-                        amount: 79990,
-                        currency: 'INR',
-                        planId: 'growth_pro',
-                        planName: 'Growth Portfolio Pro OS (Annual)',
-                        billingCycle: 'annual',
-                        txnId: 'TXN-STAY-SUB-SECURE-98124',
-                        paymentMethod: 'Axis Bank Escrow Auto-Debit',
-                        status: 'PAID'
-                      }
-                    ] : [])
-                  ).map((item, idx) => (
-                    <tr key={idx} className="hover:bg-[#ffffff]">
-                      <td className="py-3 font-mono font-bold text-[#263238]">{item.invoiceId}</td>
-                      <td className="py-3 text-[#666666]">{item.date}</td>
-                      <td className="py-3 font-semibold text-[#263238]">{item.planName}</td>
-                      <td className="py-3 text-[#666666] capitalize">{item.billingCycle}</td>
-                      <td className="py-3 font-mono text-[10px] text-[#666666]">{item.txnId}</td>
-                      <td className="py-3 font-black text-[#263238]">₹{item.amount.toLocaleString('en-IN')}</td>
-                      <td className="py-3">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700">
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="py-3 text-right">
-                        <button
-                          onClick={() => alert(`Opening official GST tax receipt for ${item.invoiceId}`)}
-                          className="px-2.5 py-1 rounded-lg bg-white border border-[#D2DDD7] text-[#263238] hover:bg-[#E8F0EC] font-bold text-[11px] inline-flex items-center gap-1 shadow-sm"
-                        >
-                          <Download className="h-3 w-3" />
-                          <span>PDF</span>
-                        </button>
-                      </td>
+            {subscriptionInvoices.length === 0 ? (
+              <div className="py-10 text-center rounded-2xl bg-[#E8F0EC]/40 border border-[#D2DDD7] space-y-2">
+                <FileText className="h-8 w-8 text-[#163B36] mx-auto opacity-70" />
+                <p className="font-extrabold text-sm text-[#263238]">No Subscription Invoices Generated Yet</p>
+                <p className="text-xs text-[#546E7A] max-w-md mx-auto">
+                  Your official GST tax invoices and receipts will automatically generate and appear here after plan renewals or payments.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-[#D2DDD7] text-[#546E7A] font-bold">
+                      <th className="pb-2.5">Invoice #</th>
+                      <th className="pb-2.5">Date</th>
+                      <th className="pb-2.5">Plan Description</th>
+                      <th className="pb-2.5">Cycle</th>
+                      <th className="pb-2.5">Transaction ID</th>
+                      <th className="pb-2.5">Amount</th>
+                      <th className="pb-2.5">Status</th>
+                      <th className="pb-2.5 text-right">Receipt</th>
                     </tr>
-                  ))}
-                  {(!subscription?.history || subscription.history.length === 0) && !isDemoAccount && (
-                    <tr>
-                      <td colSpan={8} className="py-8 text-center text-[#546E7A]">
-                        <p className="font-bold text-xs">No subscription invoices generated yet.</p>
-                        <p className="text-[11px] text-[#78909C] mt-0.5">Your official GST tax invoices and receipts will appear here after plan renewals or payments.</p>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-[#D2DDD7]">
+                    {subscriptionInvoices.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-[#E8F0EC]/30 transition">
+                        <td className="py-3 font-mono font-bold text-[#163B36]">{item.invoiceId}</td>
+                        <td className="py-3 text-[#546E7A]">{item.date}</td>
+                        <td className="py-3 font-semibold text-[#263238]">{item.planName}</td>
+                        <td className="py-3 text-[#546E7A] capitalize">{item.billingCycle}</td>
+                        <td className="py-3 font-mono text-[10px] text-[#546E7A]">{item.txnId}</td>
+                        <td className="py-3 font-black text-[#263238] font-tabular">₹{item.amount.toLocaleString('en-IN')}</td>
+                        <td className="py-3">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#E8F0EC] text-[#163B36] border border-[#163B36]/20">
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="py-3 text-right">
+                          <button
+                            onClick={() => alert(`Opening official GST tax receipt for ${item.invoiceId}`)}
+                            className="px-2.5 py-1 rounded-lg bg-white border border-[#D2DDD7] text-[#163B36] hover:bg-[#E8F0EC] font-bold text-[11px] inline-flex items-center gap-1 shadow-2xs transition cursor-pointer"
+                          >
+                            <Download className="h-3 w-3 text-[#163B36]" />
+                            <span>PDF</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}

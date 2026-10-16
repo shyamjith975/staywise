@@ -34,7 +34,14 @@ export async function POST(req: NextRequest) {
         leaseStart: body.leaseStart || new Date().toISOString().split('T')[0],
         leaseEnd: body.leaseEnd || '2027-09-30',
         rentDueDate: Number(body.rentDueDate) || 5,
-        password: body.password || 'Tenant@123'
+        password: body.password || 'Tenant@123',
+        tenancyType: body.tenancyType || 'Residential',
+        hasFood: body.hasFood ?? false,
+        roomSharing: body.roomSharing || 'Single',
+        coTenant: body.coTenant,
+        aadhaarNumber: body.aadhaarNumber,
+        panNumber: body.panNumber,
+        documents: body.documents
       });
 
       return NextResponse.json({

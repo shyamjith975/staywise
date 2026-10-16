@@ -61,7 +61,7 @@ export default function FloatingNavRail() {
   ];
 
   const tenantNavItems: NavItem[] = [
-    { id: 'dashboard', label: 'My Apartment', icon: <LayoutGrid className="h-4 w-4" /> },
+    { id: 'dashboard', label: 'My Space', icon: <LayoutGrid className="h-4 w-4" /> },
     { id: 'find_home', label: 'Find a Home & Refer', icon: <Compass className="h-4 w-4 text-[#C69A55]" /> },
     { id: 'rentflow', label: 'Rent & Receipts', icon: <CreditCard className="h-4 w-4" /> },
     { id: 'maintenance', label: 'Maintenance Requests', icon: <Wrench className="h-4 w-4" /> },

@@ -9,7 +9,8 @@ import {
   Sparkles, 
   Menu,
   X,
-  Plus
+  Plus,
+  UserPlus
 } from 'lucide-react';
 
 export default function TopHeader() {
@@ -22,7 +23,8 @@ export default function TopHeader() {
     activeView,
     setActiveView,
     logout,
-    setIsAddPropertyOpen
+    setIsAddPropertyOpen,
+    setIsExistingTenantWizardOpen
   } = useAppState();
 
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
@@ -43,7 +45,7 @@ export default function TopHeader() {
   ];
 
   return (
-    <header className="w-full px-4 sm:px-6 pt-3 pb-2 flex items-center justify-between gap-3 border-b border-[#D2DDD7] lg:border-none">
+    <header className="sticky top-0 z-30 w-full px-4 sm:px-6 py-2.5 flex items-center justify-between gap-3 bg-white/95 backdrop-blur-md border-b border-[#D2DDD7] shadow-2xs">
       
       {/* Mobile Brand & Hamburger */}
       <div className="lg:hidden flex items-center gap-2.5">
@@ -74,15 +76,28 @@ export default function TopHeader() {
       {/* Right Controls */}
       <div className="flex items-center gap-2 ml-auto">
         
-        {/* Quick Add Button */}
+        {/* Fixed Quick Add Buttons */}
         {activeRole !== 'tenant' && (
-          <button
-            onClick={() => setIsAddPropertyOpen(true)}
-            className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-extrabold transition shadow-xs cursor-pointer"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>Add Property</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsExistingTenantWizardOpen(true)}
+              className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-[#E8F0EC] hover:bg-[#DCE8E1] text-[#163B36] text-xs font-extrabold border border-[#D2DDD7] transition shadow-xs cursor-pointer shrink-0"
+              title="Onboard Tenant"
+            >
+              <UserPlus className="h-3.5 w-3.5 text-[#163B36]" />
+              <span className="hidden sm:inline">+ Onboard Tenant</span>
+              <span className="sm:hidden">+ Tenant</span>
+            </button>
+            <button
+              onClick={() => setIsAddPropertyOpen(true)}
+              className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-extrabold transition shadow-xs cursor-pointer shrink-0"
+              title="Add Property"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">+ Add Property</span>
+              <span className="sm:hidden">+ Property</span>
+            </button>
+          </div>
         )}
 
         {/* Notifications */}

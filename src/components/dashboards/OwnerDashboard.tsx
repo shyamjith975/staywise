@@ -39,7 +39,8 @@ import {
   ExternalLink,
   Laptop,
   AlertTriangle,
-  Crown
+  Crown,
+  UserPlus
 } from 'lucide-react';
 import { AuthorizedDelegate } from '../../types';
 
@@ -207,7 +208,8 @@ export default function OwnerDashboard() {
     leads, 
     currentUser, 
     activeRole,
-    setIsAddPropertyOpen, 
+    setIsAddPropertyOpen,
+    setIsExistingTenantWizardOpen, 
     setActiveView,
     electricityBills,
     setIsUploadBillModalOpen,
@@ -468,7 +470,7 @@ export default function OwnerDashboard() {
                 : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
             }`}
           >
-            Direct Banks ({bankAccounts.length})
+            Bank Accounts ({bankAccounts.length})
           </button>
           <button
             onClick={() => setActiveTab('documents')}
@@ -478,7 +480,7 @@ export default function OwnerDashboard() {
                 : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
             }`}
           >
-            Deeds &amp; Vault ({documents.length})
+            Documents &amp; Records ({documents.length})
           </button>
           <button
             onClick={() => setActiveTab('delegates')}
@@ -488,7 +490,7 @@ export default function OwnerDashboard() {
                 : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
             }`}
           >
-            Team Delegates ({activeDelegates.length})
+            Team Access ({activeDelegates.length})
           </button>
           <button
             onClick={() => setActiveTab('utilities')}
@@ -498,17 +500,9 @@ export default function OwnerDashboard() {
                 : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
             }`}
           >
-            Utility OCR Bills ({activeElectricityBills.length})
+            Electricity Bills ({activeElectricityBills.length})
           </button>
         </div>
-
-        <button
-          onClick={() => setIsAddPropertyOpen(true)}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold transition shrink-0 shadow-xs"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          <span>Add Property</span>
-        </button>
       </div>
 
       {/* ========================================================================= */}
@@ -557,15 +551,8 @@ export default function OwnerDashboard() {
                 </div>
                 <h3 className="text-lg font-bold text-[#263238]">Welcome to Staywise! No properties added yet.</h3>
                 <p className="text-xs text-[#666666] max-w-md mx-auto">
-                  Your workspace starts with a clean slate. Click below to add your first property, residential apartment, or PG hostel.
+                  Your workspace starts with a clean slate. Use the + Add Property and + Onboard Tenant buttons in the top header to manage units and tenants.
                 </p>
-                <button
-                  onClick={() => setIsAddPropertyOpen(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Add Your First Property</span>
-                </button>
               </div>
             )}
 
@@ -1231,25 +1218,12 @@ export default function OwnerDashboard() {
                 </button>
               ))}
             </div>
-
-            <button
-              onClick={() => setIsAddPropertyOpen(true)}
-              className="px-4 py-1.5 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold shadow-xs transition"
-            >
-              + Add New Property
-            </button>
           </div>
 
           {filteredProperties.length === 0 ? (
             <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
               <p className="text-sm font-bold text-[#263238]">No properties found in this view</p>
-              <p className="text-xs text-[#666666]">Add your first property to begin tracking units, leases, and tenant rent.</p>
-              <button
-                onClick={() => setIsAddPropertyOpen(true)}
-                className="px-4 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
-              >
-                + Add New Property
-              </button>
+              <p className="text-xs text-[#666666]">Add your first property using the top header to begin tracking units, leases, and tenant rent.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1266,7 +1240,7 @@ export default function OwnerDashboard() {
                       <h3 className="font-extrabold text-base text-[#263238] mt-1.5">{prop.name}</h3>
                       <p className="text-xs text-[#666666]">{prop.address}</p>
                     </div>
-                    <div className="h-8 w-8 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-center text-xs font-black text-[#263238]">
+                    <div className="h-8 w-8 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-center text-xs font-black text-[#163B36]">
                       {prop.healthScore}%
                     </div>
                   </div>
@@ -1292,7 +1266,7 @@ export default function OwnerDashboard() {
                           setPropertyToEdit(prop);
                           setIsEditPropertyModalOpen(true);
                         }}
-                        className="px-3 py-1 rounded-full bg-[#E8F0EC] hover:bg-[#163B36] text-xs font-bold text-white border border-[#D2DDD7] transition"
+                        className="px-3 py-1 rounded-full bg-[#E8F0EC] hover:bg-[#163B36] text-xs font-bold text-[#163B36] hover:text-white border border-[#D2DDD7] transition shadow-2xs cursor-pointer"
                       >
                         Edit
                       </button>
@@ -1446,14 +1420,14 @@ export default function OwnerDashboard() {
       )}
 
       {/* ========================================================================= */}
-      {/* TAB VIEW: TEAM DELEGATES                                                 */}
+      {/* TAB VIEW: TEAM & MANAGER ACCESS                                            */}
       {/* ========================================================================= */}
       {activeTab === 'delegates' && (
         <div className="space-y-4 animate-in fade-in duration-200">
           <div className="flex items-center justify-between bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
             <div>
-              <h3 className="text-sm font-extrabold text-[#263238]">Team &amp; Authorized Delegates</h3>
-              <p className="text-xs text-[#666666]">Access management for Accountants, Managers, and Auditors</p>
+              <h3 className="text-sm font-extrabold text-[#263238]">Team &amp; Manager Access</h3>
+              <p className="text-xs text-[#666666]">Give your manager access to their work while you stay in control.</p>
             </div>
             <button
               onClick={() => setIsAddDelegateModalOpen(true)}
@@ -1468,8 +1442,8 @@ export default function OwnerDashboard() {
               <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#263238] flex items-center justify-center mx-auto">
                 <Users className="h-6 w-6" />
               </div>
-              <p className="text-sm font-bold text-[#263238]">No authorized delegates added</p>
-              <p className="text-xs text-[#666666]">Invite your chartered accountant, tax auditor, or property manager with role-based access controls.</p>
+              <p className="text-sm font-bold text-[#263238]">No team members added yet</p>
+              <p className="text-xs text-[#666666]">Give your manager or caretaker access to their work while you stay in control.</p>
               <button
                 onClick={() => setIsAddDelegateModalOpen(true)}
                 className="px-4 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
@@ -1689,8 +1663,8 @@ export default function OwnerDashboard() {
           <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
               <div>
-                <h3 className="font-extrabold text-base text-[#263238]">Invite Authorized Delegate</h3>
-                <p className="text-xs text-[#546E7A]">Accountants, Property Managers &amp; Auditors</p>
+                <h3 className="font-extrabold text-base text-[#263238]">Invite Team Member</h3>
+                <p className="text-xs text-[#546E7A]">Give your manager access to their work while you stay in control</p>
               </div>
               <button onClick={() => setIsAddDelegateModalOpen(false)} className="text-[#263238]/70 hover:text-[#263238]">
                 <X className="h-5 w-5" />

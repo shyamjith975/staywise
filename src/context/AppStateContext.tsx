@@ -325,6 +325,18 @@ interface AppStateContextType {
     leaseStart: string;
     leaseEnd: string;
     rentDueDate: number;
+    tenancyType?: 'PG' | 'Residential' | 'Commercial';
+    hasFood?: boolean;
+    roomSharing?: 'Single' | '2_Sharing' | '3_Sharing';
+    coTenant?: {
+      name: string;
+      phone: string;
+      email: string;
+      rentSharePercentage?: number;
+    };
+    aadhaarNumber?: string;
+    panNumber?: string;
+    documents?: any[];
   }) => Promise<void>;
   payInvoice: (invoiceId: string, method: 'UPI' | 'Bank Transfer' | 'Card' | 'Autopay' | 'FlexPay') => void;
   approveTicket: (ticketId: string) => void;
@@ -817,6 +829,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         if (Array.isArray(d.moveFlowChecklist)) setMoveFlowChecklist(d.moveFlowChecklist);
         if (Array.isArray(d.referrals)) setReferrals(d.referrals);
         if (Array.isArray(d.users)) setUsers(d.users);
+        if (Array.isArray(d.tenantConnectionRequests)) setTenantConnectionRequests(d.tenantConnectionRequests);
         if (d.subscription) setSubscription(d.subscription);
         const isDemo = activeUser?.email === 'owner@staywise.com' || activeUser?.id === 'user-owner-vikram' || activeUser?.role === 'admin';
         setNotifications(isDemo ? DEMO_NOTIFICATIONS : []);
@@ -1033,8 +1046,39 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     leaseStart: string;
     leaseEnd: string;
     rentDueDate: number;
+    tenancyType?: 'PG' | 'Residential' | 'Commercial';
+    hasFood?: boolean;
+    roomSharing?: 'Single' | '2_Sharing' | '3_Sharing';
+    coTenant?: {
+      name: string;
+      phone: string;
+      email: string;
+      rentSharePercentage?: number;
+    };
+    aadhaarNumber?: string;
+    panNumber?: string;
+    documents?: any[];
   }) => {
+    const isSharing = data.roomSharing === '2_Sharing' && Boolean(data.coTenant?.name);
+    const coRentSharePct = isSharing ? (data.coTenant?.rentSharePercentage || 50) : 0;
+    const primaryRentSharePct = isSharing ? (100 - coRentSharePct) : 100;
+
+    const primaryMonthlyRent = isSharing 
+      ? Math.round((data.monthlyRent * primaryRentSharePct) / 100) 
+      : data.monthlyRent;
+    const coMonthlyRent = isSharing 
+      ? (data.monthlyRent - primaryMonthlyRent) 
+      : 0;
+
+    const primaryDeposit = isSharing 
+      ? Math.round((data.deposit * primaryRentSharePct) / 100) 
+      : data.deposit;
+    const coDeposit = isSharing 
+      ? (data.deposit - primaryDeposit) 
+      : 0;
+
     const tenantId = generateTenantId();
+    const coTenantId = isSharing ? generateTenantId() : undefined;
     const targetProp = properties.find(p => p.id === data.propertyId);
     const propName = targetProp ? targetProp.name : 'Staywise Property';
 
@@ -1046,8 +1090,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       propertyId: data.propertyId,
       propertyName: propName,
       unitNumber: data.unitNumber,
-      monthlyRent: data.monthlyRent,
-      depositPaid: data.deposit,
+      monthlyRent: primaryMonthlyRent,
+      depositPaid: primaryDeposit,
       leaseStart: data.leaseStart,
       leaseEnd: data.leaseEnd,
       rentDueDate: data.rentDueDate,
@@ -1055,21 +1099,71 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       reliabilityScore: 100,
       kycVerified: true,
       rewardsBalance: 500, // Onboarding welcome bonus
-      emergencyContact: 'Family Primary Contact'
+      emergencyContact: 'Family Primary Contact',
+      tenancyType: data.tenancyType || 'Residential',
+      hasFood: data.hasFood ?? false,
+      roomSharing: data.roomSharing || 'Single',
+      coTenantId: coTenantId,
+      coTenantName: data.coTenant?.name,
+      coTenantPhone: data.coTenant?.phone,
+      coTenantEmail: data.coTenant?.email,
+      rentSharePercentage: primaryRentSharePct,
+      aadhaarNumber: data.aadhaarNumber,
+      panNumber: data.panNumber,
+      documents: data.documents || []
     };
 
-    setTenants(prev => [...prev, newTenant]);
+    const newTenantsList = [newTenant];
+    let newCoTenant: Tenant | undefined = undefined;
+
+    if (isSharing && data.coTenant && coTenantId) {
+      newCoTenant = {
+        id: coTenantId,
+        name: data.coTenant.name,
+        phone: data.coTenant.phone,
+        email: data.coTenant.email,
+        propertyId: data.propertyId,
+        propertyName: propName,
+        unitNumber: data.unitNumber,
+        monthlyRent: coMonthlyRent,
+        depositPaid: coDeposit,
+        leaseStart: data.leaseStart,
+        leaseEnd: data.leaseEnd,
+        rentDueDate: data.rentDueDate,
+        autopayActive: true,
+        reliabilityScore: 100,
+        kycVerified: true,
+        rewardsBalance: 500,
+        emergencyContact: `${data.name} (Roommate)`,
+        tenancyType: data.tenancyType || 'Residential',
+        hasFood: data.hasFood ?? false,
+        roomSharing: '2_Sharing',
+        coTenantId: tenantId,
+        coTenantName: data.name,
+        coTenantPhone: data.phone,
+        coTenantEmail: data.email,
+        rentSharePercentage: coRentSharePct,
+        documents: []
+      };
+      newTenantsList.push(newCoTenant);
+    }
+
+    setTenants(prev => [...prev, ...newTenantsList]);
 
     // Update Property Unit status to OCCUPIED
     setProperties(prev => prev.map(p => {
       if (p.id === data.propertyId) {
+        const occupantNames = isSharing && data.coTenant 
+          ? `${data.name} & ${data.coTenant.name} (Sharing)` 
+          : data.name;
+
         const updatedUnits = p.units.map(u => {
           if (u.unitNumber === data.unitNumber) {
             return {
               ...u,
               status: 'OCCUPIED' as const,
               currentTenantId: tenantId,
-              currentTenantName: data.name,
+              currentTenantName: occupantNames,
               leaseEnd: data.leaseEnd,
               rentAmount: data.monthlyRent
             };
@@ -1096,19 +1190,43 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       propertyName: propName,
       unitNumber: data.unitNumber,
       period: 'October 2026',
-      baseRent: data.monthlyRent,
-      totalAmount: data.monthlyRent,
+      baseRent: primaryMonthlyRent,
+      totalAmount: primaryMonthlyRent,
       paidAmount: 0,
       dueDate: `2026-10-${data.rentDueDate.toString().padStart(2, '0')}`,
       status: 'Due'
     };
-    setInvoices(prev => [newInvoice, ...prev]);
+    const invoicesToAdd = [newInvoice];
+
+    let coInvoice: RentInvoice | undefined = undefined;
+    if (isSharing && newCoTenant) {
+      coInvoice = {
+        id: generateInvoiceId(),
+        invoiceNumber: generateInvoiceNumber(),
+        tenantId: newCoTenant.id,
+        tenantName: newCoTenant.name,
+        propertyId: data.propertyId,
+        propertyName: propName,
+        unitNumber: data.unitNumber,
+        period: 'October 2026',
+        baseRent: coMonthlyRent,
+        totalAmount: coMonthlyRent,
+        paidAmount: 0,
+        dueDate: `2026-10-${data.rentDueDate.toString().padStart(2, '0')}`,
+        status: 'Due'
+      };
+      invoicesToAdd.push(coInvoice);
+    }
+
+    setInvoices(prev => [...invoicesToAdd, ...prev]);
 
     // Record Security Deposit in double-entry ledger with collision-free ID
     const ledgerEntry: LedgerEntry = {
       id: generateLedgerId(),
       timestamp: 'Just now',
-      description: `Security Deposit Onboarded - Unit ${data.unitNumber} (${data.name})`,
+      description: isSharing && data.coTenant
+        ? `Security Deposit Onboarded (Dual Sharing) - Unit ${data.unitNumber} (${data.name} & ${data.coTenant.name})`
+        : `Security Deposit Onboarded - Unit ${data.unitNumber} (${data.name})`,
       type: 'CREDIT',
       amount: data.deposit,
       account: 'Statutory Tenant Deposit Trust',
@@ -1117,7 +1235,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       settlementStatus: 'CLEARED'
     };
     setLedger(prev => [ledgerEntry, ...prev]);
-    addNotification('Tenant Connected', `${data.name} has accepted the digital onboarding invite for Unit ${data.unitNumber}.`, 'RENT');
+
+    const notifyMsg = isSharing && data.coTenant
+      ? `${data.name} and ${data.coTenant.name} have been onboarded as shared roommates in Unit ${data.unitNumber}.`
+      : `${data.name} has accepted the digital onboarding invite for Unit ${data.unitNumber}.`;
+    addNotification('Tenant Connected', notifyMsg, 'RENT');
     broadcastSync('TENANT_ONBOARDED', { tenantId });
 
     // Authoritative API call to persist to SQLite database
@@ -1131,13 +1253,23 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       if (resJson.success && resJson.data) {
         const d = resJson.data;
         if (d.tenant) {
-          setTenants(prev => prev.map(t => t.id === tenantId ? d.tenant : t));
+          setTenants(prev => {
+            const base = prev.filter(t => t.id !== tenantId && (!coTenantId || t.id !== coTenantId));
+            const list = [d.tenant, ...base];
+            if (d.coTenant) list.push(d.coTenant);
+            return list;
+          });
         }
         if (d.property) {
           setProperties(prev => prev.map(p => p.id === d.property.id ? d.property : p));
         }
         if (d.invoice) {
-          setInvoices(prev => [d.invoice, ...prev.filter(i => i.id !== newInvoice.id)]);
+          setInvoices(prev => {
+            const base = prev.filter(i => i.id !== newInvoice.id && (!coInvoice || i.id !== coInvoice.id));
+            const list = [d.invoice, ...base];
+            if (d.coInvoice) list.push(d.coInvoice);
+            return list;
+          });
         }
         if (d.ledgerEntry) {
           setLedger(prev => [d.ledgerEntry, ...prev.filter(l => l.id !== ledgerEntry.id)]);
@@ -1439,7 +1571,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     addNotification('Meal Plan Deleted', `Meal plan removed from mess operations.`, 'SYSTEM');
   };
 
-  const createTenantConnectionRequest = (reqData: Omit<TenantConnectionRequest, 'id' | 'createdAt' | 'status'>) => {
+  const createTenantConnectionRequest = async (reqData: Omit<TenantConnectionRequest, 'id' | 'createdAt' | 'status'>) => {
     const newReq: TenantConnectionRequest = {
       ...reqData,
       id: `conn-${Date.now()}`,
@@ -1451,10 +1583,20 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       try { localStorage.setItem('staywise_tenant_connections', JSON.stringify(updated)); } catch {}
       return updated;
     });
-    addNotification('Connection Request Sent', `Your connection request for Unit ${reqData.unitNumber} was submitted. Awaiting owner approval.`, 'SYSTEM');
+    addNotification('Connection Request Sent', `Your connection request for Unit ${reqData.unitNumber} with mandatory eKYC & verified docs was submitted. Awaiting owner approval.`, 'SYSTEM');
+
+    try {
+      await fetch('/api/tenant-connections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newReq)
+      });
+    } catch (e) {
+      console.warn('[TenantConnection] SQLite sync error:', e);
+    }
   };
 
-  const approveTenantConnectionRequest = (id: string) => {
+  const approveTenantConnectionRequest = async (id: string) => {
     const req = tenantConnectionRequests.find(r => r.id === id);
     if (!req) return;
 
@@ -1477,7 +1619,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       reliabilityScore: 98,
       kycVerified: true,
       rewardsBalance: 500,
-      emergencyContact: '+91 98450 11928'
+      emergencyContact: '+91 98450 11928',
+      tenancyType: req.tenancyType || 'PG',
+      hasFood: req.includeFoodPlan !== false,
+      aadhaarNumber: req.aadhaarNumber,
+      panNumber: req.panNumber,
+      documents: req.documents || []
     };
 
     setTenants(prev => [newTenant, ...prev.filter(t => t.email?.toLowerCase() !== req.tenantEmail.toLowerCase())]);
@@ -1507,19 +1654,57 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
 
-    addNotification('Tenant Connected', `${req.tenantName} is now officially connected to Unit ${req.unitNumber}.`, 'SYSTEM');
+    addNotification('Tenant Connected', `${req.tenantName} is now officially connected with verified eKYC & Agreement to Unit ${req.unitNumber}.`, 'SYSTEM');
+
+    try {
+      await fetch('/api/tenant-connections', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'APPROVED' })
+      });
+      await fetch('/api/tenants', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newTenant.name,
+          phone: newTenant.phone,
+          email: newTenant.email,
+          propertyId: newTenant.propertyId,
+          unitNumber: newTenant.unitNumber,
+          monthlyRent: newTenant.monthlyRent,
+          deposit: newTenant.depositPaid,
+          leaseStart: newTenant.leaseStart,
+          leaseEnd: newTenant.leaseEnd,
+          rentDueDate: newTenant.rentDueDate,
+          tenancyType: newTenant.tenancyType,
+          hasFood: newTenant.hasFood,
+          aadhaarNumber: newTenant.aadhaarNumber,
+          panNumber: newTenant.panNumber,
+          documents: newTenant.documents
+        })
+      });
+    } catch (e) {
+      console.warn('[TenantConnection] Approval sync error:', e);
+    }
   };
 
-  const rejectTenantConnectionRequest = (id: string) => {
+  const rejectTenantConnectionRequest = async (id: string) => {
     setTenantConnectionRequests(prev => {
       const updated = prev.map(r => r.id === id ? { ...r, status: 'REJECTED' as const } : r);
       try { localStorage.setItem('staywise_tenant_connections', JSON.stringify(updated)); } catch {}
       return updated;
     });
     addNotification('Request Declined', 'The tenant connection request has been declined.', 'SYSTEM');
+    try {
+      await fetch('/api/tenant-connections', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'REJECTED' })
+      });
+    } catch (e) {}
   };
 
-  const requestTenantMoveOut = (requestId: string, details: { moveOutDate: string; moveOutReason: string }) => {
+  const requestTenantMoveOut = async (requestId: string, details: { moveOutDate: string; moveOutReason: string }) => {
     setTenantConnectionRequests(prev => {
       const updated = prev.map(r => r.id === requestId ? {
         ...r,
@@ -1531,9 +1716,21 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
     addNotification('Move-Out Requested', 'Move-out inspection & deposit settlement requested. Awaiting owner verification.', 'RENT');
+    try {
+      await fetch('/api/tenant-connections', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: requestId,
+          status: 'MOVE_OUT_PENDING',
+          moveOutDate: details.moveOutDate,
+          moveOutReason: details.moveOutReason
+        })
+      });
+    } catch (e) {}
   };
 
-  const verifyAndSettleMoveOut = (requestId: string, details: { inspectionNotes?: string; depositSettledAmount?: number }) => {
+  const verifyAndSettleMoveOut = async (requestId: string, details: { inspectionNotes?: string; depositSettledAmount?: number }) => {
     const req = tenantConnectionRequests.find(r => r.id === requestId);
     if (!req) return;
 
@@ -1551,6 +1748,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     });
 
     addNotification('Move-Out Verified', `Move-out verified for ${req.tenantName}. Unit ${req.unitNumber} is now marked vacant.`, 'RENT');
+    try {
+      await fetch('/api/tenant-connections', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: requestId,
+          status: 'MOVED_OUT',
+          inspectionNotes: details.inspectionNotes,
+          depositSettledAmount: details.depositSettledAmount ?? req.depositAmount
+        })
+      });
+    } catch (e) {}
   };
 
   const addDelegate = (delegateData: Omit<AuthorizedDelegate, 'id' | 'invitedAt' | 'status'> & { status?: AuthorizedDelegate['status'] }) => {
@@ -1645,7 +1854,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   const refreshSubscription = async () => {
     try {
-      const res = await fetch('/api/subscription');
+      const url = currentUser?.id ? `/api/subscription?userId=${encodeURIComponent(currentUser.id)}` : '/api/subscription';
+      const res = await fetch(url);
       const json = await res.json();
       if (json.success && json.data) {
         setSubscription(json.data);

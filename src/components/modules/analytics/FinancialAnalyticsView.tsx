@@ -18,7 +18,6 @@ import {
   CheckCircle2, 
   Percent,
   Receipt,
-  Plus,
   Clock,
   Gift,
   Zap,
@@ -32,7 +31,6 @@ export default function FinancialAnalyticsView() {
     addNotification, 
     currentUser, 
     activeRole, 
-    setIsAddPropertyOpen,
     setSelectedReceiptInvoice 
   } = useAppState();
 
@@ -537,13 +535,6 @@ export default function FinancialAnalyticsView() {
               <span className="text-xs font-bold text-[#163B36] bg-[#E8F0EC] px-2.5 py-1 rounded-full border border-[#D2DDD7]">
                 {propertyPerformances.length} Active {propertyPerformances.length === 1 ? 'Asset' : 'Assets'}
               </span>
-              <button
-                onClick={() => setIsAddPropertyOpen(true)}
-                className="px-3 py-1 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold flex items-center gap-1 shadow-2xs transition cursor-pointer"
-              >
-                <Plus className="h-3.5 w-3.5 text-[#C69A55]" />
-                <span>+ Add Property</span>
-              </button>
             </div>
           </div>
 
@@ -552,15 +543,8 @@ export default function FinancialAnalyticsView() {
               <Building2 className="h-10 w-10 text-[#D2DDD7] mx-auto opacity-50" />
               <h4 className="text-sm font-black text-[#263238]">No Properties Added Yet</h4>
               <p className="text-xs text-[#546E7A] max-w-sm mx-auto">
-                Onboard your first residential flat, PG co-living suite, or commercial space to monitor Net Operating Income and portfolio yield.
+                Use the <span className="font-semibold text-[#163B36]">+ Add Property</span> button in the top header to onboard your first residential flat, PG co-living suite, or commercial space.
               </p>
-              <button
-                onClick={() => setIsAddPropertyOpen(true)}
-                className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold shadow-xs transition inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                <Plus className="h-3.5 w-3.5 text-[#C69A55]" />
-                <span>Add Your First Property</span>
-              </button>
             </div>
           ) : (
             <div className="overflow-x-auto">

@@ -793,7 +793,7 @@ export default function RentFlowOverview() {
             <div>
               <h3 className="text-base font-extrabold text-[#263238] flex items-center gap-2">
                 <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
-                <span>{activeRole === 'tenant' ? (isDemoTenant ? 'My Apartment 302 Electricity Bill' : 'My Electricity & Power Bills') : 'Electricity & Sub-Meter Utility Billing'}</span>
+                <span>{activeRole === 'tenant' ? (isDemoTenant ? 'My Unit 302 Electricity Bill' : 'My Electricity & Power Bills') : 'Electricity & Sub-Meter Utility Billing'}</span>
               </h3>
               <p className="text-xs text-[#666666] mt-0.5">
                 {activeRole === 'tenant'

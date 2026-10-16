@@ -50,7 +50,8 @@ export async function GET(req: NextRequest) {
       allAiInsights,
       allMoveFlowChecklist,
       allReferrals,
-      allUsers
+      allUsers,
+      allTenantConnections
     ] = await Promise.all([
       db.properties.findMany(),
       db.tenants.findMany(),
@@ -68,13 +69,14 @@ export async function GET(req: NextRequest) {
       db.estate.getAssets(),
       db.estate.getStaff(),
       db.bills.findMany(),
-      db.subscriptions.getForUser(),
+      db.subscriptions.getForUser(targetUserId || undefined),
       db.leads.findMany(),
       db.utilities.findMany(),
       db.aiInsights.findMany(),
       db.moveFlow.findMany(),
       db.referrals.findMany(),
-      db.users.findMany()
+      db.users.findMany(),
+      db.tenantConnections.findMany()
     ]);
 
     // For Super Admin or Demo Account: return platform-wide catalog
@@ -104,7 +106,8 @@ export async function GET(req: NextRequest) {
           aiInsights: allAiInsights,
           moveFlowChecklist: allMoveFlowChecklist,
           referrals: allReferrals,
-          users: allUsers.map(({ password, ...u }) => u)
+          users: allUsers.map(({ password, ...u }) => u),
+          tenantConnectionRequests: allTenantConnections
         }
       });
     }
@@ -136,7 +139,8 @@ export async function GET(req: NextRequest) {
           aiInsights: [],
           moveFlowChecklist: [],
           referrals: [],
-          users: allUsers.map(({ password, ...u }) => u)
+          users: allUsers.map(({ password, ...u }) => u),
+          tenantConnectionRequests: []
         }
       });
     }
@@ -210,7 +214,10 @@ export async function GET(req: NextRequest) {
         aiInsights: userProperties.length > 0 ? allAiInsights : [],
         moveFlowChecklist: userMoveFlowChecklist,
         referrals: [],
-        users: allUsers.map(({ password, ...u }) => u)
+        users: allUsers.map(({ password, ...u }) => u),
+        tenantConnectionRequests: (userRole === 'tenant')
+          ? allTenantConnections.filter(r => r.tenantUserId === targetUserId || (userEmail && r.tenantEmail?.toLowerCase() === userEmail.toLowerCase()))
+          : allTenantConnections.filter(r => r.ownerId === targetUserId || (userEmail && r.ownerEmail?.toLowerCase() === userEmail.toLowerCase()) || (r.propertyId && userPropIds.includes(r.propertyId)))
       }
     });
 

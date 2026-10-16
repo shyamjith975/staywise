@@ -9,8 +9,6 @@ import {
   Layers, 
   CheckCircle, 
   Clock, 
-  Plus, 
-  UserPlus, 
   ArrowRight,
   ShieldCheck,
   ChevronDown,
@@ -23,8 +21,6 @@ export default function PropertyList() {
     properties, 
     activePortfolio, 
     setActivePortfolio,
-    setIsAddPropertyOpen, 
-    setIsExistingTenantWizardOpen,
     setIsEditPropertyModalOpen,
     setPropertyToEdit,
     deleteProperty,
@@ -69,25 +65,6 @@ export default function PropertyList() {
             Multi-tier Asset Hierarchy: Portfolio → Property → Building → Floor → Unit
           </p>
         </div>
-
-        {activeRole !== 'admin' && (
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={() => setIsExistingTenantWizardOpen(true)}
-              className="px-4 py-2.5 rounded-2xl bg-white hover:bg-[#E8F0EC] text-[#263238] text-xs font-bold border border-[#D2DDD7] transition flex items-center gap-1.5 shadow-sm"
-            >
-              <UserPlus className="h-4 w-4 text-[#263238]" />
-              <span>Onboard Tenant</span>
-            </button>
-            <button
-              onClick={() => setIsAddPropertyOpen(true)}
-              className="px-4 py-2.5 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white font-bold text-xs shadow-md shadow-[#263238]/20 transition flex items-center gap-1.5"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Add Property</span>
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Portfolio Filter Pills */}
@@ -134,18 +111,9 @@ export default function PropertyList() {
           <div>
             <h3 className="text-base font-bold text-[#263238]">No Properties in This Portfolio Yet</h3>
             <p className="text-xs text-[#666666] mt-1 max-w-sm mx-auto">
-              Add your first building, apartment complex, or commercial unit to start collecting rent and onboarding tenants.
+              Use the <span className="font-semibold text-[#163B36]">+ Add Property</span> button in the top header to add your first building, apartment complex, or commercial unit.
             </p>
           </div>
-          {activeRole !== 'admin' && (
-            <button
-              onClick={() => setIsAddPropertyOpen(true)}
-              className="px-5 py-2.5 rounded-2xl bg-[#263238] text-white text-xs font-bold hover:bg-[#1a1a1a] transition inline-flex items-center gap-2 shadow-md"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Add Your First Property</span>
-            </button>
-          )}
         </div>
       )}
 

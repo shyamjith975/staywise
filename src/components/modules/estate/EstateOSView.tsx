@@ -27,7 +27,6 @@ export default function EstateOSView() {
     utilities, 
     currentUser, 
     activeRole,
-    setIsAddPropertyOpen,
     addNotification,
     addEstateAsset,
     deleteEstateAsset,
@@ -130,14 +129,6 @@ export default function EstateOSView() {
               Utility Meters ({activeUtilities.length})
             </button>
           </div>
-
-          <button
-            onClick={() => setIsAddPropertyOpen(true)}
-            className="px-3.5 py-2 rounded-2xl bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer"
-          >
-            <Plus className="h-3.5 w-3.5 text-[#C69A55]" />
-            <span>+ Add Villa / Campus</span>
-          </button>
         </div>
       </div>
 

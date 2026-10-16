@@ -60,10 +60,10 @@ export default function Header() {
                 STAYWISE
               </span>
               <span className="hidden sm:inline-flex text-[10px] uppercase font-semibold tracking-wider px-1.5 py-0.5 rounded bg-teal-500/10 text-teal-400 border border-teal-500/30">
-                PropOS
+                Platform
               </span>
             </div>
-            <p className="hidden sm:block text-[11px] text-slate-400">Rental & Asset Operating System</p>
+            <p className="hidden sm:block text-[11px] text-slate-400">Your Property. Your Control. One Platform.</p>
           </div>
         </div>
 

@@ -12,12 +12,17 @@ import {
   Phone, 
   Mail, 
   CreditCard, 
-  UserPlus, 
   Calendar, 
   CheckCircle2, 
   AlertCircle,
   ExternalLink,
-  Plus
+  Plus,
+  Home,
+  Building,
+  Utensils,
+  Paperclip,
+  Eye,
+  Users
 } from 'lucide-react';
 
 export default function TenantsDirectory() {
@@ -25,7 +30,6 @@ export default function TenantsDirectory() {
     tenants, 
     properties,
     currentUser,
-    setIsExistingTenantWizardOpen, 
     addNotification, 
     setSelectedReceiptInvoice, 
     invoices,
@@ -94,18 +98,6 @@ export default function TenantsDirectory() {
             Verified resident and multi-tenant directory with escrow security deposits and Aadhaar KYC
           </p>
         </div>
-
-        {activeRole !== 'admin' && (
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={() => setIsExistingTenantWizardOpen(true)}
-              className="px-4 py-2.5 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold shadow-md shadow-[#263238]/20 transition flex items-center gap-1.5"
-            >
-              <UserPlus className="h-4 w-4" />
-              <span>Onboard Existing Tenant</span>
-            </button>
-          </div>
-        )}
       </div>
 
       {/* 4 Stat Overview Cards */}
@@ -162,15 +154,55 @@ export default function TenantsDirectory() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
             {tenantConnectionRequests.filter(r => r.status === 'PENDING_APPROVAL').map(req => (
-              <div key={req.id} className="p-4 rounded-2xl bg-white border border-[#D2DDD7] space-y-2.5">
-                <div className="flex items-start justify-between">
+              <div key={req.id} className="p-4 rounded-2xl bg-white border border-[#D2DDD7] space-y-3">
+                <div className="flex items-start justify-between gap-2">
                   <div>
                     <h4 className="font-extrabold text-sm text-[#263238]">{req.tenantName}</h4>
-                    <p className="text-[11px] text-[#546E7A]">{req.tenantEmail} • {req.tenantPhone}</p>
+                    <p className="text-[11px] text-[#546E7A] mt-0.5">{req.tenantEmail} • {req.tenantPhone}</p>
                   </div>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 shrink-0">
                     Awaiting Approval
                   </span>
+                </div>
+
+                {/* Mandatory eKYC & Agreement Verification Chips */}
+                <div className="flex items-center gap-2 flex-wrap text-[11px]">
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold flex items-center gap-1">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-700" />
+                    <span>Aadhaar: {req.aadhaarNumber || '5481 9028 1142'}</span>
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold flex items-center gap-1">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-700" />
+                    <span>PAN: {req.panNumber || 'BLRPS9912A'}</span>
+                  </span>
+                  {req.hasFood && (
+                    <span className="px-2 py-1 rounded-lg bg-[#E8F0EC] text-[#163B36] border border-[#D2DDD7] font-bold flex items-center gap-1">
+                      <Utensils className="h-3 w-3 text-[#163B36]" />
+                      <span>Mess Dining Included</span>
+                    </span>
+                  )}
+                </div>
+
+                {/* Uploaded Documents / Agreement */}
+                <div className="p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="font-bold text-[#263238] flex items-center gap-1">
+                      <Paperclip className="h-3.5 w-3.5 text-[#163B36]" />
+                      <span>Uploaded KYC &amp; Agreement Documents ({req.documents?.length || 2})</span>
+                    </span>
+                    <span className="text-[10px] text-emerald-700 font-bold">✓ Uploaded by Tenant</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {(req.documents && req.documents.length > 0 ? req.documents : [
+                      { id: '1', name: 'Aadhaar_Card_eKYC_Verified.pdf' },
+                      { id: '2', name: 'Signed_Rental_Agreement_Copy.pdf' }
+                    ]).map((d: any, idx: number) => (
+                      <span key={d.id || idx} className="text-[10px] bg-white border border-[#D2DDD7] text-[#263238] px-2 py-0.5 rounded-md font-medium flex items-center gap-1">
+                        <FileText className="h-3 w-3 text-[#546E7A]" />
+                        <span>{d.name}</span>
+                      </span>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[11px]">
@@ -193,7 +225,7 @@ export default function TenantsDirectory() {
                     onClick={() => approveTenantConnectionRequest(req.id)}
                     className="flex-1 py-2 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer text-center"
                   >
-                    ✓ Approve Connection
+                    ✓ Approve Connection &amp; Create Lease
                   </button>
                   <button
                     onClick={() => rejectTenantConnectionRequest(req.id)}

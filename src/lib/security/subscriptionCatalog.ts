@@ -28,24 +28,24 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTierId, SubscriptionPlan> = 
   starter: {
     id: 'starter',
     name: 'Starter (1 Property)',
-    tagline: '1 Property • Annual Plan for single-building landlords & independent assets',
+    tagline: '1 Property • For single-flat landlords and independent rental houses',
     monthlyPrice: 59,
     annualPrice: 599, // ₹599/year (Approx ₹50/month)
     maxUnits: 1,
     badge: '1 Property • ₹599/yr',
     features: [
       '1 Property (PG, Flat, House or Commercial)',
-      'Automated Rent Invoices & PDF Receipts',
-      'WhatsApp Payment Reminder Automations',
-      'Standard UPI Dynamic QR Code Collection',
-      'Basic Maintenance Ticket Resolution Flow',
+      'Automatic Rent Invoices & PDF Receipts',
+      'WhatsApp Payment Reminders to Tenants',
+      'Direct UPI QR Code Payment Collection',
+      'Simple Maintenance Request Tracking',
       'Single-User Access with Landlord Dashboard'
     ]
   },
   growth_pro: {
     id: 'growth_pro',
     name: 'Growth Pro (10 Properties)',
-    tagline: 'Up to 10 Properties • Annual Plan for growing multi-asset portfolios',
+    tagline: 'Up to 10 Properties • For PG operators and owners managing multiple units',
     monthlyPrice: 149,
     annualPrice: 1499, // ₹1,499/year (Approx ₹125/month)
     maxUnits: 10,
@@ -53,28 +53,28 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionTierId, SubscriptionPlan> = 
     popular: true,
     features: [
       'Up to 10 Properties & PG Co-living Buildings',
-      'Sub-Meter Electricity OCR Bill Splitting & Tariffs',
-      'Automated Multi-Day WhatsApp & SMS Dunning (T-3, Due, T+3)',
-      'MoveFlow Digital Check-in / Check-out Inspections',
-      'Statutory Double-Entry Ledger Surveillance',
-      '3 Delegated Role Logins (Accountant, Caretaker)'
+      'Sub-Meter Electricity Bill Splitting by Usage',
+      'Automated WhatsApp Rent Reminders (Before & On Due Date)',
+      'Move-In Photo Checklists & Digital Agreements',
+      'Income & Expense Records with Monthly Summaries',
+      'Give Up to 3 Staff Members Access While Staying in Control'
     ]
   },
   enterprise: {
     id: 'enterprise',
     name: 'Enterprise (Unlimited Properties)',
-    tagline: 'Unlimited Properties • Annual Plan for portfolios, LLPs & campuses',
+    tagline: 'Unlimited Properties • For large portfolios, commercial complexes, and multiple buildings',
     monthlyPrice: 299,
     annualPrice: 2999, // ₹2,999/year (Approx ₹250/month)
     maxUnits: 99999,
     badge: 'Unlimited Properties • ₹2,999/yr',
     features: [
-      'Unlimited Properties, Multi-Entity LLPs & Campuses',
-      'Axis Bank Escrow Direct Instant T+0 Auto-Sweeps',
-      'SuperAdmin Multi-Role Governance & Triage Queue',
-      'RBI Regulated Double-Entry Immutable Ledger',
-      'Commercial CAM Common Area Utility Allocation Engine',
-      'Priority 24/7 Dedicated Account Concierge with 1-hr SLA'
+      'Unlimited Properties, Buildings & Commercial Units',
+      'Direct Bank Settlements & Complete Financial Records',
+      'Team Access with Custom Roles & Permissions',
+      'Clear Income, Expense & Tax Summaries',
+      'Commercial Maintenance (CAM) & GST Invoices',
+      'Priority Phone Support & Dedicated Onboarding Assistance'
     ]
   }
 };

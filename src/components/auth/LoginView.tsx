@@ -224,7 +224,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
           </span>
         </div>
         <p className="text-xs font-semibold text-[#546E7A]">
-          Unified Property Operating System • Landlords, Estates &amp; Residents
+          Your Property. Your Control. One Platform.
         </p>
       </div>
 

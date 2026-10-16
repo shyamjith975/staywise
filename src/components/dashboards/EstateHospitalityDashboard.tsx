@@ -32,7 +32,8 @@ import {
   UserCheck,
   BedDouble,
   Check,
-  Phone
+  Phone,
+  UserPlus
 } from 'lucide-react';
 import { EstateAsset } from '../../types';
 
@@ -143,6 +144,7 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
     activeView, 
     setActiveView,
     setIsAddPropertyOpen,
+    setIsExistingTenantWizardOpen,
     addEstateAsset,
     deleteEstateAsset,
     addStaffMember,
@@ -330,7 +332,7 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
 
   const solarGeneration = isDemoEstate
     ? '+1,520 kWh'
-    : estateAssets.some(a => a.name.toLowerCase().includes('solar'))
+    : activeEstateAssets.some(a => a.name.toLowerCase().includes('solar'))
       ? '+180 kWh'
       : '0 kWh';
 
@@ -452,7 +454,7 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-[#263238]/70">Campus Solar &amp; Microgrid</span>
             <span className="text-[10px] font-bold text-[#163B36] bg-[#E8F0EC] px-2 py-0.5 rounded-full border border-[#D2DDD7]">
-              {isDemoEstate ? 'Net Surplus' : (estateAssets.length > 0 ? 'Eco Active' : 'Standby')}
+              {isDemoEstate ? 'Net Surplus' : (activeEstateAssets.length > 0 ? 'Eco Active' : 'Standby')}
             </span>
           </div>
           <div className="text-2xl sm:text-3xl font-black text-[#163B36] font-tabular mt-2">
@@ -499,7 +501,7 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
           }`}
         >
           <Building2 className={`h-4 w-4 ${activeTab === 'VILLAS' ? 'text-[#C69A55]' : 'text-[#163B36]'}`} />
-          <span>Villas &amp; Campuses ({isDemoEstate ? 4 : properties.length})</span>
+          <span>Villas &amp; Campuses ({isDemoEstate ? 4 : activeEstateProperties.length})</span>
         </button>
 
         <button
@@ -523,7 +525,7 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
           }`}
         >
           <Wrench className={`h-4 w-4 ${activeTab === 'ASSETS' ? 'text-[#C69A55]' : 'text-[#163B36]'}`} />
-          <span>Campus Physical Assets ({estateAssets.length})</span>
+          <span>Campus Physical Assets ({activeEstateAssets.length})</span>
         </button>
 
         <button
@@ -535,7 +537,7 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
           }`}
         >
           <Users className={`h-4 w-4 ${activeTab === 'STAFF' ? 'text-[#C69A55]' : 'text-[#163B36]'}`} />
-          <span>Estate Staff ({staff.length})</span>
+          <span>Estate Staff ({activeStaffMembers.length})</span>
         </button>
 
         <button
@@ -868,13 +870,6 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
               <h3 className="text-base font-extrabold text-[#263238]">Villas &amp; Luxury Campuses</h3>
               <p className="text-xs text-[#263238]/70">Boutique private estates, whole villas, and verified channel listings</p>
             </div>
-            <button
-              onClick={() => setIsAddPropertyOpen(true)}
-              className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
-            >
-              <Plus className="h-4 w-4" />
-              <span>+ Add Villa / Campus</span>
-            </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -1004,15 +999,8 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
                 <Building2 className="h-10 w-10 text-[#163B36] mx-auto" />
                 <div className="font-extrabold text-base text-[#263238]">No Luxury Campuses Registered</div>
                 <p className="text-xs text-[#263238]/70 max-w-md mx-auto">
-                  Onboard your first villa, holiday home, or boutique resort to activate dynamic nightly tariffs and smart check-ins.
+                  Use the <span className="font-semibold text-[#163B36]">+ Add Property</span> button in the top header to onboard your first villa, holiday home, or boutique resort.
                 </p>
-                <button
-                  onClick={() => setIsAddPropertyOpen(true)}
-                  className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-bold transition shadow-sm inline-flex items-center gap-1.5"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>+ Add Villa / Campus</span>
-                </button>
               </div>
             )}
           </div>

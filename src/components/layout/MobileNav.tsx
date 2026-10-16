@@ -425,7 +425,7 @@ export default function MobileNav() {
                     <div className="flex items-center gap-3">
                       <LayoutDashboard className="h-4 w-4 text-[#263238]" />
                       <div>
-                        <div className="text-xs font-bold">My Apartment</div>
+                        <div className="text-xs font-bold">My Space</div>
                         <div className="text-[10px] text-slate-500">Rent balance &amp; roommate split</div>
                       </div>
                     </div>
