@@ -78,24 +78,24 @@ export default function TopHeader() {
         
         {/* Fixed Quick Add Buttons */}
         {activeRole !== 'tenant' && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={() => setIsExistingTenantWizardOpen(true)}
-              className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-[#E8F0EC] hover:bg-[#DCE8E1] text-[#163B36] text-xs font-extrabold border border-[#D2DDD7] transition shadow-xs cursor-pointer shrink-0"
+              className="flex items-center justify-center gap-1.5 h-8 w-8 sm:h-auto sm:w-auto p-0 sm:px-3.5 sm:py-1.5 rounded-full bg-[#E8F0EC] hover:bg-[#DCE8E1] text-[#163B36] text-xs font-extrabold border border-[#D2DDD7] transition shadow-xs cursor-pointer shrink-0"
               title="Onboard Tenant"
+              aria-label="Onboard Tenant"
             >
-              <UserPlus className="h-3.5 w-3.5 text-[#163B36]" />
+              <UserPlus className="h-4 w-4 sm:h-3.5 sm:w-3.5 text-[#163B36] shrink-0" />
               <span className="hidden sm:inline">+ Onboard Tenant</span>
-              <span className="sm:hidden">+ Tenant</span>
             </button>
             <button
               onClick={() => setIsAddPropertyOpen(true)}
-              className="flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-extrabold transition shadow-xs cursor-pointer shrink-0"
+              className="flex items-center justify-center gap-1.5 h-8 w-8 sm:h-auto sm:w-auto p-0 sm:px-3.5 sm:py-1.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-extrabold transition shadow-xs cursor-pointer shrink-0"
               title="Add Property"
+              aria-label="Add Property"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="h-4 w-4 sm:h-3.5 sm:w-3.5 text-white shrink-0" />
               <span className="hidden sm:inline">+ Add Property</span>
-              <span className="sm:hidden">+ Property</span>
             </button>
           </div>
         )}

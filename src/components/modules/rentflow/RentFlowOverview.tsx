@@ -603,10 +603,11 @@ export default function RentFlowOverview() {
                               totalAmount: row.amount
                             });
                           }}
-                          className="px-3.5 py-2 rounded-xl bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] text-xs font-bold border border-[#D2DDD7] flex items-center gap-1.5 transition shadow-sm"
+                          className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] text-xs font-bold border border-[#D2DDD7] flex items-center gap-1.5 transition shadow-sm shrink-0"
                         >
                           <Download className="h-3.5 w-3.5" />
-                          <span>Download Receipt</span>
+                          <span className="hidden sm:inline">Download Receipt</span>
+                          <span className="sm:hidden text-[11px]">Receipt</span>
                         </button>
                       ) : (
                         <>
@@ -614,7 +615,7 @@ export default function RentFlowOverview() {
                             <>
                               <button
                                 onClick={() => handleSendReminder(row.name)}
-                                className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold border border-amber-200 flex items-center gap-1.5 transition"
+                                className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold border border-amber-200 flex items-center gap-1.5 transition shrink-0"
                                 title="Send polite WhatsApp alert"
                               >
                                 <Send className="h-3.5 w-3.5" />
@@ -625,18 +626,20 @@ export default function RentFlowOverview() {
                                   addNotification('Payment Recorded', `Marked ₹${row.amount.toLocaleString('en-IN')} as collected offline for ${row.name}.`, 'RENT');
                                   alert(`Recorded offline payment of ₹${row.amount.toLocaleString('en-IN')} for ${row.name}.`);
                                 }}
-                                className="px-3.5 py-1.5 rounded-xl bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] text-xs font-bold border border-[#D2DDD7] flex items-center gap-1 transition"
+                                className="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] text-xs font-bold border border-[#D2DDD7] flex items-center gap-1 transition shrink-0"
                                 title="Record cash or direct bank transfer"
                               >
-                                <span>Record Offline</span>
+                                <span className="hidden sm:inline">Record Offline</span>
+                                <span className="sm:hidden text-[11px]">Offline</span>
                               </button>
                             </>
                           ) : (
                             <button
                               onClick={() => handlePayNowSim(row)}
-                              className="px-4 py-2 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold shadow-md shadow-[#263238]/20 transition"
+                              className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold shadow-md shadow-[#263238]/20 transition shrink-0"
                             >
-                              Pay Rent Now
+                              <span className="hidden sm:inline">Pay Rent Now</span>
+                              <span className="sm:hidden text-[11px]">Pay Now</span>
                             </button>
                           )}
                         </>

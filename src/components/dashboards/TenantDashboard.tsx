@@ -34,7 +34,10 @@ import {
   Utensils,
   UploadCloud,
   Check,
-  Trash2
+  Trash2,
+  BedDouble,
+  Building2,
+  LogOut
 } from 'lucide-react';
 import { Roommate } from '../../types';
 import ViewElectricityBillDocumentModal from '../modules/rentflow/ViewElectricityBillDocumentModal';
@@ -933,56 +936,111 @@ export default function TenantDashboard() {
   // Active / Assigned Tenant View
   const rentAmount = pendingInvoice ? pendingInvoice.totalAmount : (currentTenant.monthlyRent || 0);
 
+  // Tenancy Category fetched from Database (tenants.tenancy_type or connection request or property)
+  const tenantProperty = properties.find(p => 
+    (currentTenant?.propertyId && p.id === currentTenant.propertyId) ||
+    (currentTenant?.propertyName && p.name.toLowerCase() === currentTenant.propertyName.toLowerCase())
+  );
+
+  const dbTenancyType = (
+    currentTenant?.tenancyType ||
+    userConnection?.tenancyType ||
+    activeTenancyType ||
+    (tenantProperty?.type?.toLowerCase().includes('pg') || tenantProperty?.type?.toLowerCase().includes('co-living') || tenantProperty?.type?.toLowerCase().includes('hostel') ? 'PG' :
+     tenantProperty?.type?.toLowerCase().includes('commercial') || tenantProperty?.type?.toLowerCase().includes('office') || tenantProperty?.type?.toLowerCase().includes('shop') ? 'Commercial' : 'Residential')
+  );
+
+  const normalizedCategory: 'PG' | 'Commercial' | 'Residential' = 
+    dbTenancyType.toUpperCase().includes('PG') || dbTenancyType.toUpperCase().includes('HOSTEL') || dbTenancyType.toUpperCase().includes('CO-LIVING')
+      ? 'PG'
+      : dbTenancyType.toUpperCase().includes('COMMERCIAL') || dbTenancyType.toUpperCase().includes('OFFICE') || dbTenancyType.toUpperCase().includes('SHOP')
+        ? 'Commercial'
+        : 'Residential';
+
+  const categoryDetails = {
+    PG: {
+      label: 'PG & Co-Living',
+      badgeClass: 'bg-indigo-50 text-indigo-800 border-indigo-200',
+      icon: <BedDouble className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+    },
+    Commercial: {
+      label: 'Commercial Space',
+      badgeClass: 'bg-teal-50 text-teal-800 border-teal-200',
+      icon: <Building2 className="h-3.5 w-3.5 text-teal-600 shrink-0" />
+    },
+    Residential: {
+      label: 'Residential Flat',
+      badgeClass: 'bg-emerald-50 text-[#163B36] border-emerald-200',
+      icon: <Home className="h-3.5 w-3.5 text-[#163B36] shrink-0" />
+    }
+  }[normalizedCategory];
+
   return (
     <div className="space-y-6 pb-12 font-sans text-[#263238]">
       {/* Resident Greeting Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D2DDD7]">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#263238]">
-              Welcome home, {currentTenant.name.split(' ')[0]}!
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-3 sm:pb-4 border-b border-[#D2DDD7]">
+        <div className="space-y-1">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-[#263238] flex flex-wrap items-center gap-2">
+              <span>Welcome home, {currentTenant.name.split(' ')[0]}!</span>
+              <span 
+                className={`text-xs px-2.5 py-1 rounded-full font-extrabold border inline-flex items-center gap-1.5 shadow-2xs ${categoryDetails.badgeClass}`}
+                title={`Tenancy Category: ${categoryDetails.label} (Database Record)`}
+              >
+                {categoryDetails.icon}
+                <span>{categoryDetails.label}</span>
+              </span>
             </h1>
-            <span className={`text-xs px-3 py-1 rounded-full font-extrabold border flex items-center gap-1 shadow-2xs ${
+            <span className={`text-xs px-2.5 sm:px-3 py-1 rounded-full font-extrabold border flex items-center gap-1 shadow-2xs shrink-0 ${
               ekycStatus === 'Verified' 
                 ? 'bg-[#163B36] text-white border-[#163B36]' 
                 : 'bg-[#FAF5EB] text-[#8C6B2E] border-[#ECCFA4]'
             }`}>
-              <ShieldCheck className="h-3.5 w-3.5 text-[#C69A55]" />
+              <ShieldCheck className="h-3.5 w-3.5 text-[#C69A55] shrink-0" />
               <span>{ekycStatus === 'Verified' ? 'eKYC Verified' : 'KYC Pending'}</span>
             </span>
           </div>
-          <p className="text-xs text-[#546E7A] mt-1 font-medium">
+          <p className="text-xs text-[#546E7A] font-medium">
             Unit {currentTenant.unitNumber}, {currentTenant.propertyName} • Active lease until {currentTenant.leaseEnd || '2027'}
           </p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        {/* Action Buttons: Responsive with small icons on mobile to avoid overflow */}
+        <div className="flex items-center gap-1.5 sm:gap-2 self-start sm:self-auto shrink-0">
           {userConnection?.status === 'MOVE_OUT_PENDING' ? (
-            <span className="px-3.5 py-2 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold flex items-center gap-1.5 shadow-2xs">
-              <Clock className="h-3.5 w-3.5" />
-              <span>Move-Out Pending Verification</span>
+            <span className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-amber-100 text-amber-900 border border-amber-300 text-xs font-bold flex items-center gap-1.5 shadow-2xs shrink-0">
+              <Clock className="h-3.5 w-3.5 shrink-0" />
+              <span className="hidden sm:inline">Move-Out Pending Verification</span>
+              <span className="sm:hidden text-[11px]">Move-Out Pending</span>
             </span>
           ) : (
             <button
               onClick={() => setIsMoveOutModalOpen(true)}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white hover:bg-rose-50 text-rose-700 text-xs font-bold border border-rose-200 transition shadow-2xs cursor-pointer"
+              className="flex items-center justify-center gap-1.5 h-8 w-8 sm:h-auto sm:w-auto p-0 sm:px-3.5 sm:py-2 rounded-full bg-white hover:bg-rose-50 text-rose-700 text-xs font-bold border border-rose-200 transition shadow-2xs cursor-pointer shrink-0"
+              title="Request Move-Out"
+              aria-label="Request Move-Out"
             >
-              <span>Request Move-Out</span>
+              <LogOut className="h-4 w-4 shrink-0 text-rose-600" />
+              <span className="hidden sm:inline">Request Move-Out</span>
             </button>
           )}
           <button
             onClick={() => setIsEKYCModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white hover:bg-[#E8F0EC] text-[#263238] text-xs font-bold border border-[#D2DDD7] transition shadow-2xs cursor-pointer"
+            className="flex items-center justify-center gap-1.5 h-8 w-8 sm:h-auto sm:w-auto p-0 sm:px-3.5 sm:py-2 rounded-full bg-white hover:bg-[#E8F0EC] text-[#263238] text-xs font-bold border border-[#D2DDD7] transition shadow-2xs cursor-pointer shrink-0"
+            title="Digital ID / eKYC"
+            aria-label="Digital ID"
           >
-            <Fingerprint className="h-4 w-4 text-[#163B36]" />
-            <span>Digital ID</span>
+            <Fingerprint className="h-4 w-4 text-[#163B36] shrink-0" />
+            <span className="hidden sm:inline">Digital ID</span>
           </button>
           <button
             onClick={() => setIsCreateTicketOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold shadow-xs transition cursor-pointer"
+            className="flex items-center justify-center gap-1.5 h-8 w-8 sm:h-auto sm:w-auto p-0 sm:px-4 sm:py-2 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold shadow-xs transition cursor-pointer shrink-0"
+            title="Request Repair / Maintenance"
+            aria-label="Request Repair"
           >
-            <Wrench className="h-4 w-4 text-[#C69A55]" />
-            <span>Request Repair</span>
+            <Wrench className="h-4 w-4 text-[#C69A55] shrink-0" />
+            <span className="hidden sm:inline">Request Repair</span>
           </button>
         </div>
       </div>
@@ -1073,10 +1131,12 @@ export default function TenantDashboard() {
               </div>
               <button
                 onClick={() => setIsAddRoommateModalOpen(true)}
-                className="px-3.5 py-1.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer"
+                className="px-3 sm:px-3.5 py-1.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer shrink-0"
+                title="Add Roommate"
               >
-                <UserPlus className="h-3.5 w-3.5 text-[#C69A55]" />
-                <span>Add Roommate</span>
+                <UserPlus className="h-3.5 w-3.5 text-[#C69A55] shrink-0" />
+                <span className="hidden sm:inline">Add Roommate</span>
+                <span className="sm:hidden text-[11px]">+ Add</span>
               </button>
             </div>
 
