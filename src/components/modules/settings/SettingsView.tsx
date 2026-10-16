@@ -28,16 +28,39 @@ import {
   AlertTriangle,
   RefreshCw,
   Hash,
-  ShieldAlert
+  ShieldAlert,
+  X
 } from 'lucide-react';
 import { SUBSCRIPTION_PLANS } from '../../../lib/security/subscriptionCatalog';
 
 export default function SettingsView() {
-  const { currentUser, addNotification, subscription, upgradeSubscription, refreshSubscription, cancelTrial } = useAppState();
+  const { 
+    currentUser, 
+    addNotification, 
+    subscription, 
+    upgradeSubscription, 
+    refreshSubscription, 
+    cancelTrial,
+    delegates: appDelegates,
+    addDelegate,
+    revokeDelegate
+  } = useAppState();
 
-  const [activeTab, setActiveTab] = useState<'PORTFOLIO' | 'SUBSCRIPTION' | 'RENT_RULES' | 'UTILITIES' | 'BANKING' | 'DELEGATES' | 'SECURITY'>('SUBSCRIPTION');
+  const [activeTab, setActiveTab] = useState<'PORTFOLIO' | 'SUBSCRIPTION' | 'RENT_RULES' | 'UTILITIES' | 'BANKING' | 'DELEGATES' | 'SECURITY'>('PORTFOLIO');
   const [isSavedToast, setIsSavedToast] = useState(false);
   const [isCancellingTrial, setIsCancellingTrial] = useState(false);
+
+  // Delegate Invite Modal State
+  const [isInviteDelegateOpen, setIsInviteDelegateOpen] = useState(false);
+  const [delegateForm, setDelegateForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    role: 'Accountant' as 'Accountant' | 'Property Manager' | 'Tax Auditor',
+    allowLedger: true,
+    allowInvoices: true,
+    allowMaintenance: false
+  });
 
   // Subscription Upgrade Modal State
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
@@ -220,25 +243,6 @@ export default function SettingsView() {
       {/* Settings Navigation Tabs */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-[#D1D5DB] text-xs">
         <button
-          onClick={() => handleTabChange('SUBSCRIPTION')}
-          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
-            activeTab === 'SUBSCRIPTION'
-              ? 'bg-[#163B36] text-white shadow-xs'
-              : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
-          }`}
-        >
-          <Crown className={`h-4 w-4 ${activeTab === 'SUBSCRIPTION' ? 'text-[#C69A55]' : 'text-amber-500'}`} />
-          <span>Subscription &amp; Plans</span>
-          <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold border ${
-            activeTab === 'SUBSCRIPTION'
-              ? 'bg-white/20 text-white border-white/30'
-              : 'bg-[#E8F0EC] text-[#163B36] border-[#D2DDD7]'
-          }`}>
-            Active
-          </span>
-        </button>
-
-        <button
           onClick={() => handleTabChange('PORTFOLIO')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'PORTFOLIO'
@@ -248,30 +252,6 @@ export default function SettingsView() {
         >
           <Building2 className="h-4 w-4" />
           <span>Entity &amp; Identity</span>
-        </button>
-
-        <button
-          onClick={() => handleTabChange('RENT_RULES')}
-          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
-            activeTab === 'RENT_RULES'
-              ? 'bg-[#163B36] text-white shadow-xs'
-              : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
-          }`}
-        >
-          <Sliders className="h-4 w-4" />
-          <span>Rent &amp; Grace Period Rules</span>
-        </button>
-
-        <button
-          onClick={() => handleTabChange('UTILITIES')}
-          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
-            activeTab === 'UTILITIES'
-              ? 'bg-[#163B36] text-white shadow-xs'
-              : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
-          }`}
-        >
-          <Zap className={`h-4 w-4 ${activeTab === 'UTILITIES' ? 'text-[#C69A55]' : 'text-amber-500'}`} />
-          <span>Electricity &amp; Utilities</span>
         </button>
 
         <button
@@ -299,6 +279,42 @@ export default function SettingsView() {
         </button>
 
         <button
+          onClick={() => handleTabChange('RENT_RULES')}
+          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
+            activeTab === 'RENT_RULES'
+              ? 'bg-[#163B36] text-white shadow-xs'
+              : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
+          }`}
+        >
+          <Sliders className="h-4 w-4" />
+          <span>Rent &amp; Grace Period Rules</span>
+        </button>
+
+        <button
+          onClick={() => handleTabChange('UTILITIES')}
+          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
+            activeTab === 'UTILITIES'
+              ? 'bg-[#163B36] text-white shadow-xs'
+              : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
+          }`}
+        >
+          <Zap className={`h-4 w-4 ${activeTab === 'UTILITIES' ? 'text-[#C69A55]' : 'text-amber-500'}`} />
+          <span>Electricity &amp; Utilities</span>
+        </button>
+
+        <button
+          onClick={() => handleTabChange('SUBSCRIPTION')}
+          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
+            activeTab === 'SUBSCRIPTION'
+              ? 'bg-[#163B36] text-white shadow-xs'
+              : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
+          }`}
+        >
+          <Crown className={`h-4 w-4 ${activeTab === 'SUBSCRIPTION' ? 'text-[#C69A55]' : 'text-amber-500'}`} />
+          <span>Subscription Plan</span>
+        </button>
+
+        <button
           onClick={() => handleTabChange('SECURITY')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'SECURITY'
@@ -314,98 +330,66 @@ export default function SettingsView() {
       {/* TAB: Owner Subscription Model & White-Hat Security Hardening */}
       {activeTab === 'SUBSCRIPTION' && (
         <div className="space-y-6">
-          {/* Top Hero Banner */}
-          <div className="organic-card p-6 sm:p-8 bg-gradient-to-br from-[#263238] via-[#263238] to-[#263238] text-white relative overflow-hidden rounded-3xl shadow-xl border border-[#163B36]">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-[#163B36]/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center gap-2.5">
-                  {subscription?.status === 'TRIAL' ? (
-                    <span className="px-3 py-1 rounded-full bg-[#163B36] text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
-                      <span className="h-2 w-2 rounded-full bg-rose-600 animate-ping" />
-                      7-Day Free Trial • Autopay Scheduled
-                    </span>
-                  ) : subscription?.status === 'CANCELLED' ? (
-                    <span className="px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 text-xs font-bold border border-rose-500/30">
-                      Trial Cancelled • Autopay Revoked
-                    </span>
-                  ) : (
-                    <span className="px-3 py-1 rounded-full bg-[#163B36]/20 text-[#163B36] text-xs font-black uppercase tracking-wider border border-[#163B36]/40 flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-[#163B36] animate-ping" />
-                      Active Plan • Auto-Renew ON
-                    </span>
-                  )}
-
-                  <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30 flex items-center gap-1.5">
-                    <Crown className="h-3.5 w-3.5 text-amber-400" />
-                    {subscription?.billingCycle === 'annual' ? 'Annual Commitment (Saved 17%)' : 'Monthly Flexible'}
-                  </span>
-                </div>
-
-                <div>
-                  <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-3">
-                    {subscription?.planName || 'Growth Portfolio Pro OS'}
-                  </h2>
-                  <p className="text-xs text-[#163B36]/80 mt-1 max-w-2xl leading-relaxed">
-                    {subscription?.status === 'TRIAL' 
-                      ? `Your 7-day risk-free trial is active. You have full access to all features. Your card/bank will only process autopay on ${subscription.endDate} (₹${subscription.amount}) if not cancelled before then.`
-                      : 'Unified multi-asset property management operating system with statutory double-entry ledger, sub-meter OCR tariff splitting, automated WhatsApp dunning, and Axis Bank Escrow clearance.'
-                    }
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-6 pt-2 text-xs text-white/90">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-[#163B36]" />
-                    <span>Plan Started: <b className="text-white">{subscription?.startDate || '01 Oct 2026'}</b></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-amber-300" />
-                    <span>{subscription?.status === 'TRIAL' ? 'Trial Ends / First Charge:' : 'Next Renewal:'} <b className="text-white">{subscription?.endDate || '01 Oct 2027'}</b></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-[#163B36]" />
-                    <span>{subscription?.status === 'TRIAL' ? 'Trial Remaining:' : 'Validity Countdown:'} <b className="text-[#163B36]">{subscription?.daysRemaining ?? 7} Days Left</b></span>
-                  </div>
-                </div>
+          {/* Clean Plan Summary Card */}
+          <div className="organic-card p-6 bg-white border border-[#D2DDD7] rounded-3xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#D2DDD7]">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-[#163B36] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
+                  {subscription?.status === 'TRIAL' ? '7-Day Free Trial' : 'Active Subscription'}
+                </span>
+                <h3 className="text-xl font-black text-[#263238] mt-1.5 flex items-center gap-2">
+                  <Crown className="h-5 w-5 text-[#C69A55]" />
+                  <span>{subscription?.planName || 'Growth Portfolio Pro OS'}</span>
+                </h3>
+                <p className="text-xs text-[#546E7A] mt-0.5">
+                  {subscription?.billingCycle === 'annual' ? 'Billed Annually (Saved 17%)' : 'Billed Monthly'} • Next Renewal: {subscription?.endDate || '01 Oct 2027'}
+                </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row lg:flex-col gap-3 min-w-[220px]">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsUpgradeModalOpen(true)}
-                  className="px-5 py-3 rounded-2xl bg-[#163B36] hover:bg-[#0F2925] text-white font-black text-xs transition shadow-lg shadow-[#263238]/20 flex items-center justify-center gap-2 border border-[#263238]/10"
+                  className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-bold transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Sparkles className="h-4 w-4" />
-                  <span>{subscription?.status === 'CANCELLED' ? 'Reactivate Subscription' : 'Upgrade / Switch Tier'}</span>
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>{subscription?.status === 'CANCELLED' ? 'Reactivate Plan' : 'Change Plan / Upgrade'}</span>
                 </button>
-
                 {subscription?.status === 'TRIAL' && (
                   <button
                     onClick={async () => {
-                      if (confirm("Cancel 7-Day Free Trial?\n\nYour connected card/bank autopay mandate will be revoked immediately and you will NOT be charged (₹0). You can continue exploring until your trial expires.")) {
+                      if (confirm("Cancel 7-Day Free Trial? Autopay mandate will be cancelled.")) {
                         setIsCancellingTrial(true);
                         await cancelTrial();
                         setIsCancellingTrial(false);
                       }
                     }}
                     disabled={isCancellingTrial}
-                    className="px-4 py-2.5 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold transition flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition"
                   >
-                    <AlertTriangle className="h-3.5 w-3.5 text-rose-400" />
-                    <span>{isCancellingTrial ? 'Revoking Autopay...' : 'Cancel Trial & Autopay (₹0 Charged)'}</span>
+                    Cancel Trial
                   </button>
                 )}
+              </div>
+            </div>
 
-                <button
-                  onClick={async () => {
-                    await refreshSubscription();
-                    addNotification('Subscription Status Refreshed', 'Synced latest quota & ledger status from central server.', 'SYSTEM');
-                  }}
-                  className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition border border-white/15 flex items-center justify-center gap-2"
-                >
-                  <RefreshCw className="h-3.5 w-3.5 text-[#163B36]" />
-                  <span>Sync Server Status</span>
-                </button>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div className="p-3.5 rounded-2xl bg-[#E8F0EC]/60 border border-[#D2DDD7]">
+                <span className="text-[11px] text-[#546E7A]">Unit Allocation</span>
+                <div className="text-sm font-black text-[#263238] mt-0.5 font-tabular">
+                  {subscription?.currentUnits || 24} / {subscription?.maxUnits || 50} Units
+                </div>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-[#E8F0EC]/60 border border-[#D2DDD7]">
+                <span className="text-[11px] text-[#546E7A]">Annual Subscription Fee</span>
+                <div className="text-sm font-black text-[#263238] mt-0.5 font-tabular">
+                  ₹{(subscription?.amount ?? (isDemoAccount ? 79990 : 0)).toLocaleString('en-IN')}
+                </div>
+              </div>
+              <div className="p-3.5 rounded-2xl bg-[#E8F0EC]/60 border border-[#D2DDD7]">
+                <span className="text-[11px] text-[#546E7A]">Payment Method</span>
+                <div className="text-sm font-bold text-[#263238] mt-0.5">
+                  {subscription?.paymentMethod || 'Axis Bank Escrow Auto-Debit'}
+                </div>
               </div>
             </div>
           </div>
@@ -1122,97 +1106,108 @@ export default function SettingsView() {
       )}
 
       {/* TAB 5: Managers & Accountants (Authorized Delegates) */}
-      {activeTab === 'DELEGATES' && (
-        <div className="organic-card p-6 space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E0E0E0]">
-            <div>
-              <h3 className="text-base font-extrabold text-[#263238]">Authorized Delegate Access Control</h3>
-              <p className="text-xs text-[#666666]">
-                Grant scoped read/audit access to external Accountants, Property Managers, and Tax Consultants
-              </p>
+      {activeTab === 'DELEGATES' && (() => {
+        const activeDelegates = isDemoAccount 
+          ? ((appDelegates && appDelegates.length > 0) ? appDelegates : [
+              {
+                id: 'del-demo-1',
+                name: 'CA Rajesh K.',
+                role: 'Chartered Accountant',
+                email: 'rajesh.k@cacafe.in',
+                phone: '+91 98410 44219',
+                permissions: ['Double-Entry Ledger', 'Section 24 Tax P&L', 'Invoices & TDS'],
+                status: 'ACTIVE' as const,
+                canWithdrawFunds: false
+              },
+              {
+                id: 'del-demo-2',
+                name: 'Arjun Das',
+                role: 'Field Operations Manager',
+                email: 'arjun.das@staywise.com',
+                phone: '+91 94470 12891',
+                permissions: ['Leads & Showing Visits', 'Maintenance Work Orders', 'Electricity Sub-Meters'],
+                status: 'ACTIVE' as const,
+                canWithdrawFunds: false
+              }
+            ])
+          : (appDelegates || []);
+
+        return (
+          <div className="organic-card p-6 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#D2DDD7]">
+              <div>
+                <h3 className="text-base font-extrabold text-[#263238]">Authorized Delegate Access Control</h3>
+                <p className="text-xs text-[#666666]">
+                  Grant scoped read/audit access to external Accountants, Property Managers, and Tax Consultants
+                </p>
+              </div>
+
+              <button
+                onClick={() => setIsInviteDelegateOpen(true)}
+                className="px-4 py-2 rounded-2xl bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+              >
+                <span>+ Invite New Delegate</span>
+              </button>
             </div>
 
-            <button
-              onClick={() => alert('Invite new Accountant or Property Manager with scoped permissions')}
-              className="px-4 py-2 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold shadow-md shadow-[#263238]/20 transition flex items-center gap-1.5 self-start sm:self-auto"
-            >
-              <span>+ Invite New Delegate</span>
-            </button>
+            {activeDelegates.length === 0 ? (
+              <div className="p-8 text-center rounded-2xl bg-[#E8F0EC]/50 border border-dashed border-[#D2DDD7] space-y-3">
+                <Users className="h-8 w-8 text-[#163B36] mx-auto opacity-70" />
+                <h4 className="text-sm font-extrabold text-[#263238]">No Authorized Delegates Linked</h4>
+                <p className="text-xs text-[#546E7A] max-w-md mx-auto">
+                  Authorize your Chartered Accountant or Property Manager to view ledgers and handle repairs. You can grant scoped permissions at any time.
+                </p>
+                <button
+                  onClick={() => setIsInviteDelegateOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition shadow-xs"
+                >
+                  + Invite New Delegate
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {activeDelegates.map(del => (
+                  <div key={del.id} className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-sm text-[#263238]">{del.name}</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-800">
+                          {del.role}
+                        </span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                          {del.status}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-[#666666]">{del.email} • {del.phone}</div>
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {del.permissions.map((p, idx) => (
+                          <span key={idx} className="text-[10px] bg-white border border-[#D2DDD7] text-[#263238] px-2 py-0.5 rounded-md font-medium">
+                            ✓ {p}
+                          </span>
+                        ))}
+                        <span className="text-[10px] bg-amber-50 border border-amber-200 text-amber-800 px-2 py-0.5 rounded-md font-bold">
+                          🔒 No Fund Withdrawal
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          if (confirm(`Revoke delegate access for ${del.name}?`)) revokeDelegate(del.id);
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition"
+                      >
+                        Revoke Access
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-
-          <div className="space-y-3">
-            <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-sm text-[#263238]">CA Rajesh K.</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-800">
-                    Chartered Accountant
-                  </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                    Active
-                  </span>
-                </div>
-                <div className="text-[11px] text-[#666666]">rajesh.k@cacafe.in • +91 98410 44219</div>
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  <span className="text-[10px] bg-white border border-[#D2DDD7] text-[#263238] px-2 py-0.5 rounded-md font-medium">Double-Entry Ledger</span>
-                  <span className="text-[10px] bg-white border border-[#D2DDD7] text-[#263238] px-2 py-0.5 rounded-md font-medium">Section 24 Tax P&amp;L</span>
-                  <span className="text-[10px] bg-white border border-[#D2DDD7] text-[#263238] px-2 py-0.5 rounded-md font-medium">Invoices &amp; TDS</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => alert('Permissions updated for CA Rajesh K.')}
-                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] font-bold text-xs transition"
-                >
-                  Configure Scope
-                </button>
-                <button
-                  onClick={() => alert('Access suspended for CA Rajesh K.')}
-                  className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition"
-                >
-                  Revoke
-                </button>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-sm text-[#263238]">Arjun Das</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800">
-                    Field Operations Manager
-                  </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                    Active
-                  </span>
-                </div>
-                <div className="text-[11px] text-[#666666]">arjun.das@staywise.com • +91 94470 12891</div>
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  <span className="text-[10px] bg-white border border-[#D2DDD7] text-[#263238] px-2 py-0.5 rounded-md font-medium">Leads &amp; Showing Visits</span>
-                  <span className="text-[10px] bg-white border border-[#D2DDD7] text-[#263238] px-2 py-0.5 rounded-md font-medium">Maintenance Work Orders</span>
-                  <span className="text-[10px] bg-white border border-[#D2DDD7] text-[#263238] px-2 py-0.5 rounded-md font-medium">Electricity Sub-Meters</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => alert('Permissions updated for Arjun Das')}
-                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] font-bold text-xs transition"
-                >
-                  Configure Scope
-                </button>
-                <button
-                  onClick={() => alert('Access suspended for Arjun Das')}
-                  className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs border border-rose-200 transition"
-                >
-                  Revoke
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* TAB 6: Security & 2FA */}
       {activeTab === 'SECURITY' && (
@@ -1467,6 +1462,140 @@ export default function SettingsView() {
                 </span>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* INVITE DELEGATE MODAL */}
+      {isInviteDelegateOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+              <div>
+                <h3 className="font-extrabold text-base text-[#263238]">Invite Authorized Delegate</h3>
+                <p className="text-xs text-[#546E7A]">Accountants, Property Managers &amp; Auditors</p>
+              </div>
+              <button onClick={() => setIsInviteDelegateOpen(false)} className="text-[#263238]/70 hover:text-[#263238]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={e => {
+              e.preventDefault();
+              const perms: string[] = [];
+              if (delegateForm.allowLedger) perms.push('Financial Ledger', 'Tax Reports (P&L)');
+              if (delegateForm.allowInvoices) perms.push('Rent Invoices', 'Bank Statements');
+              if (delegateForm.allowMaintenance) perms.push('Maintenance Work Orders', 'Tenant Handover');
+
+              addDelegate({
+                name: delegateForm.name,
+                email: delegateForm.email,
+                phone: delegateForm.phone,
+                role: delegateForm.role,
+                permissions: perms,
+                status: 'Active',
+                canWithdrawFunds: false
+              });
+              setIsInviteDelegateOpen(false);
+              setDelegateForm({
+                name: '',
+                email: '',
+                phone: '',
+                role: 'Accountant',
+                allowLedger: true,
+                allowInvoices: true,
+                allowMaintenance: false
+              });
+            }} className="space-y-3.5 text-xs">
+              <div>
+                <label className="text-xs font-bold text-[#263238] block mb-1">Full Name</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. CA Rajesh Kulkarni"
+                  value={delegateForm.name}
+                  onChange={e => setDelegateForm({ ...delegateForm, name: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Email</label>
+                  <input 
+                    type="email" 
+                    placeholder="rajesh@cacafe.in"
+                    value={delegateForm.email}
+                    onChange={e => setDelegateForm({ ...delegateForm, email: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Phone</label>
+                  <input 
+                    type="text" 
+                    placeholder="+91 98450 11928"
+                    value={delegateForm.phone}
+                    onChange={e => setDelegateForm({ ...delegateForm, phone: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238] font-mono"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-[#263238] block mb-1">Assigned Role</label>
+                <select
+                  value={delegateForm.role}
+                  onChange={e => setDelegateForm({ ...delegateForm, role: e.target.value as any })}
+                  className="w-full p-2.5 rounded-xl border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                >
+                  <option value="Accountant">Chartered Accountant (CA) / Accountant</option>
+                  <option value="Property Manager">Property Manager</option>
+                  <option value="Tax Auditor">Tax Auditor</option>
+                </select>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-2 text-xs">
+                <span className="font-bold text-[#263238] block">Operational Permissions:</span>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={delegateForm.allowLedger}
+                    onChange={e => setDelegateForm({ ...delegateForm, allowLedger: e.target.checked })}
+                    className="rounded text-[#163B36]"
+                  />
+                  <span>View Double-Entry Ledger &amp; Tax P&amp;L</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={delegateForm.allowInvoices}
+                    onChange={e => setDelegateForm({ ...delegateForm, allowInvoices: e.target.checked })}
+                    className="rounded text-[#163B36]"
+                  />
+                  <span>Inspect Rent Invoices &amp; TDS Statements</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={delegateForm.allowMaintenance}
+                    onChange={e => setDelegateForm({ ...delegateForm, allowMaintenance: e.target.checked })}
+                    className="rounded text-[#163B36]"
+                  />
+                  <span>Manage Work Orders &amp; Field Repairs</span>
+                </label>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-relaxed">
+                🔒 <b>Strict Compliance Rule:</b> Money withdrawal and escrow account alterations are strictly prohibited for delegates. Only the verified Property Owner can withdraw rental funds.
+              </div>
+
+              <button type="submit" className="w-full py-2.5 rounded-full bg-[#163B36] text-white text-xs font-black hover:bg-[#0F2925] transition shadow-xs cursor-pointer">
+                Authorize Delegate
+              </button>
+            </form>
           </div>
         </div>
       )}

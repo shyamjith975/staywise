@@ -31,35 +31,50 @@ export default function UploadElectricityBillModal({
   preselectedUnit
 }: UploadElectricityBillModalProps) {
   const { 
+    currentUser,
     properties, 
     tenants, 
     addElectricityBill, 
     addNotification 
   } = useAppState();
 
-  // Tenant / Unit options
-  const unitOptions = [
+  const isDemoAccount = currentUser?.email === 'vikram@staywise.in' || currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram';
+
+  const userTenants = tenants.filter(t => t.status === 'Active' || !t.status);
+  const dynamicUnitOptions = userTenants.map(t => {
+    const prop = properties.find(p => p.id === t.propertyId);
+    return {
+      unit: t.unitNumber || '101',
+      tenant: t.name,
+      property: prop?.name || 'Property',
+      propertyId: t.propertyId,
+      meter: `MTR-${t.unitNumber || '101'}`,
+      prevReading: 0
+    };
+  });
+
+  const DEMO_UNIT_OPTIONS = [
     { unit: '302', tenant: 'Shyam Sundar', property: 'Beach Road Luxury Apartments', propertyId: 'prop-beach-road', meter: 'MTR-BLR-8921-A', prevReading: 1630 },
     { unit: '201', tenant: 'Dr. Faisal Ahmed', property: 'Beach Road Luxury Apartments', propertyId: 'prop-beach-road', meter: 'MTR-BLR-8921-B', prevReading: 2440 },
     { unit: '101', tenant: 'Rahul Menon', property: 'Beach Road Luxury Apartments', propertyId: 'prop-beach-road', meter: 'MTR-BLR-8921-C', prevReading: 1110 },
-    { unit: '102', tenant: 'Ananya Pillai', property: 'Beach Road Luxury Apartments', propertyId: 'prop-beach-road', meter: 'MTR-BLR-8921-D', prevReading: 890 },
-    { unit: 'Room 4A', tenant: 'Priya Sharma', property: 'Beach Road / Sai Krishna Residency', propertyId: 'prop-beach-road', meter: 'MTR-BLR-4011', prevReading: 620 },
-    { unit: 'Room 2B', tenant: 'Arjun Mehta', property: 'Beach Road Apartments', propertyId: 'prop-beach-road', meter: 'MTR-BLR-4012', prevReading: 1040 },
+    { unit: '102', tenant: 'Ananya Pillai', property: 'Beach Road Luxury Apartments', propertyId: 'prop-beach-road', meter: 'MTR-BLR-8921-D', prevReading: 890 }
   ];
 
-  const [selectedUnit, setSelectedUnit] = useState<string>(preselectedUnit || '302');
+  const unitOptions = dynamicUnitOptions.length > 0 ? dynamicUnitOptions : (isDemoAccount ? DEMO_UNIT_OPTIONS : []);
+
+  const [selectedUnit, setSelectedUnit] = useState<string>(preselectedUnit || (unitOptions[0]?.unit || ''));
   const [discom, setDiscom] = useState('BESCOM Bangalore');
   const [billingMonth, setBillingMonth] = useState('October 2026');
-  const [previousReading, setPreviousReading] = useState<number>(1630);
-  const [currentReading, setCurrentReading] = useState<number>(1865);
+  const [previousReading, setPreviousReading] = useState<number>(isDemoAccount ? 1630 : 0);
+  const [currentReading, setCurrentReading] = useState<number>(isDemoAccount ? 1865 : 0);
   const [ratePerUnit, setRatePerUnit] = useState<number>(8.5);
   const [fixedCharges, setFixedCharges] = useState<number>(150);
   const [dueDate, setDueDate] = useState('20 Oct 2026');
-  const [notes, setNotes] = useState('Sub-meter kWh reading verified with caretaker + 10% common area lift allocation');
-  const [uploadedFile, setUploadedFile] = useState<{ name: string; size: string } | null>({
+  const [notes, setNotes] = useState('');
+  const [uploadedFile, setUploadedFile] = useState<{ name: string; size: string } | null>(isDemoAccount ? {
     name: 'BESCOM_Official_Bill_Oct2026.pdf',
     size: '482 KB'
-  });
+  } : null);
   const [isDragging, setIsDragging] = useState(false);
 
   // Sync when preselected unit changes
@@ -69,10 +84,12 @@ export default function UploadElectricityBillModal({
       const match = unitOptions.find(u => u.unit === preselectedUnit);
       if (match) {
         setPreviousReading(match.prevReading);
-        setCurrentReading(match.prevReading + 215);
+        setCurrentReading(match.prevReading > 0 ? match.prevReading + 215 : 0);
       }
+    } else if (unitOptions.length > 0 && !selectedUnit) {
+      setSelectedUnit(unitOptions[0].unit);
     }
-  }, [preselectedUnit]);
+  }, [preselectedUnit, unitOptions]);
 
   // When selected unit changes from dropdown
   const handleUnitChange = (unitNum: string) => {
@@ -80,15 +97,18 @@ export default function UploadElectricityBillModal({
     const match = unitOptions.find(u => u.unit === unitNum);
     if (match) {
       setPreviousReading(match.prevReading);
-      setCurrentReading(match.prevReading + 220);
-      setUploadedFile({
-        name: `BESCOM_${unitNum}_Oct2026_Bill.pdf`,
-        size: '425 KB'
-      });
+      setCurrentReading(match.prevReading > 0 ? match.prevReading + 220 : 0);
     }
   };
 
-  const selectedTenantInfo = unitOptions.find(u => u.unit === selectedUnit) || unitOptions[0];
+  const selectedTenantInfo = unitOptions.find(u => u.unit === selectedUnit) || unitOptions[0] || {
+    unit: '101',
+    tenant: 'Tenant',
+    property: 'Property',
+    propertyId: '',
+    meter: 'MTR-101',
+    prevReading: 0
+  };
 
   const unitsConsumed = Math.max(0, currentReading - previousReading);
   const totalAmount = Math.round(unitsConsumed * ratePerUnit + fixedCharges);

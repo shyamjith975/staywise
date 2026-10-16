@@ -48,7 +48,10 @@ export default function PGBedManagementView() {
     updatePGBedStatus, 
     addNotification,
     setIsAddPropertyOpen,
-    setActiveView 
+    setActiveView,
+    foodMenuItems,
+    addFoodMenuItem,
+    deleteFoodMenuItem
   } = useAppState();
 
   const [activeTab, setActiveTab] = useState<'LISTINGS' | 'BEDS' | 'ELECTRICITY' | 'MEALS' | 'HOSTEL'>('LISTINGS');
@@ -72,9 +75,35 @@ export default function PGBedManagementView() {
   }>({
     mealType: 'Breakfast',
     menu: '',
-    vendor: 'Annapoorna Kitchens',
+    vendor: '',
     costPerMeal: 60,
-    optedInCount: 45
+    optedInCount: 0
+  });
+
+  // Submeter modal state
+  const [isUpdateSubmeterModalOpen, setIsUpdateSubmeterModalOpen] = useState(false);
+  const [meterModalRoomId, setMeterModalRoomId] = useState<string>('');
+  const [meterModalReading, setMeterModalReading] = useState<number>(0);
+  const [meterModalSplitMethod, setMeterModalSplitMethod] = useState<'Equal' | 'Submeter' | 'Room-level'>('Submeter');
+  const [meterModalRate, setMeterModalRate] = useState<number>(8.5);
+
+  // Total building bill state for electricity split calculation
+  const isDemoAccountInitial = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
+  const [totalBuildingBill, setTotalBuildingBill] = useState<number>(isDemoAccountInitial ? 20000 : 0);
+
+  // Local room overrides for manual submeter updates
+  const [roomOverrides, setRoomOverrides] = useState<Record<string, { submeterReading: number; electricitySplitMethod: 'Equal' | 'Submeter' | 'Room-level' }>>({});
+
+  // Daily Food Menu Item Modal State
+  const [isFoodModalOpen, setIsFoodModalOpen] = useState(false);
+  const [foodItemForm, setFoodItemForm] = useState({
+    name: '',
+    category: 'Standard' as 'Standard' | 'Special' | 'Add-on',
+    mealType: 'Breakfast' as 'Breakfast' | 'Lunch' | 'Dinner' | 'Snacks',
+    dietaryTag: 'Vegetarian' as 'Vegetarian' | 'Non-Vegetarian' | 'Jain',
+    price: 60,
+    availableTimings: '07:30 - 10:00 AM',
+    description: ''
   });
 
   // Check demo account vs real new onboarded owner
@@ -1120,29 +1149,66 @@ export default function PGBedManagementView() {
           )}
 
           <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] space-y-4">
-            <div>
-              <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50 px-2.5 py-0.5 rounded-full">
-                Sub-Meter Billing Architecture
-              </span>
-              <h2 className="text-base font-extrabold text-slate-900 mt-1">PG Electricity Multi-Method Split Engine</h2>
-              <p className="text-xs text-slate-500">
-                Supports Equal Split (entire building), Sub-meter per room kWh, and Roommate-level splits feeding directly into monthly tenant invoices.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                  Sub-Meter Billing Architecture
+                </span>
+                <h2 className="text-base font-extrabold text-[#263238] mt-1">PG Electricity Multi-Method Split Engine</h2>
+                <p className="text-xs text-[#546E7A]">
+                  Supports Equal Split (entire building), Sub-meter per room kWh, and Roommate-level splits feeding directly into monthly tenant invoices.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (activePgRooms.length > 0) {
+                    setMeterModalRoomId(activePgRooms[0].roomNumber);
+                    setMeterModalReading(activePgRooms[0].submeterReading || 0);
+                    setMeterModalSplitMethod(activePgRooms[0].electricitySplitMethod || 'Submeter');
+                  }
+                  setIsUpdateSubmeterModalOpen(true);
+                }}
+                className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition self-start sm:self-auto cursor-pointer"
+              >
+                <Plus className="h-4 w-4 text-[#C69A55]" />
+                <span>+ Update Room Sub-Meter</span>
+              </button>
+            </div>
+
+            {/* Bill Input / Config Bar */}
+            <div className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-[#163B36]" />
+                <span className="font-bold text-[#263238]">Total Building Electricity Bill (₹):</span>
+                <input
+                  type="number"
+                  value={totalBuildingBill}
+                  onChange={(e) => setTotalBuildingBill(Number(e.target.value) || 0)}
+                  placeholder="e.g. 20000"
+                  className="w-32 px-3 py-1.5 rounded-xl border border-[#D2DDD7] bg-white font-mono font-bold text-[#263238] text-xs"
+                />
+              </div>
+              <div className="text-[11px] text-[#546E7A]">
+                Active Occupied Tenants: <b className="text-[#263238]">{occupiedBeds}</b> • Configured Rooms: <b className="text-[#263238]">{activePgRooms.length}</b>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Method 1: Equal Split */}
-              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-2">
-                <div className="flex items-center gap-1.5 font-bold text-xs text-slate-800">
+              <div className="p-4 rounded-2xl border border-[#D2DDD7] bg-[#F7F8F6] space-y-2">
+                <div className="flex items-center gap-1.5 font-bold text-xs text-[#263238]">
                   <Zap className="h-4 w-4 text-amber-500" />
                   <span>1. Equal Split Across Tenants</span>
                 </div>
-                <div className="text-xs text-slate-600 bg-white p-3 rounded-xl border border-slate-200 font-mono">
-                  Electricity Bill: ₹20,000<br/>
-                  ÷ 20 Active Tenants<br/>
-                  = <span className="font-bold text-emerald-700">₹1,000 each</span>
+                <div className="text-xs text-[#263238] bg-white p-3 rounded-xl border border-[#D2DDD7] font-mono">
+                  Total Bill: ₹{totalBuildingBill.toLocaleString('en-IN')}<br/>
+                  ÷ {occupiedBeds} Occupied Tenants<br/>
+                  = <span className="font-bold text-emerald-700">
+                    ₹{occupiedBeds > 0 && totalBuildingBill > 0 ? Math.round(totalBuildingBill / occupiedBeds).toLocaleString('en-IN') : 0} each
+                  </span>
                 </div>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-[#546E7A]">
                   Standard baseline mode for hostels without submetering. Split is computed on 1st of each month.
                 </p>
               </div>
@@ -1153,21 +1219,20 @@ export default function PGBedManagementView() {
                   <Zap className="h-4 w-4 text-indigo-600" />
                   <span>2. Sub-Meter kWh Precision</span>
                 </div>
-                {selectedRoomFilter ? (
-                  <div className="text-xs text-slate-700 bg-white p-3 rounded-xl border border-indigo-100 font-mono">
-                    Room {selectedRoomFilter} (SUB-{selectedRoomFilter}): {pgRooms.find(r => r.roomNumber === selectedRoomFilter)?.submeterReading ?? 248} kWh<br/>
+                {activePgRooms.length > 0 ? (
+                  <div className="text-xs text-[#263238] bg-white p-3 rounded-xl border border-indigo-100 font-mono">
+                    Room {activePgRooms[0].roomNumber}: {roomOverrides[activePgRooms[0].roomNumber]?.submeterReading ?? (activePgRooms[0].submeterReading || 0)} kWh<br/>
                     Rate: ₹8.5/kWh<br/>
-                    = <span className="font-bold text-indigo-700">₹{Math.round(((pgRooms.find(r => r.roomNumber === selectedRoomFilter)?.submeterReading) ?? 248) * 8.5).toLocaleString('en-IN')} billed to Room {selectedRoomFilter}</span>
+                    = <span className="font-bold text-indigo-700">
+                      ₹{Math.round((roomOverrides[activePgRooms[0].roomNumber]?.submeterReading ?? (activePgRooms[0].submeterReading || 0)) * 8.5).toLocaleString('en-IN')} billed to Room {activePgRooms[0].roomNumber}
+                    </span>
                   </div>
                 ) : (
-                  <div className="text-xs text-slate-700 bg-white p-3 rounded-xl border border-indigo-100 font-mono">
-                    Room 101: 248 kWh<br/>
-                    Room 102: 312 kWh<br/>
-                    Rate: ₹8.5/kWh<br/>
-                    = <span className="font-bold text-indigo-700">₹2,108 billed to Room 101</span>
+                  <div className="text-xs text-[#546E7A] bg-white p-3 rounded-xl border border-indigo-100">
+                    No rooms onboarded yet
                   </div>
                 )}
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-[#546E7A]">
                   AC rooms equipped with IoT sub-meters bill according to actual energy consumption.
                 </p>
               </div>
@@ -1178,21 +1243,21 @@ export default function PGBedManagementView() {
                   <Zap className="h-4 w-4 text-emerald-600" />
                   <span>3. Room-Level Split</span>
                 </div>
-                <div className="text-xs text-slate-700 bg-white p-3 rounded-xl border border-emerald-100 font-mono">
-                  Room 201 Total: ₹3,200<br/>
-                  ÷ 4 Roommates<br/>
-                  = <span className="font-bold text-emerald-700">₹800 / occupant</span>
+                <div className="text-xs text-[#263238] bg-white p-3 rounded-xl border border-emerald-100 font-mono">
+                  Sub-meter room bill<br/>
+                  ÷ Active Roommates in Room<br/>
+                  = <span className="font-bold text-emerald-700">Equally divided per occupant</span>
                 </div>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-[#546E7A]">
                   Equal divide among occupants in quadruple sharing dorm rooms.
                 </p>
               </div>
             </div>
 
             {/* Room Level Sub-meter Readings Table */}
-            <div className="mt-4 border-t border-slate-100 pt-4">
+            <div className="mt-4 border-t border-[#D2DDD7] pt-4">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-bold text-slate-900">Live Room Sub-meter Log &amp; Split Method</h3>
+                <h3 className="text-xs font-bold text-[#263238]">Live Room Sub-meter Log &amp; Split Method</h3>
                 {selectedRoomFilter && (
                   <span className="text-[11px] text-amber-700 font-bold">
                     Filtered to Room {selectedRoomFilter} (ROOM-{selectedRoomFilter})
@@ -1202,7 +1267,7 @@ export default function PGBedManagementView() {
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
                   <thead>
-                    <tr className="border-b border-slate-200 text-slate-400 uppercase text-[10px]">
+                    <tr className="border-b border-[#D2DDD7] text-[#546E7A] uppercase text-[10px]">
                       <th className="py-2">Room &amp; Asset ID</th>
                       <th className="py-2">Floor</th>
                       <th className="py-2">Sharing</th>
@@ -1210,34 +1275,70 @@ export default function PGBedManagementView() {
                       <th className="py-2">Latest Sub-meter</th>
                       <th className="py-2">Billed Amount</th>
                       <th className="py-2">Status</th>
+                      <th className="py-2 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {(selectedRoomFilter ? pgRooms.filter(r => r.roomNumber === selectedRoomFilter) : pgRooms).map((room) => (
-                      <tr key={room.id} className="hover:bg-slate-50">
-                        <td className="py-2.5 font-bold text-slate-900">
-                          <div>Room {room.roomNumber}</div>
-                          <div className="text-[10px] text-indigo-700 font-mono">ROOM-{room.roomNumber}</div>
-                        </td>
-                        <td className="py-2.5 text-slate-600">Floor {room.floor}</td>
-                        <td className="py-2.5 text-slate-600">{room.sharingType}</td>
-                        <td className="py-2.5">
-                          <span className="font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px]">
-                            {room.electricitySplitMethod}
-                          </span>
-                        </td>
-                        <td className="py-2.5 font-mono text-slate-800">
-                          {room.submeterReading !== undefined ? `${room.submeterReading} kWh (SUB-${room.roomNumber})` : 'Shared main line'}
-                        </td>
-                        <td className="py-2.5 font-black text-slate-900">
-                          ₹{room.submeterReading ? Math.round(room.submeterReading * 8.5).toLocaleString('en-IN') : '1,200'}
-                        </td>
-                        <td className="py-2.5 text-emerald-600 font-bold flex items-center gap-1">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          <span>Pushed to Invoices</span>
+                  <tbody className="divide-y divide-[#D2DDD7]/50">
+                    {activePgRooms.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="py-8 text-center text-[#546E7A]">
+                          <p className="font-bold">No rooms configured for this property.</p>
+                          <p className="text-[11px] mt-0.5">Add PG rooms or units in Listings to begin logging electricity sub-meter readings.</p>
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      (selectedRoomFilter ? activePgRooms.filter(r => r.roomNumber === selectedRoomFilter) : activePgRooms).map((room) => {
+                        const override = roomOverrides[room.roomNumber];
+                        const reading = override?.submeterReading ?? room.submeterReading;
+                        const splitMethod = override?.electricitySplitMethod ?? room.electricitySplitMethod;
+                        const billed = reading !== undefined ? Math.round(reading * 8.5) : (occupiedBeds > 0 && totalBuildingBill > 0 ? Math.round(totalBuildingBill / occupiedBeds) : 0);
+
+                        return (
+                          <tr key={room.id} className="hover:bg-slate-50">
+                            <td className="py-2.5 font-bold text-[#263238]">
+                              <div>Room {room.roomNumber}</div>
+                              <div className="text-[10px] text-indigo-700 font-mono">ROOM-{room.roomNumber}</div>
+                            </td>
+                            <td className="py-2.5 text-[#546E7A]">Floor {room.floor}</td>
+                            <td className="py-2.5 text-[#546E7A]">{room.sharingType}</td>
+                            <td className="py-2.5">
+                              <span className="font-semibold px-2 py-0.5 rounded-md bg-[#E8F0EC] text-[#163B36] text-[10px]">
+                                {splitMethod}
+                              </span>
+                            </td>
+                            <td className="py-2.5 font-mono text-[#263238]">
+                              {reading !== undefined ? `${reading} kWh (SUB-${room.roomNumber})` : 'Shared main line'}
+                            </td>
+                            <td className="py-2.5 font-black text-[#263238]">
+                              ₹{billed.toLocaleString('en-IN')}
+                            </td>
+                            <td className="py-2.5 text-[#163B36] font-bold">
+                              {reading !== undefined ? (
+                                <span className="inline-flex items-center gap-1 text-emerald-700">
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  <span>Reading Logged</span>
+                                </span>
+                              ) : (
+                                <span className="text-amber-700">Pending Reading</span>
+                              )}
+                            </td>
+                            <td className="py-2.5 text-right">
+                              <button
+                                onClick={() => {
+                                  setMeterModalRoomId(room.roomNumber);
+                                  setMeterModalReading(reading || 0);
+                                  setMeterModalSplitMethod(splitMethod || 'Submeter');
+                                  setIsUpdateSubmeterModalOpen(true);
+                                }}
+                                className="px-2.5 py-1 rounded-lg bg-[#E8F0EC] hover:bg-[#D2DDD7] text-[#163B36] text-[11px] font-bold transition"
+                              >
+                                Update
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1356,6 +1457,80 @@ export default function PGBedManagementView() {
                 </div>
               </div>
             )}
+
+            {/* Daily Food & Menu Items Section */}
+            <div className="pt-6 border-t border-[#D2DDD7] space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <span className="text-[10px] font-bold text-[#163B36] uppercase tracking-wider bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
+                    Published Food Menu
+                  </span>
+                  <h3 className="text-base font-extrabold text-[#263238] mt-1">Tenant Daily Food &amp; Mess Items</h3>
+                  <p className="text-xs text-[#546E7A]">
+                    Published menu items with dietary preferences and live tenant opt-in/opt-out toggles.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setIsFoodModalOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition self-start sm:self-auto cursor-pointer"
+                >
+                  <Plus className="h-4 w-4 text-[#C69A55]" />
+                  <span>+ Add Food Menu Item</span>
+                </button>
+              </div>
+
+              {foodMenuItems.length === 0 ? (
+                <div className="py-8 text-center border border-dashed border-[#D2DDD7] rounded-2xl p-6 bg-[#F7F8F6]">
+                  <Utensils className="h-8 w-8 text-[#D2DDD7] mx-auto mb-2 opacity-50" />
+                  <h4 className="text-xs font-bold text-[#263238]">No Daily Menu Items Published</h4>
+                  <p className="text-[11px] text-[#546E7A] mt-0.5">Click &ldquo;+ Add Food Menu Item&rdquo; above to publish dishes for breakfast, lunch, or dinner.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {foodMenuItems.map((item) => (
+                    <div key={item.id} className="p-4 rounded-2xl border border-[#D2DDD7] bg-white space-y-2.5 flex flex-col justify-between hover:shadow-sm transition">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black text-[#263238]">{item.name}</span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                            item.dietaryTag === 'Vegetarian' 
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                              : item.dietaryTag === 'Non-Vegetarian'
+                                ? 'bg-rose-50 text-rose-800 border-rose-200'
+                                : 'bg-amber-50 text-amber-800 border-amber-200'
+                          }`}>
+                            {item.dietaryTag}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-[#546E7A]">
+                          {item.mealType} • <span className="text-[#263238] font-semibold">{item.availableTimings}</span>
+                        </div>
+                        {item.description && (
+                          <p className="text-xs text-[#263238]/80 bg-[#F7F8F6] p-2 rounded-xl border border-[#D2DDD7]">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="pt-2 border-t border-[#D2DDD7] flex items-center justify-between">
+                        <span className="text-xs font-black text-[#163B36] font-tabular">
+                          ₹{item.price} / serving
+                        </span>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Delete menu item ${item.name}?`)) deleteFoodMenuItem(item.id);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold transition"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -1724,6 +1899,229 @@ export default function PGBedManagementView() {
                 className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer"
               >
                 Log Visitor Pass
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* UPDATE ROOM SUBMETER MODAL */}
+      {isUpdateSubmeterModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+              <div>
+                <h3 className="font-extrabold text-base text-[#263238]">Update Room Sub-Meter Reading</h3>
+                <p className="text-xs text-[#546E7A]">Set latest kWh reading &amp; split allocation method</p>
+              </div>
+              <button onClick={() => setIsUpdateSubmeterModalOpen(false)} className="text-[#263238]/70 hover:text-[#263238]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              setRoomOverrides(prev => ({
+                ...prev,
+                [meterModalRoomId]: {
+                  submeterReading: Number(meterModalReading) || 0,
+                  electricitySplitMethod: meterModalSplitMethod
+                }
+              }));
+              addNotification('Sub-Meter Logged', `Room ${meterModalRoomId} reading updated to ${meterModalReading} kWh (${meterModalSplitMethod} split).`, 'RENT');
+              setIsUpdateSubmeterModalOpen(false);
+            }} className="space-y-3.5 text-xs">
+              <div>
+                <label className="text-xs font-bold text-[#263238] block mb-1">Select Room</label>
+                <select
+                  value={meterModalRoomId}
+                  onChange={(e) => {
+                    const rNum = e.target.value;
+                    setMeterModalRoomId(rNum);
+                    const found = activePgRooms.find(r => r.roomNumber === rNum);
+                    if (found) {
+                      setMeterModalReading(roomOverrides[rNum]?.submeterReading ?? (found.submeterReading || 0));
+                      setMeterModalSplitMethod(roomOverrides[rNum]?.electricitySplitMethod ?? (found.electricitySplitMethod || 'Submeter'));
+                    }
+                  }}
+                  className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                >
+                  {activePgRooms.map(r => (
+                    <option key={r.id} value={r.roomNumber}>
+                      Room {r.roomNumber} ({r.sharingType} — Floor {r.floor})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Sub-Meter Reading (kWh)</label>
+                  <input
+                    type="number"
+                    value={meterModalReading}
+                    onChange={(e) => setMeterModalReading(Number(e.target.value) || 0)}
+                    required
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238] font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Rate per kWh (₹)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={meterModalRate}
+                    onChange={(e) => setMeterModalRate(Number(e.target.value) || 8.5)}
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238] font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-[#263238] block mb-1">Split Method</label>
+                <select
+                  value={meterModalSplitMethod}
+                  onChange={(e) => setMeterModalSplitMethod(e.target.value as any)}
+                  className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                >
+                  <option value="Submeter">Submeter (Direct kWh Reading)</option>
+                  <option value="Equal">Equal (Evenly divide among building occupants)</option>
+                  <option value="Room-level">Room-level (Divided among roommates only)</option>
+                </select>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs space-y-1">
+                <span className="text-[#546E7A]">Estimated Monthly Room Charge:</span>
+                <div className="text-base font-black text-[#163B36] font-tabular">
+                  ₹{Math.round(meterModalReading * meterModalRate).toLocaleString('en-IN')}
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-full bg-[#163B36] text-white text-xs font-black hover:bg-[#0F2925] transition shadow-xs cursor-pointer"
+              >
+                Save Room Sub-Meter Reading
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADD DAILY FOOD MENU ITEM MODAL */}
+      {isFoodModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+              <div>
+                <h3 className="font-extrabold text-base text-[#263238]">Publish Food Menu Item</h3>
+                <p className="text-xs text-[#546E7A]">Dish details, meal slot &amp; dietary classification</p>
+              </div>
+              <button onClick={() => setIsFoodModalOpen(false)} className="text-[#263238]/70 hover:text-[#263238]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              addFoodMenuItem({
+                name: foodItemForm.name,
+                category: foodItemForm.category,
+                mealType: foodItemForm.mealType,
+                dietaryTag: foodItemForm.dietaryTag,
+                price: Number(foodItemForm.price) || 60,
+                availableTimings: foodItemForm.availableTimings,
+                description: foodItemForm.description
+              });
+              setIsFoodModalOpen(false);
+              setFoodItemForm({
+                name: '',
+                category: 'Standard',
+                mealType: 'Breakfast',
+                dietaryTag: 'Vegetarian',
+                price: 60,
+                availableTimings: '07:30 - 10:00 AM',
+                description: ''
+              });
+            }} className="space-y-3.5 text-xs">
+              <div>
+                <label className="text-xs font-bold text-[#263238] block mb-1">Dish Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. South Indian Dosa &amp; Vada Combo"
+                  value={foodItemForm.name}
+                  onChange={(e) => setFoodItemForm({ ...foodItemForm, name: e.target.value })}
+                  required
+                  className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Meal Slot</label>
+                  <select
+                    value={foodItemForm.mealType}
+                    onChange={(e) => setFoodItemForm({ ...foodItemForm, mealType: e.target.value as any })}
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  >
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Lunch">Lunch</option>
+                    <option value="Dinner">Dinner</option>
+                    <option value="Snacks">Snacks &amp; Beverages</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Dietary Tag</label>
+                  <select
+                    value={foodItemForm.dietaryTag}
+                    onChange={(e) => setFoodItemForm({ ...foodItemForm, dietaryTag: e.target.value as any })}
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  >
+                    <option value="Vegetarian">Vegetarian</option>
+                    <option value="Non-Vegetarian">Non-Vegetarian</option>
+                    <option value="Jain">Jain / No Onion Garlic</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Price per Plate (₹)</label>
+                  <input
+                    type="number"
+                    value={foodItemForm.price}
+                    onChange={(e) => setFoodItemForm({ ...foodItemForm, price: Number(e.target.value) || 0 })}
+                    required
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238] font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Serving Timings</label>
+                  <input
+                    type="text"
+                    value={foodItemForm.availableTimings}
+                    onChange={(e) => setFoodItemForm({ ...foodItemForm, availableTimings: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-[#263238] block mb-1">Description / Accompaniments</label>
+                <textarea
+                  placeholder="e.g. Served with hot sambar, coconut chutney, and filter coffee"
+                  value={foodItemForm.description}
+                  onChange={(e) => setFoodItemForm({ ...foodItemForm, description: e.target.value })}
+                  rows={2}
+                  className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs text-[#263238]"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-full bg-[#163B36] text-white text-xs font-black hover:bg-[#0F2925] transition shadow-xs cursor-pointer"
+              >
+                Publish to Food Menu
               </button>
             </form>
           </div>

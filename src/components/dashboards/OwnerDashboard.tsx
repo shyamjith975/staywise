@@ -219,7 +219,13 @@ export default function OwnerDashboard() {
     addNotification,
     setIsEditPropertyModalOpen,
     setPropertyToEdit,
-    deleteProperty
+    deleteProperty,
+    delegates: appDelegates,
+    tenantConnectionRequests,
+    approveTenantConnectionRequest,
+    rejectTenantConnectionRequest,
+    addDelegate,
+    revokeDelegate
   } = useAppState();
 
   const isDemoAccount = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
@@ -264,21 +270,16 @@ export default function OwnerDashboard() {
   // Document Vault State
   const [documents, setDocuments] = useState<StoredDocument[]>(() => isDemoAccount ? DEMO_DOCUMENTS : []);
 
-  // Delegates State
-  const [delegates, setDelegates] = useState<AuthorizedDelegate[]>(() => isDemoAccount ? DEMO_DELEGATES : []);
-
   // Synchronize on user changes
   useEffect(() => {
     if (!isDemoAccount) {
       setBankAccounts([]);
       setDocuments([]);
-      setDelegates([]);
       setTasksList([]);
       setActivityFeed([]);
     } else {
       setBankAccounts(DEMO_BANK_ACCOUNTS);
       setDocuments(DEMO_DOCUMENTS);
-      setDelegates(DEMO_DELEGATES);
       setTasksList(DEMO_TASKS_LIST);
       setActivityFeed(DEMO_ACTIVITY_FEED);
     }
@@ -314,11 +315,80 @@ export default function OwnerDashboard() {
   });
 
   // Connect owner's user_id with properties
-  // Demo accounts (owner@staywise.com / Vikram) see full catalog, but real/new users see only their owned properties
-  const ownerProperties = (!isDemoAccount && activeRole === 'owner')
+  // Demo accounts see full catalog, real owners see their owned properties, and managers only see authorized portfolios
+  const activeDelegates: AuthorizedDelegate[] = isDemoAccount 
+    ? ((appDelegates && appDelegates.length > 0) ? appDelegates : DEMO_DELEGATES) 
+    : (appDelegates || []);
+
+  const isManagerRole = activeRole === 'manager';
+  const managerDelegate = (appDelegates || []).find(d => 
+    (currentUser?.email && d.email.toLowerCase() === currentUser.email.toLowerCase()) && 
+    d.status === 'Active'
+  );
+  const isManagerAuthorized = isDemoAccount || Boolean(managerDelegate);
+
+  const ownerProperties = isDemoAccount
+    ? properties
+    : (activeRole === 'owner')
     ? properties.filter(p => p.ownerId === currentUser.id)
-    : properties;
+    : (isManagerRole && managerDelegate)
+    ? properties.filter(p => p.ownerId === managerDelegate.ownerId)
+    : [];
   const activeProperties = ownerProperties;
+
+  const pendingConnectionRequests = tenantConnectionRequests.filter(r => r.status === 'PENDING_APPROVAL');
+
+  // If logged in as Manager without owner authorization, show dedicated waiting screen (zero mock data bleed)
+  if (isManagerRole && !isManagerAuthorized) {
+    return (
+      <div className="space-y-6 pb-12 font-sans text-[#263238]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D2DDD7]">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#263238]">
+              Property Manager Portal
+            </h1>
+            <p className="text-xs text-[#546E7A] mt-0.5">
+              Operations &amp; Field Oversight • Connected Landlord Portfolios
+            </p>
+          </div>
+          <span className="text-xs px-3 py-1 rounded-full font-bold bg-amber-50 text-amber-800 border border-amber-300">
+            Awaiting Owner Permission
+          </span>
+        </div>
+
+        <div className="rounded-3xl bg-white border border-[#D2DDD7] p-8 shadow-sm max-w-2xl space-y-4">
+          <div className="h-12 w-12 rounded-2xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center font-bold">
+            <Users className="h-6 w-6" />
+          </div>
+          <div>
+            <h2 className="text-lg font-black text-[#263238]">No Connected Property Owner Yet</h2>
+            <p className="text-xs text-[#546E7A] mt-1.5 leading-relaxed">
+              You are signed in as a Property Manager (<b>{currentUser.email}</b>). To access property units, maintenance tickets, and rent ledgers, a Property Owner must grant you delegate access in their Settings → Delegates section.
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-2 text-xs">
+            <div className="font-extrabold text-[#263238]">Important Security &amp; Compliance Rule:</div>
+            <p className="text-[#546E7A] leading-relaxed text-[11px]">
+              Property Managers receive scoped operational access to tenant communications and repair work orders. <b>Money withdrawal and escrow disbursements are strictly restricted to property owners only.</b>
+            </p>
+          </div>
+
+          <div className="pt-2">
+            <button
+              onClick={() => {
+                addNotification('Authorization Checked', 'Checked with platform registry for newly granted owner permissions.', 'SYSTEM');
+                alert('Checked for owner authorization. When a landlord adds your email in Settings, their portfolio will appear here.');
+              }}
+              className="px-5 py-2.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+            >
+              Check for Pending Authorizations
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const totalUnitsCount = activeProperties.reduce((acc, p) => acc + p.totalUnits, 0);
   const occupiedUnitsCount = activeProperties.reduce((acc, p) => acc + p.occupiedUnits, 0);
@@ -339,6 +409,28 @@ export default function OwnerDashboard() {
 
   return (
     <div className="space-y-6 pb-12 font-sans text-[#263238]">
+      {/* Top Banner: Pending Tenant Connections */}
+      {pendingConnectionRequests.length > 0 && (
+        <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#163B36]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+            <div>
+              <span className="font-extrabold text-xs text-[#263238]">
+                {pendingConnectionRequests.length} Tenant Connection Request(s) Pending Approval
+              </span>
+              <p className="text-[11px] text-[#546E7A]">
+                New residents have requested to connect to your properties.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setActiveView('tenants')}
+            className="px-4 py-1.5 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition shadow-xs cursor-pointer self-start sm:self-auto"
+          >
+            Review &amp; Approve in Tenants Directory →
+          </button>
+        </div>
+      )}
       
       {/* ========================================================================= */}
       {/* 1. SUB-NAVIGATION TABS (Overview, Properties, Banks, Vault, Team, Power)  */}
@@ -393,7 +485,7 @@ export default function OwnerDashboard() {
                 : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
             }`}
           >
-            Team Delegates ({delegates.length})
+            Team Delegates ({activeDelegates.length})
           </button>
           <button
             onClick={() => setActiveTab('utilities')}
@@ -1228,12 +1320,18 @@ export default function OwnerDashboard() {
               <h3 className="text-sm font-extrabold text-[#263238]">Direct Bank Payout Accounts</h3>
               <p className="text-xs text-[#666666]">Automated payouts routed directly to verified nodal accounts</p>
             </div>
-            <button
-              onClick={() => setIsAddBankModalOpen(true)}
-              className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold shadow-xs transition"
-            >
-              + Add Bank Account
-            </button>
+            {activeRole === 'manager' ? (
+              <span className="px-3.5 py-1.5 rounded-full bg-rose-50 text-rose-800 text-[11px] font-bold border border-rose-200">
+                🔒 Payout &amp; Withdrawal Restricted: Owner Only
+              </span>
+            ) : (
+              <button
+                onClick={() => setIsAddBankModalOpen(true)}
+                className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold shadow-xs transition cursor-pointer"
+              >
+                + Add Bank Account
+              </button>
+            )}
           </div>
 
           {bankAccounts.length === 0 ? (
@@ -1362,7 +1460,7 @@ export default function OwnerDashboard() {
             </button>
           </div>
 
-          {delegates.length === 0 ? (
+          {activeDelegates.length === 0 ? (
             <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
               <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#263238] flex items-center justify-center mx-auto">
                 <Users className="h-6 w-6" />
@@ -1378,16 +1476,28 @@ export default function OwnerDashboard() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {delegates.map(del => (
+              {activeDelegates.map(del => (
                 <div key={del.id} className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-xs space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-extrabold text-sm text-[#263238]">{del.name}</h4>
                       <p className="text-xs text-[#666666]">{del.email} • {del.phone}</p>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full bg-[#163B36] text-white text-[10px] font-black border border-[#263238]/20">
-                      {del.role}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#163B36] text-white text-[10px] font-black border border-[#263238]/20">
+                        {del.role}
+                      </span>
+                      {!isDemoAccount && (
+                        <button
+                          onClick={() => {
+                            if (confirm(`Revoke delegate access for ${del.name}?`)) revokeDelegate(del.id);
+                          }}
+                          className="px-2 py-0.5 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold border border-rose-200 transition"
+                        >
+                          Revoke
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[#D1D5DB]">
                     {del.permissions.map((p, idx) => (
@@ -1395,6 +1505,9 @@ export default function OwnerDashboard() {
                         ✓ {p}
                       </span>
                     ))}
+                    <span className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-[10px] text-amber-800 font-bold">
+                      🔒 No Fund Withdrawal
+                    </span>
                   </div>
                 </div>
               ))}
@@ -1559,6 +1672,143 @@ export default function OwnerDashboard() {
               </div>
               <button type="submit" className="w-full py-2.5 rounded-full bg-[#163B36] text-white text-xs font-black hover:bg-[#0F2925] transition shadow-xs">
                 Upload to Vault
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: INVITE DELEGATE                                                    */}
+      {/* ========================================================================= */}
+      {isAddDelegateModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+              <div>
+                <h3 className="font-extrabold text-base text-[#263238]">Invite Authorized Delegate</h3>
+                <p className="text-xs text-[#546E7A]">Accountants, Property Managers &amp; Auditors</p>
+              </div>
+              <button onClick={() => setIsAddDelegateModalOpen(false)} className="text-[#263238]/70 hover:text-[#263238]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={e => {
+              e.preventDefault();
+              const perms: string[] = [];
+              if (newDelegate.allowLedger) perms.push('Financial Ledger', 'Tax Reports (P&L)');
+              if (newDelegate.allowInvoices) perms.push('Rent Invoices', 'Bank Statements');
+              if (newDelegate.allowMaintenance) perms.push('Maintenance Work Orders', 'Tenant Handover');
+
+              addDelegate({
+                name: newDelegate.name,
+                email: newDelegate.email,
+                phone: newDelegate.phone,
+                role: newDelegate.role,
+                permissions: perms,
+                status: 'Active',
+                canWithdrawFunds: false
+              });
+              setIsAddDelegateModalOpen(false);
+              setNewDelegate({
+                name: '',
+                email: '',
+                phone: '',
+                role: 'Accountant',
+                allowLedger: true,
+                allowInvoices: true,
+                allowMaintenance: false,
+                allowBankPayouts: false
+              });
+            }} className="space-y-3.5 text-xs">
+              <div>
+                <label className="text-xs font-bold text-[#263238] block mb-1">Full Name</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. CA Rajesh Kulkarni"
+                  value={newDelegate.name}
+                  onChange={e => setNewDelegate({ ...newDelegate, name: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Email</label>
+                  <input 
+                    type="email" 
+                    placeholder="rajesh@cacafe.in"
+                    value={newDelegate.email}
+                    onChange={e => setNewDelegate({ ...newDelegate, email: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Phone</label>
+                  <input 
+                    type="text" 
+                    placeholder="+91 98450 11928"
+                    value={newDelegate.phone}
+                    onChange={e => setNewDelegate({ ...newDelegate, phone: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238] font-mono"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-[#263238] block mb-1">Assigned Role</label>
+                <select
+                  value={newDelegate.role}
+                  onChange={e => setNewDelegate({ ...newDelegate, role: e.target.value as any })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                >
+                  <option value="Accountant">Chartered Accountant (CA)</option>
+                  <option value="Property Manager">Property Manager</option>
+                  <option value="Tax Auditor">Tax Auditor</option>
+                </select>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-2 text-xs">
+                <span className="font-bold text-[#263238] block">Operational Permissions:</span>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newDelegate.allowLedger}
+                    onChange={e => setNewDelegate({ ...newDelegate, allowLedger: e.target.checked })}
+                    className="rounded text-[#163B36]"
+                  />
+                  <span>View Double-Entry Ledger &amp; Tax P&amp;L</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newDelegate.allowInvoices}
+                    onChange={e => setNewDelegate({ ...newDelegate, allowInvoices: e.target.checked })}
+                    className="rounded text-[#163B36]"
+                  />
+                  <span>Inspect Rent Invoices &amp; TDS Statements</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newDelegate.allowMaintenance}
+                    onChange={e => setNewDelegate({ ...newDelegate, allowMaintenance: e.target.checked })}
+                    className="rounded text-[#163B36]"
+                  />
+                  <span>Manage Work Orders &amp; Field Repairs</span>
+                </label>
+              </div>
+
+              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-relaxed">
+                🔒 <b>Strict Compliance Rule:</b> Money withdrawal and escrow account alterations are strictly prohibited for delegates. Only the verified Property Owner can withdraw rental funds.
+              </div>
+
+              <button type="submit" className="w-full py-2.5 rounded-full bg-[#163B36] text-white text-xs font-black hover:bg-[#0F2925] transition shadow-xs cursor-pointer">
+                Authorize Delegate
               </button>
             </form>
           </div>

@@ -34,6 +34,7 @@ import {
   Check,
   Phone
 } from 'lucide-react';
+import { EstateAsset } from '../../types';
 
 interface EstateBooking {
   id: string;
@@ -140,10 +141,40 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
     utilities, 
     addNotification, 
     activeView, 
-    setActiveView 
+    setActiveView,
+    setIsAddPropertyOpen,
+    addEstateAsset,
+    deleteEstateAsset,
+    addStaffMember,
+    deleteStaffMember
   } = useAppState();
 
   const isDemoEstate = currentUser?.email === 'estate@staywise.com' || currentUser?.id === 'user-estate-manoj';
+
+  const [isAddAssetModalOpen, setIsAddAssetModalOpen] = useState(false);
+  const [assetForm, setAssetForm] = useState({
+    name: '',
+    tag: '',
+    category: 'Power & Generator' as EstateAsset['category'],
+    estateName: 'Campus',
+    purchaseDate: '2026-01-15',
+    warrantyUntil: '2028-01-15',
+    amcProvider: '',
+    lastService: '10 Oct 2026',
+    nextService: '10 Jan 2027',
+    condition: 'Excellent' as EstateAsset['condition']
+  });
+
+  const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
+  const [staffForm, setStaffForm] = useState({
+    name: '',
+    role: 'Head Caretaker',
+    estateName: 'Campus',
+    phone: '',
+    shift: 'Morning (07:00 - 15:00)',
+    attendanceStatus: 'Present',
+    monthlySalary: 22000
+  });
 
   const validTabs = ['OVERVIEW', 'BOOKINGS', 'VILLAS', 'HOUSEKEEPING', 'ASSETS', 'STAFF', 'PRICING'];
   const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'BOOKINGS' | 'VILLAS' | 'HOUSEKEEPING' | 'ASSETS' | 'STAFF' | 'PRICING'>(() => {
@@ -815,137 +846,160 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
 
       {/* TAB 3: VILLAS & CAMPUSES */}
       {activeTab === 'VILLAS' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {isDemoEstate ? (
-            <>
-              <div className="organic-card p-6 space-y-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-[#163B36] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
-                      Flagship Estate
-                    </span>
-                    <h3 className="text-lg font-black text-[#263238] mt-1.5">
-                      Serene Mist Estate &amp; 5BHK Villa
-                    </h3>
-                    <p className="text-xs text-[#263238]/70 flex items-center gap-1 mt-0.5">
-                      <MapPin className="h-3.5 w-3.5 text-[#163B36]" />
-                      <span>Vythiri Tea Valley, Wayanad, Kerala • 12 Acre Private Campus</span>
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xl font-black text-[#263238] font-tabular">₹35,000</div>
-                    <div className="text-[10px] text-[#263238]/70">per night (Whole Villa)</div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-[#E8F0EC]/60 border border-[#D2DDD7] space-y-2 text-xs">
-                  <div className="font-extrabold text-[#263238]">Amenities &amp; Features:</div>
-                  <div className="grid grid-cols-2 gap-2 text-[#263238]/70">
-                    <div>• 5 King Suites with Valley Balcony</div>
-                    <div>• Private Heated Infinity Pool</div>
-                    <div>• Starlink High-Speed Internet</div>
-                    <div>• 10 kW Solar + 15 kVA Generator</div>
-                    <div>• Private Chef &amp; Butler Quarters</div>
-                    <div>• Organic Coffee &amp; Tea Trail</div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-xs pt-1">
-                  <span className="font-bold text-[#163B36]">● Live on Airbnb Superhost &amp; Direct</span>
-                  <button
-                    onClick={() => alert('Updated Wayanad Villa calendar and base rates.')}
-                    className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] font-bold text-[#163B36] shadow-sm transition"
-                  >
-                    Configure Tariffs
-                  </button>
-                </div>
-              </div>
-
-              <div className="organic-card p-6 space-y-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-[#C69A55] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#C69A55]/30">
-                      Beachfront Campus
-                    </span>
-                    <h3 className="text-lg font-black text-[#263238] mt-1.5">
-                      Beachfront Haven &amp; Luxury Suites
-                    </h3>
-                    <p className="text-xs text-[#263238]/70 flex items-center gap-1 mt-0.5">
-                      <MapPin className="h-3.5 w-3.5 text-[#163B36]" />
-                      <span>Awas Beach Road, Alibaug, Maharashtra • 4 Pool Villas + 6 Suites</span>
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xl font-black text-[#263238] font-tabular">₹28,000</div>
-                    <div className="text-[10px] text-[#263238]/70">per night (Pool Villa)</div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-[#E8F0EC]/60 border border-[#D2DDD7] space-y-2 text-xs">
-                  <div className="font-extrabold text-[#263238]">Amenities &amp; Features:</div>
-                  <div className="grid grid-cols-2 gap-2 text-[#263238]/70">
-                    <div>• Direct Private Beach Access</div>
-                    <div>• Plunge Pools in every villa</div>
-                    <div>• Rooftop Sundeck &amp; Barbecue</div>
-                    <div>• Smart Yale Digital Door Locks</div>
-                    <div>• 24/7 Security &amp; Concierge Desk</div>
-                    <div>• Corporate Offsite AV Conference Hall</div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-xs pt-1">
-                  <span className="font-bold text-[#163B36]">● Live on Booking.com &amp; Airbnb</span>
-                  <button
-                    onClick={() => alert('Updated Alibaug Beachfront calendar and base rates.')}
-                    className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] font-bold text-[#163B36] shadow-sm transition"
-                  >
-                    Configure Tariffs
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : properties.length > 0 ? (
-            properties.map(p => (
-              <div key={p.id} className="organic-card p-6 space-y-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-[#163B36] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
-                      {p.type || 'Villa'}
-                    </span>
-                    <h3 className="text-lg font-black text-[#263238] mt-1.5">
-                      {p.name}
-                    </h3>
-                    <p className="text-xs text-[#263238]/70 flex items-center gap-1 mt-0.5">
-                      <MapPin className="h-3.5 w-3.5 text-[#163B36]" />
-                      <span>{p.address}, {p.city}</span>
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xl font-black text-[#263238] font-tabular">₹{p.totalUnits > 0 ? (p.totalUnits * 25000).toLocaleString('en-IN') : '25,000'}</div>
-                    <div className="text-[10px] text-[#263238]/70">per night</div>
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-[#E8F0EC]/60 border border-[#D2DDD7] space-y-2 text-xs">
-                  <div className="font-extrabold text-[#263238]">Property Units &amp; Occupancy:</div>
-                  <div className="grid grid-cols-2 gap-2 text-[#263238]/70">
-                    <div>• {p.totalUnits} Total Units</div>
-                    <div>• {p.occupiedUnits} Occupied</div>
-                    <div>• Digital Smart Locks Ready</div>
-                    <div>• OTA Sync Capable</div>
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="col-span-2 p-12 text-center rounded-2xl bg-[#E8F0EC]/50 border border-[#D2DDD7] space-y-3">
-              <Building2 className="h-10 w-10 text-[#163B36] mx-auto" />
-              <div className="font-extrabold text-base text-[#263238]">No Luxury Campuses Registered</div>
-              <p className="text-xs text-[#263238]/70 max-w-md mx-auto">
-                Onboard your first villa, holiday home, or boutique resort to activate dynamic nightly tariffs and smart check-ins.
-              </p>
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#D2DDD7]">
+            <div>
+              <h3 className="text-base font-extrabold text-[#263238]">Villas &amp; Luxury Campuses</h3>
+              <p className="text-xs text-[#263238]/70">Boutique private estates, whole villas, and verified channel listings</p>
             </div>
-          )}
+            <button
+              onClick={() => setIsAddPropertyOpen(true)}
+              className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
+            >
+              <Plus className="h-4 w-4" />
+              <span>+ Add Villa / Campus</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {isDemoEstate ? (
+              <>
+                <div className="organic-card p-6 space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[#163B36] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
+                        Flagship Estate
+                      </span>
+                      <h3 className="text-lg font-black text-[#263238] mt-1.5">
+                        Serene Mist Estate &amp; 5BHK Villa
+                      </h3>
+                      <p className="text-xs text-[#263238]/70 flex items-center gap-1 mt-0.5">
+                        <MapPin className="h-3.5 w-3.5 text-[#163B36]" />
+                        <span>Vythiri Tea Valley, Wayanad, Kerala • 12 Acre Private Campus</span>
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xl font-black text-[#263238] font-tabular">₹35,000</div>
+                      <div className="text-[10px] text-[#263238]/70">per night (Whole Villa)</div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-[#E8F0EC]/60 border border-[#D2DDD7] space-y-2 text-xs">
+                    <div className="font-extrabold text-[#263238]">Amenities &amp; Features:</div>
+                    <div className="grid grid-cols-2 gap-2 text-[#263238]/70">
+                      <div>• 5 King Suites with Valley Balcony</div>
+                      <div>• Private Heated Infinity Pool</div>
+                      <div>• Starlink High-Speed Internet</div>
+                      <div>• 10 kW Solar + 15 kVA Generator</div>
+                      <div>• Private Chef &amp; Butler Quarters</div>
+                      <div>• Organic Coffee &amp; Tea Trail</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <span className="font-bold text-[#163B36]">● Live on Airbnb Superhost &amp; Direct</span>
+                    <button
+                      onClick={() => alert('Updated Wayanad Villa calendar and base rates.')}
+                      className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] font-bold text-[#163B36] shadow-sm transition"
+                    >
+                      Configure Tariffs
+                    </button>
+                  </div>
+                </div>
+
+                <div className="organic-card p-6 space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[#C69A55] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#C69A55]/30">
+                        Beachfront Campus
+                      </span>
+                      <h3 className="text-lg font-black text-[#263238] mt-1.5">
+                        Beachfront Haven &amp; Luxury Suites
+                      </h3>
+                      <p className="text-xs text-[#263238]/70 flex items-center gap-1 mt-0.5">
+                        <MapPin className="h-3.5 w-3.5 text-[#163B36]" />
+                        <span>Awas Beach Road, Alibaug, Maharashtra • 4 Pool Villas + 6 Suites</span>
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xl font-black text-[#263238] font-tabular">₹28,000</div>
+                      <div className="text-[10px] text-[#263238]/70">per night (Pool Villa)</div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-[#E8F0EC]/60 border border-[#D2DDD7] space-y-2 text-xs">
+                    <div className="font-extrabold text-[#263238]">Amenities &amp; Features:</div>
+                    <div className="grid grid-cols-2 gap-2 text-[#263238]/70">
+                      <div>• Direct Private Beach Access</div>
+                      <div>• Plunge Pools in every villa</div>
+                      <div>• Rooftop Sundeck &amp; Barbecue</div>
+                      <div>• Smart Yale Digital Door Locks</div>
+                      <div>• 24/7 Security &amp; Concierge Desk</div>
+                      <div>• Corporate Offsite AV Conference Hall</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <span className="font-bold text-[#163B36]">● Live on Booking.com &amp; Airbnb</span>
+                    <button
+                      onClick={() => alert('Updated Alibaug Beachfront calendar and base rates.')}
+                      className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] font-bold text-[#163B36] shadow-sm transition"
+                    >
+                      Configure Tariffs
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : properties.length > 0 ? (
+              properties.map(p => (
+                <div key={p.id} className="organic-card p-6 space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[#163B36] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
+                        {p.type || 'Villa'}
+                      </span>
+                      <h3 className="text-lg font-black text-[#263238] mt-1.5">
+                        {p.name}
+                      </h3>
+                      <p className="text-xs text-[#263238]/70 flex items-center gap-1 mt-0.5">
+                        <MapPin className="h-3.5 w-3.5 text-[#163B36]" />
+                        <span>{p.address}, {p.city}</span>
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xl font-black text-[#263238] font-tabular">₹{p.totalUnits > 0 ? (p.totalUnits * 25000).toLocaleString('en-IN') : '25,000'}</div>
+                      <div className="text-[10px] text-[#263238]/70">per night</div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-[#E8F0EC]/60 border border-[#D2DDD7] space-y-2 text-xs">
+                    <div className="font-extrabold text-[#263238]">Property Units &amp; Occupancy:</div>
+                    <div className="grid grid-cols-2 gap-2 text-[#263238]/70">
+                      <div>• {p.totalUnits} Total Units</div>
+                      <div>• {p.occupiedUnits} Occupied</div>
+                      <div>• Digital Smart Locks Ready</div>
+                      <div>• OTA Sync Capable</div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-2 p-12 text-center rounded-2xl bg-[#E8F0EC]/50 border border-[#D2DDD7] space-y-3">
+                <Building2 className="h-10 w-10 text-[#163B36] mx-auto" />
+                <div className="font-extrabold text-base text-[#263238]">No Luxury Campuses Registered</div>
+                <p className="text-xs text-[#263238]/70 max-w-md mx-auto">
+                  Onboard your first villa, holiday home, or boutique resort to activate dynamic nightly tariffs and smart check-ins.
+                </p>
+                <button
+                  onClick={() => setIsAddPropertyOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-bold transition shadow-sm inline-flex items-center gap-1.5"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>+ Add Villa / Campus</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -1021,21 +1075,37 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
       {/* TAB 5: PHYSICAL ASSETS */}
       {activeTab === 'ASSETS' && (
         <div className="organic-card p-6 space-y-4">
-          <div>
-            <h3 className="text-base font-extrabold text-[#263238] flex items-center gap-2">
-              <Wrench className="h-5 w-5 text-[#163B36]" />
-              <span>Campus Physical Assets &amp; AMC Registry</span>
-            </h3>
-            <p className="text-xs text-[#263238]/70">Critical infrastructure tracking for private estates, power grids, and water</p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#D2DDD7]">
+            <div>
+              <h3 className="text-base font-extrabold text-[#263238] flex items-center gap-2">
+                <Wrench className="h-5 w-5 text-[#163B36]" />
+                <span>Campus Physical Assets &amp; AMC Registry</span>
+              </h3>
+              <p className="text-xs text-[#263238]/70">Critical infrastructure tracking for private estates, power grids, and water</p>
+            </div>
+            <button
+              onClick={() => setIsAddAssetModalOpen(true)}
+              className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition self-start sm:self-auto"
+            >
+              <Plus className="h-4 w-4" />
+              <span>+ Add Physical Asset</span>
+            </button>
           </div>
 
           {estateAssets.length === 0 ? (
-            <div className="p-12 text-center rounded-2xl bg-[#E8F0EC]/50 border border-[#D2DDD7] space-y-2">
+            <div className="p-12 text-center rounded-2xl bg-[#E8F0EC]/50 border border-[#D2DDD7] space-y-3">
               <Wrench className="h-10 w-10 text-[#163B36] mx-auto" />
               <div className="font-extrabold text-base text-[#263238]">No Physical Assets Logged</div>
               <p className="text-xs text-[#263238]/70 max-w-md mx-auto">
                 No solar grids, DG sets, or pool filtration machinery registered for your estate.
               </p>
+              <button
+                onClick={() => setIsAddAssetModalOpen(true)}
+                className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-bold transition shadow-sm inline-flex items-center gap-1.5"
+              >
+                <Plus className="h-4 w-4" />
+                <span>+ Add Physical Asset</span>
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1057,12 +1127,22 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
                     <div>Next Service: <b className="text-[#263238]">{asset.nextService}</b></div>
                   </div>
 
-                  <button
-                    onClick={() => alert(`Service ticket logged for ${asset.name}.`)}
-                    className="w-full py-2 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#163B36] font-bold text-xs transition shadow-sm"
-                  >
-                    Schedule AMC Inspection
-                  </button>
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      onClick={() => alert(`Service ticket logged for ${asset.name}.`)}
+                      className="flex-1 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#163B36] font-bold text-xs transition shadow-2xs"
+                    >
+                      Schedule AMC
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Remove asset ${asset.name}?`)) deleteEstateAsset(asset.id);
+                      }}
+                      className="px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1073,21 +1153,37 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
       {/* TAB 6: STAFF */}
       {activeTab === 'STAFF' && (
         <div className="organic-card p-6 space-y-4">
-          <div>
-            <h3 className="text-base font-extrabold text-[#263238] flex items-center gap-2">
-              <Users className="h-5 w-5 text-[#163B36]" />
-              <span>Estate Caretakers, Security &amp; Hospitality Team</span>
-            </h3>
-            <p className="text-xs text-[#263238]/70">Shifts, biometric attendance, and guest hospitality responsibilities</p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#D2DDD7]">
+            <div>
+              <h3 className="text-base font-extrabold text-[#263238] flex items-center gap-2">
+                <Users className="h-5 w-5 text-[#163B36]" />
+                <span>Estate Caretakers, Security &amp; Hospitality Team</span>
+              </h3>
+              <p className="text-xs text-[#263238]/70">Shifts, biometric attendance, and guest hospitality responsibilities</p>
+            </div>
+            <button
+              onClick={() => setIsAddStaffModalOpen(true)}
+              className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition self-start sm:self-auto"
+            >
+              <Plus className="h-4 w-4" />
+              <span>+ Add Staff Member</span>
+            </button>
           </div>
 
           {staff.length === 0 ? (
-            <div className="p-12 text-center rounded-2xl bg-[#E8F0EC]/50 border border-[#D2DDD7] space-y-2">
+            <div className="p-12 text-center rounded-2xl bg-[#E8F0EC]/50 border border-[#D2DDD7] space-y-3">
               <Users className="h-10 w-10 text-[#163B36] mx-auto" />
               <div className="font-extrabold text-base text-[#263238]">No Staff Registered</div>
               <p className="text-xs text-[#263238]/70 max-w-md mx-auto">
                 No estate caretakers or housekeeping staff assigned yet.
               </p>
+              <button
+                onClick={() => setIsAddStaffModalOpen(true)}
+                className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-bold transition shadow-sm inline-flex items-center gap-1.5"
+              >
+                <Plus className="h-4 w-4" />
+                <span>+ Add Staff Member</span>
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1108,11 +1204,22 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
                     </div>
                   </div>
 
-                  <div className="text-right">
-                    <div className="font-black text-sm text-[#263238] font-tabular">
-                      ₹{s.monthlySalary.toLocaleString('en-IN')}
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="font-black text-sm text-[#263238] font-tabular">
+                        ₹{s.monthlySalary.toLocaleString('en-IN')}
+                      </div>
+                      <div className="text-[10px] text-[#263238]/70">Monthly Payroll</div>
                     </div>
-                    <div className="text-[10px] text-[#263238]/70">Monthly Payroll</div>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Remove staff member ${s.name}?`)) deleteStaffMember(s.id);
+                      }}
+                      className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs transition"
+                      title="Remove Staff"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -1317,6 +1424,218 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
                   Confirm &amp; Generate Key
                 </button>
               </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* ADD ASSET MODAL */}
+      {isAddAssetModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-xl border border-[#D2DDD7] animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-[#D2DDD7]">
+              <div>
+                <h3 className="text-base font-extrabold text-[#263238]">Log Campus Infrastructure</h3>
+                <p className="text-xs text-[#263238]/70">Solar, DG gensets, borewell pumps &amp; pool systems</p>
+              </div>
+              <button onClick={() => setIsAddAssetModalOpen(false)} className="p-1 rounded-full hover:bg-[#E8F0EC] text-[#263238]">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              addEstateAsset({
+                name: assetForm.name,
+                tag: assetForm.tag || `AST-${Date.now().toString().slice(-4)}`,
+                category: assetForm.category,
+                estateName: assetForm.estateName,
+                purchaseDate: assetForm.purchaseDate,
+                warrantyUntil: assetForm.warrantyUntil,
+                amcProvider: assetForm.amcProvider || 'In-House Maintenance',
+                lastService: assetForm.lastService,
+                nextService: assetForm.nextService,
+                condition: assetForm.condition
+              });
+              setIsAddAssetModalOpen(false);
+              setAssetForm({ ...assetForm, name: '', tag: '', amcProvider: '' });
+            }} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-[#263238] font-bold mb-1">Asset Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 15 kVA Diesel Generator (Cummins)"
+                  value={assetForm.name}
+                  onChange={(e) => setAssetForm({ ...assetForm, name: e.target.value })}
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#263238] font-bold mb-1">Asset Tag</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. DG-01"
+                    value={assetForm.tag}
+                    onChange={(e) => setAssetForm({ ...assetForm, tag: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#263238] font-bold mb-1">Category</label>
+                  <select
+                    value={assetForm.category}
+                    onChange={(e) => setAssetForm({ ...assetForm, category: e.target.value as any })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                  >
+                    <option value="Power & Generator">Power &amp; Generator</option>
+                    <option value="Solar & Inverters">Solar &amp; Inverters</option>
+                    <option value="Water & Borewell">Water &amp; Borewell</option>
+                    <option value="Pool & Filtration">Pool &amp; Filtration</option>
+                    <option value="Vehicles & Buggies">Vehicles &amp; Buggies</option>
+                    <option value="HVAC & Climate">HVAC &amp; Climate</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#263238] font-bold mb-1">AMC Provider</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Cummins Power India"
+                    value={assetForm.amcProvider}
+                    onChange={(e) => setAssetForm({ ...assetForm, amcProvider: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#263238] font-bold mb-1">Condition</label>
+                  <select
+                    value={assetForm.condition}
+                    onChange={(e) => setAssetForm({ ...assetForm, condition: e.target.value as any })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                  >
+                    <option value="Excellent">Excellent</option>
+                    <option value="Good">Good</option>
+                    <option value="Maintenance Due">Maintenance Due</option>
+                    <option value="Critical">Critical</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer mt-2"
+              >
+                Register Asset
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADD STAFF MODAL */}
+      {isAddStaffModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-xl border border-[#D2DDD7] animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-[#D2DDD7]">
+              <div>
+                <h3 className="text-base font-extrabold text-[#263238]">Enroll Estate Staff</h3>
+                <p className="text-xs text-[#263238]/70">Caretakers, security guards, housekeepers &amp; chefs</p>
+              </div>
+              <button onClick={() => setIsAddStaffModalOpen(false)} className="p-1 rounded-full hover:bg-[#E8F0EC] text-[#263238]">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              addStaffMember({
+                name: staffForm.name,
+                role: staffForm.role,
+                estateName: staffForm.estateName,
+                phone: staffForm.phone,
+                shift: staffForm.shift,
+                attendanceStatus: staffForm.attendanceStatus,
+                monthlySalary: Number(staffForm.monthlySalary) || 20000
+              });
+              setIsAddStaffModalOpen(false);
+              setStaffForm({ ...staffForm, name: '', phone: '' });
+            }} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-[#263238] font-bold mb-1">Full Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Suresh Kumar"
+                  value={staffForm.name}
+                  onChange={(e) => setStaffForm({ ...staffForm, name: e.target.value })}
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#263238] font-bold mb-1">Role / Designation</label>
+                  <select
+                    value={staffForm.role}
+                    onChange={(e) => setStaffForm({ ...staffForm, role: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                  >
+                    <option value="Head Caretaker">Head Caretaker</option>
+                    <option value="Security Supervisor">Security Supervisor</option>
+                    <option value="Gardener & Landscaper">Gardener & Landscaper</option>
+                    <option value="Housekeeping Supervisor">Housekeeping Supervisor</option>
+                    <option value="Chef & Butler">Chef & Butler</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[#263238] font-bold mb-1">Contact Phone</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. +91 94470 12891"
+                    value={staffForm.phone}
+                    onChange={(e) => setStaffForm({ ...staffForm, phone: e.target.value })}
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#263238] font-bold mb-1">Duty Shift</label>
+                  <select
+                    value={staffForm.shift}
+                    onChange={(e) => setStaffForm({ ...staffForm, shift: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                  >
+                    <option value="Morning (07:00 - 15:00)">Morning (07:00 - 15:00)</option>
+                    <option value="General (09:00 - 18:00)">General (09:00 - 18:00)</option>
+                    <option value="Night (19:00 - 07:00)">Night (19:00 - 07:00)</option>
+                    <option value="Full Residential Caretaker">Full Residential Caretaker</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[#263238] font-bold mb-1">Monthly Salary (₹)</label>
+                  <input
+                    type="number"
+                    value={staffForm.monthlySalary}
+                    onChange={(e) => setStaffForm({ ...staffForm, monthlySalary: Number(e.target.value) })}
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium font-tabular"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer mt-2"
+              >
+                Enroll Staff Member
+              </button>
             </form>
           </div>
         </div>

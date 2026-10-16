@@ -165,6 +165,7 @@ export interface Tenant {
   kycVerified: boolean;
   rewardsBalance: number;
   emergencyContact: string;
+  status?: 'Active' | 'Pending' | 'Moved Out' | 'Notice';
 }
 
 export type RentStatus = 
@@ -282,11 +283,11 @@ export interface EstateAsset {
 export interface StaffMember {
   id: string;
   name: string;
-  role: 'Security' | 'Caretaker' | 'Gardener' | 'Housekeeping' | 'Electrician' | 'Manager';
+  role: 'Security' | 'Caretaker' | 'Gardener' | 'Housekeeping' | 'Electrician' | 'Manager' | string;
   estateName: string;
   phone: string;
-  shift: 'Morning' | 'Evening' | 'Night' | 'Full-time';
-  attendanceStatus: 'Present' | 'On Leave' | 'Off Duty';
+  shift: 'Morning' | 'Evening' | 'Night' | 'Full-time' | string;
+  attendanceStatus: 'Present' | 'On Leave' | 'Off Duty' | string;
   monthlySalary: number;
 }
 
@@ -353,13 +354,16 @@ export interface Roommate {
 
 export interface AuthorizedDelegate {
   id: string;
+  ownerId?: string;
   name: string;
   email: string;
   phone: string;
   role: 'Accountant' | 'Property Manager' | 'Tax Auditor';
   permissions: string[];
-  addedDate: string;
+  addedDate?: string;
+  invitedAt?: string;
   status: 'Active' | 'Invited' | 'Suspended';
+  canWithdrawFunds?: boolean; // STRICT RULE: Must be false for delegates (only verified property owner can withdraw funds)
 }
 
 // ----------------------------------------------------
@@ -668,6 +672,47 @@ export interface TrialSignupPayload {
     mandateType?: 'E_NACH' | 'UPI_MANDATE';
   };
 }
+
+export interface TenantConnectionRequest {
+  id: string;
+  tenantUserId: string;
+  tenantName: string;
+  tenantEmail: string;
+  tenantPhone: string;
+  ownerId?: string;
+  ownerCode?: string;
+  ownerEmail?: string;
+  propertyId?: string;
+  propertyName?: string;
+  unitNumber: string;
+  monthlyRent: number;
+  depositAmount: number;
+  leaseStartDate: string;
+  status: 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'MOVE_OUT_PENDING' | 'MOVED_OUT';
+  createdAt: string;
+  moveOutDate?: string;
+  moveOutReason?: string;
+  inspectionNotes?: string;
+  depositSettledAmount?: number;
+}
+
+export interface FoodMenuItem {
+  id: string;
+  propertyId?: string;
+  category?: string;
+  dayOfWeek?: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday' | 'Daily';
+  mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snacks';
+  menu?: string;
+  name?: string;
+  dietaryType?: 'Veg' | 'Non-Veg' | 'Jain' | 'Vegan';
+  dietaryTag?: string;
+  costPerMeal?: number;
+  price?: number;
+  vendor?: string;
+  availableTimings?: string;
+  description?: string;
+}
+
 
 
 

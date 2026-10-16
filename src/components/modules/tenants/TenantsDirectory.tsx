@@ -29,7 +29,11 @@ export default function TenantsDirectory() {
     addNotification, 
     setSelectedReceiptInvoice, 
     invoices,
-    activeRole
+    activeRole,
+    tenantConnectionRequests,
+    approveTenantConnectionRequest,
+    rejectTenantConnectionRequest,
+    verifyAndSettleMoveOut
   } = useAppState();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -142,6 +146,114 @@ export default function TenantsDirectory() {
           </span>
         </div>
       </div>
+
+      {/* Pending Tenant Connection Requests */}
+      {tenantConnectionRequests.filter(r => r.status === 'PENDING_APPROVAL').length > 0 && (
+        <div className="rounded-3xl bg-[#E8F0EC] border border-[#163B36]/30 p-5 space-y-3 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+              <h3 className="font-extrabold text-sm text-[#263238]">
+                Pending Tenant Connection Requests ({tenantConnectionRequests.filter(r => r.status === 'PENDING_APPROVAL').length})
+              </h3>
+            </div>
+            <span className="text-[11px] text-[#546E7A]">Awaiting your landlord approval</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            {tenantConnectionRequests.filter(r => r.status === 'PENDING_APPROVAL').map(req => (
+              <div key={req.id} className="p-4 rounded-2xl bg-white border border-[#D2DDD7] space-y-2.5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="font-extrabold text-sm text-[#263238]">{req.tenantName}</h4>
+                    <p className="text-[11px] text-[#546E7A]">{req.tenantEmail} • {req.tenantPhone}</p>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
+                    Awaiting Approval
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[11px]">
+                  <div>
+                    <span className="text-[#546E7A] block">Unit</span>
+                    <span className="font-bold text-[#263238]">{req.unitNumber}</span>
+                  </div>
+                  <div>
+                    <span className="text-[#546E7A] block">Rent</span>
+                    <span className="font-bold text-[#163B36] font-tabular">₹{req.monthlyRent?.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div>
+                    <span className="text-[#546E7A] block">Deposit</span>
+                    <span className="font-bold text-[#263238] font-tabular">₹{req.depositAmount?.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={() => approveTenantConnectionRequest(req.id)}
+                    className="flex-1 py-2 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer text-center"
+                  >
+                    ✓ Approve Connection
+                  </button>
+                  <button
+                    onClick={() => rejectTenantConnectionRequest(req.id)}
+                    className="px-3 py-2 rounded-xl bg-white hover:bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200 transition cursor-pointer"
+                  >
+                    Decline
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Pending Move-Out Inspection Verifications */}
+      {tenantConnectionRequests.filter(r => r.status === 'MOVE_OUT_PENDING').length > 0 && (
+        <div className="rounded-3xl bg-amber-50/80 border border-amber-200 p-5 space-y-3 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+              <h3 className="font-extrabold text-sm text-[#263238]">
+                Pending Move-Out Verifications ({tenantConnectionRequests.filter(r => r.status === 'MOVE_OUT_PENDING').length})
+              </h3>
+            </div>
+            <span className="text-[11px] text-[#546E7A]">Inspection &amp; Escrow Settlement</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            {tenantConnectionRequests.filter(r => r.status === 'MOVE_OUT_PENDING').map(req => (
+              <div key={req.id} className="p-4 rounded-2xl bg-white border border-amber-200 space-y-2.5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="font-extrabold text-sm text-[#263238]">{req.tenantName}</h4>
+                    <p className="text-[11px] text-[#546E7A]">Unit {req.unitNumber} • Move-Out: {req.moveOutDate}</p>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-800 border border-rose-200">
+                    Settlement Pending
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-[#546E7A]">
+                  <b>Reason:</b> {req.moveOutReason || 'Tenure completed'}
+                </p>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={() => verifyAndSettleMoveOut(req.id, {
+                      inspectionNotes: 'MoveFlow handover inspection passed. All damages cleared.',
+                      depositSettledAmount: req.depositAmount
+                    })}
+                    className="flex-1 py-2 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer text-center"
+                  >
+                    Verify Inspection &amp; Settle Deposit (₹{req.depositAmount?.toLocaleString('en-IN')})
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

@@ -14,8 +14,10 @@ import {
   Clock, 
   Calendar, 
   Layers,
-  Plus
+  Plus,
+  X
 } from 'lucide-react';
+import { EstateAsset } from '../../../types';
 
 export default function EstateOSView() {
   const { 
@@ -25,8 +27,37 @@ export default function EstateOSView() {
     currentUser, 
     activeRole,
     setIsAddPropertyOpen,
-    addNotification 
+    addNotification,
+    addEstateAsset,
+    deleteEstateAsset,
+    addStaffMember,
+    deleteStaffMember
   } = useAppState();
+
+  const [isAddAssetModalOpen, setIsAddAssetModalOpen] = useState(false);
+  const [assetForm, setAssetForm] = useState({
+    name: '',
+    tag: '',
+    category: 'Power & Generator' as EstateAsset['category'],
+    estateName: 'Campus',
+    purchaseDate: '2026-01-15',
+    warrantyUntil: '2028-01-15',
+    amcProvider: '',
+    lastService: '10 Oct 2026',
+    nextService: '10 Jan 2027',
+    condition: 'Excellent' as EstateAsset['condition']
+  });
+
+  const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
+  const [staffForm, setStaffForm] = useState({
+    name: '',
+    role: 'Caretaker',
+    estateName: 'Campus',
+    phone: '',
+    shift: 'Morning (07:00 - 15:00)',
+    attendanceStatus: 'Present',
+    monthlySalary: 22000
+  });
 
   const [activeTab, setActiveTab] = useState<'ASSETS' | 'STAFF' | 'UTILITIES'>('ASSETS');
 
@@ -139,7 +170,7 @@ export default function EstateOSView() {
               <p className="text-[11px] text-[#546E7A]">AMC contracts, servicing schedules, and asset condition</p>
             </div>
             <button
-              onClick={() => setIsAddPropertyOpen(true)}
+              onClick={() => setIsAddAssetModalOpen(true)}
               className="px-3.5 py-1.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition flex items-center gap-1 shadow-2xs self-start sm:self-auto cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5 text-[#C69A55]" />
@@ -152,10 +183,10 @@ export default function EstateOSView() {
               <Trees className="h-10 w-10 text-[#D2DDD7] mx-auto opacity-50" />
               <h4 className="text-xs font-bold text-[#263238]">No Estate Assets Registered</h4>
               <p className="text-[11px] text-[#546E7A] max-w-sm mx-auto">
-                Add your luxury villa or private estate to monitor physical equipment, HVAC, solar arrays, and AMC warranties.
+                Add your physical equipment, HVAC, solar arrays, generator sets, and AMC warranties.
               </p>
               <button
-                onClick={() => setIsAddPropertyOpen(true)}
+                onClick={() => setIsAddAssetModalOpen(true)}
                 className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold shadow-xs transition inline-flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus className="h-3.5 w-3.5 text-[#C69A55]" />
@@ -225,7 +256,7 @@ export default function EstateOSView() {
               <p className="text-[11px] text-[#546E7A]">Security, Caretaker, Gardener, and Housekeeping</p>
             </div>
             <button
-              onClick={() => alert('Opening Staff Member Enrollment Form...')}
+              onClick={() => setIsAddStaffModalOpen(true)}
               className="px-3.5 py-1.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition flex items-center gap-1 shadow-2xs self-start sm:self-auto cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5 text-[#C69A55]" />
@@ -234,10 +265,19 @@ export default function EstateOSView() {
           </div>
 
           {activeStaff.length === 0 ? (
-            <div className="py-12 text-center border border-dashed border-[#D2DDD7] rounded-2xl p-6">
+            <div className="py-12 text-center border border-dashed border-[#D2DDD7] rounded-2xl p-6 space-y-3">
               <Users className="h-10 w-10 text-[#D2DDD7] mx-auto mb-2 opacity-50" />
               <p className="text-xs font-bold text-[#263238]">No estate staff rostered</p>
-              <p className="text-[11px] text-[#546E7A] mt-0.5">Add security guards, gardeners, and caretakers to manage monthly salaries and shifts.</p>
+              <p className="text-[11px] text-[#546E7A] max-w-sm mx-auto">
+                Add security guards, gardeners, and caretakers to manage monthly salaries and shifts.
+              </p>
+              <button
+                onClick={() => setIsAddStaffModalOpen(true)}
+                className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold shadow-xs transition inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5 text-[#C69A55]" />
+                <span>Add First Staff Member</span>
+              </button>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -336,6 +376,218 @@ export default function EstateOSView() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Modal: Add Campus Physical Asset */}
+      {isAddAssetModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-3xl border border-[#D2DDD7] p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+              <div>
+                <h3 className="text-base font-extrabold text-[#263238]">Register Physical Campus Asset</h3>
+                <p className="text-xs text-[#546E7A]">Power generator, solar inverter, pool pump, or HVAC</p>
+              </div>
+              <button onClick={() => setIsAddAssetModalOpen(false)} className="text-[#546E7A] hover:text-[#263238]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              addEstateAsset({
+                name: assetForm.name,
+                tag: assetForm.tag || `AST-${Date.now().toString().slice(-4)}`,
+                category: assetForm.category,
+                estateName: assetForm.estateName || 'Campus',
+                purchaseDate: assetForm.purchaseDate,
+                warrantyUntil: assetForm.warrantyUntil,
+                amcProvider: assetForm.amcProvider || 'Authorized Service Partner',
+                lastService: assetForm.lastService,
+                nextService: assetForm.nextService,
+                condition: assetForm.condition
+              });
+              setIsAddAssetModalOpen(false);
+              setAssetForm({ ...assetForm, name: '', tag: '', amcProvider: '' });
+            }} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-[#263238] font-bold mb-1">Asset Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Kirloskar 25 kVA Silent Generator"
+                  value={assetForm.name}
+                  onChange={(e) => setAssetForm({ ...assetForm, name: e.target.value })}
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#263238] font-bold mb-1">Asset Tag / Serial</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. DG-01"
+                    value={assetForm.tag}
+                    onChange={(e) => setAssetForm({ ...assetForm, tag: e.target.value })}
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-mono font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#263238] font-bold mb-1">Category</label>
+                  <select
+                    value={assetForm.category}
+                    onChange={(e) => setAssetForm({ ...assetForm, category: e.target.value as any })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                  >
+                    <option value="Power & Generator">Power & Generator</option>
+                    <option value="HVAC & Cooling">HVAC & Cooling</option>
+                    <option value="Water & Sewage">Water & Sewage</option>
+                    <option value="Solar & Eco">Solar & Eco</option>
+                    <option value="Security & CCTV">Security & CCTV</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#263238] font-bold mb-1">AMC Contractor</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Cummins Power Solutions"
+                    value={assetForm.amcProvider}
+                    onChange={(e) => setAssetForm({ ...assetForm, amcProvider: e.target.value })}
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#263238] font-bold mb-1">Next AMC Service</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 15 Jan 2027"
+                    value={assetForm.nextService}
+                    onChange={(e) => setAssetForm({ ...assetForm, nextService: e.target.value })}
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer mt-2"
+              >
+                Register Campus Asset
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Add Staff Member */}
+      {isAddStaffModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-3xl border border-[#D2DDD7] p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+              <div>
+                <h3 className="text-base font-extrabold text-[#263238]">Enroll Estate Staff Member</h3>
+                <p className="text-xs text-[#546E7A]">Caretaker, gardener, housekeeper, or security</p>
+              </div>
+              <button onClick={() => setIsAddStaffModalOpen(false)} className="text-[#546E7A] hover:text-[#263238]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              addStaffMember({
+                name: staffForm.name,
+                role: staffForm.role as any,
+                estateName: staffForm.estateName || 'Campus',
+                phone: staffForm.phone || '+91 94470 12891',
+                shift: staffForm.shift as any,
+                attendanceStatus: staffForm.attendanceStatus as any,
+                monthlySalary: Number(staffForm.monthlySalary) || 20000
+              });
+              setIsAddStaffModalOpen(false);
+              setStaffForm({ ...staffForm, name: '', phone: '' });
+            }} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block text-[#263238] font-bold mb-1">Full Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Suresh Kumar"
+                  value={staffForm.name}
+                  onChange={(e) => setStaffForm({ ...staffForm, name: e.target.value })}
+                  required
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#263238] font-bold mb-1">Role / Designation</label>
+                  <select
+                    value={staffForm.role}
+                    onChange={(e) => setStaffForm({ ...staffForm, role: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                  >
+                    <option value="Head Caretaker">Head Caretaker</option>
+                    <option value="Security Supervisor">Security Supervisor</option>
+                    <option value="Gardener & Landscaper">Gardener & Landscaper</option>
+                    <option value="Housekeeping Supervisor">Housekeeping Supervisor</option>
+                    <option value="Chef & Butler">Chef & Butler</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[#263238] font-bold mb-1">Contact Phone</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. +91 94470 12891"
+                    value={staffForm.phone}
+                    onChange={(e) => setStaffForm({ ...staffForm, phone: e.target.value })}
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#263238] font-bold mb-1">Duty Shift</label>
+                  <select
+                    value={staffForm.shift}
+                    onChange={(e) => setStaffForm({ ...staffForm, shift: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                  >
+                    <option value="Morning (07:00 - 15:00)">Morning (07:00 - 15:00)</option>
+                    <option value="General (09:00 - 18:00)">General (09:00 - 18:00)</option>
+                    <option value="Night (19:00 - 07:00)">Night (19:00 - 07:00)</option>
+                    <option value="Full Residential Caretaker">Full Residential Caretaker</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[#263238] font-bold mb-1">Monthly Salary (₹)</label>
+                  <input
+                    type="number"
+                    value={staffForm.monthlySalary}
+                    onChange={(e) => setStaffForm({ ...staffForm, monthlySalary: Number(e.target.value) })}
+                    required
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium font-tabular"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer mt-2"
+              >
+                Enroll Staff Member
+              </button>
+            </form>
+          </div>
         </div>
       )}
     </div>

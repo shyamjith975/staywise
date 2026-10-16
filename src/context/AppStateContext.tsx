@@ -62,7 +62,10 @@ import {
   InfluencerOffer,
   OwnerSubscription,
   SubscriptionTierId,
-  TrialSignupPayload
+  TrialSignupPayload,
+  TenantConnectionRequest,
+  AuthorizedDelegate,
+  FoodMenuItem
 } from '../types';
 // Standalone typed defaults (Zero mockData dependency)
 const DEFAULT_PROPERTY_PASSPORT: PropertyPassportData = {
@@ -341,6 +344,31 @@ interface AppStateContextType {
   influencerOffers: InfluencerOffer[];
   addInfluencerOffer: (offer: Omit<InfluencerOffer, 'id' | 'signupsCount' | 'totalCommissionPaid' | 'createdAt'>) => void;
   toggleInfluencerOfferStatus: (offerId: string) => void;
+
+  // Tenant Connections & Move-Out Lifecycle
+  tenantConnectionRequests: TenantConnectionRequest[];
+  createTenantConnectionRequest: (req: Omit<TenantConnectionRequest, 'id' | 'createdAt' | 'status'>) => void;
+  approveTenantConnectionRequest: (id: string) => void;
+  rejectTenantConnectionRequest: (id: string) => void;
+  requestTenantMoveOut: (requestId: string, details: { moveOutDate: string; moveOutReason: string }) => void;
+  verifyAndSettleMoveOut: (requestId: string, details: { inspectionNotes?: string; depositSettledAmount?: number }) => void;
+
+  // Authorized Delegates (Manager & CA with strict withdrawal restrictions)
+  delegates: AuthorizedDelegate[];
+  addDelegate: (delegate: Omit<AuthorizedDelegate, 'id' | 'invitedAt' | 'status'> & { status?: AuthorizedDelegate['status'] }) => void;
+  updateDelegatePermissions: (id: string, permissions: string[]) => void;
+  revokeDelegate: (id: string) => void;
+
+  // Custom Food Menu (Zero stock data fallback)
+  foodMenuItems: FoodMenuItem[];
+  addFoodMenuItem: (item: Omit<FoodMenuItem, 'id'>) => void;
+  deleteFoodMenuItem: (id: string) => void;
+
+  // Campus Physical Assets & Staff CRUD
+  addEstateAsset: (asset: Omit<EstateAsset, 'id'>) => void;
+  deleteEstateAsset: (id: string) => void;
+  addStaffMember: (member: Omit<StaffMember, 'id'>) => void;
+  deleteStaffMember: (id: string) => void;
 }
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
@@ -642,6 +670,39 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [vacancyCosts] = useState<VacancyCostReport[]>(DEFAULT_VACANCY_COSTS);
   const [propertyPassport] = useState<PropertyPassportData>(DEFAULT_PROPERTY_PASSPORT);
   const [tenantPassport] = useState<TenantPassportData>(DEFAULT_TENANT_PASSPORT);
+
+  // Tenant Connections & Lifecycle
+  const [tenantConnectionRequests, setTenantConnectionRequests] = useState<TenantConnectionRequest[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const saved = localStorage.getItem('staywise_tenant_connections');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Authorized Delegates (CAs & Managers)
+  const [delegates, setDelegates] = useState<AuthorizedDelegate[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const saved = localStorage.getItem('staywise_delegates');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Food Menu Items (Zero stock data fallback)
+  const [foodMenuItems, setFoodMenuItems] = useState<FoodMenuItem[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const saved = localStorage.getItem('staywise_food_menu');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [influencerOffers, setInfluencerOffers] = useState<InfluencerOffer[]>([
     {
       id: 'inf-1',
@@ -1378,6 +1439,210 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     addNotification('Meal Plan Deleted', `Meal plan removed from mess operations.`, 'SYSTEM');
   };
 
+  const createTenantConnectionRequest = (reqData: Omit<TenantConnectionRequest, 'id' | 'createdAt' | 'status'>) => {
+    const newReq: TenantConnectionRequest = {
+      ...reqData,
+      id: `conn-${Date.now()}`,
+      status: 'PENDING_APPROVAL',
+      createdAt: new Date().toISOString()
+    };
+    setTenantConnectionRequests(prev => {
+      const updated = [newReq, ...prev];
+      try { localStorage.setItem('staywise_tenant_connections', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    addNotification('Connection Request Sent', `Your connection request for Unit ${reqData.unitNumber} was submitted. Awaiting owner approval.`, 'SYSTEM');
+  };
+
+  const approveTenantConnectionRequest = (id: string) => {
+    const req = tenantConnectionRequests.find(r => r.id === id);
+    if (!req) return;
+
+    const targetProp = properties.find(p => p.id === req.propertyId) || properties[0];
+    const newTenant: Tenant = {
+      id: `tenant-${Date.now()}`,
+      userId: req.tenantUserId,
+      name: req.tenantName,
+      email: req.tenantEmail,
+      phone: req.tenantPhone,
+      propertyId: targetProp?.id || 'prop-default',
+      propertyName: targetProp?.name || req.propertyName || 'Apartments',
+      unitNumber: req.unitNumber,
+      monthlyRent: req.monthlyRent,
+      depositPaid: req.depositAmount,
+      leaseStart: req.leaseStartDate || '01 Oct 2026',
+      leaseEnd: '30 Sep 2027',
+      rentDueDate: 5,
+      autopayActive: true,
+      reliabilityScore: 98,
+      kycVerified: true,
+      rewardsBalance: 500,
+      emergencyContact: '+91 98450 11928'
+    };
+
+    setTenants(prev => [newTenant, ...prev.filter(t => t.email?.toLowerCase() !== req.tenantEmail.toLowerCase())]);
+
+    const newInvoice: RentInvoice = {
+      id: generateInvoiceId(),
+      invoiceNumber: generateInvoiceNumber(),
+      tenantId: newTenant.id,
+      tenantName: newTenant.name,
+      propertyId: newTenant.propertyId,
+      propertyName: newTenant.propertyName,
+      unitNumber: newTenant.unitNumber,
+      period: 'October 2026',
+      baseRent: newTenant.monthlyRent,
+      camCharges: 1500,
+      utilityCharges: 0,
+      totalAmount: newTenant.monthlyRent + 1500,
+      paidAmount: 0,
+      dueDate: '05 Nov 2026',
+      status: 'Due'
+    };
+    setInvoices(prev => [newInvoice, ...prev]);
+
+    setTenantConnectionRequests(prev => {
+      const updated = prev.map(r => r.id === id ? { ...r, status: 'APPROVED' as const } : r);
+      try { localStorage.setItem('staywise_tenant_connections', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+
+    addNotification('Tenant Connected', `${req.tenantName} is now officially connected to Unit ${req.unitNumber}.`, 'SYSTEM');
+  };
+
+  const rejectTenantConnectionRequest = (id: string) => {
+    setTenantConnectionRequests(prev => {
+      const updated = prev.map(r => r.id === id ? { ...r, status: 'REJECTED' as const } : r);
+      try { localStorage.setItem('staywise_tenant_connections', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    addNotification('Request Declined', 'The tenant connection request has been declined.', 'SYSTEM');
+  };
+
+  const requestTenantMoveOut = (requestId: string, details: { moveOutDate: string; moveOutReason: string }) => {
+    setTenantConnectionRequests(prev => {
+      const updated = prev.map(r => r.id === requestId ? {
+        ...r,
+        status: 'MOVE_OUT_PENDING' as const,
+        moveOutDate: details.moveOutDate,
+        moveOutReason: details.moveOutReason
+      } : r);
+      try { localStorage.setItem('staywise_tenant_connections', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    addNotification('Move-Out Requested', 'Move-out inspection & deposit settlement requested. Awaiting owner verification.', 'RENT');
+  };
+
+  const verifyAndSettleMoveOut = (requestId: string, details: { inspectionNotes?: string; depositSettledAmount?: number }) => {
+    const req = tenantConnectionRequests.find(r => r.id === requestId);
+    if (!req) return;
+
+    setTenants(prev => prev.filter(t => t.userId !== req.tenantUserId && t.email?.toLowerCase() !== req.tenantEmail.toLowerCase()));
+
+    setTenantConnectionRequests(prev => {
+      const updated = prev.map(r => r.id === requestId ? {
+        ...r,
+        status: 'MOVED_OUT' as const,
+        inspectionNotes: details.inspectionNotes || 'MoveFlow inspection completed. Deposit balance settled.',
+        depositSettledAmount: details.depositSettledAmount ?? req.depositAmount
+      } : r);
+      try { localStorage.setItem('staywise_tenant_connections', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+
+    addNotification('Move-Out Verified', `Move-out verified for ${req.tenantName}. Unit ${req.unitNumber} is now marked vacant.`, 'RENT');
+  };
+
+  const addDelegate = (delegateData: Omit<AuthorizedDelegate, 'id' | 'invitedAt' | 'status'> & { status?: AuthorizedDelegate['status'] }) => {
+    const newDelegate: AuthorizedDelegate = {
+      ...delegateData,
+      id: `del-${Date.now()}`,
+      status: delegateData.status || 'Active',
+      invitedAt: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      addedDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      permissions: delegateData.permissions || [],
+      canWithdrawFunds: false // STRICT SECURITY: Delegates CANNOT withdraw funds! Only owner can withdraw!
+    };
+    setDelegates(prev => {
+      const updated = [newDelegate, ...prev];
+      try { localStorage.setItem('staywise_delegates', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    addNotification('Delegate Invited', `${newDelegate.name} (${newDelegate.role}) granted access. Fund withdrawals restricted to owner only.`, 'SYSTEM');
+  };
+
+  const updateDelegatePermissions = (id: string, permissions: string[]) => {
+    setDelegates(prev => {
+      const updated = prev.map(d => d.id === id ? {
+        ...d,
+        permissions,
+        canWithdrawFunds: false // ALWAYS enforce false
+      } : d);
+      try { localStorage.setItem('staywise_delegates', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    addNotification('Permissions Updated', 'Delegate access scope updated. Fund withdrawals restricted.', 'SYSTEM');
+  };
+
+  const revokeDelegate = (id: string) => {
+    setDelegates(prev => {
+      const updated = prev.map(d => d.id === id ? { ...d, status: 'Suspended' as const } : d);
+      try { localStorage.setItem('staywise_delegates', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    addNotification('Access Revoked', 'Delegate permissions have been revoked.', 'SYSTEM');
+  };
+
+  const addFoodMenuItem = (itemData: Omit<FoodMenuItem, 'id'>) => {
+    const newItem: FoodMenuItem = {
+      ...itemData,
+      id: `menu-${Date.now()}`
+    };
+    setFoodMenuItems(prev => {
+      const updated = [newItem, ...prev];
+      try { localStorage.setItem('staywise_food_menu', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    addNotification('Menu Item Added', `${newItem.mealType} (${newItem.dietaryType}) menu item added.`, 'RENT');
+  };
+
+  const deleteFoodMenuItem = (id: string) => {
+    setFoodMenuItems(prev => {
+      const updated = prev.filter(m => m.id !== id);
+      try { localStorage.setItem('staywise_food_menu', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    addNotification('Menu Item Removed', 'Menu item removed.', 'SYSTEM');
+  };
+
+  const addEstateAsset = (assetData: Omit<EstateAsset, 'id'>) => {
+    const newAsset: EstateAsset = {
+      ...assetData,
+      id: `ea-${Date.now()}`
+    };
+    setEstateAssets(prev => [newAsset, ...prev]);
+    addNotification('Campus Asset Registered', `${newAsset.name} (${newAsset.tag}) added to estate registry.`, 'SYSTEM');
+  };
+
+  const deleteEstateAsset = (id: string) => {
+    setEstateAssets(prev => prev.filter(a => a.id !== id));
+    addNotification('Asset Removed', 'Campus physical asset removed from registry.', 'SYSTEM');
+  };
+
+  const addStaffMember = (memberData: Omit<StaffMember, 'id'>) => {
+    const newStaff: StaffMember = {
+      ...memberData,
+      id: `staff-${Date.now()}`
+    };
+    setStaff(prev => [newStaff, ...prev]);
+    addNotification('Staff Member Added', `${newStaff.name} assigned as ${newStaff.role}.`, 'SYSTEM');
+  };
+
+  const deleteStaffMember = (id: string) => {
+    setStaff(prev => prev.filter(s => s.id !== id));
+    addNotification('Staff Removed', 'Staff member unassigned.', 'SYSTEM');
+  };
+
   const refreshSubscription = async () => {
     try {
       const res = await fetch('/api/subscription');
@@ -1607,7 +1872,24 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       approveProperty,
       influencerOffers,
       addInfluencerOffer,
-      toggleInfluencerOfferStatus
+      toggleInfluencerOfferStatus,
+      tenantConnectionRequests,
+      createTenantConnectionRequest,
+      approveTenantConnectionRequest,
+      rejectTenantConnectionRequest,
+      requestTenantMoveOut,
+      verifyAndSettleMoveOut,
+      delegates,
+      addDelegate,
+      updateDelegatePermissions,
+      revokeDelegate,
+      foodMenuItems,
+      addFoodMenuItem,
+      deleteFoodMenuItem,
+      addEstateAsset,
+      deleteEstateAsset,
+      addStaffMember,
+      deleteStaffMember
     }}>
       {children}
     </AppStateContext.Provider>
