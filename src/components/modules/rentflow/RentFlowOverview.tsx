@@ -32,6 +32,7 @@ import ViewElectricityBillDocumentModal from './ViewElectricityBillDocumentModal
 export default function RentFlowOverview() {
   const { 
     invoices, 
+    properties,
     ledger, 
     activeRole, 
     currentUser,
@@ -55,11 +56,11 @@ export default function RentFlowOverview() {
 
   const [isGenBillModalOpen, setIsGenBillModalOpen] = useState(false);
   const [newBillForm, setNewBillForm] = useState({
-    unitNumber: '302',
-    tenantName: 'Shyam Sundar',
-    meterNumber: 'MTR-BLR-8921-A',
-    previousReading: 1630,
-    currentReading: 1850,
+    unitNumber: '101',
+    tenantName: '',
+    meterNumber: 'MTR-BLR-001',
+    previousReading: 0,
+    currentReading: 0,
     ratePerUnit: 8.5,
     fixedCharges: 150,
     discom: 'BESCOM Bangalore'
@@ -252,8 +253,58 @@ export default function RentFlowOverview() {
     }
   ];
 
-  const allPaymentRows = activeRole === 'tenant' ? tenantPaymentRows : ownerPaymentRows;
-  const displayedLedger = activeRole === 'tenant' ? tenantLedger : ledger;
+  const isDemoAccount = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
+  const isDemoTenant = currentUser?.email === 'tenant@staywise.com' || currentUser?.id === 'user-tenant-shyam';
+
+  // Dynamically map real invoices from SQLite database scoped to the active role
+  const scopedInvoices = (activeRole === 'owner')
+    ? (isDemoAccount ? invoices : invoices.filter(inv => {
+        const ownerProps = properties.filter(p => p.ownerId === currentUser.id);
+        const ownerPropIds = ownerProps.map(p => p.id);
+        const ownerPropNames = ownerProps.map(p => p.name.toLowerCase());
+        return ownerPropIds.includes(inv.propertyId) || (inv.propertyName && ownerPropNames.includes(inv.propertyName.toLowerCase()));
+      }))
+    : (activeRole === 'tenant')
+    ? (isDemoTenant ? invoices : invoices.filter(inv => inv.tenantId === currentUser.id || (currentUser.name && inv.tenantName?.toLowerCase().includes(currentUser.name.toLowerCase()))))
+    : invoices;
+
+  const dynamicPaymentRows = scopedInvoices.length > 0 ? scopedInvoices.map(inv => ({
+    id: inv.id,
+    name: inv.tenantName,
+    initial: (inv.tenantName || 'T').charAt(0).toUpperCase(),
+    unit: `Unit ${inv.unitNumber}`,
+    property: inv.propertyName,
+    dueDate: inv.dueDate,
+    amount: inv.totalAmount,
+    status: (inv.status === 'Paid' ? 'Paid' : inv.status === 'Overdue' ? 'Overdue' : 'Pending') as 'Paid' | 'Pending' | 'Overdue',
+    paymentRail: inv.paymentMethod || 'UPI Instant (GPay)',
+    rawInvoice: inv
+  })) : ((activeRole === 'tenant' ? isDemoTenant : isDemoAccount) ? (activeRole === 'tenant' ? tenantPaymentRows : ownerPaymentRows) : []);
+
+  const allPaymentRows = dynamicPaymentRows;
+  
+  const displayedLedger = (activeRole === 'tenant')
+    ? (isDemoTenant ? tenantLedger : ledger.filter(l => (currentUser?.id && l.referenceId.includes(currentUser.id)) || (currentUser?.name && l.description.toLowerCase().includes(currentUser.name.toLowerCase()))))
+    : (isDemoAccount ? ledger : ledger.filter(l => {
+        const ownerProps = properties.filter(p => p.ownerId === currentUser?.id);
+        const propIds = ownerProps.map(p => p.id);
+        return propIds.some(pid => l.referenceId.includes(pid));
+      }));
+
+  const userElectricityBills = (activeRole === 'tenant')
+    ? (isDemoTenant
+        ? electricityBills.filter(b => b.unitNumber === '302')
+        : electricityBills.filter(b => {
+            const tenantUnits = scopedInvoices.map(i => i.unitNumber);
+            return (b as any).tenantId === currentUser?.id || (b.tenantName && currentUser?.name && b.tenantName.toLowerCase().includes(currentUser.name.toLowerCase())) || tenantUnits.includes(b.unitNumber);
+          }))
+    : (isDemoAccount
+        ? electricityBills
+        : electricityBills.filter(b => {
+            const ownerProps = properties.filter(p => p.ownerId === currentUser?.id);
+            const ownerPropIds = ownerProps.map(p => p.id);
+            return ownerPropIds.includes(b.propertyId);
+          }));
 
   const filteredRows = allPaymentRows.filter(row => {
     if (filter === 'PAID') return row.status === 'Paid';
@@ -267,38 +318,42 @@ export default function RentFlowOverview() {
   };
 
   const handlePayNowSim = (row: typeof allPaymentRows[0]) => {
-    const dummyInv = invoices.find(i => i.status === 'Due' || i.status === 'Overdue') || invoices[0];
-    setSelectedInvoiceForPay({
-      ...dummyInv,
-      tenantName: row.name,
-      unitNumber: row.unit,
-      totalAmount: row.amount
-    });
-    setIsPayRentOpen(true);
+    const matchingInv = ('rawInvoice' in row && (row as any).rawInvoice) 
+      ? (row as any).rawInvoice 
+      : (invoices.find(i => i.id === row.id) || invoices.find(i => i.status === 'Due' || i.status === 'Overdue') || invoices[0]);
+    if (matchingInv) {
+      setSelectedInvoiceForPay({
+        ...matchingInv,
+        tenantName: row.name,
+        unitNumber: row.unit.replace('Unit ', ''),
+        totalAmount: row.amount
+      });
+      setIsPayRentOpen(true);
+    }
   };
 
   return (
     <div className="space-y-6 pb-12 font-sans">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#e3e1d8]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D2DDD7]">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#19251f]">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#263238]">
             {activeRole === 'tenant' ? 'My Rent & Payments' : 'Payments & Collections'}
           </h1>
-          <div className="text-xs text-[#6e7972] font-semibold uppercase tracking-wider mt-0.5">
+          <div className="text-xs text-[#666666] font-semibold uppercase tracking-wider mt-0.5">
             {activeRole === 'tenant' 
-              ? 'Apartment 302 • Beach Road Luxury Apartments' 
-              : 'Real-time Escrow Inflows • Bengaluru & Kozhikode'}
+              ? (isDemoTenant ? 'Apartment 302 • Beach Road Luxury Apartments' : (scopedInvoices[0]?.propertyName ? `${scopedInvoices[0]?.propertyName} • Unit ${scopedInvoices[0]?.unitNumber}` : 'Tenant Billing & Receipts'))
+              : (isDemoAccount ? 'Real-time Escrow Inflows • Bengaluru & Kozhikode' : 'Real-time Escrow Inflows & Collections')}
           </div>
         </div>
 
         <div className="flex items-center gap-2.5 max-w-full overflow-x-auto pb-1">
           {/* Tab Switcher */}
-          <div className="flex items-center p-1 bg-white rounded-2xl border border-[#e3e1d8] text-xs whitespace-nowrap shrink-0">
+          <div className="flex items-center p-1 bg-white rounded-2xl border border-[#D2DDD7] text-xs whitespace-nowrap shrink-0">
             <button
               onClick={() => setActiveTab('OVERVIEW')}
               className={`px-3.5 py-1.5 rounded-xl font-bold transition ${
-                activeTab === 'OVERVIEW' ? 'bg-[#274235] text-white' : 'text-[#6e7972] hover:text-[#19251f]'
+                activeTab === 'OVERVIEW' ? 'bg-[#263238] text-white' : 'text-[#666666] hover:text-[#263238]'
               }`}
             >
               {activeRole === 'tenant' ? 'My Receipts' : 'Collections'}
@@ -306,7 +361,7 @@ export default function RentFlowOverview() {
             <button
               onClick={() => setActiveTab('LEDGER')}
               className={`px-3.5 py-1.5 rounded-xl font-bold transition ${
-                activeTab === 'LEDGER' ? 'bg-[#274235] text-white' : 'text-[#6e7972] hover:text-[#19251f]'
+                activeTab === 'LEDGER' ? 'bg-[#263238] text-white' : 'text-[#666666] hover:text-[#263238]'
               }`}
             >
               {activeRole === 'tenant' ? 'My Statement' : 'Double-Entry Ledger'}
@@ -314,7 +369,7 @@ export default function RentFlowOverview() {
             <button
               onClick={() => setActiveTab('ELECTRICITY')}
               className={`px-3.5 py-1.5 rounded-xl font-bold transition ${
-                activeTab === 'ELECTRICITY' ? 'bg-[#274235] text-white' : 'text-[#6e7972] hover:text-[#19251f]'
+                activeTab === 'ELECTRICITY' ? 'bg-[#263238] text-white' : 'text-[#666666] hover:text-[#263238]'
               }`}
             >
               {activeRole === 'tenant' ? 'My Electricity Bill' : 'Electricity Bills'}
@@ -323,7 +378,7 @@ export default function RentFlowOverview() {
               <button
                 onClick={() => setActiveTab('SCHEDULE')}
                 className={`px-3.5 py-1.5 rounded-xl font-bold transition ${
-                  activeTab === 'SCHEDULE' ? 'bg-[#274235] text-white' : 'text-[#6e7972] hover:text-[#19251f]'
+                  activeTab === 'SCHEDULE' ? 'bg-[#263238] text-white' : 'text-[#666666] hover:text-[#263238]'
                 }`}
               >
                 Auto Reminders
@@ -333,97 +388,124 @@ export default function RentFlowOverview() {
         </div>
       </div>
 
-      {activeTab === 'OVERVIEW' && (
-        <div className="space-y-6">
-          {/* Top 3 Metrics Cards */}
-          {activeRole === 'tenant' ? (
-            // Tenant-specific 3 Cards (Zero other people's data)
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="organic-card p-5 bg-gradient-to-br from-[#fdfbf3] to-white border-amber-200">
-                <span className="text-xs font-bold text-amber-800">Current Rent Due (Oct 2026)</span>
-                <div className="text-2xl sm:text-3xl font-black text-[#19251f] font-tabular mt-1">
-                  ₹28,700
-                </div>
-                <div className="text-[11px] text-amber-700 font-bold mt-2 flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" />
-                  <span>Due on Oct 5, 2026</span>
-                </div>
-              </div>
+      {activeTab === 'OVERVIEW' && (() => {
+        const tenantPendingInvoice = scopedInvoices.find(i => i.status === 'Due' || i.status === 'Overdue');
+        const tenantDueAmount = scopedInvoices.filter(i => i.status === 'Due' || i.status === 'Overdue').reduce((acc, i) => acc + i.totalAmount, 0);
+        const tenantDisplayDue = (isDemoTenant && scopedInvoices.length === 0) ? 28700 : tenantDueAmount;
+        const tenantDueDate = tenantPendingInvoice ? `Due on ${tenantPendingInvoice.dueDate}` : ((isDemoTenant && scopedInvoices.length === 0) ? 'Due on Oct 5, 2026' : 'No upcoming dues');
+        const tenantDepositAmount = scopedInvoices.length > 0 
+          ? (properties.find(p => p.id === scopedInvoices[0]?.propertyId)?.units?.find(u => u.unitNumber === scopedInvoices[0]?.unitNumber)?.depositAmount || 0)
+          : ((isDemoTenant && scopedInvoices.length === 0) ? 60000 : 0);
 
-              <div className="organic-card p-5 bg-gradient-to-br from-[#f0f8f4] to-white border-emerald-200">
-                <span className="text-xs font-bold text-emerald-800">Security Deposit in Escrow</span>
-                <div className="text-2xl sm:text-3xl font-black text-emerald-800 font-tabular mt-1">
-                  ₹60,000
-                </div>
-                <div className="text-[11px] text-emerald-700 font-bold mt-2 flex items-center gap-1">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  <span>Safe in Axis Nodal Escrow</span>
-                </div>
-              </div>
+        const totalCollected = scopedInvoices.filter(i => i.status === 'Paid').reduce((acc, i) => acc + i.totalAmount, 0);
+        const totalPending = scopedInvoices.filter(i => i.status === 'Due').reduce((acc, i) => acc + i.totalAmount, 0);
+        const totalOverdue = scopedInvoices.filter(i => i.status === 'Overdue').reduce((acc, i) => acc + i.totalAmount, 0);
 
-              <div className="organic-card p-5 bg-white">
-                <span className="text-xs font-bold text-[#6e7972]">Bank Autopay Status</span>
-                <div className="text-xl font-black text-[#19251f] mt-1">
-                  Active (Axis Bank)
-                </div>
-                <div className="text-[11px] text-[#274235] font-bold mt-2 flex items-center gap-1">
-                  <Zap className="h-3.5 w-3.5" />
-                  <span>Next auto-debit on 5th Oct</span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            // Owner / Admin 3 Metrics Cards
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="organic-card p-5 bg-gradient-to-br from-[#f0f8f4] to-white flex flex-col justify-between h-32 relative overflow-hidden border-emerald-200">
-                <div>
-                  <div className="text-2xl sm:text-3xl font-black text-emerald-800 font-tabular tracking-tight">
-                    ₹13.4L
-                  </div>
-                  <div className="text-xs font-bold text-emerald-700 mt-0.5">
-                    Collected
-                  </div>
-                </div>
-                <div>
-                  <div className="w-full bg-emerald-100 h-2 rounded-full overflow-hidden">
-                    <div className="bg-emerald-600 h-full rounded-full w-[91%] shadow-sm"></div>
-                  </div>
-                </div>
-              </div>
+        const displayCollected = (isDemoAccount && scopedInvoices.length === 0) ? 1340000 : totalCollected;
+        const displayPending = (isDemoAccount && scopedInvoices.length === 0) ? 120000 : totalPending;
+        const displayOverdue = (isDemoAccount && scopedInvoices.length === 0) ? 40000 : totalOverdue;
 
-              <div className="organic-card p-5 bg-gradient-to-br from-[#fdfbf3] to-white flex flex-col justify-between h-32 relative overflow-hidden border-amber-200">
-                <div>
-                  <div className="text-2xl sm:text-3xl font-black text-amber-800 font-tabular tracking-tight">
-                    ₹1.2L
-                  </div>
-                  <div className="text-xs font-bold text-amber-700 mt-0.5">
-                    Pending
-                  </div>
-                </div>
-                <div>
-                  <div className="w-full bg-amber-100 h-2 rounded-full overflow-hidden">
-                    <div className="bg-amber-600 h-full rounded-full w-[24%] shadow-sm"></div>
-                  </div>
-                </div>
-              </div>
+        const totalExpected = displayCollected + displayPending + displayOverdue;
+        const collectedWidth = totalExpected > 0 ? Math.round((displayCollected / totalExpected) * 100) : 0;
+        const pendingWidth = totalExpected > 0 ? Math.round((displayPending / totalExpected) * 100) : 0;
+        const overdueWidth = totalExpected > 0 ? Math.round((displayOverdue / totalExpected) * 100) : 0;
 
-              <div className="organic-card p-5 bg-gradient-to-br from-[#fdf4f4] to-white flex flex-col justify-between h-32 relative overflow-hidden border-rose-200">
-                <div>
-                  <div className="text-2xl sm:text-3xl font-black text-rose-800 font-tabular tracking-tight">
-                    ₹0.4L
+        const formatLakhs = (val: number) => {
+          if (val >= 100000) return `₹${(val / 100000).toFixed(1)}L`;
+          return `₹${val.toLocaleString('en-IN')}`;
+        };
+
+        return (
+          <div className="space-y-6">
+            {/* Top 3 Metrics Cards */}
+            {activeRole === 'tenant' ? (
+              // Tenant-specific 3 Cards (Zero other people's data)
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="organic-card p-5 bg-gradient-to-br from-[#ffffff] to-white border-amber-200">
+                  <span className="text-xs font-bold text-amber-800">Current Rent Due</span>
+                  <div className="text-2xl sm:text-3xl font-black text-[#263238] font-tabular mt-1">
+                    ₹{tenantDisplayDue.toLocaleString('en-IN')}
                   </div>
-                  <div className="text-xs font-bold text-rose-700 mt-0.5">
-                    Overdue
+                  <div className="text-[11px] text-amber-700 font-bold mt-2 flex items-center gap-1">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>{tenantDueDate}</span>
                   </div>
                 </div>
-                <div>
-                  <div className="w-full bg-rose-100 h-2 rounded-full overflow-hidden">
-                    <div className="bg-rose-600 h-full rounded-full w-[12%] shadow-sm"></div>
+
+                <div className="organic-card p-5 bg-gradient-to-br from-[#f5f5f5] to-white border-emerald-200">
+                  <span className="text-xs font-bold text-emerald-800">Security Deposit in Escrow</span>
+                  <div className="text-2xl sm:text-3xl font-black text-emerald-800 font-tabular mt-1">
+                    ₹{tenantDepositAmount.toLocaleString('en-IN')}
+                  </div>
+                  <div className="text-[11px] text-emerald-700 font-bold mt-2 flex items-center gap-1">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    <span>{tenantDepositAmount > 0 ? 'Safe in Axis Nodal Escrow' : 'Zero deposit held'}</span>
+                  </div>
+                </div>
+
+                <div className="organic-card p-5 bg-white">
+                  <span className="text-xs font-bold text-[#666666]">Bank Autopay Status</span>
+                  <div className="text-xl font-black text-[#263238] mt-1">
+                    {isDemoTenant ? 'Active (Axis Bank)' : (scopedInvoices.length > 0 ? 'Active Mandate' : 'No Mandate Active')}
+                  </div>
+                  <div className="text-[11px] text-[#263238] font-bold mt-2 flex items-center gap-1">
+                    <Zap className="h-3.5 w-3.5" />
+                    <span>{isDemoTenant ? 'Next auto-debit on 5th Oct' : (tenantPendingInvoice ? `Due on ${tenantPendingInvoice.dueDate}` : 'Autopay ready')}</span>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            ) : (
+              // Owner / Admin 3 Metrics Cards
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="organic-card p-5 bg-gradient-to-br from-[#f5f5f5] to-white flex flex-col justify-between h-32 relative overflow-hidden border-emerald-200">
+                  <div>
+                    <div className="text-2xl sm:text-3xl font-black text-emerald-800 font-tabular tracking-tight">
+                      {formatLakhs(displayCollected)}
+                    </div>
+                    <div className="text-xs font-bold text-emerald-700 mt-0.5">
+                      Collected
+                    </div>
+                  </div>
+                  <div>
+                    <div className="w-full bg-emerald-100 h-2 rounded-full overflow-hidden">
+                      <div className="bg-emerald-600 h-full rounded-full shadow-sm" style={{ width: `${collectedWidth}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="organic-card p-5 bg-gradient-to-br from-[#ffffff] to-white flex flex-col justify-between h-32 relative overflow-hidden border-amber-200">
+                  <div>
+                    <div className="text-2xl sm:text-3xl font-black text-amber-800 font-tabular tracking-tight">
+                      {formatLakhs(displayPending)}
+                    </div>
+                    <div className="text-xs font-bold text-amber-700 mt-0.5">
+                      Pending
+                    </div>
+                  </div>
+                  <div>
+                    <div className="w-full bg-amber-100 h-2 rounded-full overflow-hidden">
+                      <div className="bg-amber-600 h-full rounded-full shadow-sm" style={{ width: `${pendingWidth}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="organic-card p-5 bg-gradient-to-br from-[#fff0f0] to-white flex flex-col justify-between h-32 relative overflow-hidden border-rose-200">
+                  <div>
+                    <div className="text-2xl sm:text-3xl font-black text-rose-800 font-tabular tracking-tight">
+                      {formatLakhs(displayOverdue)}
+                    </div>
+                    <div className="text-xs font-bold text-rose-700 mt-0.5">
+                      Overdue
+                    </div>
+                  </div>
+                  <div>
+                    <div className="w-full bg-rose-100 h-2 rounded-full overflow-hidden">
+                      <div className="bg-rose-600 h-full rounded-full shadow-sm" style={{ width: `${overdueWidth}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
           {/* Filter Pills */}
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -434,8 +516,8 @@ export default function RentFlowOverview() {
                   onClick={() => setFilter(f as any)}
                   className={`px-3.5 py-1.5 rounded-2xl text-xs font-bold transition ${
                     filter === f 
-                      ? 'bg-[#274235] text-white shadow-sm' 
-                      : 'bg-white text-[#6e7972] hover:text-[#19251f] border border-[#e3e1d8]'
+                      ? 'bg-[#263238] text-white shadow-sm' 
+                      : 'bg-white text-[#666666] hover:text-[#263238] border border-[#D2DDD7]'
                   }`}
                 >
                   {f === 'ALL' ? (activeRole === 'tenant' ? 'All My Payments' : 'All Payments') : f}
@@ -443,127 +525,147 @@ export default function RentFlowOverview() {
               ))}
             </div>
 
-            <span className="text-xs text-[#6e7972] font-semibold">
+            <span className="text-xs text-[#666666] font-semibold">
               Showing {filteredRows.length} rent records
             </span>
           </div>
 
           {/* Payment Rows */}
-          <div className="space-y-3">
-            {filteredRows.map((row) => (
-              <div
-                key={row.id}
-                className="organic-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition hover:border-[#274235]/40"
-              >
-                {/* Left: Avatar + Tenant Name + Room & Due Date */}
-                <div className="flex items-center gap-4">
-                  <div className="h-11 w-11 rounded-2xl bg-[#eef3f0] border border-[#274235]/20 flex items-center justify-center font-black text-[#274235] text-sm shadow-inner shrink-0">
-                    {row.initial}
-                  </div>
-
-                  <div>
-                    <h3 className="font-extrabold text-[#19251f] text-sm sm:text-base">
-                      {row.name}
-                    </h3>
-                    <div className="text-xs text-[#6e7972] mt-0.5 flex items-center gap-1.5">
-                      <span className="font-semibold text-[#19251f]">{row.unit}</span>
-                      <span>•</span>
-                      <span>{row.dueDate}</span>
-                      <span className="hidden md:inline">• {row.property}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: Amount + Status Badge + 1-Click Actions */}
-                <div className="flex items-center justify-between sm:justify-end gap-5 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#eeece5]">
-                  <div className="sm:text-right">
-                    <div className="text-base sm:text-lg font-black text-[#19251f] font-tabular">
-                      ₹{row.amount.toLocaleString('en-IN')}
-                    </div>
-                    <div className="text-xs font-bold mt-0.5">
-                      <span className={`capitalize ${
-                        row.status === 'Paid' 
-                          ? 'text-emerald-700' 
-                          : row.status === 'Pending' 
-                          ? 'text-amber-700' 
-                          : 'text-rose-700'
-                      }`}>
-                        {row.status}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    {row.status === 'Paid' ? (
-                      <button
-                        onClick={() => {
-                          const paidInv = invoices.find(i => i.status === 'Paid') || invoices[0];
-                          setSelectedReceiptInvoice({
-                            ...paidInv,
-                            tenantName: row.name,
-                            unitNumber: row.unit,
-                            totalAmount: row.amount
-                          });
-                        }}
-                        className="px-3.5 py-2 rounded-xl bg-[#f4f3ef] hover:bg-[#274235] hover:text-white text-[#19251f] text-xs font-bold border border-[#e3e1d8] flex items-center gap-1.5 transition shadow-sm"
-                      >
-                        <Download className="h-3.5 w-3.5" />
-                        <span>Download Receipt</span>
-                      </button>
-                    ) : (
-                      <>
-                        {activeRole !== 'tenant' ? (
-                          <>
-                            <button
-                              onClick={() => handleSendReminder(row.name)}
-                              className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold border border-amber-200 flex items-center gap-1.5 transition"
-                              title="Send polite WhatsApp alert"
-                            >
-                              <Send className="h-3.5 w-3.5" />
-                              <span className="hidden sm:inline">WhatsApp</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                addNotification('Payment Recorded', `Marked ₹${row.amount.toLocaleString('en-IN')} as collected offline for ${row.name}.`, 'RENT');
-                                alert(`Recorded offline payment of ₹${row.amount.toLocaleString('en-IN')} for ${row.name}.`);
-                              }}
-                              className="px-3.5 py-1.5 rounded-xl bg-[#f4f3ef] hover:bg-[#274235] hover:text-white text-[#19251f] text-xs font-bold border border-[#e3e1d8] flex items-center gap-1 transition"
-                              title="Record cash or direct bank transfer"
-                            >
-                              <span>Record Offline</span>
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={() => handlePayNowSim(row)}
-                            className="px-4 py-2 rounded-xl bg-[#274235] hover:bg-[#1e352a] text-white text-xs font-bold shadow-md shadow-[#274235]/20 transition"
-                          >
-                            Pay Rent Now
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
+          {filteredRows.length === 0 ? (
+            <div className="py-12 text-center bg-white rounded-3xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
+              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#263238] flex items-center justify-center mx-auto">
+                <Receipt className="h-6 w-6 text-[#263238]" />
               </div>
-            ))}
-          </div>
+              <h3 className="text-base font-extrabold text-[#263238]">
+                {activeRole === 'tenant' ? 'No rent invoices found' : 'No rent collections recorded yet'}
+              </h3>
+              <p className="text-xs text-[#666666] max-w-md mx-auto">
+                {activeRole === 'tenant'
+                  ? 'You have no current or pending rent invoices. Invoices generated by your landlord or property manager will appear here.'
+                  : 'Once you add properties and onboard tenants, automated monthly rent schedules, UPI payment links, and reconciliation receipts will appear here.'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredRows.map((row) => (
+                <div
+                  key={row.id}
+                  className="organic-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition hover:border-[#263238]/40"
+                >
+                  {/* Left: Avatar + Tenant Name + Room & Due Date */}
+                  <div className="flex items-center gap-4">
+                    <div className="h-11 w-11 rounded-2xl bg-[#E8F0EC] border border-[#263238]/20 flex items-center justify-center font-black text-[#263238] text-sm shadow-inner shrink-0">
+                      {row.initial}
+                    </div>
+
+                    <div>
+                      <h3 className="font-extrabold text-[#263238] text-sm sm:text-base">
+                        {row.name}
+                      </h3>
+                      <div className="text-xs text-[#666666] mt-0.5 flex items-center gap-1.5">
+                        <span className="font-semibold text-[#263238]">{row.unit}</span>
+                        <span>•</span>
+                        <span>{row.dueDate}</span>
+                        <span className="hidden md:inline">• {row.property}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Amount + Status Badge + 1-Click Actions */}
+                  <div className="flex items-center justify-between sm:justify-end gap-5 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#E0E0E0]">
+                    <div className="sm:text-right">
+                      <div className="text-base sm:text-lg font-black text-[#263238] font-tabular">
+                        ₹{row.amount.toLocaleString('en-IN')}
+                      </div>
+                      <div className="text-xs font-bold mt-0.5">
+                        <span className={`capitalize ${
+                          row.status === 'Paid' 
+                            ? 'text-emerald-700' 
+                            : row.status === 'Pending' 
+                            ? 'text-amber-700' 
+                            : 'text-rose-700'
+                        }`}>
+                          {row.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2">
+                      {row.status === 'Paid' ? (
+                        <button
+                          onClick={() => {
+                            const paidInv = invoices.find(i => i.status === 'Paid') || invoices[0];
+                            setSelectedReceiptInvoice({
+                              ...paidInv,
+                              tenantName: row.name,
+                              unitNumber: row.unit,
+                              totalAmount: row.amount
+                            });
+                          }}
+                          className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] text-xs font-bold border border-[#D2DDD7] flex items-center gap-1.5 transition shadow-sm shrink-0"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">Download Receipt</span>
+                          <span className="sm:hidden text-[11px]">Receipt</span>
+                        </button>
+                      ) : (
+                        <>
+                          {activeRole !== 'tenant' ? (
+                            <>
+                              <button
+                                onClick={() => handleSendReminder(row.name)}
+                                className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold border border-amber-200 flex items-center gap-1.5 transition shrink-0"
+                                title="Send polite WhatsApp alert"
+                              >
+                                <Send className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">WhatsApp</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  addNotification('Payment Recorded', `Marked ₹${row.amount.toLocaleString('en-IN')} as collected offline for ${row.name}.`, 'RENT');
+                                  alert(`Recorded offline payment of ₹${row.amount.toLocaleString('en-IN')} for ${row.name}.`);
+                                }}
+                                className="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] text-xs font-bold border border-[#D2DDD7] flex items-center gap-1 transition shrink-0"
+                                title="Record cash or direct bank transfer"
+                              >
+                                <span className="hidden sm:inline">Record Offline</span>
+                                <span className="sm:hidden text-[11px]">Offline</span>
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => handlePayNowSim(row)}
+                              className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold shadow-md shadow-[#263238]/20 transition shrink-0"
+                            >
+                              <span className="hidden sm:inline">Pay Rent Now</span>
+                              <span className="sm:hidden text-[11px]">Pay Now</span>
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+        );
+      })()}
 
       {/* TAB 2: Immutable Double-Entry Ledger */}
       {activeTab === 'LEDGER' && (
         <div className="organic-card p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-extrabold text-[#19251f] flex items-center gap-2">
-                <Database className="h-4 w-4 text-[#274235]" />
+              <h3 className="text-sm font-extrabold text-[#263238] flex items-center gap-2">
+                <Database className="h-4 w-4 text-[#263238]" />
                 <span>{activeRole === 'tenant' ? 'My Statement & Transaction Ledger' : 'Statutory Double-Entry Ledger'}</span>
               </h3>
-              <p className="text-[11px] text-[#6e7972]">
+              <p className="text-[11px] text-[#666666]">
                 {activeRole === 'tenant' 
-                  ? 'All rent transfers, security deposit receipts, and utility payments for Unit 302'
+                  ? (isDemoTenant ? 'All rent transfers, security deposit receipts, and utility payments for Unit 302' : 'All your personal rent transfers, security deposit receipts, and utility payments')
                   : 'Balance is never the single source of truth. Every transaction logs an immutable debit/credit trail.'}
               </p>
             </div>
@@ -574,7 +676,7 @@ export default function RentFlowOverview() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#f7f6f2] text-[#6e7972] border-b border-[#e3e1d8] text-[11px] font-bold uppercase tracking-wider">
+              <thead className="bg-[#E8F0EC] text-[#666666] border-b border-[#D2DDD7] text-[11px] font-bold uppercase tracking-wider">
                 <tr>
                   <th className="py-2.5 px-3">Entry ID</th>
                   <th className="py-2.5 px-3">Timestamp</th>
@@ -585,31 +687,41 @@ export default function RentFlowOverview() {
                   <th className="py-2.5 px-3 text-center">Settlement</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#eeece5] text-[#19251f]">
-                {displayedLedger.map(entry => (
-                  <tr key={entry.id} className="hover:bg-[#fbfbfa]">
-                    <td className="py-2.5 px-3 font-mono text-[11px] text-[#6e7972]">{entry.id}</td>
-                    <td className="py-2.5 px-3 text-[#6e7972] whitespace-nowrap">{entry.timestamp}</td>
-                    <td className="py-2.5 px-3 font-bold">{entry.description}</td>
-                    <td className="py-2.5 px-3 text-[#6e7972] text-[11px]">{entry.account}</td>
-                    <td className="py-2.5 px-3">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        entry.type === 'CREDIT' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {entry.type}
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3 text-right font-black font-tabular">
-                      ₹{entry.amount.toLocaleString('en-IN')}
-                    </td>
-                    <td className="py-2.5 px-3 text-center">
-                      <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-bold">
-                        <CheckCircle2 className="h-3 w-3" />
-                        {entry.settlementStatus}
-                      </span>
+              <tbody className="divide-y divide-[#E0E0E0] text-[#263238]">
+                {displayedLedger.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center">
+                      <Database className="h-8 w-8 text-[#D2DDD7] mx-auto mb-2 opacity-50" />
+                      <p className="text-xs font-bold text-[#666666]">No ledger transactions recorded yet</p>
+                      <p className="text-[11px] text-[#999999] mt-0.5">Transactions will appear automatically as rent and deposit entries are settled.</p>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  displayedLedger.map(entry => (
+                    <tr key={entry.id} className="hover:bg-[#ffffff]">
+                      <td className="py-2.5 px-3 font-mono text-[11px] text-[#666666]">{entry.id}</td>
+                      <td className="py-2.5 px-3 text-[#666666] whitespace-nowrap">{entry.timestamp}</td>
+                      <td className="py-2.5 px-3 font-bold">{entry.description}</td>
+                      <td className="py-2.5 px-3 text-[#666666] text-[11px]">{entry.account}</td>
+                      <td className="py-2.5 px-3">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          entry.type === 'CREDIT' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {entry.type}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-black font-tabular">
+                        ₹{entry.amount.toLocaleString('en-IN')}
+                      </td>
+                      <td className="py-2.5 px-3 text-center">
+                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-bold">
+                          <CheckCircle2 className="h-3 w-3" />
+                          {entry.settlementStatus}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -620,53 +732,53 @@ export default function RentFlowOverview() {
       {activeTab === 'SCHEDULE' && activeRole !== 'tenant' && (
         <div className="organic-card p-6 space-y-4">
           <div>
-            <h3 className="text-sm font-extrabold text-[#19251f]">Automated Rent Reminders Schedule</h3>
-            <p className="text-[11px] text-[#6e7972]">
+            <h3 className="text-sm font-extrabold text-[#263238]">Automated Rent Reminders Schedule</h3>
+            <p className="text-[11px] text-[#666666]">
               Configurable schedule across WhatsApp, SMS, Email, and Push Notifications
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <div className="p-4 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] space-y-3">
-              <span className="font-extrabold text-[#19251f] flex items-center gap-2">
-                <Clock className="h-4 w-4 text-[#274235]" />
+            <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-3">
+              <span className="font-extrabold text-[#263238] flex items-center gap-2">
+                <Clock className="h-4 w-4 text-[#263238]" />
                 <span>Pre-Due Date Reminders</span>
               </span>
-              <div className="space-y-2 text-[#19251f]">
-                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#e3e1d8]">
+              <div className="space-y-2 text-[#263238]">
+                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#D2DDD7]">
                   <span>7 days before due date</span>
                   <span className="text-emerald-700 font-bold">Active (WhatsApp + Email)</span>
                 </div>
-                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#e3e1d8]">
+                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#D2DDD7]">
                   <span>3 days before due date</span>
                   <span className="text-emerald-700 font-bold">Active (WhatsApp + SMS)</span>
                 </div>
-                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#e3e1d8]">
+                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#D2DDD7]">
                   <span>1 day before due date</span>
                   <span className="text-emerald-700 font-bold">Active (Push + WhatsApp)</span>
                 </div>
-                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#e3e1d8] font-bold">
+                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#D2DDD7] font-bold">
                   <span>Due Date Morning (09:00 AM)</span>
-                  <span className="text-[#274235]">Active (Instant UPI QR)</span>
+                  <span className="text-[#263238]">Active (Instant UPI QR)</span>
                 </div>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] space-y-3">
-              <span className="font-extrabold text-[#19251f] flex items-center gap-2">
+            <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-3">
+              <span className="font-extrabold text-[#263238] flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-rose-600" />
                 <span>Overdue Escalation Workflow</span>
               </span>
-              <div className="space-y-2 text-[#19251f]">
-                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#e3e1d8]">
+              <div className="space-y-2 text-[#263238]">
+                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#D2DDD7]">
                   <span>1 day overdue</span>
                   <span className="text-amber-700 font-bold">Polite WhatsApp Alert</span>
                 </div>
-                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#e3e1d8]">
+                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#D2DDD7]">
                   <span>3 days overdue</span>
                   <span className="text-amber-700 font-bold">SMS + Manager Notification</span>
                 </div>
-                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#e3e1d8]">
+                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#D2DDD7]">
                   <span>7 days overdue</span>
                   <span className="text-rose-700 font-bold">Formal Overdue Escalation Notice</span>
                 </div>
@@ -682,13 +794,13 @@ export default function RentFlowOverview() {
           {/* Header Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="text-base font-extrabold text-[#19251f] flex items-center gap-2">
+              <h3 className="text-base font-extrabold text-[#263238] flex items-center gap-2">
                 <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
-                <span>{activeRole === 'tenant' ? 'My Apartment 302 Electricity Bill' : 'Electricity & Sub-Meter Utility Billing'}</span>
+                <span>{activeRole === 'tenant' ? (isDemoTenant ? 'My Unit 302 Electricity Bill' : 'My Electricity & Power Bills') : 'Electricity & Sub-Meter Utility Billing'}</span>
               </h3>
-              <p className="text-xs text-[#6e7972] mt-0.5">
+              <p className="text-xs text-[#666666] mt-0.5">
                 {activeRole === 'tenant'
-                  ? 'Official BESCOM power readings, tariff breakdown, and direct WhatsApp sharing'
+                  ? 'Official utility power readings, tariff breakdown, and direct WhatsApp sharing'
                   : 'Track individual unit sub-meters, compute power bills, and dispatch WhatsApp payment links'}
               </p>
             </div>
@@ -700,7 +812,7 @@ export default function RentFlowOverview() {
                     setPreselectedUnitForUpload(null);
                     setIsUploadBillModalOpen(true);
                   }}
-                  className="px-4 py-2.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white text-xs font-bold shadow-md shadow-[#274235]/20 transition flex items-center gap-1.5"
+                  className="px-4 py-2.5 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold shadow-md shadow-[#263238]/20 transition flex items-center gap-1.5"
                 >
                   <UploadCloud className="h-4 w-4" />
                   <span>Upload Bill to Tenant</span>
@@ -708,7 +820,7 @@ export default function RentFlowOverview() {
 
                 <button
                   onClick={() => setIsGenBillModalOpen(true)}
-                  className="px-3.5 py-2.5 rounded-2xl bg-white hover:bg-[#f4f3ef] border border-[#e3e1d8] text-[#19251f] text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                  className="px-3.5 py-2.5 rounded-2xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Generate Bill</span>
@@ -718,55 +830,73 @@ export default function RentFlowOverview() {
           </div>
 
           {/* 3 Metric Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="organic-card p-5">
-              <span className="text-xs font-semibold text-[#6e7972]">Units Consumed (This Month)</span>
-              <div className="text-2xl font-black text-[#19251f] font-tabular mt-1">
-                {activeRole === 'tenant' ? '210 kWh' : '710 kWh'}
-              </div>
-              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full mt-2 inline-block">
-                Sub-meters Calibrated
-              </span>
-            </div>
+          {(() => {
+            const totalUnitsConsumed = userElectricityBills.reduce((acc, b) => acc + (b.unitsConsumed || 0), 0);
+            const totalPowerDues = userElectricityBills.filter(b => b.status === 'Due').reduce((acc, b) => acc + b.totalAmount, 0);
+            const earliestDueBill = userElectricityBills.find(b => b.status === 'Due');
 
-            <div className="organic-card p-5">
-              <span className="text-xs font-semibold text-[#6e7972]">Tariff Rate / Unit</span>
-              <div className="text-2xl font-black text-[#19251f] font-tabular mt-1">
-                ₹8.50 <span className="text-xs font-normal text-[#6e7972]">/ kWh</span>
-              </div>
-              <span className="text-[11px] font-bold text-[#274235] bg-[#eef3f0] px-2 py-0.5 rounded-full mt-2 inline-block">
-                Govt Regulated Discom Rate
-              </span>
-            </div>
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="organic-card p-5">
+                  <span className="text-xs font-semibold text-[#666666]">Units Consumed (This Month)</span>
+                  <div className="text-2xl font-black text-[#263238] font-tabular mt-1">
+                    {totalUnitsConsumed} kWh
+                  </div>
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full mt-2 inline-block">
+                    {userElectricityBills.length > 0 ? 'Sub-meters Calibrated' : 'Zero Active Meters'}
+                  </span>
+                </div>
 
-            <div className="organic-card p-5">
-              <span className="text-xs font-semibold text-[#6e7972]">
-                {activeRole === 'tenant' ? 'Your Outstanding Bill' : 'Total Power Dues'}
-              </span>
-              <div className="text-2xl font-black text-amber-700 font-tabular mt-1">
-                {activeRole === 'tenant' ? '₹1,935' : '₹3,445'}
+                <div className="organic-card p-5">
+                  <span className="text-xs font-semibold text-[#666666]">Tariff Rate / Unit</span>
+                  <div className="text-2xl font-black text-[#263238] font-tabular mt-1">
+                    ₹8.50 <span className="text-xs font-normal text-[#666666]">/ kWh</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-[#263238] bg-[#E8F0EC] px-2 py-0.5 rounded-full mt-2 inline-block">
+                    Govt Regulated Discom Rate
+                  </span>
+                </div>
+
+                <div className="organic-card p-5">
+                  <span className="text-xs font-semibold text-[#666666]">
+                    {activeRole === 'tenant' ? 'Your Outstanding Bill' : 'Total Power Dues'}
+                  </span>
+                  <div className="text-2xl font-black text-amber-700 font-tabular mt-1">
+                    ₹{totalPowerDues.toLocaleString('en-IN')}
+                  </div>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full mt-2 inline-block ${
+                    earliestDueBill ? 'text-amber-800 bg-amber-50' : 'text-emerald-800 bg-emerald-50'
+                  }`}>
+                    {earliestDueBill ? `Due: ${earliestDueBill.dueDate}` : 'All dues cleared'}
+                  </span>
+                </div>
               </div>
-              <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full mt-2 inline-block">
-                Due: 15 Oct 2026
-              </span>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* Electricity Bills List */}
           <div className="organic-card overflow-hidden">
-            <div className="p-4 border-b border-[#eeece5] bg-[#fbfbfa] flex items-center justify-between">
-              <span className="font-extrabold text-xs text-[#19251f]">
-                {activeRole === 'tenant' ? 'Apartment 302 Billing History' : 'All Unit Power Meters'}
+            <div className="p-4 border-b border-[#E0E0E0] bg-[#ffffff] flex items-center justify-between">
+              <span className="font-extrabold text-xs text-[#263238]">
+                {activeRole === 'tenant' ? (isDemoTenant ? 'Apartment 302 Billing History' : 'My Unit Billing History') : 'All Unit Power Meters'}
               </span>
-              <span className="text-[11px] text-[#6e7972]">BESCOM Discom Provider</span>
+              <span className="text-[11px] text-[#666666]">BESCOM Discom Provider</span>
             </div>
 
-            <div className="divide-y divide-[#eeece5]">
-              {(activeRole === 'tenant' 
-                ? electricityBills.filter(b => b.unitNumber === '302') 
-                : electricityBills
-              ).map((bill) => (
-                <div key={bill.id} className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-[#fbfbfa] transition">
+            <div className="divide-y divide-[#E0E0E0]">
+              {userElectricityBills.length === 0 ? (
+                <div className="p-12 text-center">
+                  <Zap className="h-8 w-8 text-[#D2DDD7] mx-auto mb-2 opacity-50" />
+                  <p className="text-xs font-bold text-[#666666]">No electricity or utility bills found</p>
+                  <p className="text-[11px] text-[#999999] mt-0.5">
+                    {activeRole === 'tenant'
+                      ? 'Utility bills uploaded by your property manager will appear here.'
+                      : 'Generate or upload sub-meter bills for your units above.'}
+                  </p>
+                </div>
+              ) : (
+                userElectricityBills.map((bill) => (
+                <div key={bill.id} className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-[#ffffff] transition">
                   <div className="flex items-center gap-3.5">
                     <div className="h-11 w-11 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center shrink-0">
                       <Zap className="h-5 w-5 fill-current" />
@@ -774,7 +904,7 @@ export default function RentFlowOverview() {
 
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-[#19251f] text-sm sm:text-base">
+                        <span className="font-extrabold text-[#263238] text-sm sm:text-base">
                           Unit {bill.unitNumber} • {bill.tenantName}
                         </span>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -790,14 +920,14 @@ export default function RentFlowOverview() {
                         )}
                       </div>
 
-                      <div className="text-xs text-[#6e7972] mt-0.5 flex flex-wrap items-center gap-2">
-                        <span>Meter: <b className="font-mono text-[#19251f]">{bill.meterNumber}</b></span>
+                      <div className="text-xs text-[#666666] mt-0.5 flex flex-wrap items-center gap-2">
+                        <span>Meter: <b className="font-mono text-[#263238]">{bill.meterNumber}</b></span>
                         <span>•</span>
                         <span>Reading: {bill.previousReading} → {bill.currentReading} ({bill.unitsConsumed} kWh)</span>
                         <span>•</span>
                         <span>Due: {bill.dueDate}</span>
                         {bill.notes && (
-                          <span className="text-[11px] text-[#6e7972] italic hidden lg:inline">
+                          <span className="text-[11px] text-[#666666] italic hidden lg:inline">
                             • &ldquo;{bill.notes}&rdquo;
                           </span>
                         )}
@@ -805,12 +935,12 @@ export default function RentFlowOverview() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between md:justify-end gap-4 pt-2 md:pt-0 border-t md:border-t-0 border-[#eeece5]">
+                  <div className="flex items-center justify-between md:justify-end gap-4 pt-2 md:pt-0 border-t md:border-t-0 border-[#E0E0E0]">
                     <div className="text-left md:text-right">
-                      <div className="text-base sm:text-lg font-black text-[#19251f] font-tabular">
+                      <div className="text-base sm:text-lg font-black text-[#263238] font-tabular">
                         ₹{bill.totalAmount.toLocaleString('en-IN')}
                       </div>
-                      <div className="text-[10px] text-[#6e7972]">
+                      <div className="text-[10px] text-[#666666]">
                         ({bill.unitsConsumed} × ₹{bill.ratePerUnit} + ₹{bill.fixedCharges} fixed)
                       </div>
                     </div>
@@ -821,10 +951,10 @@ export default function RentFlowOverview() {
                           setSelectedBillForDocView(bill);
                           setIsViewDocModalOpen(true);
                         }}
-                        className="px-3 py-2 rounded-xl bg-white hover:bg-[#f4f3ef] border border-[#e3e1d8] text-[#19251f] text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
+                        className="px-3 py-2 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
                         title="View and download official scanned Discom bill document"
                       >
-                        <FileText className="h-3.5 w-3.5 text-[#274235]" />
+                        <FileText className="h-3.5 w-3.5 text-[#263238]" />
                         <span>View Bill</span>
                       </button>
 
@@ -841,7 +971,7 @@ export default function RentFlowOverview() {
                         activeRole === 'tenant' ? (
                           <button
                             onClick={() => handlePayElectricityBill(bill)}
-                            className="px-4 py-2 rounded-xl bg-[#274235] hover:bg-[#1e352a] text-white text-xs font-bold shadow-md shadow-[#274235]/20 transition"
+                            className="px-4 py-2 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold shadow-md shadow-[#263238]/20 transition"
                           >
                             Pay (UPI)
                           </button>
@@ -851,7 +981,7 @@ export default function RentFlowOverview() {
                               updateElectricityBill(bill.id, { status: 'Paid', paidDate: 'Today' });
                               addNotification('Electricity Bill Cleared', `Unit ${bill.unitNumber} marked as settled offline.`, 'RENT');
                             }}
-                            className="px-3.5 py-2 rounded-xl bg-[#f4f3ef] hover:bg-[#274235] hover:text-white text-[#19251f] text-xs font-bold border border-[#e3e1d8] transition"
+                            className="px-3.5 py-2 rounded-xl bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] text-xs font-bold border border-[#D2DDD7] transition"
                           >
                             Mark Paid
                           </button>
@@ -864,7 +994,7 @@ export default function RentFlowOverview() {
                     </div>
                   </div>
                 </div>
-              ))}
+              )))}
             </div>
           </div>
         </div>
@@ -873,13 +1003,13 @@ export default function RentFlowOverview() {
       {/* Generate Electricity Bill Modal */}
       {isGenBillModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white border border-[#e3e1d8] rounded-3xl p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-2 border-b border-[#eeece5]">
+          <div className="w-full max-w-md bg-white border border-[#D2DDD7] rounded-3xl p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-2 border-b border-[#E0E0E0]">
               <div className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
-                <h3 className="font-extrabold text-base text-[#19251f]">Generate Unit Electricity Bill</h3>
+                <h3 className="font-extrabold text-base text-[#263238]">Generate Unit Electricity Bill</h3>
               </div>
-              <button onClick={() => setIsGenBillModalOpen(false)} className="text-[#6e7972] hover:text-[#19251f]">
+              <button onClick={() => setIsGenBillModalOpen(false)} className="text-[#666666] hover:text-[#263238]">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -887,95 +1017,95 @@ export default function RentFlowOverview() {
             <form onSubmit={handleGenerateBillSubmit} className="space-y-3.5 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#19251f] font-semibold mb-1">Unit Number</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Unit Number</label>
                   <input
                     type="text"
                     required
                     value={newBillForm.unitNumber}
                     onChange={(e) => setNewBillForm({ ...newBillForm, unitNumber: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[#19251f] font-semibold mb-1">Tenant Name</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Tenant Name</label>
                   <input
                     type="text"
                     required
                     value={newBillForm.tenantName}
                     onChange={(e) => setNewBillForm({ ...newBillForm, tenantName: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[#19251f] font-semibold mb-1">Meter ID & Discom</label>
+                <label className="block text-[#263238] font-semibold mb-1">Meter ID & Discom</label>
                 <input
                   type="text"
                   required
                   value={newBillForm.meterNumber}
                   onChange={(e) => setNewBillForm({ ...newBillForm, meterNumber: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#19251f] font-semibold mb-1">Previous Reading (kWh)</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Previous Reading (kWh)</label>
                   <input
                     type="number"
                     required
                     value={newBillForm.previousReading}
                     onChange={(e) => setNewBillForm({ ...newBillForm, previousReading: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[#19251f] font-semibold mb-1">Current Reading (kWh)</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Current Reading (kWh)</label>
                   <input
                     type="number"
                     required
                     value={newBillForm.currentReading}
                     onChange={(e) => setNewBillForm({ ...newBillForm, currentReading: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#19251f] font-semibold mb-1">Tariff Rate (₹/kWh)</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Tariff Rate (₹/kWh)</label>
                   <input
                     type="number"
                     step="0.1"
                     required
                     value={newBillForm.ratePerUnit}
                     onChange={(e) => setNewBillForm({ ...newBillForm, ratePerUnit: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[#19251f] font-semibold mb-1">Fixed Meter Charge (₹)</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Fixed Meter Charge (₹)</label>
                   <input
                     type="number"
                     required
                     value={newBillForm.fixedCharges}
                     onChange={(e) => setNewBillForm({ ...newBillForm, fixedCharges: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                   />
                 </div>
               </div>
 
-              <div className="p-3 rounded-2xl bg-[#eef3f0] border border-[#274235]/20 flex justify-between items-center text-xs">
-                <span className="text-[#6e7972]">Estimated Bill Total:</span>
-                <span className="text-base font-black text-[#274235] font-tabular">
+              <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#263238]/20 flex justify-between items-center text-xs">
+                <span className="text-[#666666]">Estimated Bill Total:</span>
+                <span className="text-base font-black text-[#263238] font-tabular">
                   ₹{Math.max(0, Math.round((newBillForm.currentReading - newBillForm.previousReading) * newBillForm.ratePerUnit + newBillForm.fixedCharges)).toLocaleString('en-IN')}
                 </span>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs shadow-md shadow-[#274235]/20 transition"
+                className="w-full py-3 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white font-bold text-xs shadow-md shadow-[#263238]/20 transition"
               >
                 Create Bill & Ready WhatsApp Share
               </button>

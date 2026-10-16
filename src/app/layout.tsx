@@ -19,9 +19,9 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Staywise — Operating System for Rental & Real Estate Assets",
-  description: "The complete property operating system for landlords, property managers, tenants, and estates. Manage the full asset lifecycle: Vacant → Listed → Rent → Maintenance → Renewal.",
-  keywords: ["Property Operating System", "RentFlow", "PropOS", "Real Estate Management", "Tenant Onboarding", "EstateOS", "Staywise"],
+  title: "Staywise — Your Property. Your Control. One Platform.",
+  description: "Staywise helps property owners manage their properties, tenants, rent, maintenance, documents, expenses, and property performance in one simple place.",
+  keywords: ["Property Management", "Tenant Management", "Rent Collection", "PG Management", "Real Estate Software", "Staywise"],
 };
 
 export default function RootLayout({
@@ -34,7 +34,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className="min-h-full bg-[#edece6] text-[#19251f] flex flex-col selection:bg-[#274235]/20 selection:text-[#274235]">
+      <body className="min-h-full bg-[#F7F8F6] text-[#263238] flex flex-col selection:bg-[#163B36] selection:text-white">
         {children}
       </body>
     </html>

@@ -18,13 +18,20 @@ import {
 } from 'lucide-react';
 
 export default function MaintenanceList() {
-  const { tickets, approveTicket, setIsCreateTicketOpen, activeRole, currentUser } = useAppState();
+  const { tickets, properties, approveTicket, setIsCreateTicketOpen, activeRole, currentUser } = useAppState();
   const [selectedTicketForPhotos, setSelectedTicketForPhotos] = useState<MaintenanceTicket | null>(null);
   const [filter, setFilter] = useState<'ALL' | 'OPEN' | 'APPROVAL' | 'COMPLETED'>('ALL');
 
-  // If activeRole is tenant, show ONLY tickets for the tenant's own unit (Apt 302)
-  const roleFilteredTickets = activeRole === 'tenant'
-    ? tickets.filter(t => t.unitNumber === '302' || t.tenantName?.toLowerCase().includes('shyam'))
+  // Role-scoped tickets: Owners see tickets for their properties, tenants see their own requests
+  const roleFilteredTickets = (activeRole === 'owner' && currentUser.id && currentUser.id !== 'user-owner-vikram')
+    ? tickets.filter(t => {
+        const ownerProps = properties.filter(p => p.ownerId === currentUser.id);
+        const ownerPropIds = ownerProps.map(p => p.id);
+        const ownerPropNames = ownerProps.map(p => p.name.toLowerCase());
+        return ownerPropIds.includes(t.propertyId) || (t.propertyName && ownerPropNames.includes(t.propertyName.toLowerCase()));
+      })
+    : (activeRole === 'tenant' && currentUser.name)
+    ? tickets.filter(t => t.tenantName?.toLowerCase().includes(currentUser.name.toLowerCase()) || (currentUser.email && t.tenantName?.toLowerCase().includes(currentUser.email.split('@')[0])))
     : tickets;
 
   const filteredTickets = roleFilteredTickets.filter(t => {
@@ -37,17 +44,17 @@ export default function MaintenanceList() {
   return (
     <div className="space-y-6 pb-12 font-sans">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#e3e1d8]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D2DDD7]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#19251f]">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#263238]">
               {activeRole === 'tenant' ? 'My Maintenance Requests' : 'Maintenance Triage & Work Orders'}
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#eef3f0] text-[#274235] font-bold border border-[#274235]/20">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#263238] font-bold border border-[#263238]/20">
               {roleFilteredTickets.length} Tickets Logged
             </span>
           </div>
-          <p className="text-xs text-[#6e7972] mt-0.5">
+          <p className="text-xs text-[#666666] mt-0.5">
             {activeRole === 'tenant' 
               ? 'Track real-time progress and photos for your apartment service requests'
               : 'Smart Approval Routing (< ₹2,000 Auto / > ₹2,000 Owner Approval) + Before/After Proof'}
@@ -57,7 +64,7 @@ export default function MaintenanceList() {
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => setIsCreateTicketOpen(true)}
-            className="px-4 py-2.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs shadow-md shadow-[#274235]/20 transition flex items-center gap-1.5"
+            className="px-4 py-2.5 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white font-bold text-xs shadow-md shadow-[#263238]/20 transition flex items-center gap-1.5"
           >
             <Plus className="h-4 w-4" />
             <span>Raise Ticket</span>
@@ -69,9 +76,9 @@ export default function MaintenanceList() {
       {activeRole !== 'tenant' ? (
         <div className="organic-card p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2.5">
-            <ShieldCheck className="h-5 w-5 text-[#274235] shrink-0" />
-            <div className="text-[#6e7972]">
-              <b className="text-[#19251f]">Operating Wallet Threshold Rule:</b> Quotes under ₹2,000 auto-assign to certified vendors. Quotes above ₹2,000 require 1-click owner approval.
+            <ShieldCheck className="h-5 w-5 text-[#263238] shrink-0" />
+            <div className="text-[#666666]">
+              <b className="text-[#263238]">Operating Wallet Threshold Rule:</b> Quotes under ₹2,000 auto-assign to certified vendors. Quotes above ₹2,000 require 1-click owner approval.
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -80,7 +87,7 @@ export default function MaintenanceList() {
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${
-                  filter === f ? 'bg-[#274235] text-white shadow-sm' : 'bg-[#f4f3ef] text-[#6e7972] hover:text-[#19251f]'
+                  filter === f ? 'bg-[#263238] text-white shadow-sm' : 'bg-[#E8F0EC] text-[#666666] hover:text-[#263238]'
                 }`}
               >
                 {f}
@@ -95,7 +102,7 @@ export default function MaintenanceList() {
               key={f}
               onClick={() => setFilter(f as any)}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
-                filter === f ? 'bg-[#274235] text-white shadow-sm' : 'bg-white border border-[#e3e1d8] text-[#6e7972] hover:text-[#19251f]'
+                filter === f ? 'bg-[#263238] text-white shadow-sm' : 'bg-white border border-[#D2DDD7] text-[#666666] hover:text-[#263238]'
               }`}
             >
               {f === 'ALL' ? 'All My Tickets' : f}
@@ -112,15 +119,15 @@ export default function MaintenanceList() {
             <div
               key={t.id}
               className={`organic-card p-5 space-y-3 ${
-                needsApproval ? 'border-amber-300 bg-[#fffdf7]' : ''
+                needsApproval ? 'border-amber-300 bg-[#ffffff]' : ''
               }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-mono text-[11px] text-[#6e7972] font-semibold">{t.ticketNumber}</span>
-                    <h3 className="font-extrabold text-[#19251f] text-sm sm:text-base">{t.title}</h3>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#f4f3ef] text-[#6e7972] font-semibold border border-[#e3e1d8]">
+                    <span className="font-mono text-[11px] text-[#666666] font-semibold">{t.ticketNumber}</span>
+                    <h3 className="font-extrabold text-[#263238] text-sm sm:text-base">{t.title}</h3>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#E8F0EC] text-[#666666] font-semibold border border-[#D2DDD7]">
                       {t.category}
                     </span>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -129,7 +136,7 @@ export default function MaintenanceList() {
                       {t.priority}
                     </span>
                   </div>
-                  <div className="text-[11px] text-[#6e7972] mt-1">
+                  <div className="text-[11px] text-[#666666] mt-1">
                     {t.propertyName} (Unit {t.unitNumber}) • Reported on {t.createdAt}
                   </div>
                 </div>
@@ -138,24 +145,24 @@ export default function MaintenanceList() {
                   <span className={`text-xs font-bold px-3 py-1 rounded-xl border ${
                     t.status === 'Completed' 
                       ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                      : 'bg-[#eef3f0] text-[#274235] border-[#274235]/20'
+                      : 'bg-[#E8F0EC] text-[#263238] border-[#263238]/20'
                   }`}>
                     {t.status}
                   </span>
                 </div>
               </div>
 
-              <p className="text-xs text-[#19251f] leading-relaxed bg-[#f7f6f2] p-3 rounded-2xl border border-[#e3e1d8]">
+              <p className="text-xs text-[#263238] leading-relaxed bg-[#E8F0EC] p-3 rounded-2xl border border-[#D2DDD7]">
                 {t.description}
               </p>
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 text-xs border-t border-[#eeece5]">
-                <div className="flex items-center gap-4 text-[#6e7972]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 text-xs border-t border-[#E0E0E0]">
+                <div className="flex items-center gap-4 text-[#666666]">
                   {activeRole !== 'tenant' && (
-                    <span>Estimated Quote: <b className="text-[#19251f] font-tabular font-bold">₹{t.estimatedCost.toLocaleString('en-IN')}</b></span>
+                    <span>Estimated Quote: <b className="text-[#263238] font-tabular font-bold">₹{t.estimatedCost.toLocaleString('en-IN')}</b></span>
                   )}
                   {t.vendorName && (
-                    <span>Assigned Partner: <b className="text-[#274235] font-bold">{t.vendorName}</b></span>
+                    <span>Assigned Partner: <b className="text-[#263238] font-bold">{t.vendorName}</b></span>
                   )}
                 </div>
 
@@ -164,7 +171,7 @@ export default function MaintenanceList() {
                   {(t.beforePhotoUrl || t.status === 'Completed') && (
                     <button
                       onClick={() => setSelectedTicketForPhotos(t)}
-                      className="px-3 py-1.5 rounded-xl bg-[#f4f3ef] hover:bg-[#274235] hover:text-white text-[#19251f] font-bold text-[11px] flex items-center gap-1.5 border border-[#e3e1d8] transition"
+                      className="px-3 py-1.5 rounded-xl bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] font-bold text-[11px] flex items-center gap-1.5 border border-[#D2DDD7] transition"
                     >
                       <Camera className="h-3.5 w-3.5" />
                       <span>Before / After Photos</span>
@@ -191,17 +198,17 @@ export default function MaintenanceList() {
       {/* Before / After Photo Comparison Modal */}
       {selectedTicketForPhotos && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl bg-white border border-[#e3e1d8] rounded-3xl shadow-2xl overflow-hidden p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#eeece5]">
+          <div className="w-full max-w-2xl bg-white border border-[#D2DDD7] rounded-3xl shadow-2xl overflow-hidden p-6 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E0E0E0]">
               <div>
-                <h3 className="text-base font-extrabold text-[#19251f]">Before & After Repair Proof</h3>
-                <p className="text-[11px] text-[#6e7972]">
+                <h3 className="text-base font-extrabold text-[#263238]">Before & After Repair Proof</h3>
+                <p className="text-[11px] text-[#666666]">
                   {selectedTicketForPhotos.ticketNumber} — {selectedTicketForPhotos.title}
                 </p>
               </div>
               <button 
                 onClick={() => setSelectedTicketForPhotos(null)}
-                className="text-[#6e7972] hover:text-[#19251f]"
+                className="text-[#666666] hover:text-[#263238]"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -210,7 +217,7 @@ export default function MaintenanceList() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <span className="text-xs font-bold text-rose-700">Before Repair (Damage Photo)</span>
-                <div className="h-48 w-full rounded-2xl bg-[#f4f3ef] border border-[#e3e1d8] overflow-hidden relative">
+                <div className="h-48 w-full rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] overflow-hidden relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=600"
@@ -225,7 +232,7 @@ export default function MaintenanceList() {
 
               <div className="space-y-1.5">
                 <span className="text-xs font-bold text-emerald-700">After Repair (Certified Restoration)</span>
-                <div className="h-48 w-full rounded-2xl bg-[#f4f3ef] border border-[#e3e1d8] overflow-hidden relative">
+                <div className="h-48 w-full rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] overflow-hidden relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600"
@@ -239,9 +246,9 @@ export default function MaintenanceList() {
               </div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-xs flex justify-between items-center text-[#6e7972]">
+            <div className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs flex justify-between items-center text-[#666666]">
               <span>Assigned Vendor: RapidCool Aircon (Certified)</span>
-              <span className="font-bold text-[#19251f]">Escrow Settled: ₹1,150</span>
+              <span className="font-bold text-[#263238]">Escrow Settled: ₹1,150</span>
             </div>
           </div>
         </div>

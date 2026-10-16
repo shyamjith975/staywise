@@ -123,6 +123,7 @@ export interface PropertyUnit {
 
 export interface Property {
   id: string;
+  ownerId?: string;
   name: string;
   type: PropertyType;
   portfolio: string;
@@ -146,6 +147,7 @@ export interface Property {
 
 export interface Tenant {
   id: string;
+  userId?: string;
   name: string;
   email: string;
   phone: string;
@@ -163,6 +165,18 @@ export interface Tenant {
   kycVerified: boolean;
   rewardsBalance: number;
   emergencyContact: string;
+  status?: 'Active' | 'Pending' | 'Moved Out' | 'Notice';
+  tenancyType?: 'PG' | 'Residential' | 'Commercial';
+  hasFood?: boolean;
+  roomSharing?: 'Single' | '2_Sharing' | '3_Sharing';
+  coTenantId?: string;
+  coTenantName?: string;
+  coTenantPhone?: string;
+  coTenantEmail?: string;
+  rentSharePercentage?: number;
+  aadhaarNumber?: string;
+  panNumber?: string;
+  documents?: { id: string; name: string; size?: string; date: string; type?: string; url?: string }[];
 }
 
 export type RentStatus = 
@@ -280,11 +294,11 @@ export interface EstateAsset {
 export interface StaffMember {
   id: string;
   name: string;
-  role: 'Security' | 'Caretaker' | 'Gardener' | 'Housekeeping' | 'Electrician' | 'Manager';
+  role: 'Security' | 'Caretaker' | 'Gardener' | 'Housekeeping' | 'Electrician' | 'Manager' | string;
   estateName: string;
   phone: string;
-  shift: 'Morning' | 'Evening' | 'Night' | 'Full-time';
-  attendanceStatus: 'Present' | 'On Leave' | 'Off Duty';
+  shift: 'Morning' | 'Evening' | 'Night' | 'Full-time' | string;
+  attendanceStatus: 'Present' | 'On Leave' | 'Off Duty' | string;
   monthlySalary: number;
 }
 
@@ -351,13 +365,16 @@ export interface Roommate {
 
 export interface AuthorizedDelegate {
   id: string;
+  ownerId?: string;
   name: string;
   email: string;
   phone: string;
   role: 'Accountant' | 'Property Manager' | 'Tax Auditor';
   permissions: string[];
-  addedDate: string;
+  addedDate?: string;
+  invitedAt?: string;
   status: 'Active' | 'Invited' | 'Suspended';
+  canWithdrawFunds?: boolean; // STRICT RULE: Must be false for delegates (only verified property owner can withdraw funds)
 }
 
 // ----------------------------------------------------
@@ -557,5 +574,168 @@ export interface InfluencerOffer {
   status: 'ACTIVE' | 'PAUSED' | 'EXPIRED';
   createdAt: string;
 }
+
+// ----------------------------------------------------
+// OWNER SUBSCRIPTION & ANTI-TAMPER SECURITY (Sections 47-50)
+// ----------------------------------------------------
+export type SubscriptionTierId = 'starter' | 'growth_pro' | 'enterprise';
+
+export interface SubscriptionPlan {
+  id: SubscriptionTierId;
+  name: string;
+  tagline: string;
+  monthlyPrice: number;
+  annualPrice: number;
+  maxUnits: number;
+  badge?: string;
+  popular?: boolean;
+  features: string[];
+}
+
+export interface SubscriptionInvoice {
+  invoiceId: string;
+  date: string;
+  amount: number;
+  currency: string;
+  planId: SubscriptionTierId;
+  planName: string;
+  billingCycle: 'monthly' | 'annual';
+  txnId: string;
+  paymentMethod: string;
+  status: 'PAID' | 'PENDING' | 'FAILED';
+  gstin?: string;
+  taxAmount: number;
+  downloadUrl?: string;
+}
+
+export interface OwnerSubscription {
+  id: string;
+  userId: string;
+  ownerName: string;
+  entityName: string;
+  planId: SubscriptionTierId;
+  planName: string;
+  status: 'ACTIVE' | 'EXPIRED' | 'TRIAL' | 'PAST_DUE' | 'CANCELLED';
+  billingCycle: 'monthly' | 'annual';
+  startDate: string;        // e.g. "2026-10-01"
+  endDate: string;          // e.g. "2027-10-01"
+  daysRemaining: number;
+  amount: number;
+  currency: string;
+  maxUnits: number;
+  currentUnits: number;
+  paymentMethod: string;
+  lastPaymentTxnId: string;
+  lastPaymentDate: string;
+  autoRenew: boolean;
+  gstin?: string;
+  tamperProofHash: string;  // SHA256 of immutable subscription parameters to prevent DB manipulation
+  history: SubscriptionInvoice[];
+  // 7-Day Free Trial & Autopay Fields
+  isTrial?: boolean;
+  trialDaysRemaining?: number;
+  trialEndsAt?: string;
+  canCancelBefore?: string;
+  autopayConnected?: boolean;
+  autopayMethod?: 'CARD' | 'BANK_MANDATE';
+  autopayMaskedDetails?: string;
+  firstChargeAmount?: number;
+  firstChargeDate?: string;
+}
+
+export interface SignedCheckoutSession {
+  sessionId: string;
+  sessionToken: string;
+  userId: string;
+  planId: SubscriptionTierId;
+  planName: string;
+  billingCycle: 'monthly' | 'annual';
+  authoritativeAmount: number;
+  currency: string;
+  nonce: string;
+  createdAt: number;
+  expiresAt: number;
+  signature: string;
+}
+
+export interface TrialSignupPayload {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  role: 'owner' | 'estate_manager';
+  portfolioName: string;
+  city: string;
+  planId: SubscriptionTierId;
+  billingCycle: 'monthly' | 'annual';
+  autopayMethod: 'CARD' | 'BANK_MANDATE';
+  cardDetails?: {
+    holderName: string;
+    cardNumberMasked: string;
+    expiry: string;
+    cardBrand?: string;
+  };
+  bankDetails?: {
+    accountHolder: string;
+    bankName: string;
+    accountNumberMasked: string;
+    ifsc: string;
+    mandateType?: 'E_NACH' | 'UPI_MANDATE';
+  };
+}
+
+export interface TenantConnectionRequest {
+  id: string;
+  tenantUserId: string;
+  tenantName: string;
+  tenantEmail: string;
+  tenantPhone: string;
+  ownerId?: string;
+  ownerCode?: string;
+  ownerEmail?: string;
+  ownerPhone?: string;
+  propertyId?: string;
+  propertyName?: string;
+  unitNumber: string;
+  monthlyRent: number;
+  depositAmount: number;
+  leaseStartDate: string;
+  status: 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'MOVE_OUT_PENDING' | 'MOVED_OUT';
+  createdAt: string;
+  moveOutDate?: string;
+  moveOutReason?: string;
+  inspectionNotes?: string;
+  depositSettledAmount?: number;
+  tenancyType?: 'PG' | 'Residential' | 'Commercial';
+  includeFoodPlan?: boolean;
+  hasFood?: boolean;
+  aadhaarNumber?: string;
+  panNumber?: string;
+  ekycVerified?: boolean;
+  documents?: { id: string; name: string; size?: string; date: string; type?: string; url?: string }[];
+  agreementUrl?: string;
+  coTenantName?: string;
+  coTenantPhone?: string;
+  coTenantEmail?: string;
+}
+
+export interface FoodMenuItem {
+  id: string;
+  propertyId?: string;
+  category?: string;
+  dayOfWeek?: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday' | 'Daily';
+  mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snacks';
+  menu?: string;
+  name?: string;
+  dietaryType?: 'Veg' | 'Non-Veg' | 'Jain' | 'Vegan';
+  dietaryTag?: string;
+  costPerMeal?: number;
+  price?: number;
+  vendor?: string;
+  availableTimings?: string;
+  description?: string;
+}
+
+
 
 

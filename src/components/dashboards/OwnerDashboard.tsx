@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { 
   Building2, 
@@ -9,7 +9,9 @@ import {
   Users, 
   Wallet, 
   CheckCircle2, 
-  Fingerprint, 
+  ThumbsUp,
+  Clock, 
+  Activity as ActivityIcon,
   ChevronDown, 
   Plus, 
   CreditCard, 
@@ -21,25 +23,24 @@ import {
   Upload,
   Download,
   X,
-  ExternalLink,
-  Shield,
-  UserPlus,
-  UserCheck,
-  Zap,
-  Share2,
-  UploadCloud,
+  Phone,
+  Video,
+  MoreVertical,
   Paperclip,
-  Sparkles,
-  BedDouble,
-  Briefcase,
-  Trees,
-  ArrowRight,
-  Clock,
-  AlertTriangle,
-  Percent,
+  Smile,
+  Mic,
+  Send,
+  Calendar as CalendarIcon,
+  MoreHorizontal,
+  Search,
   Check,
-  Pencil,
-  Trash2
+  Zap,
+  Trash2,
+  ExternalLink,
+  Laptop,
+  AlertTriangle,
+  Crown,
+  UserPlus
 } from 'lucide-react';
 import { AuthorizedDelegate } from '../../types';
 
@@ -62,6 +63,143 @@ interface StoredDocument {
   status: 'Verified' | 'Valid' | 'Active';
 }
 
+const DEMO_BANK_ACCOUNTS: BankAccount[] = [
+  {
+    id: 'bnk-1',
+    bankName: 'HDFC Bank',
+    accountNumber: '•••• •••• •••• 4910',
+    ifsc: 'HDFC0001842',
+    holderName: 'Vikram Singhania',
+    isPrimary: true,
+    status: 'Verified'
+  },
+  {
+    id: 'bnk-2',
+    bankName: 'Axis Bank Escrow Trust',
+    accountNumber: '•••• •••• •••• 9104',
+    ifsc: 'UTIB0000042',
+    holderName: 'Staywise Nodal / Escrow',
+    isPrimary: false,
+    status: 'Verified'
+  }
+];
+
+const DEMO_DOCUMENTS: StoredDocument[] = [
+  {
+    id: 'doc-1',
+    title: 'Title Deed (Beach Road Property)',
+    category: 'Ownership & Sale Deed',
+    size: '2.4 MB',
+    date: 'Verified Oct 2024',
+    status: 'Verified'
+  },
+  {
+    id: 'doc-2',
+    title: 'Municipal Property Tax 2025-26',
+    category: 'Tax & Assessment',
+    size: '480 KB',
+    date: 'Paid Aug 2026',
+    status: 'Valid'
+  },
+  {
+    id: 'doc-3',
+    title: 'Nil Encumbrance Certificate (EC)',
+    category: 'Statutory Registry',
+    size: '1.2 MB',
+    date: 'Valid till 2030',
+    status: 'Verified'
+  },
+  {
+    id: 'doc-4',
+    title: 'Comprehensive Building Insurance',
+    category: 'ICICI Lombard Policy',
+    size: '890 KB',
+    date: 'Active till Jun 2027',
+    status: 'Active'
+  }
+];
+
+const DEMO_DELEGATES: AuthorizedDelegate[] = [
+  {
+    id: 'del-1',
+    name: 'CA Rajesh K. (Kulkarni & Associates)',
+    email: 'rajesh.ca@auditfirm.in',
+    phone: '+91 98450 11928',
+    role: 'Accountant',
+    permissions: ['Financial Ledger', 'Bank Statements', 'Rent Invoices', 'Tax Reports (P&L)'],
+    addedDate: '15 Aug 2026',
+    status: 'Active'
+  },
+  {
+    id: 'del-2',
+    name: 'Arjun Das',
+    email: 'arjun.ops@staywise.com',
+    phone: '+91 94470 82910',
+    role: 'Property Manager',
+    permissions: ['Maintenance Work Orders', 'CRM Leads', 'Physical Visits', 'Tenant Handover'],
+    addedDate: '01 Sep 2026',
+    status: 'Active'
+  }
+];
+
+const DEMO_TASKS_LIST = [
+  {
+    id: 'tsk-1',
+    title: 'Monthly Rent Verification & Autopay Sync',
+    status: 'In progress',
+    statusColor: 'bg-[#163B36]',
+    hours: '4h',
+    icon: 'sparkles'
+  },
+  {
+    id: 'tsk-2',
+    title: 'BESCOM Electricity Meter OCR Scan (Unit 302)',
+    status: 'On hold',
+    statusColor: 'bg-[#263238]',
+    hours: '8h',
+    icon: 'search'
+  },
+  {
+    id: 'tsk-3',
+    title: 'Digital Tenancy Agreement (Aadhaar eSign)',
+    status: 'Done',
+    statusColor: 'bg-[#163B36]',
+    hours: '32h',
+    icon: 'code'
+  }
+];
+
+const DEMO_ACTIVITY_FEED = [
+  {
+    id: 'act-1',
+    name: 'Floyd Miles',
+    time: '10:15 AM',
+    action: 'Commented on Palm Grove Villa',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
+    type: 'message' as const,
+    text: "Hi! Rent for Unit 402 has been settled via UPI autopay. All meter readings verified.",
+    reaction: '👍'
+  },
+  {
+    id: 'act-2',
+    name: 'Guy Hawkins',
+    time: '10:15 AM',
+    action: 'Uploaded BESCOM Power Bill',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
+    type: 'file' as const,
+    fileName: 'BESCOM_Unit302_Oct.pdf',
+    fileSize: '420 Kb'
+  },
+  {
+    id: 'act-3',
+    name: 'Kristin Watson',
+    time: '10:15 AM',
+    action: 'Scheduled AC Inspection for Unit 108',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop',
+    type: 'text_only' as const
+  }
+];
+
 export default function OwnerDashboard() {
   const { 
     properties, 
@@ -69,7 +207,9 @@ export default function OwnerDashboard() {
     tickets, 
     leads, 
     currentUser, 
-    setIsAddPropertyOpen, 
+    activeRole,
+    setIsAddPropertyOpen,
+    setIsExistingTenantWizardOpen, 
     setActiveView,
     electricityBills,
     setIsUploadBillModalOpen,
@@ -81,95 +221,77 @@ export default function OwnerDashboard() {
     addNotification,
     setIsEditPropertyModalOpen,
     setPropertyToEdit,
-    deleteProperty
+    deleteProperty,
+    delegates: appDelegates,
+    tenantConnectionRequests,
+    approveTenantConnectionRequest,
+    rejectTenantConnectionRequest,
+    addDelegate,
+    revokeDelegate
   } = useAppState();
 
-  const [selectedMonth, setSelectedMonth] = useState('October 2026');
+  const isDemoAccount = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
+
+  // Navigation Filter Tabs
+  const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'bank_accounts' | 'documents' | 'delegates' | 'utilities'>('overview');
+
+  // Chart Tooltip Hover State
+  const [hoveredDay, setHoveredDay] = useState<'01' | '02' | '03' | '04' | '05' | '06' | '07'>('03');
+  const [selectedChartRange, setSelectedChartRange] = useState('01-07 May');
+
+  // Chat input state
+  const [chatMessage, setChatMessage] = useState('');
+  const [activityFeed, setActivityFeed] = useState(() => isDemoAccount ? DEMO_ACTIVITY_FEED : []);
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatMessage.trim()) return;
+    const newEntry = {
+      id: `act-${Date.now()}`,
+      name: currentUser.name || 'Owner',
+      time: 'Just now',
+      action: 'Sent a note to property team',
+      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
+      type: 'message' as const,
+      text: chatMessage,
+      reaction: ''
+    };
+    setActivityFeed([newEntry, ...activityFeed]);
+    setChatMessage('');
+  };
+
+  // Current Operations Tasks List
+  const [tasksList, setTasksList] = useState(() => isDemoAccount ? DEMO_TASKS_LIST : []);
+
+  // Heatmap & Property Filter
   const [heatmapFilter, setHeatmapFilter] = useState<'ALL' | 'HIGH_YIELD' | 'STABLE' | 'NEEDS_ATTENTION' | 'VACANT'>('ALL');
 
-  const heatmapCounts = React.useMemo(() => ({
-    all: properties.length,
-    highYield: properties.filter(p => p.expectedMonthlyRent >= 200000 || p.healthScore >= 92).length,
-    stable: properties.filter(p => p.totalUnits > 0 && (p.occupiedUnits / p.totalUnits) >= 0.95).length,
-    attention: properties.filter(p => p.healthScore < 90 || (p.totalUnits > 0 && (p.occupiedUnits / p.totalUnits) < 0.9) || p.pendingRent > 0).length,
-    vacant: properties.filter(p => p.occupiedUnits < p.totalUnits).length
-  }), [properties]);
+  // Bank Accounts State
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(() => isDemoAccount ? DEMO_BANK_ACCOUNTS : []);
 
-  const filteredProperties = React.useMemo(() => {
-    return properties.filter((prop) => {
-      const occRatio = prop.totalUnits > 0 ? prop.occupiedUnits / prop.totalUnits : 0;
-      if (heatmapFilter === 'ALL') return true;
-      if (heatmapFilter === 'HIGH_YIELD') return prop.expectedMonthlyRent >= 200000 || prop.healthScore >= 92;
-      if (heatmapFilter === 'STABLE') return occRatio >= 0.95;
-      if (heatmapFilter === 'NEEDS_ATTENTION') return prop.healthScore < 90 || occRatio < 0.9 || prop.pendingRent > 0;
-      if (heatmapFilter === 'VACANT') return prop.occupiedUnits < prop.totalUnits;
-      return true;
-    });
-  }, [properties, heatmapFilter]);
+  // Document Vault State
+  const [documents, setDocuments] = useState<StoredDocument[]>(() => isDemoAccount ? DEMO_DOCUMENTS : []);
 
-  // Bank Accounts State (User requested: remove card, add bank account for payments)
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([
-    {
-      id: 'bnk-1',
-      bankName: 'HDFC Bank',
-      accountNumber: '•••• •••• •••• 4910',
-      ifsc: 'HDFC0001842',
-      holderName: 'Vikram Singhania',
-      isPrimary: true,
-      status: 'Verified'
-    },
-    {
-      id: 'bnk-2',
-      bankName: 'Axis Bank Escrow Trust',
-      accountNumber: '•••• •••• •••• 9104',
-      ifsc: 'UTIB0000042',
-      holderName: 'Staywise Nodal / Vikram S.',
-      isPrimary: false,
-      status: 'Verified'
+  // Synchronize on user changes
+  useEffect(() => {
+    if (!isDemoAccount) {
+      setBankAccounts([]);
+      setDocuments([]);
+      setTasksList([]);
+      setActivityFeed([]);
+    } else {
+      setBankAccounts(DEMO_BANK_ACCOUNTS);
+      setDocuments(DEMO_DOCUMENTS);
+      setTasksList(DEMO_TASKS_LIST);
+      setActivityFeed(DEMO_ACTIVITY_FEED);
     }
-  ]);
+  }, [currentUser?.id, currentUser?.email, isDemoAccount]);
 
-  // Digital Document Wallet State (User requested: make a digital wallet for saving documents)
-  const [documents, setDocuments] = useState<StoredDocument[]>([
-    {
-      id: 'doc-1',
-      title: 'Title Deed (Beach Road Property)',
-      category: 'Ownership & Sale Deed',
-      size: '2.4 MB',
-      date: 'Verified Oct 2024',
-      status: 'Verified'
-    },
-    {
-      id: 'doc-2',
-      title: 'Municipal Property Tax 2025-26',
-      category: 'Tax & Assessment',
-      size: '480 KB',
-      date: 'Paid Aug 2026',
-      status: 'Valid'
-    },
-    {
-      id: 'doc-3',
-      title: 'Nil Encumbrance Certificate (EC)',
-      category: 'Statutory Registry',
-      size: '1.2 MB',
-      date: 'Valid till 2030',
-      status: 'Verified'
-    },
-    {
-      id: 'doc-4',
-      title: 'Comprehensive Building Insurance',
-      category: 'ICICI Lombard Policy',
-      size: '890 KB',
-      date: 'Active till Jun 2027',
-      status: 'Active'
-    }
-  ]);
-
-  // Modals for adding bank account & uploading document
+  // Modal States
   const [isAddBankModalOpen, setIsAddBankModalOpen] = useState(false);
   const [isUploadDocModalOpen, setIsUploadDocModalOpen] = useState(false);
+  const [isAddDelegateModalOpen, setIsAddDelegateModalOpen] = useState(false);
 
-  // New Bank Form State
   const [newBank, setNewBank] = useState({
     bankName: 'ICICI Bank',
     accountNumber: '',
@@ -178,37 +300,11 @@ export default function OwnerDashboard() {
     holderName: currentUser.name
   });
 
-  // New Document Form State
   const [newDoc, setNewDoc] = useState({
     title: '',
     category: 'Title Deed'
   });
 
-  // Authorized Delegates State (Accountants, Property Managers)
-  const [delegates, setDelegates] = useState<AuthorizedDelegate[]>([
-    {
-      id: 'del-1',
-      name: 'CA Rajesh K. (Kulkarni & Associates)',
-      email: 'rajesh.ca@auditfirm.in',
-      phone: '+91 98450 11928',
-      role: 'Accountant',
-      permissions: ['Financial Ledger', 'Bank Statements', 'Rent Invoices', 'Tax Reports (P&L)'],
-      addedDate: '15 Aug 2026',
-      status: 'Active'
-    },
-    {
-      id: 'del-2',
-      name: 'Arjun Das',
-      email: 'arjun.ops@staywise.com',
-      phone: '+91 94470 82910',
-      role: 'Property Manager',
-      permissions: ['Maintenance Work Orders', 'CRM Leads', 'Physical Visits', 'Tenant Handover'],
-      addedDate: '01 Sep 2026',
-      status: 'Active'
-    }
-  ]);
-
-  const [isAddDelegateModalOpen, setIsAddDelegateModalOpen] = useState(false);
   const [newDelegate, setNewDelegate] = useState({
     name: '',
     email: '',
@@ -220,1237 +316,1482 @@ export default function OwnerDashboard() {
     allowBankPayouts: false
   });
 
-  const handleAddDelegateSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newDelegate.name) return;
+  // Connect owner's user_id with properties
+  // Demo accounts see full catalog, real owners see their owned properties, and managers only see authorized portfolios
+  const activeDelegates: AuthorizedDelegate[] = isDemoAccount 
+    ? ((appDelegates && appDelegates.length > 0) ? appDelegates : DEMO_DELEGATES) 
+    : (appDelegates || []);
 
-    const perms: string[] = [];
-    if (newDelegate.allowLedger) perms.push('Financial Ledger');
-    if (newDelegate.allowInvoices) perms.push('Rent Invoices');
-    if (newDelegate.allowMaintenance) perms.push('Maintenance Work Orders');
-    if (newDelegate.allowBankPayouts) perms.push('Bank Payouts (Requires 2FA)');
+  const isManagerRole = activeRole === 'manager';
+  const managerDelegate = (appDelegates || []).find(d => 
+    (currentUser?.email && d.email.toLowerCase() === currentUser.email.toLowerCase()) && 
+    d.status === 'Active'
+  );
+  const isManagerAuthorized = isDemoAccount || Boolean(managerDelegate);
 
-    const added: AuthorizedDelegate = {
-      id: `del-${Date.now()}`,
-      name: newDelegate.name,
-      email: newDelegate.email,
-      phone: newDelegate.phone,
-      role: newDelegate.role,
-      permissions: perms,
-      addedDate: 'Today',
-      status: 'Active'
-    };
+  const ownerProperties = isDemoAccount
+    ? properties
+    : (activeRole === 'owner')
+    ? properties.filter(p => p.ownerId === currentUser.id)
+    : (isManagerRole && managerDelegate)
+    ? properties.filter(p => p.ownerId === managerDelegate.ownerId)
+    : [];
+  const activeProperties = ownerProperties;
+  const activeElectricityBills = isDemoAccount
+    ? electricityBills
+    : electricityBills.filter(b => activeProperties.some(p => p.id === b.propertyId));
 
-    setDelegates(prev => [added, ...prev]);
-    setIsAddDelegateModalOpen(false);
-    setNewDelegate({
-      name: '',
-      email: '',
-      phone: '',
-      role: 'Accountant',
-      allowLedger: true,
-      allowInvoices: true,
-      allowMaintenance: false,
-      allowBankPayouts: false
-    });
-    alert(`Access granted to ${added.name} as ${added.role}! Invitation dispatched to ${added.email}.`);
-  };
+  const pendingConnectionRequests = tenantConnectionRequests.filter(r => r.status === 'PENDING_APPROVAL');
 
-  const handleShareOwnerElectricityBill = (unit: string, amount: number, discom: string) => {
-    const text = `*Staywise Power Bill - Unit ${unit}*\nAmount: ₹${amount.toLocaleString('en-IN')}\nDiscom: ${discom}\nDue Date: 15 Oct 2026\n\nPay online to Staywise Escrow: staywise.escrow@axisbank`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
-  };
-
-  const handleAddBank = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newBank.accountNumber) return;
-    const last4 = newBank.accountNumber.slice(-4);
-    const createdBank: BankAccount = {
-      id: `bnk-${Date.now()}`,
-      bankName: newBank.bankName,
-      accountNumber: `•••• •••• •••• ${last4}`,
-      ifsc: newBank.ifsc.toUpperCase(),
-      holderName: newBank.holderName,
-      isPrimary: false,
-      status: 'Verified'
-    };
-    setBankAccounts([...bankAccounts, createdBank]);
-    setIsAddBankModalOpen(false);
-    setNewBank({
-      bankName: 'ICICI Bank',
-      accountNumber: '',
-      confirmAccountNumber: '',
-      ifsc: '',
-      holderName: currentUser.name
-    });
-  };
-
-  const handleUploadDoc = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newDoc.title) return;
-    const createdDoc: StoredDocument = {
-      id: `doc-${Date.now()}`,
-      title: newDoc.title,
-      category: newDoc.category,
-      size: '1.5 MB',
-      date: 'Just uploaded',
-      status: 'Verified'
-    };
-    setDocuments([...documents, createdDoc]);
-    setIsUploadDocModalOpen(false);
-    setNewDoc({ title: '', category: 'Title Deed' });
-  };
-
-  return (
-    <div className="space-y-5 sm:space-y-6 pb-12 font-sans">
-      
-      {/* SECTION 53: OWNER DAILY AI BRIEF */}
-      <div className="rounded-3xl p-4 sm:p-6 bg-gradient-to-br from-[#19251f] via-[#203429] to-[#274235] text-white shadow-xl relative overflow-hidden">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="space-y-2 max-w-2xl">
-            <h2 className="text-base sm:text-xl font-black text-white tracking-tight leading-snug">
-              Good morning, Vikram. ₹16.4L Monthly Expected Revenue • 91.2% Total Occupancy.
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 pt-2 text-xs">
-              <div className="bg-white/10 p-2.5 rounded-xl sm:rounded-2xl backdrop-blur-sm min-w-0">
-                <span className="text-[10px] text-teal-300 block font-medium truncate">Rent Collected</span>
-                <span className="text-xs sm:text-sm font-black text-white truncate block mt-0.5">₹15.9L / 16.4L</span>
-              </div>
-              <div className="bg-white/10 p-2.5 rounded-xl sm:rounded-2xl backdrop-blur-sm min-w-0">
-                <span className="text-[10px] text-amber-300 block font-medium truncate">Vacant Inventory</span>
-                <span className="text-xs sm:text-sm font-black text-white truncate block mt-0.5">3 Units • 2 Beds</span>
-              </div>
-              <div className="bg-white/10 p-2.5 rounded-xl sm:rounded-2xl backdrop-blur-sm min-w-0">
-                <span className="text-[10px] text-rose-300 block font-medium truncate">Active Overdue</span>
-                <span className="text-xs sm:text-sm font-black text-white truncate block mt-0.5">₹50k (4 Tenants)</span>
-              </div>
-              <div className="bg-white/10 p-2.5 rounded-xl sm:rounded-2xl backdrop-blur-sm min-w-0">
-                <span className="text-[10px] text-indigo-300 block font-medium truncate">Lease Expiry</span>
-                <span className="text-xs sm:text-sm font-black text-white truncate block mt-0.5">1 Office in 90d</span>
-              </div>
-            </div>
+  // If logged in as Manager without owner authorization, show dedicated waiting screen (zero mock data bleed)
+  if (isManagerRole && !isManagerAuthorized) {
+    return (
+      <div className="space-y-6 pb-12 font-sans text-[#263238]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D2DDD7]">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#263238]">
+              Property Manager Portal
+            </h1>
+            <p className="text-xs text-[#546E7A] mt-0.5">
+              Operations &amp; Field Oversight • Connected Landlord Portfolios
+            </p>
           </div>
-
-          <div className="flex flex-col sm:flex-row lg:flex-col gap-2 shrink-0 pt-1 lg:pt-0">
-            <button
-              onClick={() => setActiveView('rentflow')}
-              className="px-4 py-2.5 rounded-2xl bg-teal-500 hover:bg-teal-400 text-[#19251f] text-xs font-extrabold transition shadow-lg flex items-center justify-center gap-1.5"
-            >
-              <span>Review Collections</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={() => setActiveView('pg')}
-              className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition flex items-center justify-center gap-1.5"
-            >
-              <span>PG Bed Operations</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ROW 1: 4 Mini Stat Cards matching reference image */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {/* Card 1: Spent this month with mini vertical bar chart */}
-        <div className="organic-card p-4 sm:p-5 flex items-center justify-between gap-3">
-          <div className="space-y-1 min-w-0">
-            <span className="text-xs font-semibold text-[#6e7972] block truncate">Spent this month</span>
-            <div className="text-xl sm:text-2xl font-black text-[#19251f] font-tabular">
-              ₹28,450
-            </div>
-          </div>
-          <div className="flex items-end gap-1.5 h-10 px-2 py-1 shrink-0">
-            <div className="w-1.5 h-4 bg-[#759382] rounded-full"></div>
-            <div className="w-1.5 h-8 bg-[#274235] rounded-full"></div>
-            <div className="w-1.5 h-6 bg-[#759382] rounded-full"></div>
-            <div className="w-1.5 h-10 bg-[#274235] rounded-full"></div>
-            <div className="w-1.5 h-5 bg-[#759382] rounded-full"></div>
-          </div>
-        </div>
-
-        {/* Card 2: New clients / Leads with smooth sparkline curve */}
-        <div className="organic-card p-4 sm:p-5 flex items-center justify-between gap-3">
-          <div className="space-y-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full bg-[#eef3f0] flex items-center justify-center text-[#274235] shrink-0">
-                <Users className="h-3.5 w-3.5" />
-              </div>
-              <span className="text-xs font-semibold text-[#6e7972] truncate">New clients</span>
-            </div>
-            <div className="text-xl sm:text-2xl font-black text-[#19251f] font-tabular">
-              321
-            </div>
-          </div>
-          <svg className="w-16 h-8 shrink-0" viewBox="0 0 64 32" fill="none">
-            <path
-              d="M2 24 C16 24, 20 8, 34 8 C46 8, 50 18, 62 14"
-              stroke="#6e7972"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
-          </svg>
-        </div>
-
-        {/* Card 3: Earnings with coin icon */}
-        <div className="organic-card p-4 sm:p-5 flex items-center justify-between gap-3">
-          <div className="space-y-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full bg-[#fcf5e5] flex items-center justify-center text-[#c2811d] shrink-0">
-                <Wallet className="h-3.5 w-3.5" />
-              </div>
-              <span className="text-xs font-semibold text-[#6e7972] truncate">Earnings</span>
-            </div>
-            <div className="text-xl sm:text-2xl font-black text-[#19251f] font-tabular truncate">
-              ₹11,70,000
-            </div>
-          </div>
-          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full shrink-0 border border-emerald-200">
-            +8.4%
+          <span className="text-xs px-3 py-1 rounded-full font-bold bg-amber-50 text-amber-800 border border-amber-300">
+            Awaiting Owner Permission
           </span>
         </div>
 
-        {/* Card 4 (Solid Sage Green Card from reference image): Activity */}
-        <div className="organic-card-dark p-4 sm:p-5 flex items-center justify-between gap-3 relative overflow-hidden">
-          <div className="space-y-1 z-10 min-w-0">
-            <span className="text-xs font-medium text-emerald-200/80 block truncate">Activity</span>
-            <div className="text-xl sm:text-2xl font-black text-white font-tabular truncate">
-              ₹12,40,000
-            </div>
+        <div className="rounded-3xl bg-white border border-[#D2DDD7] p-8 shadow-sm max-w-2xl space-y-4">
+          <div className="h-12 w-12 rounded-2xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center font-bold">
+            <Users className="h-6 w-6" />
           </div>
-          <svg className="w-20 h-10 z-10 shrink-0" viewBox="0 0 80 40" fill="none">
-            <path
-              d="M4 28 C20 28, 25 10, 42 10 C58 10, 64 22, 76 18"
-              stroke="#ffffff"
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
-          </svg>
-          <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
-        </div>
-      </div>
-
-      {/* SECTION 40 & 41: OWNER PORTFOLIO COMMAND CENTER & PORTFOLIO HEATMAP */}
-      <div className="bg-white p-4 sm:p-6 rounded-3xl border border-[#e3e1d8] space-y-4 sm:space-y-5 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#19251f] text-white shrink-0">
-                Portfolio Matrix
-              </span>
-              <span className="text-xs text-slate-500 font-semibold">Total Assets: 8 Across 4 Pillars</span>
-            </div>
-            <h2 className="text-base sm:text-lg font-black text-slate-900 mt-1">Universal Portfolio Command Center</h2>
-            <p className="text-xs text-slate-500 mt-0.5">One unified operating dashboard aggregating Residential, PG Co-living, Commercial Hubs & Industrial Warehousing.</p>
-          </div>
-
-          {/* Heatmap Filters */}
-          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#f7f6f2] border border-[#e8e6de] self-stretch sm:self-auto overflow-x-auto no-scrollbar text-[11px] font-bold max-w-full">
-            {(['ALL', 'HIGH_YIELD', 'STABLE', 'NEEDS_ATTENTION', 'VACANT'] as const).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setHeatmapFilter(filter)}
-                className={`px-3 py-1.5 rounded-xl transition shrink-0 whitespace-nowrap flex items-center gap-1.5 ${
-                  heatmapFilter === filter 
-                    ? 'bg-[#19251f] text-white shadow-sm' 
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <span>
-                  {filter === 'ALL' && `All ${heatmapCounts.all} Assets`}
-                  {filter === 'HIGH_YIELD' && `High Yield (9%+) (${heatmapCounts.highYield})`}
-                  {filter === 'STABLE' && `Stable (95%+ Occ) (${heatmapCounts.stable})`}
-                  {filter === 'NEEDS_ATTENTION' && `Attention Needed (${heatmapCounts.attention})`}
-                  {filter === 'VACANT' && `Vacancy Loss (${heatmapCounts.vacant})`}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 4 Asset Pillar Summary Matrix (Section 40) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 bg-[#f7f6f2] p-3 sm:p-4 rounded-2xl sm:rounded-3xl border border-[#e8e6de]">
-          <div className="space-y-1 min-w-0 p-2 sm:p-0 rounded-xl bg-white/60 sm:bg-transparent border sm:border-0 border-[#e8e6de]">
-            <div className="flex items-center gap-1.5 text-xs font-extrabold text-emerald-800">
-              <Building2 className="h-4 w-4 shrink-0" />
-              <span className="truncate">Residential (5 Units)</span>
-            </div>
-            <div className="text-sm sm:text-base font-black text-slate-900">₹4.8L <span className="text-[10px] text-slate-500 font-normal">/mo</span></div>
-            <div className="text-[10px] text-emerald-700 font-semibold truncate">91.6% Occupancy • 1 Vacant</div>
-          </div>
-
-          <div className="space-y-1 min-w-0 p-2 sm:p-0 rounded-xl bg-white/60 sm:bg-transparent border sm:border-0 border-[#e8e6de]">
-            <div className="flex items-center gap-1.5 text-xs font-extrabold text-indigo-700">
-              <BedDouble className="h-4 w-4 shrink-0" />
-              <span className="truncate">PG & Co-Living (120 Beds)</span>
-            </div>
-            <div className="text-sm sm:text-base font-black text-slate-900">₹8.4L <span className="text-[10px] text-slate-500 font-normal">/mo</span></div>
-            <div className="text-[10px] text-indigo-700 font-semibold truncate">80.8% Occupancy • 97 Beds</div>
-          </div>
-
-          <div className="space-y-1 min-w-0 p-2 sm:p-0 rounded-xl bg-white/60 sm:bg-transparent border sm:border-0 border-[#e8e6de]">
-            <div className="flex items-center gap-1.5 text-xs font-extrabold text-amber-800">
-              <Briefcase className="h-4 w-4 shrink-0" />
-              <span className="truncate">Commercial & CAM</span>
-            </div>
-            <div className="text-sm sm:text-base font-black text-slate-900">₹6.1L <span className="text-[10px] text-slate-500 font-normal">/mo</span></div>
-            <div className="text-[10px] text-amber-700 font-semibold truncate">88.6% Occ • ₹18 CAM</div>
-          </div>
-
-          <div className="space-y-1 min-w-0 p-2 sm:p-0 rounded-xl bg-white/60 sm:bg-transparent border sm:border-0 border-[#e8e6de]">
-            <div className="flex items-center gap-1.5 text-xs font-extrabold text-teal-800">
-              <Trees className="h-4 w-4 shrink-0" />
-              <span className="truncate">Estates & Logistics</span>
-            </div>
-            <div className="text-sm sm:text-base font-black text-slate-900">₹5.7L <span className="text-[10px] text-slate-500 font-normal">/mo</span></div>
-            <div className="text-[10px] text-teal-700 font-semibold truncate">100% Leased • Solar Active</div>
-          </div>
-        </div>
-
-        {/* Portfolio Heatmap Cards (Section 41) */}
-        {filteredProperties.length === 0 ? (
-          <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-slate-300 text-slate-500 text-xs">
-            No properties found matching the selected filter ({heatmapFilter}).
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {filteredProperties.map((prop) => (
-              <div 
-                key={prop.id}
-                className="p-3.5 sm:p-4 rounded-2xl border border-slate-200 bg-white hover:border-[#274235] hover:shadow-md transition space-y-3 cursor-pointer group"
-                onClick={() => {
-                  if (prop.type === 'PG') setActiveView('pg');
-                  else if (prop.type === 'Commercial') setActiveView('commercial');
-                  else setActiveView('properties');
-                }}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                        {prop.type}
-                      </span>
-                      {prop.verificationStatus === 'PENDING' ? (
-                        <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-200">
-                          ⏳ Admin Doc Audit
-                        </span>
-                      ) : (
-                        <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
-                          ✓ Verified
-                        </span>
-                      )}
-                    </div>
-                    <h4 className="text-xs font-black text-slate-900 mt-1 truncate">{prop.name}</h4>
-                    <span className="text-[10px] text-slate-500 block truncate">{prop.city}, {prop.state}</span>
-                  </div>
-                  <div className={`h-3 w-3 rounded-full shrink-0 mt-1 ${
-                    prop.healthScore >= 92 ? 'bg-emerald-500' :
-                    prop.healthScore >= 88 ? 'bg-amber-500' : 'bg-rose-500'
-                  }`} title={`Health Score: ${prop.healthScore}/100`} />
-                </div>
-
-                <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100">
-                  <div>
-                    <div className="text-[9px] text-slate-400">Monthly Revenue</div>
-                    <div className="font-extrabold text-slate-900">₹{(prop.expectedMonthlyRent / 1000).toFixed(0)}k</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-[9px] text-slate-400">Occupancy</div>
-                    <div className="font-black text-emerald-700">
-                      {prop.totalUnits > 0 ? Math.round((prop.occupiedUnits / prop.totalUnits) * 100) : 0}%
-                    </div>
-                  </div>
-                </div>
-
-                {/* Edit & Remove Actions */}
-                <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-[11px]">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPropertyToEdit(prop);
-                      setIsEditPropertyModalOpen(true);
-                    }}
-                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-[#274235] hover:text-white text-slate-700 font-bold transition flex items-center gap-1"
-                    title="Edit property details"
-                  >
-                    <Pencil className="h-3 w-3" />
-                    <span>Edit</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (window.confirm(`Are you sure you want to remove "${prop.name}" from your portfolio?`)) {
-                        deleteProperty(prop.id);
-                      }
-                    }}
-                    className="px-2.5 py-1 rounded-lg text-rose-600 hover:bg-rose-50 font-bold transition flex items-center gap-1"
-                    title="Remove property"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                    <span>Remove</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* PORTFOLIO VACANCY COST & "MONEY LEAK" DETECTOR */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
-        
-        {/* Left Span 6: Vacancy Cost Analysis */}
-        <div className="lg:col-span-6 bg-white p-4 sm:p-6 rounded-3xl border border-[#e3e1d8] space-y-4 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider bg-rose-50 px-2.5 py-0.5 rounded-md">
-                Opportunity Cost
-              </span>
-              <h3 className="text-base font-extrabold text-slate-900 mt-1">Universal Vacancy Cost Engine</h3>
-            </div>
-            <span className="text-xs font-black text-rose-600 font-mono shrink-0 self-start sm:self-auto">
-              -₹2,08,900 Est. Lost Rent
-            </span>
-          </div>
-          <p className="text-xs text-slate-500">Daily opportunity cost of unleased inventory across residential flats, PG beds, commercial suites, and logistics bays.</p>
-
-          <div className="space-y-2.5">
-            {vacancyCosts.map((vac) => (
-              <div key={vac.id} className="p-3 sm:p-3.5 rounded-2xl bg-[#fbfbfa] border border-slate-200 flex items-center justify-between gap-2.5 text-xs">
-                <div className="space-y-0.5 min-w-0 flex-1">
-                  <div className="font-bold text-slate-900 truncate">{vac.unitOrBed}</div>
-                  <div className="text-[10px] text-slate-500 truncate">{vac.assetName} • Vacant for <span className="font-bold text-rose-700">{vac.daysVacant} days</span></div>
-                </div>
-                <div className="text-right shrink-0">
-                  <div className="text-[9px] text-slate-400">Lost Rent</div>
-                  <div className="font-black text-rose-600 font-mono">₹{vac.estimatedLostRent.toLocaleString('en-IN')}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Right Span 6: Money Leak Detector */}
-        <div className="lg:col-span-6 bg-white p-4 sm:p-6 rounded-3xl border border-amber-200 bg-amber-50/20 space-y-4 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
-              <div>
-                <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider bg-amber-100 px-2 py-0.5 rounded-md">
-                  AI Revenue Optimization
-                </span>
-                <h3 className="text-base font-extrabold text-slate-900 mt-0.5">"Money Leak" Detector</h3>
-              </div>
-            </div>
-            <span className="text-[11px] font-black text-amber-800 bg-amber-100 px-2.5 py-1 rounded-xl shrink-0 self-start sm:self-auto">
-              4 Active Leaks
-            </span>
-          </div>
-
-          <div className="space-y-2.5">
-            {moneyLeaks.map((leak) => (
-              <div key={leak.id} className="p-3 sm:p-3.5 rounded-2xl bg-white border border-amber-200 shadow-sm space-y-1.5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                  <span className="font-bold text-xs text-slate-900">{leak.title}</span>
-                  <span className="text-[10px] font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md shrink-0 self-start sm:self-auto">
-                    -₹{leak.estimatedLoss.toLocaleString('en-IN')}/mo
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-600 leading-relaxed">{leak.recommendation}</p>
-                <div className="pt-1 flex justify-end">
-                  <button
-                    onClick={() => addNotification('Mitigation Dispatched', `Applied AI optimization for: ${leak.title}`, 'SYSTEM')}
-                    className="text-[10px] font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 px-2.5 py-1 rounded-lg transition"
-                  >
-                    1-Click Mitigate Leak
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ROW 2: Big Balance Card + Earnings Radial Gauge + User Profile */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-5">
-        {/* Left Span 6: Big Balance Card with Inset Subcards and Continuous Wave Chart */}
-        <div className="md:col-span-2 lg:col-span-6 organic-card p-4 sm:p-6 flex flex-col justify-between space-y-4 sm:space-y-6">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-base font-extrabold text-[#19251f]">Balance</span>
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-[#eef3f0] px-2.5 py-0.5 rounded-full shrink-0">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-600"></span>
-                On track
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1 text-xs font-bold text-[#6e7972] bg-[#f4f3ef] px-3 py-1.5 rounded-xl cursor-pointer shrink-0">
-              <span>Monthly</span>
-              <ChevronDown className="h-3.5 w-3.5" />
-            </div>
-          </div>
-
-          {/* Two Inset Subcards from reference image - responsive grid & wrapping to prevent badge overlay */}
-          <div className="grid grid-cols-2 gap-2.5 sm:gap-4">
-            <div className="p-3 sm:p-4 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] space-y-1 min-w-0">
-              <span className="text-[11px] font-semibold text-[#6e7972] block truncate">Saves</span>
-              <div className="flex flex-wrap items-baseline gap-1 sm:gap-2">
-                <span className="text-lg sm:text-xl font-black text-[#19251f] font-tabular">43.50%</span>
-                <span className="text-[9px] sm:text-[10px] font-bold text-emerald-700 bg-emerald-100/70 px-1.5 py-0.5 rounded shrink-0">
-                  +2.45%
-                </span>
-              </div>
-            </div>
-
-            <div className="p-3 sm:p-4 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] space-y-1 min-w-0">
-              <span className="text-[11px] font-semibold text-[#6e7972] block truncate">Balance</span>
-              <div className="flex flex-wrap items-baseline gap-1 sm:gap-2">
-                <span className="text-lg sm:text-xl font-black text-[#19251f] font-tabular truncate">₹52,422</span>
-                <span className="text-[9px] sm:text-[10px] font-bold text-rose-700 bg-rose-100/70 px-1.5 py-0.5 rounded shrink-0">
-                  -4.75%
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Continuous Sage Green Wavy Graph - fully viewable on all screen sizes */}
-          <div className="pt-2 w-full">
-            <div className="w-full overflow-hidden rounded-xl">
-              <svg className="w-full h-24 sm:h-28 overflow-visible" viewBox="0 0 500 100" fill="none" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="sageWaveGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#274235" stopOpacity="0.20" />
-                    <stop offset="100%" stopColor="#274235" stopOpacity="0.01" />
-                  </linearGradient>
-                </defs>
-                <path
-                  d="M0 60 C50 60, 80 85, 120 85 C160 85, 180 35, 230 35 C280 35, 300 75, 350 75 C400 75, 430 45, 500 50"
-                  stroke="#274235"
-                  strokeWidth="3.2"
-                  strokeLinecap="round"
-                  fill="none"
-                />
-                <path
-                  d="M0 60 C50 60, 80 85, 120 85 C160 85, 180 35, 230 35 C280 35, 300 75, 350 75 C400 75, 430 45, 500 50 L500 100 L0 100 Z"
-                  fill="url(#sageWaveGrad)"
-                />
-              </svg>
-            </div>
-            <div className="flex justify-between items-center text-[10px] sm:text-[11px] font-medium text-[#6e7972] pt-2 px-1 border-t border-[#eeece5]/60 mt-1">
-              <span>01 Oct</span>
-              <span>08 Oct</span>
-              <span>15 Oct</span>
-              <span>22 Oct</span>
-              <span className="font-bold text-[#274235]">Live (₹52.4k)</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Middle Span 3: Earnings Semi-Circle Radial Gauge Card from reference image */}
-        <div className="md:col-span-1 lg:col-span-3 organic-card p-4 sm:p-6 flex flex-col justify-between space-y-4">
-          <div>
-            <h3 className="text-base font-extrabold text-[#19251f]">Earnings</h3>
-            <span className="text-xs text-[#6e7972] font-medium">Total Expense</span>
-            <div className="text-2xl font-black text-[#19251f] font-tabular mt-1">
-              ₹60,787
-            </div>
-            <p className="text-xs text-[#6e7972] mt-1 leading-relaxed">
-              Profit is 34% More than last Month
+            <h2 className="text-lg font-black text-[#263238]">No Connected Property Owner Yet</h2>
+            <p className="text-xs text-[#546E7A] mt-1.5 leading-relaxed">
+              You are signed in as a Property Manager (<b>{currentUser.email}</b>). To access property units, maintenance tickets, and rent ledgers, a Property Owner must grant you delegate access in their Settings → Delegates section.
             </p>
           </div>
 
-          <div className="flex flex-col items-center justify-center pt-2">
-            <div className="relative w-40 sm:w-44 h-22 sm:h-24 overflow-hidden flex items-end justify-center">
-              <svg className="w-40 h-40 sm:w-44 sm:h-44 -rotate-90 origin-center" viewBox="0 0 100 100">
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  stroke="#e8eee9"
-                  strokeWidth="11"
-                  fill="none"
-                  strokeDasharray="125 125"
-                />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  stroke="#274235"
-                  strokeWidth="11"
-                  fill="none"
-                  strokeDasharray="100 125"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <div className="absolute bottom-1 text-center">
-                <span className="text-xl sm:text-2xl font-black text-[#19251f] font-tabular">80%</span>
-                <span className="block text-[9px] uppercase tracking-wider text-[#6e7972] font-bold">Target Met</span>
-              </div>
-            </div>
-            <div className="w-full flex justify-between text-[10px] text-[#6e7972] font-semibold px-4 pt-1">
-              <span>₹0</span>
-              <span>Target ₹75k</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Span 3: User Profile Card from reference image */}
-        <div className="md:col-span-1 lg:col-span-3 organic-card p-4 sm:p-6 flex flex-col items-center justify-center text-center space-y-4">
-          <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full bg-[#fdecd5] border-2 border-[#e3e1d8] flex items-center justify-center text-3xl sm:text-4xl shadow-sm">
-            😎
+          <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-2 text-xs">
+            <div className="font-extrabold text-[#263238]">Important Security &amp; Compliance Rule:</div>
+            <p className="text-[#546E7A] leading-relaxed text-[11px]">
+              Property Managers receive scoped operational access to tenant communications and repair work orders. <b>Money withdrawal and escrow disbursements are strictly restricted to property owners only.</b>
+            </p>
           </div>
 
-          <div className="min-w-0 w-full px-2">
-            <h3 className="font-extrabold text-base text-[#19251f] truncate">
-              {currentUser.name}
-            </h3>
-            <p className="text-xs text-[#6e7972] truncate">{currentUser.email}</p>
-          </div>
-
-          <div className="grid grid-cols-3 gap-1 sm:gap-2 w-full pt-3 border-t border-[#eeece5] text-center">
-            <div className="min-w-0">
-              <span className="block text-[9px] sm:text-[10px] uppercase font-bold text-[#6e7972] truncate">Projects</span>
-              <span className="text-sm sm:text-base font-black text-[#19251f] font-tabular">26</span>
-            </div>
-            <div className="min-w-0">
-              <span className="block text-[9px] sm:text-[10px] uppercase font-bold text-[#6e7972] truncate">Followers</span>
-              <span className="text-sm sm:text-base font-black text-[#19251f] font-tabular">356</span>
-            </div>
-            <div className="min-w-0">
-              <span className="block text-[9px] sm:text-[10px] uppercase font-bold text-[#6e7972] truncate">Following</span>
-              <span className="text-sm sm:text-base font-black text-[#19251f] font-tabular">68</span>
-            </div>
+          <div className="pt-2">
+            <button
+              onClick={() => {
+                addNotification('Authorization Checked', 'Checked with platform registry for newly granted owner permissions.', 'SYSTEM');
+                alert('Checked for owner authorization. When a landlord adds your email in Settings, their portfolio will appear here.');
+              }}
+              className="px-5 py-2.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+            >
+              Check for Pending Authorizations
+            </button>
           </div>
         </div>
       </div>
+    );
+  }
 
-      {/* ROW 3: Connected Bank Account for Payments + Digital Document Wallet + Your Transfers */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-5">
-        {/* Left Span 5: Connected Bank Accounts (Replaces credit cards per user instruction) */}
-        <div className="md:col-span-2 lg:col-span-5 organic-card p-4 sm:p-6 flex flex-col justify-between space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:items-center justify-between gap-2.5 pb-1 sm:pb-0">
+  const totalUnitsCount = activeProperties.reduce((acc, p) => acc + p.totalUnits, 0);
+  const occupiedUnitsCount = activeProperties.reduce((acc, p) => acc + p.occupiedUnits, 0);
+  const totalRentExpected = activeProperties.reduce((acc, p) => acc + p.expectedMonthlyRent, 0);
+  const totalPendingRent = activeProperties.reduce((acc, p) => acc + p.pendingRent, 0);
+  const totalCollectedRent = Math.max(0, totalRentExpected - totalPendingRent);
+  const occupancyPercentage = totalUnitsCount > 0 ? ((occupiedUnitsCount / totalUnitsCount) * 100).toFixed(1) : '0.0';
+
+  const filteredProperties = activeProperties.filter((prop) => {
+    const occRatio = prop.totalUnits > 0 ? prop.occupiedUnits / prop.totalUnits : 0;
+    if (heatmapFilter === 'ALL') return true;
+    if (heatmapFilter === 'HIGH_YIELD') return prop.expectedMonthlyRent >= 200000 || prop.healthScore >= 92;
+    if (heatmapFilter === 'STABLE') return occRatio >= 0.95;
+    if (heatmapFilter === 'NEEDS_ATTENTION') return prop.healthScore < 90 || occRatio < 0.9 || prop.pendingRent > 0;
+    if (heatmapFilter === 'VACANT') return prop.occupiedUnits < prop.totalUnits;
+    return true;
+  });
+
+  return (
+    <div className="space-y-6 pb-12 font-sans text-[#263238]">
+      {/* Top Banner: Pending Tenant Connections */}
+      {pendingConnectionRequests.length > 0 && (
+        <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#163B36]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse"></span>
             <div>
-              <h3 className="text-base font-extrabold text-[#19251f] flex items-center gap-2">
-                <Landmark className="h-5 w-5 text-[#274235] shrink-0" />
-                <span>Bank Accounts for Payouts</span>
-              </h3>
-              <p className="text-xs text-[#6e7972] mt-0.5">
-                Primary linked accounts for automated rent collection & T+0 escrow deposits
+              <span className="font-extrabold text-xs text-[#263238]">
+                {pendingConnectionRequests.length} Tenant Connection Request(s) Pending Approval
+              </span>
+              <p className="text-[11px] text-[#546E7A]">
+                New residents have requested to connect to your properties.
               </p>
             </div>
-            <button
-              onClick={() => setIsAddBankModalOpen(true)}
-              className="px-3.5 py-1.5 rounded-xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs shadow-sm transition flex items-center gap-1 shrink-0 self-start sm:self-auto"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Add Bank</span>
-            </button>
           </div>
-
-          {/* List of Connected Bank Accounts */}
-          <div className="space-y-2.5">
-            {bankAccounts.map((b) => (
-              <div
-                key={b.id}
-                className="p-3 sm:p-3.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] flex items-center justify-between gap-2 text-xs"
-              >
-                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-                  <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-white border border-[#e3e1d8] flex items-center justify-center text-[#274235] font-black text-sm shadow-sm shrink-0">
-                    🏛️
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-extrabold text-[#19251f] flex flex-wrap items-center gap-1.5 sm:gap-2">
-                      <span className="truncate">{b.bankName}</span>
-                      {b.isPrimary && (
-                        <span className="text-[9px] sm:text-[10px] px-2 py-0.2 rounded-full bg-emerald-100 text-emerald-800 font-bold shrink-0">
-                          Primary
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-[10px] sm:text-[11px] font-mono text-[#6e7972] mt-0.5 truncate">
-                      {b.accountNumber} • IFSC: {b.ifsc}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-right shrink-0">
-                  <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-bold border border-emerald-200">
-                    {b.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="pt-2 border-t border-[#eeece5] flex flex-wrap items-center justify-between gap-1 text-[11px] text-[#6e7972]">
-            <span>Escrow Trustee: Axis Bank Nodal</span>
-            <span className="font-bold text-[#274235]">100% RBI Escrow Insured</span>
-          </div>
-        </div>
-
-        {/* Middle Span 4: Digital Document Wallet (User requested: digital wallet for saving documents) */}
-        <div className="md:col-span-1 lg:col-span-4 organic-card p-4 sm:p-6 flex flex-col justify-between space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:items-center justify-between gap-2 pb-1 sm:pb-0">
-            <div>
-              <h3 className="text-base font-extrabold text-[#19251f] flex items-center gap-2">
-                <FileText className="h-5 w-5 text-[#274235] shrink-0" />
-                <span>Digital Document Wallet</span>
-              </h3>
-              <p className="text-xs text-[#6e7972] mt-0.5">
-                Encrypted storage for property deeds, taxes & NOCs
-              </p>
-            </div>
-            <button
-              onClick={() => setIsUploadDocModalOpen(true)}
-              className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#f4f3ef] border border-[#e3e1d8] text-[#19251f] font-bold text-xs shadow-sm transition flex items-center gap-1 shrink-0 self-start sm:self-auto"
-            >
-              <Upload className="h-3.5 w-3.5 text-[#274235]" />
-              <span>Upload</span>
-            </button>
-          </div>
-
-          {/* List of Stored Documents */}
-          <div className="space-y-2 overflow-y-auto max-h-56 pr-1">
-            {documents.map((doc) => (
-              <div
-                key={doc.id}
-                className="p-2.5 sm:p-3 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] flex items-center justify-between gap-2 text-xs hover:bg-white transition"
-              >
-                <div className="flex items-center gap-2.5 min-w-0 flex-1 overflow-hidden">
-                  <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-800 flex items-center justify-center font-bold text-xs shrink-0">
-                    PDF
-                  </div>
-                  <div className="truncate min-w-0 flex-1">
-                    <div className="font-extrabold text-[#19251f] truncate">{doc.title}</div>
-                    <div className="text-[10px] text-[#6e7972] truncate">{doc.category} • {doc.size}</div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    onClick={() => alert(`Opening secure preview for: ${doc.title}`)}
-                    className="p-1.5 rounded-lg bg-white border border-[#e3e1d8] text-[#19251f] hover:bg-[#274235] hover:text-white transition"
-                    title="View Document"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="pt-2 border-t border-[#eeece5] flex flex-wrap items-center justify-between gap-1 text-[11px] text-[#6e7972]">
-            <span>AES-256 Vault Encryption</span>
-            <span className="font-bold text-[#274235]">Legal Proof Ready</span>
-          </div>
-        </div>
-
-        {/* Right Span 3: Your Transfers Card matching reference image */}
-        <div className="md:col-span-1 lg:col-span-3 organic-card p-4 sm:p-6 flex flex-col justify-between space-y-4">
-          <h3 className="text-base font-extrabold text-[#19251f]">Your Transfers</h3>
-
-          <div className="space-y-3.5 text-xs">
-            <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#eeece5]">
-              <div className="min-w-0 flex-1">
-                <span className="font-bold text-[#19251f] block truncate">From Anna Jones</span>
-                <span className="text-[10px] text-[#6e7972]">Today, 14:34</span>
-              </div>
-              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0">
-                +2.45%
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between gap-2 pb-2 border-b border-[#eeece5]">
-              <div className="min-w-0 flex-1">
-                <span className="font-bold text-[#19251f] block truncate">To RapidCool HVAC</span>
-                <span className="text-[10px] text-[#6e7972]">Today, 15:23</span>
-              </div>
-              <span className="text-[11px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full shrink-0">
-                -₹1,150
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <span className="font-bold text-[#19251f] block truncate">From Joel Cannan</span>
-                <span className="text-[10px] text-[#6e7972]">Today, 17:54</span>
-              </div>
-              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0">
-                +2.45%
-              </span>
-            </div>
-          </div>
-
           <button
-            onClick={() => setActiveView('rentflow')}
-            className="text-xs font-bold text-[#274235] hover:underline flex items-center justify-center gap-1 pt-1"
+            onClick={() => setActiveView('tenants')}
+            className="px-4 py-1.5 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition shadow-xs cursor-pointer self-start sm:self-auto"
           >
-            <span>View All Ledger Entries</span>
-            <ArrowUpRight className="h-3.5 w-3.5" />
+            Review &amp; Approve in Tenants Directory →
+          </button>
+        </div>
+      )}
+      
+      {/* ========================================================================= */}
+      {/* 1. SUB-NAVIGATION TABS (Overview, Properties, Banks, Vault, Team, Power)  */}
+      {/* ========================================================================= */}
+      <div className="flex items-center justify-between gap-3 border-b border-[#D1D5DB] pb-3 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+              activeTab === 'overview'
+                ? 'bg-[#163B36] text-white shadow-2xs'
+                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
+            }`}
+          >
+            Universal Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('properties')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+              activeTab === 'properties'
+                ? 'bg-[#163B36] text-white shadow-2xs'
+                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
+            }`}
+          >
+            Properties &amp; Units ({activeProperties.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('bank_accounts')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+              activeTab === 'bank_accounts'
+                ? 'bg-[#163B36] text-white shadow-2xs'
+                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
+            }`}
+          >
+            Bank Accounts ({bankAccounts.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('documents')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+              activeTab === 'documents'
+                ? 'bg-[#163B36] text-white shadow-2xs'
+                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
+            }`}
+          >
+            Documents &amp; Records ({documents.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('delegates')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+              activeTab === 'delegates'
+                ? 'bg-[#163B36] text-white shadow-2xs'
+                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
+            }`}
+          >
+            Team Access ({activeDelegates.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('utilities')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+              activeTab === 'utilities'
+                ? 'bg-[#163B36] text-white shadow-2xs'
+                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
+            }`}
+          >
+            Electricity Bills ({activeElectricityBills.length})
           </button>
         </div>
       </div>
 
-      {/* ROW 4: Authorized Delegate Access (Managers & Accountants) + Property Electricity & Sub-Meter Billing */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-        {/* Left: Authorized Delegate Access (Managers & Accountants) */}
-        <div className="organic-card p-4 sm:p-6 flex flex-col justify-between space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:items-center justify-between gap-3 pb-2 border-b border-[#eeece5]">
-            <div>
-              <div className="flex items-center gap-2">
-                <UserCheck className="h-5 w-5 text-[#274235] shrink-0" />
-                <h3 className="font-extrabold text-base text-[#19251f]">
-                  Authorized Delegate Access
-                </h3>
+      {/* ========================================================================= */}
+      {/* 2. OVERVIEW VIEW (EXACT GREEN PALETTE + ALL LIVE PORTFOLIO DATA)          */}
+      {/* ========================================================================= */}
+      {activeTab === 'overview' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start animate-in fade-in duration-200">
+          
+          {/* ------------------------------------------------------------------- */}
+          {/* LEFT/CENTER 8-COL: GREETING, METRIC CARDS, CHART, TASKS             */}
+          {/* ------------------------------------------------------------------- */}
+          <div className="lg:col-span-8 space-y-6">
+            
+            {/* Header: Greeting + Date */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#263238] tracking-tight">
+                  Hello, {currentUser.name.split(' ')[0] || 'Vikram'}
+                </h1>
+                <p className="text-xs text-[#666666] mt-1 font-medium">
+                  Track property performance, collections, and team tasks. You almost reach your revenue goal!
+                </p>
               </div>
-              <p className="text-xs text-[#6e7972] mt-0.5">
-                Share financial ledger, statements, or field work orders with your Accountant or Property Manager
-              </p>
+
+              {/* Date Pill & Quick Action */}
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button 
+                  onClick={() => setActiveView('reports')}
+                  className="px-3 py-1.5 rounded-full bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238] transition shadow-2xs flex items-center gap-1"
+                >
+                  <span>P&amp;L Statement</span>
+                  <ArrowUpRight className="h-3 w-3" />
+                </button>
+                <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238] shadow-2xs">
+                  <span>16 May, 2026</span>
+                  <CalendarIcon className="h-3.5 w-3.5 text-[#163B36]" />
+                </div>
+              </div>
             </div>
 
-            <button
-              onClick={() => setIsAddDelegateModalOpen(true)}
-              className="px-3.5 py-2 rounded-xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs shadow-sm transition flex items-center gap-1.5 self-start sm:self-auto shrink-0"
-            >
-              <UserPlus className="h-3.5 w-3.5" />
-              <span>Add Manager / Accountant</span>
-            </button>
-          </div>
+            {/* Clean Slate Onboarding State for New Users */}
+            {activeProperties.length === 0 && (
+              <div className="bg-white rounded-3xl p-6 border-2 border-dashed border-[#D2DDD7] text-center space-y-3 animate-in fade-in duration-200">
+                <div className="w-12 h-12 rounded-full bg-[#E8F0EC] flex items-center justify-center mx-auto text-[#163B36]">
+                  <Plus className="h-6 w-6" />
+                </div>
+                <h3 className="text-lg font-bold text-[#263238]">Welcome to Staywise! No properties added yet.</h3>
+                <p className="text-xs text-[#666666] max-w-md mx-auto">
+                  Your workspace starts with a clean slate. Use the + Add Property and + Onboard Tenant buttons in the top header to manage units and tenants.
+                </p>
+              </div>
+            )}
 
-          {/* List of Authorized Delegates */}
-          <div className="space-y-2.5">
-            {delegates.map((del) => (
-              <div
-                key={del.id}
-                className="p-3 sm:p-3.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] hover:bg-white transition flex flex-col sm:flex-row sm:items-start sm:items-center justify-between gap-3 text-xs"
-              >
-                <div className="space-y-1 min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                    <span className="font-extrabold text-[#19251f] text-sm break-words">{del.name}</span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                      del.role === 'Accountant' ? 'bg-blue-50 text-blue-800' : 'bg-emerald-50 text-emerald-800'
-                    }`}>
-                      {del.role}
+            {/* ========================================================================= */}
+            {/* TOTAL PORTFOLIO GLANCE (DYNAMIC BASED ON ACTIVE PROPERTIES)              */}
+            {/* ========================================================================= */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              
+              {/* Card 1: Total Revenue & Inflow */}
+              <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#666666]">Hospitality &amp; Rent Inflow</span>
+                  <span className="text-[10px] font-bold text-[#263238] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#263238]/10">
+                    {activeProperties.length > 0 ? '+24% YoY' : '0%'}
+                  </span>
+                </div>
+                <div className="text-2xl sm:text-3xl font-black text-[#263238] font-tabular mt-2 tracking-tight">
+                  ₹{totalCollectedRent.toLocaleString('en-IN')}
+                </div>
+                <span className="text-[11px] text-[#666666] mt-1 block">
+                  {activeProperties.length > 0 
+                    ? `₹${(totalRentExpected / 100000).toFixed(1)}L Expected • ${totalRentExpected > 0 ? Math.round((totalCollectedRent / totalRentExpected) * 100) : 0}% Collection Rate`
+                    : '₹0 Expected • 0% Collection Rate'
+                  }
+                </span>
+              </div>
+
+              {/* Card 2: Unit & Bed Occupancy */}
+              <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#666666]">Portfolio Unit Occupancy</span>
+                  <span className="text-[10px] font-bold text-[#263238] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#263238]/10">
+                    {activeProperties.length > 0 ? 'Active' : 'No Units'}
+                  </span>
+                </div>
+                <div className="text-2xl sm:text-3xl font-black text-[#263238] font-tabular mt-2 tracking-tight">
+                  {occupancyPercentage}%
+                </div>
+                <span className="text-[11px] text-[#666666] mt-1 block">
+                  {occupiedUnitsCount}/{totalUnitsCount} Units • {activeProperties.filter(p => p.type === 'PG' || p.type === 'Hostel').reduce((acc, p) => acc + p.totalUnits, 0)} PG Beds Active
+                </span>
+              </div>
+
+              {/* Card 3: Active Stays & Leases */}
+              <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#666666]">Active Stays &amp; Leases</span>
+                  <span className="text-[10px] font-bold text-[#263238] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#263238]/10">
+                    {occupiedUnitsCount} Leases
+                  </span>
+                </div>
+                <div className="text-2xl sm:text-3xl font-black text-[#263238] font-tabular mt-2 tracking-tight">
+                  {occupiedUnitsCount} Stays Live
+                </div>
+                <span className="text-[11px] text-[#666666] mt-1 block">
+                  {activeProperties.length} Properties Configured
+                </span>
+              </div>
+
+              {/* Card 4: Net Operating Cashflow (NOI) */}
+              <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#666666]">Net Operating Cashflow</span>
+                  <span className="text-[10px] font-bold text-[#263238] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#263238]/10">
+                    {activeProperties.length > 0 ? 'Net Surplus' : 'No Inflow'}
+                  </span>
+                </div>
+                <div className="text-2xl sm:text-3xl font-black text-[#263238] font-tabular mt-2 tracking-tight">
+                  +₹{Math.round(totalCollectedRent * 0.844).toLocaleString('en-IN')}
+                </div>
+                <span className="text-[11px] text-[#666666] mt-1 block">
+                  {activeProperties.length > 0 ? '+84.4% Margin • In Flow' : '0% Margin • Clean Workspace'}
+                </span>
+              </div>
+
+            </div>
+
+            {/* Performance Chart Card (Human-Readable, Responsive with Clear Y-Axis & Tooltips) */}
+            {activeProperties.length > 0 && (
+            <div className="rounded-3xl bg-white border border-[#D2DDD7] p-4 sm:p-5 md:p-6 shadow-xs space-y-4">
+              
+              {/* Header & Range Controls */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#D1D5DB]">
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-base sm:text-lg font-black text-[#263238] tracking-tight">Collection &amp; Yield Performance</h3>
+                    <span className="text-[10px] sm:text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-[#163B36] text-white border border-[#263238]/20 shrink-0">
+                      +12% vs Last Month
                     </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0">
-                      {del.status}
+                  </div>
+                  <p className="text-xs text-[#666666] mt-1 font-medium">
+                    Real-time rent collection pace compared against prior month with live yield trajectory
+                  </p>
+                </div>
+                
+                {/* Legend & Cycle Toggle */}
+                <div className="flex items-center gap-2 flex-wrap text-xs self-start sm:self-auto">
+                  <div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-[#E8F0EC] border border-[#D2DDD7]">
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-[#263238]">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#263238] shrink-0" />
+                      <span>May 2026 (Active)</span>
+                    </span>
+                    <span className="flex items-center gap-1.5 text-xs font-semibold text-[#666666]">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#163B36]/40 border border-[#163B36] shrink-0" />
+                      <span>Apr 2026</span>
                     </span>
                   </div>
 
-                  <div className="text-[11px] text-[#6e7972] break-words">
-                    {del.email} • {del.phone}
-                  </div>
-
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {del.permissions.map((p, idx) => (
-                      <span key={idx} className="text-[10px] bg-white border border-[#e3e1d8] text-[#19251f] px-2 py-0.5 rounded-md font-medium">
-                        {p}
-                      </span>
+                  <div className="flex items-center rounded-full bg-[#E8F0EC] p-0.5 border border-[#D2DDD7]">
+                    {['01-07 May', 'Monthly', 'Quarterly'].map((range) => (
+                      <button
+                        key={range}
+                        onClick={() => setSelectedChartRange(range)}
+                        className={`px-3 py-1 rounded-full text-[11px] font-bold transition ${
+                          selectedChartRange === range
+                            ? 'bg-[#163B36] text-white shadow-2xs'
+                            : 'text-[#263238]/70 hover:text-[#263238]'
+                        }`}
+                      >
+                        {range}
+                      </button>
                     ))}
                   </div>
                 </div>
+              </div>
 
-                <div className="shrink-0 flex items-center gap-1.5 self-start sm:self-center pt-1 sm:pt-0">
-                  <button
-                    onClick={() => {
-                      const text = `Hi ${del.name.split(' ')[0]}, here is your Staywise Owner Portal delegated access credentials for Vikram Singhania's portfolio.\nRole: ${del.role}\nPortal URL: https://staywise.app/delegate-login`;
-                      window.open(`https://api.whatsapp.com/send?phone=${del.phone.replace(/[^0-9]/g, '')}&text=${encodeURIComponent(text)}`, '_blank');
-                    }}
-                    className="p-2 rounded-xl bg-white hover:bg-[#274235] hover:text-white border border-[#e3e1d8] text-[#19251f] transition"
-                    title="Send WhatsApp Access Link"
-                  >
-                    <Share2 className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    onClick={() => alert(`Access permissions updated for ${del.name}`)}
-                    className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#f4f3ef] border border-[#e3e1d8] text-[#19251f] font-bold text-xs transition"
-                  >
-                    Edit Access
-                  </button>
+              {/* Summary Stats Row */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 text-xs">
+                <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] transition hover:border-[#263238]">
+                  <div className="text-[10px] sm:text-[11px] text-[#666666] font-semibold">Selected Day Collection</div>
+                  <div className="text-sm sm:text-base font-black text-[#263238] font-tabular mt-0.5">
+                    {hoveredDay === '01' ? '₹4.20 Lakhs' :
+                     hoveredDay === '02' ? '₹9.50 Lakhs' :
+                     hoveredDay === '03' ? '₹15.90 Lakhs' :
+                     hoveredDay === '04' ? '₹16.10 Lakhs' :
+                     hoveredDay === '05' ? '₹16.25 Lakhs' :
+                     hoveredDay === '06' ? '₹16.35 Lakhs' : '₹16.40 Lakhs'}
+                  </div>
+                  <span className="text-[10px] text-[#263238] font-bold mt-0.5 block">
+                    {hoveredDay === '03' ? '🔥 Peak Inflow (97% Met)' :
+                     hoveredDay === '01' ? 'Cycle start • 25.6% Met' :
+                     hoveredDay === '02' ? 'UPI Autopay • 57.9% Met' :
+                     hoveredDay === '07' ? '100% Target Achieved' : 'Reconciliation on track'}
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] transition hover:border-[#263238]">
+                  <div className="text-[10px] sm:text-[11px] text-[#666666] font-semibold">Monthly Peak Day</div>
+                  <div className="text-sm sm:text-base font-black text-[#263238] font-tabular mt-0.5">
+                    03 May (₹15.9L)
+                  </div>
+                  <span className="text-[10px] text-[#666666] font-medium mt-0.5 block">
+                    +₹1.70L vs Apr Peak Day
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] transition hover:border-[#263238]">
+                  <div className="text-[10px] sm:text-[11px] text-[#666666] font-semibold">On-Time Collection Rate</div>
+                  <div className="text-sm sm:text-base font-black text-[#263238] font-tabular mt-0.5">
+                    97.0% On-Time
+                  </div>
+                  <span className="text-[10px] text-[#163B36] font-bold mt-0.5 block">
+                    ₹50,000 pending reconciliation
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] transition hover:border-[#263238]">
+                  <div className="text-[10px] sm:text-[11px] text-[#666666] font-semibold">Realized Portfolio APY</div>
+                  <div className="text-sm sm:text-base font-black text-[#263238] font-tabular mt-0.5">
+                    8.4% Net Yield
+                  </div>
+                  <span className="text-[10px] text-[#666666] font-medium mt-0.5 block">
+                    +0.6% vs market benchmark
+                  </span>
                 </div>
               </div>
-            ))}
-          </div>
 
-          <div className="pt-2 border-t border-[#eeece5] flex flex-wrap items-center justify-between gap-1 text-[11px] text-[#6e7972]">
-            <span>Role-Based Granular Access Control</span>
-            <span className="font-bold text-[#274235]">{delegates.length} Active Delegates</span>
-          </div>
-        </div>
+              {/* Human-Readable Chart Container (Y-Axis + SVG + X-Axis) */}
+              <div className="relative pt-1 sm:pt-2">
+                
+                {/* 2-Column Grid: Y-Axis labels (left) + SVG Chart Area (right) */}
+                <div className="flex items-stretch gap-2 sm:gap-3">
+                  
+                  {/* Y-Axis Currency Scale Labels */}
+                  <div className="flex flex-col justify-between text-[10px] sm:text-[11px] font-bold text-[#666666] font-tabular py-1 text-right select-none shrink-0 w-8 sm:w-10">
+                    <span>₹20L</span>
+                    <span>₹15L</span>
+                    <span>₹10L</span>
+                    <span>₹5L</span>
+                    <span>₹0L</span>
+                  </div>
 
-        {/* Right: Property Electricity & Sub-Meter Billing */}
-        <div className="organic-card p-4 sm:p-6 flex flex-col justify-between space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:items-center justify-between gap-3 pb-2 border-b border-[#eeece5]">
-            <div>
-              <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-amber-500 fill-amber-500 shrink-0" />
-                <h3 className="font-extrabold text-base text-[#19251f]">
-                  Electricity & Sub-Meter Billing
-                </h3>
+                  {/* SVG Canvas Area */}
+                  <div className="relative flex-1 h-48 sm:h-56 md:h-64 w-full">
+                    
+                    {/* Interactive Floating Popover Tooltip with Clamped Bounds */}
+                    <div 
+                      className="absolute top-1 z-30 bg-[#263238] text-white rounded-2xl p-2.5 sm:p-3 shadow-xl space-y-1 text-xs w-40 sm:w-48 transition-all duration-200 border border-[#163B36] pointer-events-none"
+                      style={{
+                        left: hoveredDay === '01' ? '12%' :
+                              hoveredDay === '02' ? '24%' :
+                              hoveredDay === '03' ? '37%' :
+                              hoveredDay === '04' ? '50%' :
+                              hoveredDay === '05' ? '63%' :
+                              hoveredDay === '06' ? '76%' : '88%',
+                        transform: 'translateX(-50%)'
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] sm:text-xs font-black text-[#C69A55]">
+                          {hoveredDay} May 2026 ({
+                            hoveredDay === '01' ? 'Fri' :
+                            hoveredDay === '02' ? 'Sat' :
+                            hoveredDay === '03' ? 'Sun' :
+                            hoveredDay === '04' ? 'Mon' :
+                            hoveredDay === '05' ? 'Tue' :
+                            hoveredDay === '06' ? 'Wed' : 'Thu'
+                          })
+                        </span>
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#163B36] text-white font-bold shrink-0">
+                          {hoveredDay === '03' ? '🔥 Peak' : 'Recorded'}
+                        </span>
+                      </div>
+                      
+                      <div className="pt-1 border-t border-white/10 space-y-1">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="flex items-center gap-1 text-[#E8F0EC]">
+                            <span className="w-1.5 h-3 rounded-full bg-[#163B36]" />
+                            May Inflow:
+                          </span>
+                          <span className="font-black text-white font-tabular">
+                            {hoveredDay === '01' ? '₹4.20L' :
+                             hoveredDay === '02' ? '₹9.50L' :
+                             hoveredDay === '03' ? '₹15.90L' :
+                             hoveredDay === '04' ? '₹16.10L' :
+                             hoveredDay === '05' ? '₹16.25L' :
+                             hoveredDay === '06' ? '₹16.35L' : '₹16.40L'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="flex items-center gap-1 text-[#E8F0EC]/70">
+                            <span className="w-1.5 h-3 rounded-full bg-[#163B36]" />
+                            Apr Inflow:
+                          </span>
+                          <span className="font-semibold text-[#E8F0EC] font-tabular">
+                            {hoveredDay === '01' ? '₹3.80L' :
+                             hoveredDay === '02' ? '₹8.10L' :
+                             hoveredDay === '03' ? '₹14.20L' :
+                             hoveredDay === '04' ? '₹14.80L' :
+                             hoveredDay === '05' ? '₹15.10L' :
+                             hoveredDay === '06' ? '₹15.30L' : '₹15.50L'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-[10px] text-[#163B36] pt-0.5 border-t border-white/5">
+                          <span>Growth vs Apr:</span>
+                          <span className="font-bold">
+                            {hoveredDay === '01' ? '+₹40,000' :
+                             hoveredDay === '02' ? '+₹1,40,000' :
+                             hoveredDay === '03' ? '+₹1,70,000' :
+                             hoveredDay === '04' ? '+₹1,30,000' :
+                             hoveredDay === '05' ? '+₹1,15,000' :
+                             hoveredDay === '06' ? '+₹1,05,000' : '+₹90,000'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* SVG Chart Graphic */}
+                    <svg className="w-full h-full overflow-visible" viewBox="0 0 700 180" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="forestAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#263238" stopOpacity="0.32" />
+                          <stop offset="50%" stopColor="#263238" stopOpacity="0.10" />
+                          <stop offset="100%" stopColor="#263238" stopOpacity="0.0" />
+                        </linearGradient>
+                      </defs>
+
+                      {/* Horizontal Gridlines matching Y-Axis Scale */}
+                      <line x1="0" y1="10" x2="700" y2="10" stroke="#D1D5DB" strokeWidth="1" strokeDasharray="4 4" />
+                      <line x1="0" y1="50" x2="700" y2="50" stroke="#D1D5DB" strokeWidth="1" strokeDasharray="4 4" />
+                      <line x1="0" y1="90" x2="700" y2="90" stroke="#D1D5DB" strokeWidth="1" strokeDasharray="4 4" />
+                      <line x1="0" y1="130" x2="700" y2="130" stroke="#D1D5DB" strokeWidth="1" strokeDasharray="4 4" />
+                      <line x1="0" y1="170" x2="700" y2="170" stroke="#D2DDD7" strokeWidth="1.5" />
+
+                      {/* Active Day Vertical Needle Line */}
+                      <line 
+                        x1={hoveredDay === '01' ? '50' :
+                            hoveredDay === '02' ? '150' :
+                            hoveredDay === '03' ? '250' :
+                            hoveredDay === '04' ? '350' :
+                            hoveredDay === '05' ? '450' :
+                            hoveredDay === '06' ? '550' : '650'}
+                        y1="10" 
+                        x2={hoveredDay === '01' ? '50' :
+                            hoveredDay === '02' ? '150' :
+                            hoveredDay === '03' ? '250' :
+                            hoveredDay === '04' ? '350' :
+                            hoveredDay === '05' ? '450' :
+                            hoveredDay === '06' ? '550' : '650'}
+                        y2="170" 
+                        stroke="#263238" 
+                        strokeWidth="1.5" 
+                        strokeDasharray="3 3" 
+                      />
+
+                      {/* Secondary Curve (April 2026 - Dashed Olive) */}
+                      <path
+                        d="M 50,140 C 100,120 150,95 250,52 C 350,45 450,42 550,40 C 600,39 650,38 650,38"
+                        fill="none"
+                        stroke="#666666"
+                        strokeWidth="2"
+                        strokeDasharray="4 4"
+                      />
+
+                      {/* Primary Area Fill (May 2026) */}
+                      <path
+                        d="M 50,135 C 100,105 150,85 250,38 C 350,34 450,31 550,29 C 600,28 650,26 650,26 L 650,170 L 50,170 Z"
+                        fill="url(#forestAreaGradient)"
+                      />
+
+                      {/* Primary Curve (May 2026 - Solid Forest Green) */}
+                      <path
+                        d="M 50,135 C 100,105 150,85 250,38 C 350,34 450,31 550,29 C 600,28 650,26 650,26"
+                        fill="none"
+                        stroke="#263238"
+                        strokeWidth="3.5"
+                        strokeLinecap="round"
+                      />
+
+                      {/* Interactive Circles / Data Dots */}
+                      {[
+                        { day: '01', cx: 50, cyThis: 135, cyLast: 140 },
+                        { day: '02', cx: 150, cyThis: 85, cyLast: 95 },
+                        { day: '03', cx: 250, cyThis: 38, cyLast: 52 },
+                        { day: '04', cx: 350, cyThis: 34, cyLast: 45 },
+                        { day: '05', cx: 450, cyThis: 31, cyLast: 42 },
+                        { day: '06', cx: 550, cyThis: 29, cyLast: 40 },
+                        { day: '07', cx: 650, cyThis: 26, cyLast: 38 },
+                      ].map((dot) => {
+                        const isHovered = hoveredDay === dot.day;
+                        return (
+                          <g key={dot.day} className="cursor-pointer" onClick={() => setHoveredDay(dot.day as any)}>
+                            {/* Broad touch & hover target */}
+                            <rect 
+                              x={dot.cx - 35} 
+                              y="0" 
+                              width="70" 
+                              height="170" 
+                              fill="transparent" 
+                              onMouseEnter={() => setHoveredDay(dot.day as any)}
+                            />
+                            
+                            {/* Apr dot */}
+                            <circle 
+                              cx={dot.cx} 
+                              cy={dot.cyLast} 
+                              r={isHovered ? 4 : 2.5} 
+                              fill="#FFFFFF" 
+                              stroke="#666666" 
+                              strokeWidth="1.5" 
+                            />
+
+                            {/* May dot with animated focus aura */}
+                            {isHovered && (
+                              <circle 
+                                cx={dot.cx} 
+                                cy={dot.cyThis} 
+                                r={10} 
+                                fill="#163B36" 
+                                opacity={0.4}
+                              />
+                            )}
+
+                            <circle 
+                              cx={dot.cx} 
+                              cy={dot.cyThis} 
+                              r={isHovered ? 6.5 : 4} 
+                              fill={isHovered ? "#163B36" : "#263238"} 
+                              stroke="#263238" 
+                              strokeWidth={isHovered ? 2.5 : 1.5} 
+                            />
+                          </g>
+                        );
+                      })}
+                    </svg>
+                  </div>
+                </div>
+
+                {/* X-Axis Date Selectors (Fully Responsive Pill Buttons with Day of Week) */}
+                <div className="grid grid-cols-7 gap-1 sm:gap-2 pt-2.5 sm:pt-3.5 ml-8 sm:ml-10 text-center font-tabular">
+                  {([
+                    { id: '01', dayOfWeek: 'Fri' },
+                    { id: '02', dayOfWeek: 'Sat' },
+                    { id: '03', dayOfWeek: 'Sun' },
+                    { id: '04', dayOfWeek: 'Mon' },
+                    { id: '05', dayOfWeek: 'Tue' },
+                    { id: '06', dayOfWeek: 'Wed' },
+                    { id: '07', dayOfWeek: 'Thu' }
+                  ] as const).map(({ id, dayOfWeek }) => {
+                    const isSelected = hoveredDay === id;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => setHoveredDay(id)}
+                        className={`py-2 px-1 sm:px-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition flex flex-col items-center justify-center min-h-[44px] ${
+                          isSelected
+                            ? 'bg-[#163B36] text-white shadow-sm ring-1 ring-[#163B36]'
+                            : 'text-[#263238]/70 hover:text-[#263238] hover:bg-[#E8F0EC] bg-transparent'
+                        }`}
+                      >
+                        <span className="font-extrabold">{id} May</span>
+                        <span className={`text-[9px] font-medium transition ${isSelected ? 'text-white/80' : 'text-[#263238]/60'}`}>
+                          {dayOfWeek}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
               </div>
-              <p className="text-xs text-[#6e7972] mt-0.5">
-                Monthly sub-meter readings & direct WhatsApp bill sharing
-              </p>
+            </div>
+            )}
+
+            {/* Current Operations Tasks List */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-extrabold text-[#263238]">Current Operational Tasks</h3>
+                  <span className="text-xs text-white font-extrabold bg-[#163B36] px-2.5 py-0.5 rounded-full">Done 88%</span>
+                </div>
+
+                <button className="flex items-center gap-1 text-xs font-bold text-[#263238] hover:text-[#163B36] transition">
+                  <span>This Week</span>
+                  <ChevronDown className="h-3 w-3 text-[#163B36]" />
+                </button>
+              </div>
+
+              {/* Task Items */}
+              {tasksList.length === 0 ? (
+                <div className="p-6 rounded-2xl bg-white border border-dashed border-[#D2DDD7] text-center space-y-1">
+                  <p className="text-xs font-bold text-[#263238]">No operational tasks pending</p>
+                  <p className="text-[11px] text-[#666666]">Tasks will automatically generate as tenants request repairs, meters are scanned, or rent is due.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {tasksList.map((task) => (
+                    <div
+                      key={task.id}
+                      className="p-3.5 sm:p-4 rounded-2xl bg-white border border-[#D2DDD7] hover:border-[#263238] flex items-center justify-between gap-3 text-xs shadow-2xs transition"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-9 w-9 rounded-full bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-center text-[#263238] shrink-0">
+                          {task.icon === 'sparkles' && <Zap className="h-4 w-4 text-[#263238]" />}
+                          {task.icon === 'search' && <Search className="h-4 w-4 text-[#163B36]" />}
+                          {task.icon === 'code' && <Laptop className="h-4 w-4 text-[#263238]" />}
+                        </div>
+                        <span className="font-bold text-[#263238] truncate">
+                          {task.title}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-4 sm:gap-6 shrink-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`h-2.5 w-2.5 rounded-full ${task.statusColor}`} />
+                          <span className="text-xs font-bold text-[#263238] hidden sm:inline">{task.status}</span>
+                        </div>
+
+                        <div className="flex items-center gap-1 text-[#666666] font-bold font-tabular">
+                          <Clock className="h-3.5 w-3.5" />
+                          <span>{task.hours}</span>
+                        </div>
+
+                        <button className="text-[#666666] hover:text-[#263238] p-1">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+          </div>
+
+          {/* ------------------------------------------------------------------- */}
+          {/* RIGHT 4-COL: PROFILE CARD, ACTIVITY CHAT FEED, MESSAGE INPUT        */}
+          {/* ------------------------------------------------------------------- */}
+          <div className="lg:col-span-4 space-y-5">
+            
+            {/* Top Profile Card */}
+            <div className="rounded-3xl bg-[#E8F0EC] border border-[#D2DDD7] p-5 text-center space-y-4">
+              <div className="relative inline-block mx-auto">
+                {currentUser.avatar && currentUser.avatar.startsWith('http') ? (
+                  <img 
+                    src={currentUser.avatar} 
+                    alt="Profile"
+                    className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-xs mx-auto"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-[#163B36] text-white font-black text-2xl flex items-center justify-center border-2 border-white shadow-xs mx-auto">
+                    {(currentUser.name || 'Owner').charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full bg-[#C69A55] ring-2 ring-white" />
+              </div>
+
+              <div>
+                <h3 className="font-extrabold text-base text-[#263238]">
+                  {currentUser.name || (isDemoAccount ? 'Vikram Singhania' : 'Property Owner')}
+                </h3>
+                <p className="text-xs text-[#263238]/70 font-bold mt-0.5">
+                  {currentUser.roleLabel || 'Property & Asset Host'}
+                </p>
+              </div>
+
+              {/* 3 Circular Action Buttons */}
+              <div className="flex items-center justify-center gap-3 pt-1">
+                <button 
+                  onClick={() => alert('Call connected with tenant WhatsApp gateway')}
+                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-[#163B36] hover:bg-[#163B36] hover:text-white transition shadow-2xs"
+                  title="Phone Call"
+                >
+                  <Phone className="h-4 w-4" />
+                </button>
+                <button 
+                  onClick={() => alert('Live video inspection room generated.')}
+                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-[#163B36] hover:bg-[#163B36] hover:text-white transition shadow-2xs"
+                  title="Video Inspection"
+                >
+                  <Video className="h-4 w-4" />
+                </button>
+                <button 
+                  onClick={() => setActiveView('settings')}
+                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-[#163B36] hover:bg-[#163B36] hover:text-white transition shadow-2xs"
+                  title="Settings"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Activity & Chat Feed */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-extrabold text-[#263238] px-1">Live Tenant &amp; Team Activity</h3>
+
+              {activityFeed.length === 0 ? (
+                <div className="p-5 rounded-2xl bg-white border border-dashed border-[#D2DDD7] text-center space-y-1">
+                  <p className="text-xs font-bold text-[#263238]">No recent team activity</p>
+                  <p className="text-[11px] text-[#666666]">Team notes, tenant comments, and system updates will appear here.</p>
+                </div>
+              ) : (
+                <div className="space-y-3.5">
+                  {activityFeed.map((item) => (
+                    <div key={item.id} className="space-y-2 text-xs">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <img 
+                            src={item.avatar} 
+                            alt={item.name} 
+                            className="h-7 w-7 rounded-full object-cover shrink-0 border border-[#D2DDD7]" 
+                          />
+                          <div className="truncate">
+                            <span className="font-extrabold text-[#263238] mr-1">{item.name}</span>
+                            <span className="text-[11px] text-[#666666]">{item.action}</span>
+                          </div>
+                        </div>
+                        <span className="text-[10px] text-[#666666] font-tabular shrink-0">{item.time}</span>
+                      </div>
+
+                      {item.type === 'message' && item.text && (
+                        <div className="relative ml-9 p-3 rounded-2xl bg-[#E8F0EC] text-[#263238] text-xs font-medium leading-relaxed border border-[#D2DDD7]">
+                          <p>{item.text}</p>
+                          {item.reaction && (
+                            <div className="absolute -bottom-2 right-2 h-5 w-5 rounded-full bg-[#163B36] border border-[#263238]/20 flex items-center justify-center text-[10px] shadow-2xs">
+                              {item.reaction}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {item.type === 'file' && (
+                        <div className="ml-9 p-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-between gap-2 shadow-2xs">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="h-8 w-8 rounded-xl bg-[#163B36] text-white flex items-center justify-center font-bold text-[10px] shrink-0">
+                              PDF
+                            </div>
+                            <div className="truncate">
+                              <div className="font-bold text-[#263238] truncate">{item.fileName}</div>
+                              <div className="text-[10px] text-[#666666]">{item.fileSize}</div>
+                            </div>
+                          </div>
+
+                          <button 
+                            onClick={() => alert(`Downloading ${item.fileName}...`)}
+                            className="h-7 w-7 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-[#263238] hover:bg-[#163B36] transition shrink-0"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      )}
+
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Chat Message Input Bar */}
+              <form onSubmit={handleSendMessage} className="pt-2">
+                <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs shadow-2xs">
+                  <button type="button" className="text-[#163B36] hover:text-[#263238] transition">
+                    <Paperclip className="h-4 w-4" />
+                  </button>
+                  <input
+                    type="text"
+                    value={chatMessage}
+                    onChange={e => setChatMessage(e.target.value)}
+                    placeholder="Message tenant or team..."
+                    className="flex-1 bg-transparent border-none outline-none text-[#263238] placeholder-[#666666] text-xs font-medium"
+                  />
+                  <button type="button" className="text-[#163B36] hover:text-[#263238] transition">
+                    <Smile className="h-4 w-4" />
+                  </button>
+                  <button type="button" className="text-[#163B36] hover:text-[#263238] transition">
+                    <Mic className="h-4 w-4" />
+                  </button>
+                  {chatMessage && (
+                    <button type="submit" className="text-[#263238] hover:text-[#263238]">
+                      <Send className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </form>
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB VIEW: PROPERTIES & ASSETS                                             */}
+      {/* ========================================================================= */}
+      {activeTab === 'properties' && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-[#666666]">Filter Heatmap:</span>
+              {(['ALL', 'HIGH_YIELD', 'STABLE', 'NEEDS_ATTENTION', 'VACANT'] as const).map(filter => (
+                <button
+                  key={filter}
+                  onClick={() => setHeatmapFilter(filter)}
+                  className={`px-3 py-1 rounded-full text-xs font-bold transition ${
+                    heatmapFilter === filter 
+                      ? 'bg-[#163B36] text-white shadow-xs' 
+                      : 'bg-white text-[#263238] hover:bg-[#E8F0EC] border border-[#D2DDD7]'
+                  }`}
+                >
+                  {filter.replace('_', ' ')}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {filteredProperties.length === 0 ? (
+            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
+              <p className="text-sm font-bold text-[#263238]">No properties found in this view</p>
+              <p className="text-xs text-[#666666]">Add your first property using the top header to begin tracking units, leases, and tenant rent.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredProperties.map(prop => (
+                <div 
+                  key={prop.id}
+                  className="rounded-2xl bg-white border border-[#D2DDD7] p-5 shadow-xs hover:border-[#263238] transition space-y-3"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-[#163B36] text-white border border-[#263238]/20">
+                        {prop.type}
+                      </span>
+                      <h3 className="font-extrabold text-base text-[#263238] mt-1.5">{prop.name}</h3>
+                      <p className="text-xs text-[#666666]">{prop.address}</p>
+                    </div>
+                    <div className="h-8 w-8 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-center text-xs font-black text-[#163B36]">
+                      {prop.healthScore}%
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#D1D5DB] text-xs">
+                    <div>
+                      <span className="text-[10px] text-[#666666]">Units Occupancy</span>
+                      <div className="font-bold text-[#263238]">{prop.occupiedUnits} / {prop.totalUnits} Units</div>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-[#666666]">Monthly Rent</span>
+                      <div className="font-bold text-[#263238]">₹{prop.expectedMonthlyRent.toLocaleString('en-IN')}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-[#D1D5DB]">
+                    <span className="text-xs text-[#666666]">
+                      Pending: <strong className="text-rose-600">₹{prop.pendingRent.toLocaleString('en-IN')}</strong>
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          setPropertyToEdit(prop);
+                          setIsEditPropertyModalOpen(true);
+                        }}
+                        className="px-3 py-1 rounded-full bg-[#E8F0EC] hover:bg-[#163B36] text-xs font-bold text-[#163B36] hover:text-white border border-[#D2DDD7] transition shadow-2xs cursor-pointer"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm(`Delete property ${prop.name}?`)) deleteProperty(prop.id);
+                        }}
+                        className="p-1 text-slate-400 hover:text-rose-600 transition"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB VIEW: BANK ACCOUNTS                                                   */}
+      {/* ========================================================================= */}
+      {activeTab === 'bank_accounts' && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
+            <div>
+              <h3 className="text-sm font-extrabold text-[#263238]">Direct Bank Payout Accounts</h3>
+              <p className="text-xs text-[#666666]">Automated payouts routed directly to verified nodal accounts</p>
+            </div>
+            {activeRole === 'manager' ? (
+              <span className="px-3.5 py-1.5 rounded-full bg-rose-50 text-rose-800 text-[11px] font-bold border border-rose-200">
+                🔒 Payout &amp; Withdrawal Restricted: Owner Only
+              </span>
+            ) : (
+              <button
+                onClick={() => setIsAddBankModalOpen(true)}
+                className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold shadow-xs transition cursor-pointer"
+              >
+                + Add Bank Account
+              </button>
+            )}
+          </div>
+
+          {bankAccounts.length === 0 ? (
+            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
+              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#263238] flex items-center justify-center mx-auto">
+                <Landmark className="h-6 w-6" />
+              </div>
+              <p className="text-sm font-bold text-[#263238]">No bank accounts linked yet</p>
+              <p className="text-xs text-[#666666]">Add your primary bank account or nodal escrow trust to receive direct tenant rent payouts.</p>
+              <button
+                onClick={() => setIsAddBankModalOpen(true)}
+                className="px-4 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
+              >
+                + Add Bank Account
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {bankAccounts.map(bank => (
+                <div key={bank.id} className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-10 w-10 rounded-xl bg-[#E8F0EC] text-[#263238] flex items-center justify-center font-bold">
+                        <Landmark className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-sm text-[#263238]">{bank.bankName}</h4>
+                        <p className="text-xs text-[#666666] font-mono">{bank.accountNumber}</p>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#163B36] text-white text-[10px] font-black border border-[#263238]/20">
+                      {bank.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[#D1D5DB]">
+                    <div>
+                      <span className="text-[10px] text-[#666666]">IFSC Code:</span>
+                      <div className="font-bold text-[#263238]">{bank.ifsc}</div>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-[#666666]">Holder:</span>
+                      <div className="font-bold text-[#263238] truncate">{bank.holderName}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB VIEW: DIGITAL DOCUMENT VAULT                                         */}
+      {/* ========================================================================= */}
+      {activeTab === 'documents' && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
+            <div>
+              <h3 className="text-sm font-extrabold text-[#263238]">Legal Deeds &amp; Document Vault</h3>
+              <p className="text-xs text-[#666666]">DigiLocker &amp; Municipal statutory registry verified documents</p>
+            </div>
+            <button
+              onClick={() => setIsUploadDocModalOpen(true)}
+              className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold shadow-xs transition"
+            >
+              + Upload Document
+            </button>
+          </div>
+
+          {documents.length === 0 ? (
+            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
+              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#263238] flex items-center justify-center mx-auto">
+                <FileText className="h-6 w-6" />
+              </div>
+              <p className="text-sm font-bold text-[#263238]">Document vault is empty</p>
+              <p className="text-xs text-[#666666]">Upload title deeds, tax receipts, encumbrance certificates, and building insurance policies.</p>
+              <button
+                onClick={() => setIsUploadDocModalOpen(true)}
+                className="px-4 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
+              >
+                + Upload Document
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {documents.map(doc => (
+                <div key={doc.id} className="p-4 rounded-2xl bg-white border border-[#D2DDD7] shadow-xs flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-[#E8F0EC] text-[#263238] flex items-center justify-center">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-xs text-[#263238]">{doc.title}</h4>
+                      <p className="text-[10px] text-[#666666]">{doc.category} • {doc.size}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => alert(`Downloading ${doc.title}...`)}
+                    className="p-2 rounded-full hover:bg-[#163B36] text-[#263238] hover:text-white transition"
+                  >
+                    <Download className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB VIEW: TEAM & MANAGER ACCESS                                            */}
+      {/* ========================================================================= */}
+      {activeTab === 'delegates' && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
+            <div>
+              <h3 className="text-sm font-extrabold text-[#263238]">Team &amp; Manager Access</h3>
+              <p className="text-xs text-[#666666]">Give your manager access to their work while you stay in control.</p>
+            </div>
+            <button
+              onClick={() => setIsAddDelegateModalOpen(true)}
+              className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold shadow-xs transition"
+            >
+              + Invite Member
+            </button>
+          </div>
+
+          {activeDelegates.length === 0 ? (
+            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
+              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#263238] flex items-center justify-center mx-auto">
+                <Users className="h-6 w-6" />
+              </div>
+              <p className="text-sm font-bold text-[#263238]">No team members added yet</p>
+              <p className="text-xs text-[#666666]">Give your manager or caretaker access to their work while you stay in control.</p>
+              <button
+                onClick={() => setIsAddDelegateModalOpen(true)}
+                className="px-4 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
+              >
+                + Invite Member
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {activeDelegates.map(del => (
+                <div key={del.id} className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-extrabold text-sm text-[#263238]">{del.name}</h4>
+                      <p className="text-xs text-[#666666]">{del.email} • {del.phone}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#163B36] text-white text-[10px] font-black border border-[#263238]/20">
+                        {del.role}
+                      </span>
+                      {!isDemoAccount && (
+                        <button
+                          onClick={() => {
+                            if (confirm(`Revoke delegate access for ${del.name}?`)) revokeDelegate(del.id);
+                          }}
+                          className="px-2 py-0.5 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold border border-rose-200 transition"
+                        >
+                          Revoke
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[#D1D5DB]">
+                    {del.permissions.map((p, idx) => (
+                      <span key={idx} className="px-2 py-0.5 rounded-md bg-[#E8F0EC] border border-[#D2DDD7] text-[10px] text-[#263238] font-semibold">
+                        ✓ {p}
+                      </span>
+                    ))}
+                    <span className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-[10px] text-amber-800 font-bold">
+                      🔒 No Fund Withdrawal
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB VIEW: UTILITIES & POWER BILLS                                        */}
+      {/* ========================================================================= */}
+      {activeTab === 'utilities' && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
+            <div>
+              <h3 className="text-sm font-extrabold text-[#263238]">Electricity &amp; Utility Sub-Meters</h3>
+              <p className="text-xs text-[#666666]">AI OCR extraction and automated WhatsApp bill sharing with tenants</p>
+            </div>
+            <button
+              onClick={() => {
+                setPreselectedUnitForUpload('101');
+                setIsUploadBillModalOpen(true);
+              }}
+              className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold shadow-xs transition"
+            >
+              + Upload Power Bill
+            </button>
+          </div>
+
+          {activeElectricityBills.length === 0 ? (
+            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
+              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#263238] flex items-center justify-center mx-auto">
+                <Zap className="h-6 w-6 text-[#163B36]" />
+              </div>
+              <p className="text-sm font-bold text-[#263238]">No utility bills uploaded yet</p>
+              <p className="text-xs text-[#666666]">Upload discom electricity bills or log sub-meter readings to automatically invoice tenants.</p>
               <button
                 onClick={() => {
                   setPreselectedUnitForUpload(null);
                   setIsUploadBillModalOpen(true);
                 }}
-                className="px-3 py-1.5 rounded-xl bg-[#274235] hover:bg-[#1e352a] text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5"
+                className="px-4 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
               >
-                <UploadCloud className="h-3.5 w-3.5" />
-                <span>Upload Bill</span>
-              </button>
-
-              <button
-                onClick={() => setActiveView('rentflow')}
-                className="text-xs font-bold text-[#274235] hover:underline flex items-center gap-1"
-              >
-                <span>Full Billing</span>
-                <ArrowUpRight className="h-3.5 w-3.5" />
+                + Upload Power Bill
               </button>
             </div>
-          </div>
-
-          {/* Unit Power Bills Summary */}
-          <div className="space-y-2.5 text-xs">
-            {electricityBills.slice(0, 4).map((bill) => (
-              <div key={bill.id} className="p-3 sm:p-3.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] flex flex-col sm:flex-row sm:items-start sm:items-center justify-between gap-2.5">
-                <div className="min-w-0 flex-1">
-                  <div className="font-extrabold text-[#19251f] flex flex-wrap items-center gap-1.5 sm:gap-2">
-                    <span className="break-words">Unit {bill.unitNumber} ({bill.tenantName})</span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                      bill.status === 'Paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {activeElectricityBills.map(bill => (
+                <div key={bill.id} className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-xs space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-extrabold text-sm text-[#263238]">Unit {bill.unitNumber}</span>
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#163B36] text-white font-black border border-[#263238]/20">
+                          {bill.propertyName}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#666666] mt-0.5">{bill.tenantName || 'Occupied'}</p>
+                    </div>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                      bill.status === 'Paid' ? 'bg-[#163B36] text-white' : 'bg-amber-100 text-amber-800'
                     }`}>
-                      {bill.status === 'Paid' ? 'Paid' : `Due ${bill.dueDate.split(' ')[0]} ${bill.dueDate.split(' ')[1]}`}
+                      {bill.status}
                     </span>
-                    {bill.attachmentName && (
-                      <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md flex items-center gap-0.5 shrink-0">
-                        <Paperclip className="h-2.5 w-2.5" />
-                        <span>PDF</span>
-                      </span>
-                    )}
                   </div>
-                  <div className="text-[10px] sm:text-[11px] text-[#6e7972] mt-0.5 truncate">
-                    {bill.unitsConsumed} kWh @ ₹{bill.ratePerUnit} + ₹{bill.fixedCharges} fixed • {bill.meterNumber}
+
+                  <div className="p-3 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-[#666666]">Provider:</span>
+                      <span className="font-bold text-[#263238]">{bill.discom}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#666666]">Consumption:</span>
+                      <span className="font-bold text-[#263238]">{bill.unitsConsumed} Units</span>
+                    </div>
+                    <div className="flex justify-between border-t border-[#D2DDD7] pt-1">
+                      <span className="text-[#666666]">Bill Amount:</span>
+                      <span className="font-black text-sm text-[#263238]">₹{bill.totalAmount.toLocaleString('en-IN')}</span>
+                    </div>
                   </div>
                 </div>
-
-                <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto pt-1 sm:pt-0 border-t sm:border-t-0 border-[#eeece5]/80">
-                  <span className="font-black text-[#19251f] font-tabular text-sm">
-                    ₹{bill.totalAmount.toLocaleString('en-IN')}
-                  </span>
-                  {bill.status === 'Paid' ? (
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-xl shrink-0">
-                      ✓ Settled
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => handleShareOwnerElectricityBill(bill.unitNumber, bill.totalAmount, bill.discom)}
-                      className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 transition shrink-0"
-                      title="Share WhatsApp bill to tenant"
-                    >
-                      <Share2 className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => {
-                      setPreselectedUnitForUpload(bill.unitNumber);
-                      setIsUploadBillModalOpen(true);
-                    }}
-                    className="p-1.5 rounded-xl bg-white hover:bg-[#f4f3ef] border border-[#e3e1d8] text-[#19251f] transition shrink-0"
-                    title={`Upload new bill for Unit ${bill.unitNumber}`}
-                  >
-                    <UploadCloud className="h-3.5 w-3.5 text-[#274235]" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="pt-2 border-t border-[#eeece5] flex flex-wrap items-center justify-between gap-1 text-[11px] text-[#6e7972]">
-            <span>Automatic Sub-Meter Computation</span>
-            <span className="font-bold text-[#274235]">BESCOM Regulated Rate</span>
-          </div>
+              ))}
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
-      {/* Add Bank Account Modal */}
+      {/* ========================================================================= */}
+      {/* MODAL: ADD BANK ACCOUNT                                                   */}
+      {/* ========================================================================= */}
       {isAddBankModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="w-[calc(100vw-2rem)] max-w-md bg-white border border-[#e3e1d8] rounded-3xl p-4 sm:p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto my-auto">
-            <div className="flex items-center justify-between pb-2 border-b border-[#eeece5]">
-              <div className="flex items-center gap-2">
-                <Landmark className="h-5 w-5 text-[#274235]" />
-                <h3 className="font-extrabold text-base text-[#19251f]">Add Bank Account for Payouts</h3>
-              </div>
-              <button onClick={() => setIsAddBankModalOpen(false)} className="text-[#6e7972] hover:text-[#19251f]">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-base text-[#263238]">Add Bank Account</h3>
+              <button onClick={() => setIsAddBankModalOpen(false)} className="text-[#666666] hover:text-[#263238]">
                 <X className="h-5 w-5" />
               </button>
             </div>
-
-            <form onSubmit={handleAddBank} className="space-y-3.5 text-xs">
+            <form onSubmit={e => { e.preventDefault(); setIsAddBankModalOpen(false); }} className="space-y-3">
               <div>
-                <label className="block text-[#19251f] font-semibold mb-1">Bank Name</label>
-                <select
+                <label className="text-xs font-bold text-[#263238]">Bank Name</label>
+                <input 
+                  type="text" 
                   value={newBank.bankName}
-                  onChange={(e) => setNewBank({ ...newBank, bankName: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
-                >
-                  <option value="HDFC Bank">HDFC Bank</option>
-                  <option value="ICICI Bank">ICICI Bank</option>
-                  <option value="State Bank of India">State Bank of India</option>
-                  <option value="Axis Bank">Axis Bank</option>
-                  <option value="Kotak Mahindra Bank">Kotak Mahindra Bank</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[#19251f] font-semibold mb-1">Account Holder Name</label>
-                <input
-                  type="text"
+                  onChange={e => setNewBank({ ...newBank, bankName: e.target.value })}
+                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238]"
                   required
-                  value={newBank.holderName}
-                  onChange={(e) => setNewBank({ ...newBank, holderName: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
                 />
               </div>
-
               <div>
-                <label className="block text-[#19251f] font-semibold mb-1">Bank Account Number</label>
-                <input
-                  type="password"
-                  required
-                  placeholder="Enter full account number"
+                <label className="text-xs font-bold text-[#263238]">Account Number</label>
+                <input 
+                  type="password" 
                   value={newBank.accountNumber}
-                  onChange={(e) => setNewBank({ ...newBank, accountNumber: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
+                  onChange={e => setNewBank({ ...newBank, accountNumber: e.target.value })}
+                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  required
                 />
               </div>
-
               <div>
-                <label className="block text-[#19251f] font-semibold mb-1">Confirm Account Number</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Re-enter account number"
-                  value={newBank.confirmAccountNumber}
-                  onChange={(e) => setNewBank({ ...newBank, confirmAccountNumber: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[#19251f] font-semibold mb-1">IFSC Code</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. ICIC0001234"
+                <label className="text-xs font-bold text-[#263238]">IFSC Code</label>
+                <input 
+                  type="text" 
                   value={newBank.ifsc}
-                  onChange={(e) => setNewBank({ ...newBank, ifsc: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235] uppercase font-mono"
+                  onChange={e => setNewBank({ ...newBank, ifsc: e.target.value })}
+                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  required
                 />
               </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  className="w-full py-3.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold shadow-md shadow-[#274235]/20 transition"
-                >
-                  Verify & Link Bank Account
-                </button>
-              </div>
+              <button type="submit" className="w-full py-2.5 rounded-full bg-[#163B36] text-white text-xs font-black hover:bg-[#0F2925] transition shadow-xs">
+                Save &amp; Verify Bank Account
+              </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* Upload Document Modal */}
+      {/* ========================================================================= */}
+      {/* MODAL: UPLOAD DOCUMENT                                                    */}
+      {/* ========================================================================= */}
       {isUploadDocModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="w-[calc(100vw-2rem)] max-w-md bg-white border border-[#e3e1d8] rounded-3xl p-4 sm:p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto my-auto">
-            <div className="flex items-center justify-between pb-2 border-b border-[#eeece5]">
-              <div className="flex items-center gap-2">
-                <Upload className="h-5 w-5 text-[#274235]" />
-                <h3 className="font-extrabold text-base text-[#19251f]">Upload Document to Wallet</h3>
-              </div>
-              <button onClick={() => setIsUploadDocModalOpen(false)} className="text-[#6e7972] hover:text-[#19251f]">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-base text-[#263238]">Upload Document</h3>
+              <button onClick={() => setIsUploadDocModalOpen(false)} className="text-[#263238]/70 hover:text-[#263238]">
                 <X className="h-5 w-5" />
               </button>
             </div>
-
-            <form onSubmit={handleUploadDoc} className="space-y-3.5 text-xs">
+            <form onSubmit={e => { e.preventDefault(); setIsUploadDocModalOpen(false); }} className="space-y-3">
               <div>
-                <label className="block text-[#19251f] font-semibold mb-1">Document Title</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Wayanad Villa Title Deed"
+                <label className="text-xs font-bold text-[#263238]">Title</label>
+                <input 
+                  type="text" 
                   value={newDoc.title}
-                  onChange={(e) => setNewDoc({ ...newDoc, title: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
+                  onChange={e => setNewDoc({ ...newDoc, title: e.target.value })}
+                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  required
                 />
               </div>
-
-              <div>
-                <label className="block text-[#19251f] font-semibold mb-1">Category</label>
-                <select
-                  value={newDoc.category}
-                  onChange={(e) => setNewDoc({ ...newDoc, category: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
-                >
-                  <option value="Title Deed">Title Deed & Sale Deed</option>
-                  <option value="Property Tax">Property Tax Receipt</option>
-                  <option value="Encumbrance Certificate">Encumbrance Certificate (EC)</option>
-                  <option value="Building Insurance">Building Insurance Policy</option>
-                  <option value="Fire & Safety NOC">Fire & Safety NOC</option>
-                  <option value="Electricity & Water NOC">Electricity & Water Connection</option>
-                </select>
-              </div>
-
-              <div className="p-5 sm:p-6 rounded-2xl border-2 border-dashed border-[#e3e1d8] text-center space-y-2 bg-[#fbfbfa]">
-                <FileText className="h-8 w-8 text-[#274235] mx-auto" />
-                <div className="text-xs font-bold text-[#19251f]">Drop PDF or click to browse</div>
-                <div className="text-[10px] text-[#6e7972]">Supports PDF, PNG, JPG up to 25 MB</div>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  className="w-full py-3.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold shadow-md shadow-[#274235]/20 transition"
-                >
-                  Save into Encrypted Vault
-                </button>
-              </div>
+              <button type="submit" className="w-full py-2.5 rounded-full bg-[#163B36] text-white text-xs font-black hover:bg-[#0F2925] transition shadow-xs">
+                Upload to Vault
+              </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* Add Manager or Accountant Modal */}
+      {/* ========================================================================= */}
+      {/* MODAL: INVITE DELEGATE                                                    */}
+      {/* ========================================================================= */}
       {isAddDelegateModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="w-[calc(100vw-2rem)] max-w-md bg-white border border-[#e3e1d8] rounded-3xl p-4 sm:p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto my-auto">
-            <div className="flex items-center justify-between pb-2 border-b border-[#eeece5]">
-              <div className="flex items-center gap-2">
-                <UserCheck className="h-5 w-5 text-[#274235]" />
-                <h3 className="font-extrabold text-base text-[#19251f]">Add Manager or Accountant</h3>
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+              <div>
+                <h3 className="font-extrabold text-base text-[#263238]">Invite Team Member</h3>
+                <p className="text-xs text-[#546E7A]">Give your manager access to their work while you stay in control</p>
               </div>
-              <button onClick={() => setIsAddDelegateModalOpen(false)} className="text-[#6e7972] hover:text-[#19251f]">
+              <button onClick={() => setIsAddDelegateModalOpen(false)} className="text-[#263238]/70 hover:text-[#263238]">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAddDelegateSubmit} className="space-y-3.5 text-xs">
+            <form onSubmit={e => {
+              e.preventDefault();
+              const perms: string[] = [];
+              if (newDelegate.allowLedger) perms.push('Financial Ledger', 'Tax Reports (P&L)');
+              if (newDelegate.allowInvoices) perms.push('Rent Invoices', 'Bank Statements');
+              if (newDelegate.allowMaintenance) perms.push('Maintenance Work Orders', 'Tenant Handover');
+
+              addDelegate({
+                name: newDelegate.name,
+                email: newDelegate.email,
+                phone: newDelegate.phone,
+                role: newDelegate.role,
+                permissions: perms,
+                status: 'Active',
+                canWithdrawFunds: false
+              });
+              setIsAddDelegateModalOpen(false);
+              setNewDelegate({
+                name: '',
+                email: '',
+                phone: '',
+                role: 'Accountant',
+                allowLedger: true,
+                allowInvoices: true,
+                allowMaintenance: false,
+                allowBankPayouts: false
+              });
+            }} className="space-y-3.5 text-xs">
               <div>
-                <label className="block text-[#19251f] font-semibold mb-1">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. CA Suresh Narayanan"
+                <label className="text-xs font-bold text-[#263238] block mb-1">Full Name</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. CA Rajesh Kulkarni"
                   value={newDelegate.name}
-                  onChange={(e) => setNewDelegate({ ...newDelegate, name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
+                  onChange={e => setNewDelegate({ ...newDelegate, name: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  required
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Email</label>
+                  <input 
+                    type="email" 
+                    placeholder="rajesh@cacafe.in"
+                    value={newDelegate.email}
+                    onChange={e => setNewDelegate({ ...newDelegate, email: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Phone</label>
+                  <input 
+                    type="text" 
+                    placeholder="+91 98450 11928"
+                    value={newDelegate.phone}
+                    onChange={e => setNewDelegate({ ...newDelegate, phone: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238] font-mono"
+                    required
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-[#19251f] font-semibold mb-1">Role & Responsibility</label>
+                <label className="text-xs font-bold text-[#263238] block mb-1">Assigned Role</label>
                 <select
                   value={newDelegate.role}
-                  onChange={(e) => {
-                    const r = e.target.value as any;
-                    setNewDelegate({
-                      ...newDelegate,
-                      role: r,
-                      allowLedger: r === 'Accountant' || r === 'Tax Auditor',
-                      allowInvoices: true,
-                      allowMaintenance: r === 'Property Manager'
-                    });
-                  }}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
+                  onChange={e => setNewDelegate({ ...newDelegate, role: e.target.value as any })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
                 >
-                  <option value="Accountant">Accountant / Chartered Accountant (CA)</option>
-                  <option value="Property Manager">Property Manager / Field Operations</option>
-                  <option value="Tax Auditor">Tax Auditor / Compliance Advisor</option>
+                  <option value="Accountant">Chartered Accountant (CA)</option>
+                  <option value="Property Manager">Property Manager</option>
+                  <option value="Tax Auditor">Tax Auditor</option>
                 </select>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[#19251f] font-semibold mb-1">Email Address</label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="suresh@auditfirm.in"
-                    value={newDelegate.email}
-                    onChange={(e) => setNewDelegate({ ...newDelegate, email: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[#19251f] font-semibold mb-1">WhatsApp Phone</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="+91 98450 12345"
-                    value={newDelegate.phone}
-                    onChange={(e) => setNewDelegate({ ...newDelegate, phone: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] focus:outline-none focus:border-[#274235]"
-                  />
-                </div>
-              </div>
-
-              {/* Permissions Checkboxes */}
-              <div className="p-3 rounded-2xl bg-[#fbfbfa] border border-[#e3e1d8] space-y-2">
-                <span className="font-extrabold text-[#19251f] block text-[11px]">Granular Permission Scopes:</span>
+              <div className="p-3 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-2 text-xs">
+                <span className="font-bold text-[#263238] block">Operational Permissions:</span>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={newDelegate.allowLedger}
-                    onChange={(e) => setNewDelegate({ ...newDelegate, allowLedger: e.target.checked })}
-                    className="rounded text-[#274235] focus:ring-[#274235]"
+                    onChange={e => setNewDelegate({ ...newDelegate, allowLedger: e.target.checked })}
+                    className="rounded text-[#163B36]"
                   />
-                  <span>View Double-Entry Ledger & P&L Statements</span>
+                  <span>View Double-Entry Ledger &amp; Tax P&amp;L</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={newDelegate.allowInvoices}
-                    onChange={(e) => setNewDelegate({ ...newDelegate, allowInvoices: e.target.checked })}
-                    className="rounded text-[#274235] focus:ring-[#274235]"
+                    onChange={e => setNewDelegate({ ...newDelegate, allowInvoices: e.target.checked })}
+                    className="rounded text-[#163B36]"
                   />
-                  <span>View Tenant Invoices, Receipts & Bank Deposits</span>
+                  <span>Inspect Rent Invoices &amp; TDS Statements</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={newDelegate.allowMaintenance}
-                    onChange={(e) => setNewDelegate({ ...newDelegate, allowMaintenance: e.target.checked })}
-                    className="rounded text-[#274235] focus:ring-[#274235]"
+                    onChange={e => setNewDelegate({ ...newDelegate, allowMaintenance: e.target.checked })}
+                    className="rounded text-[#163B36]"
                   />
-                  <span>Manage Work Orders, Quotes & Vendor Triage</span>
+                  <span>Manage Work Orders &amp; Field Repairs</span>
                 </label>
               </div>
 
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs shadow-md shadow-[#274235]/20 transition flex items-center justify-center gap-2"
-                >
-                  <UserPlus className="h-4 w-4" />
-                  <span>Grant Secure Access & Send Invite</span>
-                </button>
+              <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-relaxed">
+                🔒 <b>Strict Compliance Rule:</b> Money withdrawal and escrow account alterations are strictly prohibited for delegates. Only the verified Property Owner can withdraw rental funds.
               </div>
+
+              <button type="submit" className="w-full py-2.5 rounded-full bg-[#163B36] text-white text-xs font-black hover:bg-[#0F2925] transition shadow-xs cursor-pointer">
+                Authorize Delegate
+              </button>
             </form>
           </div>
         </div>
       )}
+
     </div>
   );
 }

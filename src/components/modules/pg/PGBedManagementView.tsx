@@ -31,19 +31,29 @@ import {
   Warehouse,
   SlidersHorizontal,
   ExternalLink,
-  MapPin
+  MapPin,
+  UserPlus
 } from 'lucide-react';
 
 export default function PGBedManagementView() {
   const { 
+    currentUser,
+    activeRole,
     pgBeds, 
     pgRooms, 
     pgMeals, 
+    addPgMeal,
+    updatePgMeal,
+    deletePgMeal,
     properties,
     updatePGBedStatus, 
     addNotification,
     setIsAddPropertyOpen,
-    setActiveView 
+    setIsExistingTenantWizardOpen,
+    setActiveView,
+    foodMenuItems,
+    addFoodMenuItem,
+    deleteFoodMenuItem
   } = useAppState();
 
   const [activeTab, setActiveTab] = useState<'LISTINGS' | 'BEDS' | 'ELECTRICITY' | 'MEALS' | 'HOSTEL'>('LISTINGS');
@@ -55,19 +65,99 @@ export default function PGBedManagementView() {
   const [selectedRoomFilter, setSelectedRoomFilter] = useState<string | null>(null);
   const [selectedPropertyFilter, setSelectedPropertyFilter] = useState<string | null>(null);
 
-  // PG Dashboard Metrics
-  const totalBeds = 120; // PG Portfolio Capacity
-  const occupiedBeds = pgBeds.filter(b => b.status === 'Occupied').length + 89; // active inventory
-  const vacantBeds = pgBeds.filter(b => b.status === 'Available').length + 17;
-  const reservedBeds = pgBeds.filter(b => b.status === 'Reserved').length + 4;
-  const noticeBeds = pgBeds.filter(b => b.status === 'Notice Given').length;
-  const occupancyPercent = ((occupiedBeds / totalBeds) * 100).toFixed(1);
-  const expectedRevenue = 840000;
-  const collectedRevenue = 790000;
-  const pendingRevenue = 50000;
+  // Meal Modal State
+  const [isMealModalOpen, setIsMealModalOpen] = useState(false);
+  const [editingMealId, setEditingMealId] = useState<string | null>(null);
+  const [mealForm, setMealForm] = useState<{
+    mealType: 'Breakfast' | 'Lunch' | 'Dinner';
+    menu: string;
+    vendor: string;
+    costPerMeal: number;
+    optedInCount: number;
+  }>({
+    mealType: 'Breakfast',
+    menu: '',
+    vendor: '',
+    costPerMeal: 60,
+    optedInCount: 0
+  });
+
+  // Submeter modal state
+  const [isUpdateSubmeterModalOpen, setIsUpdateSubmeterModalOpen] = useState(false);
+  const [meterModalRoomId, setMeterModalRoomId] = useState<string>('');
+  const [meterModalReading, setMeterModalReading] = useState<number>(0);
+  const [meterModalSplitMethod, setMeterModalSplitMethod] = useState<'Equal' | 'Submeter' | 'Room-level'>('Submeter');
+  const [meterModalRate, setMeterModalRate] = useState<number>(8.5);
+
+  // Total building bill state for electricity split calculation
+  const isDemoAccountInitial = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
+  const [totalBuildingBill, setTotalBuildingBill] = useState<number>(isDemoAccountInitial ? 20000 : 0);
+
+  // Local room overrides for manual submeter updates
+  const [roomOverrides, setRoomOverrides] = useState<Record<string, { submeterReading: number; electricitySplitMethod: 'Equal' | 'Submeter' | 'Room-level' }>>({});
+
+  // Daily Food Menu Item Modal State
+  const [isFoodModalOpen, setIsFoodModalOpen] = useState(false);
+  const [foodItemForm, setFoodItemForm] = useState({
+    name: '',
+    category: 'Standard' as 'Standard' | 'Special' | 'Add-on',
+    mealType: 'Breakfast' as 'Breakfast' | 'Lunch' | 'Dinner' | 'Snacks',
+    dietaryTag: 'Vegetarian' as 'Vegetarian' | 'Non-Vegetarian' | 'Jain',
+    price: 60,
+    availableTimings: '07:30 - 10:00 AM',
+    description: ''
+  });
+
+  // Check demo account vs real new onboarded owner
+  const isDemoAccount = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
+
+  // Demo vs dynamic guardian & visitor states
+  const [guardianContacts, setGuardianContacts] = useState(isDemoAccount ? [
+    { id: 'g-1', studentName: 'Aditya Verma (Bed 101-A)', guardianName: 'Rajesh Verma (Father)', phone: '+91 98410 88219', status: 'Verified' },
+    { id: 'g-2', studentName: 'Varun Nair (Bed 101-B)', guardianName: 'S. Nair (Mother)', phone: '+91 94470 33100', status: 'Verified' }
+  ] : []);
+  const [isAddGuardianModalOpen, setIsAddGuardianModalOpen] = useState(false);
+  const [guardianForm, setGuardianForm] = useState({
+    studentName: '',
+    guardianName: '',
+    relationship: 'Father',
+    phone: ''
+  });
+
+  const [hostelVisitors, setHostelVisitors] = useState(isDemoAccount ? [
+    { id: 'v-1', name: 'Meenakshi Verma', purpose: 'Visiting Aditya (Room 101) • 4:00 PM - 6:30 PM', status: 'Checked Out' },
+    { id: 'v-2', name: 'Praveen K. (Laptop Repair)', purpose: 'Authorized Tech Vendor • In Common Room', status: 'Inside Campus' }
+  ] : []);
+  const [isLogVisitorModalOpen, setIsLogVisitorModalOpen] = useState(false);
+  const [visitorForm, setVisitorForm] = useState({
+    name: '',
+    purpose: '',
+    status: 'Inside Campus' as 'Inside Campus' | 'Checked Out'
+  });
+
+  // For non-demo user, scope beds and rooms strictly to properties owned by currentUser
+  const userOwnedProperties = isDemoAccount ? properties : properties.filter(p => p.ownerId === currentUser?.id);
+  const userOwnedPropIds = userOwnedProperties.map(p => p.id);
+  const activePgRooms = isDemoAccount ? pgRooms : pgRooms.filter(r => userOwnedPropIds.includes(r.propertyId));
+  const activePgRoomIds = activePgRooms.map(r => r.id);
+  const activePgRoomNumbers = activePgRooms.map(r => r.roomNumber);
+  const activePgBeds = isDemoAccount 
+    ? pgBeds 
+    : pgBeds.filter(b => activePgRoomIds.includes(b.roomId) || activePgRoomNumbers.includes(b.roomNumber));
+
+  // Dynamic PG Dashboard Metrics (Zero mock additions)
+  const totalBeds = activePgBeds.length;
+  const occupiedBeds = activePgBeds.filter(b => b.status === 'Occupied').length;
+  const vacantBeds = activePgBeds.filter(b => b.status === 'Available').length;
+  const reservedBeds = activePgBeds.filter(b => b.status === 'Reserved').length;
+  const noticeBeds = activePgBeds.filter(b => b.status === 'Notice Given').length;
+  const occupancyPercent = totalBeds > 0 ? ((occupiedBeds / totalBeds) * 100).toFixed(1) : '0.0';
+  const expectedRevenue = activePgBeds.reduce((acc, b) => acc + (b.monthlyRent || 0), 0);
+  const collectedRevenue = activePgBeds.filter(b => b.status === 'Occupied').reduce((acc, b) => acc + (b.monthlyRent || 0), 0);
+  const pendingRevenue = Math.max(0, expectedRevenue - collectedRevenue);
 
   // Filtered Beds - strictly matches selectedRoomFilter if chosen
-  const filteredBeds = pgBeds.filter(bed => {
+  const filteredBeds = activePgBeds.filter(bed => {
     if (selectedRoomFilter && bed.roomNumber !== selectedRoomFilter) return false;
     if (selectedFloor !== 'ALL' && bed.floor !== selectedFloor) return false;
     if (selectedStatus !== 'ALL' && bed.status !== selectedStatus) return false;
@@ -112,7 +202,7 @@ export default function PGBedManagementView() {
     <div className="space-y-6 font-sans">
       
       {/* Top Banner & Overview */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-[#e3e1d8] shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-[#D2DDD7] shadow-sm">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
@@ -120,22 +210,22 @@ export default function PGBedManagementView() {
             </span>
             <span className="text-xs text-slate-500 font-medium">PGs • Private Rooms • Commercial Buildings • Residential</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-[#19251f]">
+          <h1 className="text-xl sm:text-2xl font-black text-[#263238]">
             Bed, Room &amp; Building Universe
           </h1>
-          <p className="text-xs text-[#6e7972]">
+          <p className="text-xs text-[#666666]">
             Comprehensive multi-asset inventory management with PG bed state machines, private rooms, commercial floors, and sub-meter power.
           </p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#f7f6f2] border border-[#e8e6de] self-start md:self-auto overflow-x-auto max-w-full">
+        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] self-start md:self-auto overflow-x-auto max-w-full">
           <button
             onClick={() => setActiveTab('LISTINGS')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'LISTINGS'
-                ? 'bg-[#19251f] text-white shadow-sm'
-                : 'text-[#6e7972] hover:text-[#19251f]'
+                ? 'bg-[#163B36] text-white shadow-xs'
+                : 'text-[#546E7A] hover:text-[#263238]'
             }`}
           >
             <Building2 className="h-3.5 w-3.5" />
@@ -145,8 +235,8 @@ export default function PGBedManagementView() {
             onClick={() => setActiveTab('BEDS')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'BEDS'
-                ? 'bg-[#19251f] text-white shadow-sm'
-                : 'text-[#6e7972] hover:text-[#19251f]'
+                ? 'bg-[#163B36] text-white shadow-xs'
+                : 'text-[#546E7A] hover:text-[#263238]'
             }`}
           >
             <BedDouble className="h-3.5 w-3.5" />
@@ -156,8 +246,8 @@ export default function PGBedManagementView() {
             onClick={() => setActiveTab('ELECTRICITY')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'ELECTRICITY'
-                ? 'bg-[#19251f] text-white shadow-sm'
-                : 'text-[#6e7972] hover:text-[#19251f]'
+                ? 'bg-[#163B36] text-white shadow-xs'
+                : 'text-[#546E7A] hover:text-[#263238]'
             }`}
           >
             <Zap className="h-3.5 w-3.5" />
@@ -167,8 +257,8 @@ export default function PGBedManagementView() {
             onClick={() => setActiveTab('MEALS')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'MEALS'
-                ? 'bg-[#19251f] text-white shadow-sm'
-                : 'text-[#6e7972] hover:text-[#19251f]'
+                ? 'bg-[#163B36] text-white shadow-xs'
+                : 'text-[#546E7A] hover:text-[#263238]'
             }`}
           >
             <Utensils className="h-3.5 w-3.5" />
@@ -178,8 +268,8 @@ export default function PGBedManagementView() {
             onClick={() => setActiveTab('HOSTEL')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'HOSTEL'
-                ? 'bg-[#19251f] text-white shadow-sm'
-                : 'text-[#6e7972] hover:text-[#19251f]'
+                ? 'bg-[#163B36] text-white shadow-xs'
+                : 'text-[#546E7A] hover:text-[#263238]'
             }`}
           >
             <Users className="h-3.5 w-3.5" />
@@ -190,10 +280,10 @@ export default function PGBedManagementView() {
 
       {/* SECTION 5: PG Dashboard Key Metrics Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-        <div className="p-3.5 rounded-2xl bg-white border border-[#e3e1d8] shadow-sm">
+        <div className="p-3.5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm">
           <div className="text-[10px] uppercase font-bold text-slate-400">Total Beds</div>
           <div className="text-xl font-black text-slate-900 mt-1">{totalBeds}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">3 Floors • 24 Rooms</div>
+          <div className="text-[10px] text-slate-500 mt-0.5">{activePgRooms.length} Active Rooms</div>
         </div>
 
         <div className="p-3.5 rounded-2xl bg-white border border-indigo-200/80 shadow-sm">
@@ -205,7 +295,7 @@ export default function PGBedManagementView() {
         <div className="p-3.5 rounded-2xl bg-white border border-emerald-200 shadow-sm">
           <div className="text-[10px] uppercase font-bold text-emerald-700">Vacant Beds</div>
           <div className="text-xl font-black text-emerald-950 mt-1">{vacantBeds}</div>
-          <div className="text-[10px] text-emerald-600 font-medium mt-0.5">Ready for Check-in</div>
+          <div className="text-[10px] text-emerald-600 font-medium mt-0.5">{vacantBeds > 0 ? 'Ready for Check-in' : 'No Vacant Beds'}</div>
         </div>
 
         <div className="p-3.5 rounded-2xl bg-white border border-amber-200 shadow-sm">
@@ -214,22 +304,34 @@ export default function PGBedManagementView() {
           <div className="text-[10px] text-amber-600 font-medium mt-0.5">Deposits Received</div>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-white border border-[#e3e1d8] shadow-sm">
+        <div className="p-3.5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm">
           <div className="text-[10px] uppercase font-bold text-slate-400">Expected Rev</div>
-          <div className="text-xl font-black text-slate-900 mt-1">₹8.4L</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">₹7,000 avg/bed</div>
+          <div className="text-xl font-black text-slate-900 mt-1">
+            {expectedRevenue >= 100000 ? `₹${(expectedRevenue / 100000).toFixed(1)}L` : `₹${expectedRevenue.toLocaleString('en-IN')}`}
+          </div>
+          <div className="text-[10px] text-slate-500 mt-0.5">
+            {totalBeds > 0 ? `₹${Math.round(expectedRevenue / totalBeds).toLocaleString('en-IN')} avg/bed` : '₹0 avg'}
+          </div>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-white border border-[#e3e1d8] shadow-sm">
+        <div className="p-3.5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm">
           <div className="text-[10px] uppercase font-bold text-emerald-700">Collected</div>
-          <div className="text-xl font-black text-emerald-900 mt-1">₹7.9L</div>
-          <div className="text-[10px] text-emerald-600 font-semibold mt-0.5">94.0% Collected</div>
+          <div className="text-xl font-black text-emerald-900 mt-1">
+            {collectedRevenue >= 100000 ? `₹${(collectedRevenue / 100000).toFixed(1)}L` : `₹${collectedRevenue.toLocaleString('en-IN')}`}
+          </div>
+          <div className="text-[10px] text-emerald-600 font-semibold mt-0.5">
+            {expectedRevenue > 0 ? `${Math.round((collectedRevenue / expectedRevenue) * 100)}% Collected` : '0%'}
+          </div>
         </div>
 
         <div className="p-3.5 rounded-2xl bg-white border border-rose-200 shadow-sm col-span-2 sm:col-span-1">
           <div className="text-[10px] uppercase font-bold text-rose-600">Pending Rent</div>
-          <div className="text-xl font-black text-rose-950 mt-1">₹50K</div>
-          <div className="text-[10px] text-rose-600 font-medium mt-0.5">4 Tenants Overdue</div>
+          <div className="text-xl font-black text-rose-950 mt-1">
+            {pendingRevenue >= 100000 ? `₹${(pendingRevenue / 100000).toFixed(1)}L` : `₹${pendingRevenue.toLocaleString('en-IN')}`}
+          </div>
+          <div className="text-[10px] text-rose-600 font-medium mt-0.5">
+            {pendingRevenue > 0 ? 'Pending Collection' : 'Zero Overdue'}
+          </div>
         </div>
       </div>
 
@@ -237,7 +339,7 @@ export default function PGBedManagementView() {
       {activeTab === 'LISTINGS' && (
         <div className="space-y-5">
           {/* Controls Bar */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#e3e1d8] shadow-sm">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#D2DDD7] shadow-sm">
             {/* Category Filter Pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
               {[
@@ -252,8 +354,8 @@ export default function PGBedManagementView() {
                   onClick={() => setListingCategoryFilter(cat.id as any)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
                     listingCategoryFilter === cat.id
-                      ? 'bg-[#19251f] text-white shadow-sm'
-                      : 'bg-[#f7f6f2] text-slate-600 hover:text-slate-900 hover:bg-[#edece6]'
+                      ? 'bg-[#263238] text-white shadow-sm'
+                      : 'bg-[#E8F0EC] text-slate-600 hover:text-slate-900 hover:bg-[#E8F0EC]'
                   }`}
                 >
                   {cat.icon}
@@ -261,24 +363,61 @@ export default function PGBedManagementView() {
                 </button>
               ))}
             </div>
-
-            {/* Quick Action: Add Property / Space */}
-            <button
-              onClick={() => setIsAddPropertyOpen(true)}
-              className="py-2 px-4 rounded-xl bg-[#274235] hover:bg-[#1e352a] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition shrink-0"
-            >
-              <Plus className="h-4 w-4" />
-              <span>+ Add to Universe</span>
-            </button>
           </div>
 
-          {/* ASSET SECTION 1: PG & Co-Living Properties */}
-          {(listingCategoryFilter === 'ALL' || listingCategoryFilter === 'PG') && (
+          {(!isDemoAccount && userOwnedProperties.length === 0) ? (
+            <div className="bg-white rounded-3xl p-10 border-2 border-dashed border-[#D2DDD7] text-center space-y-4 animate-in fade-in duration-200">
+              <Building2 className="h-12 w-12 text-slate-300 mx-auto" />
+              <div className="space-y-1">
+                <h3 className="text-base font-extrabold text-[#263238]">No assets or properties registered yet</h3>
+                <p className="text-xs text-[#666666] max-w-md mx-auto">
+                  Your asset universe is currently clean. Use the <span className="font-semibold text-[#163B36]">+ Add Property</span> button in the top header to start managing beds and tenants.
+                </p>
+              </div>
+            </div>
+          ) : !isDemoAccount ? (
+            <div className="space-y-4 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between">
+                <h2 className="font-extrabold text-[#263238] text-sm">Your Registered Properties ({userOwnedProperties.length})</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {userOwnedProperties.map(p => (
+                  <div key={p.id} className="bg-white p-5 rounded-3xl border border-[#D2DDD7] shadow-sm space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">
+                          {p.type}
+                        </span>
+                        <h3 className="text-base font-black text-slate-900 mt-1">{p.name}</h3>
+                        <p className="text-xs text-slate-500">{p.address}</p>
+                      </div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">
+                        {p.totalUnits > 0 ? `${Math.round((p.occupiedUnits / p.totalUnits) * 100)}% Occupied` : '0 Units'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-[#E8F0EC] text-xs">
+                      <div>
+                        <span className="text-[10px] text-slate-500 block">Units</span>
+                        <span className="font-bold text-slate-900">{p.occupiedUnits} / {p.totalUnits}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 block">Expected Rent</span>
+                        <span className="font-bold text-slate-900">₹{p.expectedMonthlyRent.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* ASSET SECTION 1: PG & Co-Living Properties */}
+              {(listingCategoryFilter === 'ALL' || listingCategoryFilter === 'PG') && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <BedDouble className="h-4 w-4 text-indigo-600" />
-                  <h2 className="font-extrabold text-[#19251f] text-sm">Managed PG &amp; Co-Living Buildings</h2>
+                  <h2 className="font-extrabold text-[#263238] text-sm">Managed PG &amp; Co-Living Buildings</h2>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
                     2 Properties • 168 Total Beds
                   </span>
@@ -294,7 +433,7 @@ export default function PGBedManagementView() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Staywise Urban PG */}
-                <div className="bg-white p-5 rounded-3xl border border-[#e3e1d8] shadow-sm hover:shadow-md transition space-y-4">
+                <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] shadow-sm hover:shadow-md transition space-y-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider flex items-center gap-1.5 flex-wrap">
@@ -312,7 +451,7 @@ export default function PGBedManagementView() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-[#f7f6f2] border border-[#e8e6de] text-center">
+                  <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-center">
                     <div>
                       <span className="text-[10px] text-slate-400 font-bold block">Capacity</span>
                       <span className="text-sm font-black text-slate-800">120 Beds</span>
@@ -334,14 +473,14 @@ export default function PGBedManagementView() {
                     <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200 font-semibold text-slate-600">High-Speed Wi-Fi</span>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#f0eee6]">
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#E8F0EC]">
                     <button
                       onClick={() => {
                         setSelectedRoomFilter(null);
                         setSelectedPropertyFilter('Staywise Urban PG');
                         setActiveTab('BEDS');
                       }}
-                      className="py-2 px-2 rounded-xl bg-[#19251f] hover:bg-[#274235] text-white text-xs font-bold text-center transition"
+                      className="py-2 px-2 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold text-center transition"
                     >
                       Bed Grid
                     </button>
@@ -365,7 +504,7 @@ export default function PGBedManagementView() {
                 </div>
 
                 {/* Indiranagar Co-Living */}
-                <div className="bg-white p-5 rounded-3xl border border-[#e3e1d8] shadow-sm hover:shadow-md transition space-y-4">
+                <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] shadow-sm hover:shadow-md transition space-y-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider flex items-center gap-1.5 flex-wrap">
@@ -383,7 +522,7 @@ export default function PGBedManagementView() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-[#f7f6f2] border border-[#e8e6de] text-center">
+                  <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-center">
                     <div>
                       <span className="text-[10px] text-slate-400 font-bold block">Capacity</span>
                       <span className="text-sm font-black text-slate-800">48 Beds</span>
@@ -404,10 +543,10 @@ export default function PGBedManagementView() {
                     <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200 font-semibold text-slate-600">CCTV &amp; Warden</span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#f0eee6]">
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#E8F0EC]">
                     <button
                       onClick={() => setActiveTab('HOSTEL')}
-                      className="py-2 px-3 rounded-xl bg-[#19251f] hover:bg-[#274235] text-white text-xs font-bold text-center transition"
+                      className="py-2 px-3 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold text-center transition"
                     >
                       Warden &amp; Visitors
                     </button>
@@ -433,7 +572,7 @@ export default function PGBedManagementView() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <DoorOpen className="h-4 w-4 text-emerald-600" />
-                  <h2 className="font-extrabold text-[#19251f] text-sm">Individual Rooms &amp; Studio Suites</h2>
+                  <h2 className="font-extrabold text-[#263238] text-sm">Individual Rooms &amp; Studio Suites</h2>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                     4 Active Units
                   </span>
@@ -499,7 +638,7 @@ export default function PGBedManagementView() {
                     attachedBath: true
                   },
                 ].map((room, idx) => (
-                  <div key={idx} className="bg-white p-4 rounded-2xl border border-[#e3e1d8] space-y-3 shadow-sm hover:border-[#274235] transition">
+                  <div key={idx} className="bg-white p-4 rounded-2xl border border-[#D2DDD7] space-y-3 shadow-sm hover:border-[#263238] transition">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-black text-slate-900">{room.code}</span>
@@ -517,10 +656,10 @@ export default function PGBedManagementView() {
                     <div className="space-y-1">
                       <div className="text-xs font-bold text-slate-800">{room.type}</div>
                       <div className="text-[11px] text-slate-500">{room.property} • Floor {room.floor}</div>
-                      <div className="text-sm font-black text-[#19251f] pt-1">₹{room.rent.toLocaleString('en-IN')}<span className="text-[10px] font-medium text-slate-400">/mo</span></div>
+                      <div className="text-sm font-black text-[#263238] pt-1">₹{room.rent.toLocaleString('en-IN')}<span className="text-[10px] font-medium text-slate-400">/mo</span></div>
                     </div>
 
-                    <div className="pt-2 border-t border-[#f0eee6] space-y-1 text-[11px] text-slate-600">
+                    <div className="pt-2 border-t border-[#E8F0EC] space-y-1 text-[11px] text-slate-600">
                       <div className="flex items-center justify-between">
                         <span className="text-slate-400 font-medium">Tenant:</span>
                         <span className="font-bold text-slate-800 truncate max-w-[120px]">{room.occupant}</span>
@@ -538,7 +677,7 @@ export default function PGBedManagementView() {
                           setSelectedRoomFilter(room.roomNumber);
                           setActiveTab('BEDS');
                         }}
-                        className="py-1.5 px-2 rounded-xl bg-[#19251f] hover:bg-[#274235] text-white text-[11px] font-bold transition flex items-center justify-center gap-1 shadow-sm"
+                        className="py-1.5 px-2 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-[11px] font-bold transition flex items-center justify-center gap-1 shadow-sm"
                         title={`View Bed Grid for Room ${room.roomNumber} only`}
                       >
                         <BedDouble className="h-3 w-3" />
@@ -569,7 +708,7 @@ export default function PGBedManagementView() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Briefcase className="h-4 w-4 text-teal-600" />
-                  <h2 className="font-extrabold text-[#19251f] text-sm">Commercial Buildings, Offices &amp; Logistics</h2>
+                  <h2 className="font-extrabold text-[#263238] text-sm">Commercial Buildings, Offices &amp; Logistics</h2>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200">
                     2 Properties • 50,500 sq.ft
                   </span>
@@ -585,7 +724,7 @@ export default function PGBedManagementView() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Commercial Tech Park */}
-                <div className="bg-white p-5 rounded-3xl border border-[#e3e1d8] shadow-sm space-y-4">
+                <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] shadow-sm space-y-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="text-[10px] uppercase font-bold text-teal-600 tracking-wider flex items-center gap-1.5 flex-wrap">
@@ -600,7 +739,7 @@ export default function PGBedManagementView() {
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-[#f7f6f2] border border-[#e8e6de] space-y-2 text-xs">
+                  <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-2 text-xs">
                     <div className="flex items-center justify-between font-bold text-slate-700">
                       <span>Floor 1: Suite 101 — BlueFin Capital</span>
                       <span className="font-black text-slate-900">₹1,80,000 + ₹57,600 CAM</span>
@@ -615,10 +754,10 @@ export default function PGBedManagementView() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#f0eee6]">
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#E8F0EC]">
                     <button
                       onClick={() => setActiveView('commercial')}
-                      className="py-2 px-3 rounded-xl bg-[#19251f] hover:bg-[#274235] text-white text-xs font-bold text-center transition"
+                      className="py-2 px-3 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold text-center transition"
                     >
                       Commercial Leases
                     </button>
@@ -632,7 +771,7 @@ export default function PGBedManagementView() {
                 </div>
 
                 {/* Logistics & Cargo Park */}
-                <div className="bg-white p-5 rounded-3xl border border-[#e3e1d8] shadow-sm space-y-4">
+                <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] shadow-sm space-y-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="text-[10px] uppercase font-bold text-teal-600 tracking-wider flex items-center gap-1.5 flex-wrap">
@@ -647,7 +786,7 @@ export default function PGBedManagementView() {
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-[#f7f6f2] border border-[#e8e6de] space-y-2 text-xs">
+                  <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-2 text-xs">
                     <div className="flex items-center justify-between font-bold text-slate-700">
                       <span>Zone A: Bay 1-2 — TransIndia Cold Storage</span>
                       <span className="font-black text-slate-900">₹2,80,000/mo</span>
@@ -658,10 +797,10 @@ export default function PGBedManagementView() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#f0eee6]">
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#E8F0EC]">
                     <button
                       onClick={() => setActiveView('commercial')}
-                      className="py-2 px-3 rounded-xl bg-[#19251f] hover:bg-[#274235] text-white text-xs font-bold text-center transition"
+                      className="py-2 px-3 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold text-center transition"
                     >
                       Bay Compliance
                     </button>
@@ -683,7 +822,7 @@ export default function PGBedManagementView() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Home className="h-4 w-4 text-amber-600" />
-                  <h2 className="font-extrabold text-[#19251f] text-sm">Residential Apartments, Villas &amp; Duplexes</h2>
+                  <h2 className="font-extrabold text-[#263238] text-sm">Residential Apartments, Villas &amp; Duplexes</h2>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
                     2 Buildings • 8 Total Units
                   </span>
@@ -699,7 +838,7 @@ export default function PGBedManagementView() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Beach Road */}
-                <div className="bg-white p-4 rounded-2xl border border-[#e3e1d8] space-y-2">
+                <div className="bg-white p-4 rounded-2xl border border-[#D2DDD7] space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-slate-900 text-xs">Beach Road Luxury Apartments</h3>
@@ -712,7 +851,7 @@ export default function PGBedManagementView() {
                 </div>
 
                 {/* Palm Grove */}
-                <div className="bg-white p-4 rounded-2xl border border-[#e3e1d8] space-y-2">
+                <div className="bg-white p-4 rounded-2xl border border-[#D2DDD7] space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-slate-900 text-xs">Palm Grove Residences</h3>
@@ -725,6 +864,9 @@ export default function PGBedManagementView() {
                 </div>
               </div>
             </div>
+          )}
+
+            </>
           )}
 
         </div>
@@ -758,7 +900,7 @@ export default function PGBedManagementView() {
           )}
 
           {/* Controls & Filter Bar */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-[#e3e1d8]">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-[#D2DDD7]">
             {/* Search */}
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
@@ -767,17 +909,17 @@ export default function PGBedManagementView() {
                 placeholder="Search bed code, room, or tenant..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3.5 py-1.5 rounded-xl bg-[#f7f6f2] border border-[#e3e1d8] text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#274235]"
+                className="w-full pl-9 pr-3.5 py-1.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#263238]"
               />
             </div>
 
             {/* Filter Buttons */}
             <div className="flex items-center gap-2 overflow-x-auto">
-              <div className="flex items-center gap-1 bg-[#f7f6f2] p-1 rounded-xl border border-[#e3e1d8]">
+              <div className="flex items-center gap-1 bg-[#E8F0EC] p-1 rounded-xl border border-[#D2DDD7]">
                 <button
                   onClick={() => setSelectedFloor('ALL')}
                   className={`px-2.5 py-1 rounded-lg text-[11px] font-bold ${
-                    selectedFloor === 'ALL' ? 'bg-[#19251f] text-white' : 'text-slate-600 hover:text-slate-900'
+                    selectedFloor === 'ALL' ? 'bg-[#263238] text-white' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   All Floors
@@ -787,7 +929,7 @@ export default function PGBedManagementView() {
                     key={floor}
                     onClick={() => setSelectedFloor(floor)}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-bold ${
-                      selectedFloor === floor ? 'bg-[#19251f] text-white' : 'text-slate-600 hover:text-slate-900'
+                      selectedFloor === floor ? 'bg-[#263238] text-white' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     Floor {floor}
@@ -798,7 +940,7 @@ export default function PGBedManagementView() {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-3 py-1.5 rounded-xl bg-[#f7f6f2] border border-[#e3e1d8] text-xs font-semibold text-slate-800"
+                className="px-3 py-1.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-semibold text-slate-800"
               >
                 <option value="ALL">All Statuses (7 States)</option>
                 <option value="Available">Available</option>
@@ -813,84 +955,96 @@ export default function PGBedManagementView() {
           </div>
 
           {/* Bed Inventory Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
-            {filteredBeds.map((bed) => (
-              <div
-                key={bed.id}
-                className="bg-white rounded-2xl border border-[#e3e1d8] p-3.5 shadow-sm hover:border-[#274235] hover:shadow-md transition flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-1 mb-2">
-                    <div className="flex items-center gap-1.5">
-                      <DoorOpen className="h-3.5 w-3.5 text-slate-500" />
-                      <span className="font-extrabold text-xs text-slate-900">Room {bed.roomNumber}</span>
-                      <span className="text-[9px] font-mono font-bold text-indigo-700 bg-indigo-50 px-1 rounded">ROOM-{bed.roomNumber}</span>
-                    </div>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${getStatusColor(bed.status)}`}>
-                      {bed.status}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between border-t border-b border-slate-100 py-2 my-2">
-                    <div>
-                      <div className="text-[10px] text-slate-400 font-medium">Bed Identity</div>
-                      <div className="text-sm font-black text-[#19251f]">{bed.bedCode}</div>
-                      <div className="text-[9px] font-mono text-indigo-600 font-bold">BED-{bed.roomNumber}{bed.bedCode.replace(/^R\d+-?/, '') || bed.bedCode}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[10px] text-slate-400 font-medium">Monthly Rent</div>
-                      <div className="text-xs font-black text-emerald-800">₹{bed.monthlyRent.toLocaleString('en-IN')}</div>
-                      <div className="text-[9px] text-slate-400">{bed.sharingType}</div>
-                    </div>
-                  </div>
-
-                  {/* Tenant Details or Vacancy Info */}
-                  {bed.tenantName ? (
-                    <div className="space-y-1 my-1">
-                      <div className="text-xs font-bold text-slate-800 truncate flex items-center gap-1">
-                        <Users className="h-3 w-3 text-indigo-600 shrink-0" />
-                        <span className="truncate">{bed.tenantName}</span>
+          {filteredBeds.length === 0 ? (
+            <div className="py-12 text-center bg-white rounded-3xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
+              <BedDouble className="h-10 w-10 text-slate-300 mx-auto" />
+              <h3 className="font-bold text-slate-800 text-sm">No PG Beds Found</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                {selectedRoomFilter 
+                  ? `No beds configured under Room ${selectedRoomFilter}.`
+                  : 'There are no active PG beds in your portfolio. Use + Add Property in the top header to configure rooms, beds, and sub-meters.'}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
+              {filteredBeds.map((bed) => (
+                <div
+                  key={bed.id}
+                  className="bg-white rounded-2xl border border-[#D2DDD7] p-3.5 shadow-sm hover:border-[#263238] hover:shadow-md transition flex flex-col justify-between"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-1 mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <DoorOpen className="h-3.5 w-3.5 text-slate-500" />
+                        <span className="font-extrabold text-xs text-slate-900">Room {bed.roomNumber}</span>
+                        <span className="text-[9px] font-mono font-bold text-indigo-700 bg-indigo-50 px-1 rounded">ROOM-{bed.roomNumber}</span>
                       </div>
-                      {bed.tenantPhone && (
-                        <div className="text-[10px] text-slate-500 flex items-center gap-1">
-                          <Phone className="h-2.5 w-2.5" />
-                          <span>{bed.tenantPhone}</span>
-                        </div>
-                      )}
-                      {bed.status === 'Notice Given' && (
-                        <div className="text-[10px] text-purple-700 bg-purple-50 p-1 rounded-md font-semibold mt-1">
-                          Notice: Vacates on {bed.expectedVacantDate}
-                        </div>
-                      )}
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${getStatusColor(bed.status)}`}>
+                        {bed.status}
+                      </span>
                     </div>
-                  ) : (
-                    <div className="text-[11px] text-slate-400 italic py-1">
-                      {bed.status === 'Cleaning' ? 'Housekeeping in progress' : 'Ready for tenant placement'}
-                    </div>
-                  )}
 
-                  {/* Amenities Badges */}
-                  <div className="flex items-center gap-1 mt-2">
-                    {bed.ac && <span title="AC" className="p-1 rounded bg-slate-100 text-slate-700 text-[10px]"><Wind className="h-2.5 w-2.5" /></span>}
-                    {bed.wifiIncluded && <span title="Wi-Fi" className="p-1 rounded bg-slate-100 text-slate-700 text-[10px]"><Wifi className="h-2.5 w-2.5" /></span>}
-                    {bed.foodIncluded && <span title="Food" className="p-1 rounded bg-slate-100 text-slate-700 text-[10px]"><Utensils className="h-2.5 w-2.5" /></span>}
-                    <span className="text-[9px] font-bold text-slate-500 ml-auto">{bed.sharingType}</span>
+                    <div className="flex items-center justify-between border-t border-b border-slate-100 py-2 my-2">
+                      <div>
+                        <div className="text-[10px] text-slate-400 font-medium">Bed Identity</div>
+                        <div className="text-sm font-black text-[#263238]">{bed.bedCode}</div>
+                        <div className="text-[9px] font-mono text-indigo-600 font-bold">BED-{bed.roomNumber}{bed.bedCode.replace(/^R\d+-?/, '') || bed.bedCode}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[10px] text-slate-400 font-medium">Monthly Rent</div>
+                        <div className="text-xs font-black text-emerald-800">₹{bed.monthlyRent.toLocaleString('en-IN')}</div>
+                        <div className="text-[9px] text-slate-400">{bed.sharingType}</div>
+                      </div>
+                    </div>
+
+                    {/* Tenant Details or Vacancy Info */}
+                    {bed.tenantName ? (
+                      <div className="space-y-1 my-1">
+                        <div className="text-xs font-bold text-slate-800 truncate flex items-center gap-1">
+                          <Users className="h-3 w-3 text-indigo-600 shrink-0" />
+                          <span className="truncate">{bed.tenantName}</span>
+                        </div>
+                        {bed.tenantPhone && (
+                          <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                            <Phone className="h-2.5 w-2.5" />
+                            <span>{bed.tenantPhone}</span>
+                          </div>
+                        )}
+                        {bed.status === 'Notice Given' && (
+                          <div className="text-[10px] text-purple-700 bg-purple-50 p-1 rounded-md font-semibold mt-1">
+                            Notice: Vacates on {bed.expectedVacantDate}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-[11px] text-slate-400 italic py-1">
+                        {bed.status === 'Cleaning' ? 'Housekeeping in progress' : 'Ready for tenant placement'}
+                      </div>
+                    )}
+
+                    {/* Amenities Badges */}
+                    <div className="flex items-center gap-1 mt-2">
+                      {bed.ac && <span title="AC" className="p-1 rounded bg-slate-100 text-slate-700 text-[10px]"><Wind className="h-2.5 w-2.5" /></span>}
+                      {bed.wifiIncluded && <span title="Wi-Fi" className="p-1 rounded bg-slate-100 text-slate-700 text-[10px]"><Wifi className="h-2.5 w-2.5" /></span>}
+                      {bed.foodIncluded && <span title="Food" className="p-1 rounded bg-slate-100 text-slate-700 text-[10px]"><Utensils className="h-2.5 w-2.5" /></span>}
+                      <span className="text-[9px] font-bold text-slate-500 ml-auto">{bed.sharingType}</span>
+                    </div>
+                  </div>
+
+                  {/* State Machine Transition Trigger */}
+                  <div className="mt-3 pt-2 border-t border-slate-100">
+                    <button
+                      onClick={() => setSelectedBedForAction(bed)}
+                      className="w-full py-1.5 rounded-xl bg-slate-100 hover:bg-[#263238] hover:text-white text-slate-700 text-[10px] font-bold transition flex items-center justify-center gap-1"
+                    >
+                      <span>Update State</span>
+                      <ChevronRight className="h-3 w-3" />
+                    </button>
                   </div>
                 </div>
-
-                {/* State Machine Transition Trigger */}
-                <div className="mt-3 pt-2 border-t border-slate-100">
-                  <button
-                    onClick={() => setSelectedBedForAction(bed)}
-                    className="w-full py-1.5 rounded-xl bg-slate-100 hover:bg-[#19251f] hover:text-white text-slate-700 text-[10px] font-bold transition flex items-center justify-center gap-1"
-                  >
-                    <span>Update State</span>
-                    <ChevronRight className="h-3 w-3" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* State Transition Modal */}
           {selectedBedForAction && (
@@ -898,7 +1052,7 @@ export default function PGBedManagementView() {
               className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
               onClick={(e) => { if (e.target === e.currentTarget) setSelectedBedForAction(null); }}
             >
-              <div className="w-full max-w-md bg-white rounded-3xl p-5 border border-[#e3e1d8] shadow-2xl space-y-4">
+              <div className="w-full max-w-md bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-2xl space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div>
                     <h3 className="font-extrabold text-sm text-slate-900">Transition Bed Status</h3>
@@ -968,30 +1122,67 @@ export default function PGBedManagementView() {
             </div>
           )}
 
-          <div className="bg-white p-5 rounded-3xl border border-[#e3e1d8] space-y-4">
-            <div>
-              <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50 px-2.5 py-0.5 rounded-full">
-                Sub-Meter Billing Architecture
-              </span>
-              <h2 className="text-base font-extrabold text-slate-900 mt-1">PG Electricity Multi-Method Split Engine</h2>
-              <p className="text-xs text-slate-500">
-                Supports Equal Split (entire building), Sub-meter per room kWh, and Roommate-level splits feeding directly into monthly tenant invoices.
-              </p>
+          <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                  Sub-Meter Billing Architecture
+                </span>
+                <h2 className="text-base font-extrabold text-[#263238] mt-1">PG Electricity Multi-Method Split Engine</h2>
+                <p className="text-xs text-[#546E7A]">
+                  Supports Equal Split (entire building), Sub-meter per room kWh, and Roommate-level splits feeding directly into monthly tenant invoices.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  if (activePgRooms.length > 0) {
+                    setMeterModalRoomId(activePgRooms[0].roomNumber);
+                    setMeterModalReading(activePgRooms[0].submeterReading || 0);
+                    setMeterModalSplitMethod(activePgRooms[0].electricitySplitMethod || 'Submeter');
+                  }
+                  setIsUpdateSubmeterModalOpen(true);
+                }}
+                className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition self-start sm:self-auto cursor-pointer"
+              >
+                <Plus className="h-4 w-4 text-[#C69A55]" />
+                <span>+ Update Room Sub-Meter</span>
+              </button>
+            </div>
+
+            {/* Bill Input / Config Bar */}
+            <div className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2">
+                <Zap className="h-4 w-4 text-[#163B36]" />
+                <span className="font-bold text-[#263238]">Total Building Electricity Bill (₹):</span>
+                <input
+                  type="number"
+                  value={totalBuildingBill}
+                  onChange={(e) => setTotalBuildingBill(Number(e.target.value) || 0)}
+                  placeholder="e.g. 20000"
+                  className="w-32 px-3 py-1.5 rounded-xl border border-[#D2DDD7] bg-white font-mono font-bold text-[#263238] text-xs"
+                />
+              </div>
+              <div className="text-[11px] text-[#546E7A]">
+                Active Occupied Tenants: <b className="text-[#263238]">{occupiedBeds}</b> • Configured Rooms: <b className="text-[#263238]">{activePgRooms.length}</b>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Method 1: Equal Split */}
-              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-2">
-                <div className="flex items-center gap-1.5 font-bold text-xs text-slate-800">
+              <div className="p-4 rounded-2xl border border-[#D2DDD7] bg-[#F7F8F6] space-y-2">
+                <div className="flex items-center gap-1.5 font-bold text-xs text-[#263238]">
                   <Zap className="h-4 w-4 text-amber-500" />
                   <span>1. Equal Split Across Tenants</span>
                 </div>
-                <div className="text-xs text-slate-600 bg-white p-3 rounded-xl border border-slate-200 font-mono">
-                  Electricity Bill: ₹20,000<br/>
-                  ÷ 20 Active Tenants<br/>
-                  = <span className="font-bold text-emerald-700">₹1,000 each</span>
+                <div className="text-xs text-[#263238] bg-white p-3 rounded-xl border border-[#D2DDD7] font-mono">
+                  Total Bill: ₹{totalBuildingBill.toLocaleString('en-IN')}<br/>
+                  ÷ {occupiedBeds} Occupied Tenants<br/>
+                  = <span className="font-bold text-emerald-700">
+                    ₹{occupiedBeds > 0 && totalBuildingBill > 0 ? Math.round(totalBuildingBill / occupiedBeds).toLocaleString('en-IN') : 0} each
+                  </span>
                 </div>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-[#546E7A]">
                   Standard baseline mode for hostels without submetering. Split is computed on 1st of each month.
                 </p>
               </div>
@@ -1002,21 +1193,20 @@ export default function PGBedManagementView() {
                   <Zap className="h-4 w-4 text-indigo-600" />
                   <span>2. Sub-Meter kWh Precision</span>
                 </div>
-                {selectedRoomFilter ? (
-                  <div className="text-xs text-slate-700 bg-white p-3 rounded-xl border border-indigo-100 font-mono">
-                    Room {selectedRoomFilter} (SUB-{selectedRoomFilter}): {pgRooms.find(r => r.roomNumber === selectedRoomFilter)?.submeterReading ?? 248} kWh<br/>
+                {activePgRooms.length > 0 ? (
+                  <div className="text-xs text-[#263238] bg-white p-3 rounded-xl border border-indigo-100 font-mono">
+                    Room {activePgRooms[0].roomNumber}: {roomOverrides[activePgRooms[0].roomNumber]?.submeterReading ?? (activePgRooms[0].submeterReading || 0)} kWh<br/>
                     Rate: ₹8.5/kWh<br/>
-                    = <span className="font-bold text-indigo-700">₹{Math.round(((pgRooms.find(r => r.roomNumber === selectedRoomFilter)?.submeterReading) ?? 248) * 8.5).toLocaleString('en-IN')} billed to Room {selectedRoomFilter}</span>
+                    = <span className="font-bold text-indigo-700">
+                      ₹{Math.round((roomOverrides[activePgRooms[0].roomNumber]?.submeterReading ?? (activePgRooms[0].submeterReading || 0)) * 8.5).toLocaleString('en-IN')} billed to Room {activePgRooms[0].roomNumber}
+                    </span>
                   </div>
                 ) : (
-                  <div className="text-xs text-slate-700 bg-white p-3 rounded-xl border border-indigo-100 font-mono">
-                    Room 101: 248 kWh<br/>
-                    Room 102: 312 kWh<br/>
-                    Rate: ₹8.5/kWh<br/>
-                    = <span className="font-bold text-indigo-700">₹2,108 billed to Room 101</span>
+                  <div className="text-xs text-[#546E7A] bg-white p-3 rounded-xl border border-indigo-100">
+                    No rooms onboarded yet
                   </div>
                 )}
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-[#546E7A]">
                   AC rooms equipped with IoT sub-meters bill according to actual energy consumption.
                 </p>
               </div>
@@ -1027,21 +1217,21 @@ export default function PGBedManagementView() {
                   <Zap className="h-4 w-4 text-emerald-600" />
                   <span>3. Room-Level Split</span>
                 </div>
-                <div className="text-xs text-slate-700 bg-white p-3 rounded-xl border border-emerald-100 font-mono">
-                  Room 201 Total: ₹3,200<br/>
-                  ÷ 4 Roommates<br/>
-                  = <span className="font-bold text-emerald-700">₹800 / occupant</span>
+                <div className="text-xs text-[#263238] bg-white p-3 rounded-xl border border-emerald-100 font-mono">
+                  Sub-meter room bill<br/>
+                  ÷ Active Roommates in Room<br/>
+                  = <span className="font-bold text-emerald-700">Equally divided per occupant</span>
                 </div>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-[#546E7A]">
                   Equal divide among occupants in quadruple sharing dorm rooms.
                 </p>
               </div>
             </div>
 
             {/* Room Level Sub-meter Readings Table */}
-            <div className="mt-4 border-t border-slate-100 pt-4">
+            <div className="mt-4 border-t border-[#D2DDD7] pt-4">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-xs font-bold text-slate-900">Live Room Sub-meter Log &amp; Split Method</h3>
+                <h3 className="text-xs font-bold text-[#263238]">Live Room Sub-meter Log &amp; Split Method</h3>
                 {selectedRoomFilter && (
                   <span className="text-[11px] text-amber-700 font-bold">
                     Filtered to Room {selectedRoomFilter} (ROOM-{selectedRoomFilter})
@@ -1051,7 +1241,7 @@ export default function PGBedManagementView() {
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left">
                   <thead>
-                    <tr className="border-b border-slate-200 text-slate-400 uppercase text-[10px]">
+                    <tr className="border-b border-[#D2DDD7] text-[#546E7A] uppercase text-[10px]">
                       <th className="py-2">Room &amp; Asset ID</th>
                       <th className="py-2">Floor</th>
                       <th className="py-2">Sharing</th>
@@ -1059,34 +1249,70 @@ export default function PGBedManagementView() {
                       <th className="py-2">Latest Sub-meter</th>
                       <th className="py-2">Billed Amount</th>
                       <th className="py-2">Status</th>
+                      <th className="py-2 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {(selectedRoomFilter ? pgRooms.filter(r => r.roomNumber === selectedRoomFilter) : pgRooms).map((room) => (
-                      <tr key={room.id} className="hover:bg-slate-50">
-                        <td className="py-2.5 font-bold text-slate-900">
-                          <div>Room {room.roomNumber}</div>
-                          <div className="text-[10px] text-indigo-700 font-mono">ROOM-{room.roomNumber}</div>
-                        </td>
-                        <td className="py-2.5 text-slate-600">Floor {room.floor}</td>
-                        <td className="py-2.5 text-slate-600">{room.sharingType}</td>
-                        <td className="py-2.5">
-                          <span className="font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px]">
-                            {room.electricitySplitMethod}
-                          </span>
-                        </td>
-                        <td className="py-2.5 font-mono text-slate-800">
-                          {room.submeterReading !== undefined ? `${room.submeterReading} kWh (SUB-${room.roomNumber})` : 'Shared main line'}
-                        </td>
-                        <td className="py-2.5 font-black text-slate-900">
-                          ₹{room.submeterReading ? Math.round(room.submeterReading * 8.5).toLocaleString('en-IN') : '1,200'}
-                        </td>
-                        <td className="py-2.5 text-emerald-600 font-bold flex items-center gap-1">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          <span>Pushed to Invoices</span>
+                  <tbody className="divide-y divide-[#D2DDD7]/50">
+                    {activePgRooms.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="py-8 text-center text-[#546E7A]">
+                          <p className="font-bold">No rooms configured for this property.</p>
+                          <p className="text-[11px] mt-0.5">Add PG rooms or units in Listings to begin logging electricity sub-meter readings.</p>
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      (selectedRoomFilter ? activePgRooms.filter(r => r.roomNumber === selectedRoomFilter) : activePgRooms).map((room) => {
+                        const override = roomOverrides[room.roomNumber];
+                        const reading = override?.submeterReading ?? room.submeterReading;
+                        const splitMethod = override?.electricitySplitMethod ?? room.electricitySplitMethod;
+                        const billed = reading !== undefined ? Math.round(reading * 8.5) : (occupiedBeds > 0 && totalBuildingBill > 0 ? Math.round(totalBuildingBill / occupiedBeds) : 0);
+
+                        return (
+                          <tr key={room.id} className="hover:bg-slate-50">
+                            <td className="py-2.5 font-bold text-[#263238]">
+                              <div>Room {room.roomNumber}</div>
+                              <div className="text-[10px] text-indigo-700 font-mono">ROOM-{room.roomNumber}</div>
+                            </td>
+                            <td className="py-2.5 text-[#546E7A]">Floor {room.floor}</td>
+                            <td className="py-2.5 text-[#546E7A]">{room.sharingType}</td>
+                            <td className="py-2.5">
+                              <span className="font-semibold px-2 py-0.5 rounded-md bg-[#E8F0EC] text-[#163B36] text-[10px]">
+                                {splitMethod}
+                              </span>
+                            </td>
+                            <td className="py-2.5 font-mono text-[#263238]">
+                              {reading !== undefined ? `${reading} kWh (SUB-${room.roomNumber})` : 'Shared main line'}
+                            </td>
+                            <td className="py-2.5 font-black text-[#263238]">
+                              ₹{billed.toLocaleString('en-IN')}
+                            </td>
+                            <td className="py-2.5 text-[#163B36] font-bold">
+                              {reading !== undefined ? (
+                                <span className="inline-flex items-center gap-1 text-emerald-700">
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  <span>Reading Logged</span>
+                                </span>
+                              ) : (
+                                <span className="text-amber-700">Pending Reading</span>
+                              )}
+                            </td>
+                            <td className="py-2.5 text-right">
+                              <button
+                                onClick={() => {
+                                  setMeterModalRoomId(room.roomNumber);
+                                  setMeterModalReading(reading || 0);
+                                  setMeterModalSplitMethod(splitMethod || 'Submeter');
+                                  setIsUpdateSubmeterModalOpen(true);
+                                }}
+                                className="px-2.5 py-1 rounded-lg bg-[#E8F0EC] hover:bg-[#D2DDD7] text-[#163B36] text-[11px] font-bold transition"
+                              >
+                                Update
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1098,45 +1324,186 @@ export default function PGBedManagementView() {
       {/* TAB 3: PG FOOD & MESS MANAGEMENT */}
       {activeTab === 'MEALS' && (
         <div className="space-y-4">
-          <div className="bg-white p-5 rounded-3xl border border-[#e3e1d8] space-y-4">
-            <div>
-              <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider bg-emerald-50 px-2.5 py-0.5 rounded-full">
-                Mess &amp; Meal Operations
-              </span>
-              <h2 className="text-base font-extrabold text-slate-900 mt-1">PG &amp; Hostel Mess Management</h2>
-              <p className="text-xs text-slate-500">
-                Track daily meal attendance (Breakfast, Lunch, Dinner), meal subscriptions, and vendor billing.
-              </p>
+          <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider bg-emerald-50 px-2.5 py-0.5 rounded-full">
+                  Mess &amp; Meal Operations
+                </span>
+                <h2 className="text-base font-extrabold text-[#263238] mt-1">PG &amp; Hostel Mess Management</h2>
+                <p className="text-xs text-[#546E7A]">
+                  Track daily meal attendance (Breakfast, Lunch, Dinner), meal subscriptions, and vendor billing.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setEditingMealId(null);
+                  setMealForm({
+                    mealType: 'Breakfast',
+                    menu: '',
+                    vendor: 'Annapoorna Kitchens',
+                    costPerMeal: 60,
+                    optedInCount: 40
+                  });
+                  setIsMealModalOpen(true);
+                }}
+                className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition self-start sm:self-auto cursor-pointer"
+              >
+                <Plus className="h-4 w-4 text-[#C69A55]" />
+                <span>+ Add Meal Plan</span>
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {pgMeals.map((meal) => (
-                <div key={meal.id} className="p-4 rounded-2xl border border-slate-200 bg-[#fbfbfa] space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-slate-900">{meal.mealType}</span>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                      {meal.optedInCount} Students Opted-in
-                    </span>
+            {pgMeals.length === 0 ? (
+              <div className="py-10 text-center border border-dashed border-[#D2DDD7] rounded-2xl p-6">
+                <Utensils className="h-8 w-8 text-[#D2DDD7] mx-auto mb-2 opacity-50" />
+                <h4 className="text-xs font-bold text-[#263238]">No Meal Plans Configured</h4>
+                <p className="text-[11px] text-[#546E7A] mt-0.5">Click &ldquo;+ Add Meal Plan&rdquo; above to setup daily breakfast, lunch, or dinner menus.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {pgMeals.map((meal) => (
+                  <div key={meal.id} className="p-4 rounded-2xl border border-[#D2DDD7] bg-[#ffffff] space-y-3 flex flex-col justify-between hover:shadow-sm transition">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-[#263238]">{meal.mealType}</span>
+                        <span className="text-[10px] font-bold text-emerald-800 bg-[#E8F0EC] px-2 py-0.5 rounded-md border border-[#D2DDD7]">
+                          {meal.optedInCount} Students Opted-in
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#263238] leading-relaxed bg-[#F7F8F6] p-3 rounded-xl border border-[#D2DDD7]">
+                        {meal.menu}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 border-t border-[#D2DDD7] space-y-2">
+                      <div className="flex items-center justify-between text-[11px] text-[#546E7A]">
+                        <div>Vendor: <span className="font-semibold text-[#263238]">{meal.vendor}</span></div>
+                        <div className="font-bold text-[#163B36]">₹{meal.costPerMeal}/plate</div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2 pt-1">
+                        <button
+                          onClick={() => {
+                            setEditingMealId(meal.id);
+                            setMealForm({
+                              mealType: meal.mealType,
+                              menu: meal.menu,
+                              vendor: meal.vendor,
+                              costPerMeal: meal.costPerMeal,
+                              optedInCount: meal.optedInCount
+                            });
+                            setIsMealModalOpen(true);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-[#E8F0EC] hover:bg-[#DCE8E1] text-[#163B36] text-[11px] font-bold transition"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Remove the ${meal.mealType} meal plan?`)) {
+                              deletePgMeal(meal.id);
+                            }
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold transition"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed bg-white p-3 rounded-xl border border-slate-100">
-                    {meal.menu}
-                  </p>
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
-                    <div>Vendor: <span className="font-semibold text-slate-800">{meal.vendor}</span></div>
-                    <div className="font-bold text-slate-900">₹{meal.costPerMeal}/plate</div>
+                ))}
+              </div>
+            )}
+
+            {/* Monthly vendor payout dynamic estimate */}
+            {pgMeals.length > 0 && (
+              <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <div className="text-xs font-bold text-[#163B36]">Monthly Mess Vendor Payout Estimate</div>
+                  <div className="text-xs text-[#546E7A] mt-0.5">
+                    {pgMeals.map(m => `${m.optedInCount} ${m.mealType.toLowerCase()}`).join(' • ')} (Calculated over 30 days)
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="text-base font-black text-[#163B36] font-tabular">
+                  ₹{pgMeals.reduce((acc, m) => acc + (m.optedInCount * m.costPerMeal * 30), 0).toLocaleString('en-IN')} / month
+                </div>
+              </div>
+            )}
 
-            <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 flex items-center justify-between">
-              <div>
-                <div className="text-xs font-bold text-indigo-900">Monthly Mess Vendor Payout Estimate</div>
-                <div className="text-xs text-indigo-700 mt-0.5">Annapoorna Kitchens • 88 Average daily breakfast, 64 lunch, 92 dinner</div>
+            {/* Daily Food & Menu Items Section */}
+            <div className="pt-6 border-t border-[#D2DDD7] space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <span className="text-[10px] font-bold text-[#163B36] uppercase tracking-wider bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
+                    Published Food Menu
+                  </span>
+                  <h3 className="text-base font-extrabold text-[#263238] mt-1">Tenant Daily Food &amp; Mess Items</h3>
+                  <p className="text-xs text-[#546E7A]">
+                    Published menu items with dietary preferences and live tenant opt-in/opt-out toggles.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setIsFoodModalOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition self-start sm:self-auto cursor-pointer"
+                >
+                  <Plus className="h-4 w-4 text-[#C69A55]" />
+                  <span>+ Add Food Menu Item</span>
+                </button>
               </div>
-              <div className="text-base font-black text-indigo-950">
-                ₹1,84,200 / month
-              </div>
+
+              {foodMenuItems.length === 0 ? (
+                <div className="py-8 text-center border border-dashed border-[#D2DDD7] rounded-2xl p-6 bg-[#F7F8F6]">
+                  <Utensils className="h-8 w-8 text-[#D2DDD7] mx-auto mb-2 opacity-50" />
+                  <h4 className="text-xs font-bold text-[#263238]">No Daily Menu Items Published</h4>
+                  <p className="text-[11px] text-[#546E7A] mt-0.5">Click &ldquo;+ Add Food Menu Item&rdquo; above to publish dishes for breakfast, lunch, or dinner.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {foodMenuItems.map((item) => (
+                    <div key={item.id} className="p-4 rounded-2xl border border-[#D2DDD7] bg-white space-y-2.5 flex flex-col justify-between hover:shadow-sm transition">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-black text-[#263238]">{item.name}</span>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
+                            item.dietaryTag === 'Vegetarian' 
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
+                              : item.dietaryTag === 'Non-Vegetarian'
+                                ? 'bg-rose-50 text-rose-800 border-rose-200'
+                                : 'bg-amber-50 text-amber-800 border-amber-200'
+                          }`}>
+                            {item.dietaryTag}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-[#546E7A]">
+                          {item.mealType} • <span className="text-[#263238] font-semibold">{item.availableTimings}</span>
+                        </div>
+                        {item.description && (
+                          <p className="text-xs text-[#263238]/80 bg-[#F7F8F6] p-2 rounded-xl border border-[#D2DDD7]">
+                            {item.description}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="pt-2 border-t border-[#D2DDD7] flex items-center justify-between">
+                        <span className="text-xs font-black text-[#163B36] font-tabular">
+                          ₹{item.price} / serving
+                        </span>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Delete menu item ${item.name}?`)) deleteFoodMenuItem(item.id);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold transition"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1145,75 +1512,592 @@ export default function PGBedManagementView() {
       {/* TAB 4: HOSTEL, STUDENTS & VISITORS */}
       {activeTab === 'HOSTEL' && (
         <div className="space-y-4">
-          <div className="bg-white p-5 rounded-3xl border border-[#e3e1d8] space-y-4">
+          <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] space-y-4">
             <div>
-              <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider bg-indigo-50 px-2.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-bold text-[#163B36] uppercase tracking-wider bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
                 Hostel Operations &amp; Safety Protocol
               </span>
-              <h2 className="text-base font-extrabold text-slate-900 mt-1">Hostel Guardians &amp; Resident Log</h2>
-              <p className="text-xs text-slate-500">
+              <h2 className="text-base font-extrabold text-[#263238] mt-1">Hostel Guardians &amp; Resident Log</h2>
+              <p className="text-xs text-[#546E7A]">
                 Student guardian records, curfews, emergency contacts, visitor records, and community amenities.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-3">
-                <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
-                  <ShieldAlert className="h-4 w-4 text-indigo-600" />
-                  <span>Student Guardian Emergency Contacts</span>
-                </div>
-                <div className="space-y-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex justify-between">
-                    <div>
-                      <div className="font-bold text-slate-800">Aditya Verma (Bed 101-A)</div>
-                      <div className="text-[10px] text-slate-500">Guardian: Rajesh Verma (Father)</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-mono text-slate-700">+91 98410 88219</div>
-                      <div className="text-[10px] text-emerald-600 font-semibold">Verified</div>
-                    </div>
+              {/* Emergency Contacts Card */}
+              <div className="p-4 rounded-2xl border border-[#D2DDD7] bg-[#F7F8F6] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="font-bold text-xs text-[#263238] flex items-center gap-1.5">
+                    <ShieldAlert className="h-4 w-4 text-[#163B36]" />
+                    <span>Student Guardian Emergency Contacts</span>
                   </div>
+                  <button
+                    onClick={() => setIsAddGuardianModalOpen(true)}
+                    className="px-2.5 py-1 rounded-lg bg-white border border-[#D2DDD7] text-[#163B36] text-[11px] font-bold hover:bg-[#E8F0EC] transition"
+                  >
+                    + Add Contact
+                  </button>
+                </div>
 
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex justify-between">
-                    <div>
-                      <div className="font-bold text-slate-800">Varun Nair (Bed 101-B)</div>
-                      <div className="text-[10px] text-slate-500">Guardian: S. Nair (Mother)</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-mono text-slate-700">+91 94470 33100</div>
-                      <div className="text-[10px] text-emerald-600 font-semibold">Verified</div>
-                    </div>
+                {guardianContacts.length === 0 ? (
+                  <div className="p-6 text-center border border-dashed border-[#D2DDD7] rounded-xl bg-white">
+                    <p className="text-xs font-semibold text-[#546E7A]">No emergency guardian contacts logged</p>
+                    <p className="text-[10px] text-[#78909C] mt-0.5">Click &ldquo;+ Add Contact&rdquo; to store parent/guardian contact numbers.</p>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-2 text-xs">
+                    {guardianContacts.map(g => (
+                      <div key={g.id} className="p-2.5 rounded-xl bg-white border border-[#D2DDD7] flex justify-between items-center">
+                        <div>
+                          <div className="font-bold text-[#263238]">{g.studentName}</div>
+                          <div className="text-[10px] text-[#546E7A]">Guardian: {g.guardianName}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-mono text-[#263238] font-bold">{g.phone}</div>
+                          <div className="text-[10px] text-emerald-800 font-semibold">{g.status}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-3">
-                <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
-                  <Users className="h-4 w-4 text-emerald-600" />
-                  <span>Hostel Visitor Log (Biometric Entry)</span>
-                </div>
-                <div className="space-y-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-slate-800">Meenakshi Verma</div>
-                      <div className="text-[10px] text-slate-500">Visiting Aditya (Room 101) • 4:00 PM - 6:30 PM</div>
-                    </div>
-                    <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
-                      Checked Out
-                    </span>
+              {/* Visitor Log Card */}
+              <div className="p-4 rounded-2xl border border-[#D2DDD7] bg-[#F7F8F6] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="font-bold text-xs text-[#263238] flex items-center gap-1.5">
+                    <Users className="h-4 w-4 text-[#163B36]" />
+                    <span>Hostel Visitor Log (Biometric Entry)</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-slate-800">Praveen K. (Laptop Repair)</div>
-                      <div className="text-[10px] text-slate-500">Authorized Tech Vendor • In Common Room</div>
-                    </div>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                      Inside Campus
-                    </span>
-                  </div>
+                  <button
+                    onClick={() => setIsLogVisitorModalOpen(true)}
+                    className="px-2.5 py-1 rounded-lg bg-white border border-[#D2DDD7] text-[#163B36] text-[11px] font-bold hover:bg-[#E8F0EC] transition"
+                  >
+                    + Log Visitor
+                  </button>
                 </div>
+
+                {hostelVisitors.length === 0 ? (
+                  <div className="p-6 text-center border border-dashed border-[#D2DDD7] rounded-xl bg-white">
+                    <p className="text-xs font-semibold text-[#546E7A]">No visitor entries logged today</p>
+                    <p className="text-[10px] text-[#78909C] mt-0.5">Click &ldquo;+ Log Visitor&rdquo; to record biometric guest check-ins.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 text-xs">
+                    {hostelVisitors.map(v => (
+                      <div key={v.id} className="p-2.5 rounded-xl bg-white border border-[#D2DDD7] flex justify-between items-center">
+                        <div>
+                          <div className="font-bold text-[#263238]">{v.name}</div>
+                          <div className="text-[10px] text-[#546E7A]">{v.purpose}</div>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                          v.status === 'Inside Campus' 
+                            ? 'bg-[#E8F0EC] text-[#163B36] border border-[#D2DDD7]' 
+                            : 'bg-slate-100 text-[#546E7A]'
+                        }`}>
+                          {v.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Add/Edit Meal Plan */}
+      {isMealModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-[#D2DDD7] p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+              <h3 className="font-extrabold text-base text-[#263238]">
+                {editingMealId ? 'Edit Meal Plan' : 'Add New Meal Plan'}
+              </h3>
+              <button onClick={() => setIsMealModalOpen(false)} className="text-[#546E7A] hover:text-[#263238]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (editingMealId) {
+                  updatePgMeal(editingMealId, mealForm);
+                } else {
+                  addPgMeal({
+                    mealType: mealForm.mealType,
+                    menu: mealForm.menu,
+                    vendor: mealForm.vendor,
+                    costPerMeal: Number(mealForm.costPerMeal),
+                    optedInCount: Number(mealForm.optedInCount),
+                    date: new Date().toISOString().split('T')[0]
+                  });
+                }
+                setIsMealModalOpen(false);
+              }}
+              className="space-y-3 text-xs"
+            >
+              <div>
+                <label className="block text-[#546E7A] font-semibold mb-1">Meal Timing / Type</label>
+                <select
+                  value={mealForm.mealType}
+                  onChange={(e) => setMealForm({ ...mealForm, mealType: e.target.value as any })}
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                >
+                  <option value="Breakfast">Breakfast (Morning 7:30 - 9:30 AM)</option>
+                  <option value="Lunch">Lunch (Afternoon 12:30 - 2:30 PM)</option>
+                  <option value="Dinner">Dinner (Night 7:30 - 9:30 PM)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[#546E7A] font-semibold mb-1">Menu Description</label>
+                <textarea
+                  required
+                  rows={3}
+                  value={mealForm.menu}
+                  onChange={(e) => setMealForm({ ...mealForm, menu: e.target.value })}
+                  placeholder="e.g. South Indian Idli, Vada, Sambar, Chutney &amp; Filter Coffee"
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-medium focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#546E7A] font-semibold mb-1">Cost Per Plate (₹)</label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    value={mealForm.costPerMeal}
+                    onChange={(e) => setMealForm({ ...mealForm, costPerMeal: Number(e.target.value) })}
+                    className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#546E7A] font-semibold mb-1">Students Opted-In</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={mealForm.optedInCount}
+                    onChange={(e) => setMealForm({ ...mealForm, optedInCount: Number(e.target.value) })}
+                    className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[#546E7A] font-semibold mb-1">Catering / Kitchen Vendor</label>
+                <input
+                  type="text"
+                  required
+                  value={mealForm.vendor}
+                  onChange={(e) => setMealForm({ ...mealForm, vendor: e.target.value })}
+                  placeholder="e.g. Annapoorna Kitchens"
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer"
+              >
+                {editingMealId ? 'Save Changes' : 'Create Meal Plan'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Add Guardian Contact */}
+      {isAddGuardianModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-[#D2DDD7] p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+              <h3 className="font-extrabold text-base text-[#263238]">Add Emergency Guardian Contact</h3>
+              <button onClick={() => setIsAddGuardianModalOpen(false)} className="text-[#546E7A] hover:text-[#263238]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setGuardianContacts(prev => [
+                  ...prev,
+                  {
+                    id: `g-${Date.now()}`,
+                    studentName: guardianForm.studentName,
+                    guardianName: `${guardianForm.guardianName} (${guardianForm.relationship})`,
+                    phone: guardianForm.phone,
+                    status: 'Verified'
+                  }
+                ]);
+                addNotification('Guardian Contact Added', `Emergency record saved for ${guardianForm.studentName}.`, 'SYSTEM');
+                setIsAddGuardianModalOpen(false);
+                setGuardianForm({ studentName: '', guardianName: '', relationship: 'Father', phone: '' });
+              }}
+              className="space-y-3 text-xs"
+            >
+              <div>
+                <label className="block text-[#546E7A] font-semibold mb-1">Student &amp; Bed/Room</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Rahul Sharma (Bed 204-A)"
+                  value={guardianForm.studentName}
+                  onChange={(e) => setGuardianForm({ ...guardianForm, studentName: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#546E7A] font-semibold mb-1">Guardian Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Manoj Sharma"
+                  value={guardianForm.guardianName}
+                  onChange={(e) => setGuardianForm({ ...guardianForm, guardianName: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#546E7A] font-semibold mb-1">Relationship</label>
+                  <select
+                    value={guardianForm.relationship}
+                    onChange={(e) => setGuardianForm({ ...guardianForm, relationship: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                  >
+                    <option value="Father">Father</option>
+                    <option value="Mother">Mother</option>
+                    <option value="Local Guardian">Local Guardian</option>
+                    <option value="Sibling">Sibling</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[#546E7A] font-semibold mb-1">Emergency Phone</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+91 98765 43210"
+                    value={guardianForm.phone}
+                    onChange={(e) => setGuardianForm({ ...guardianForm, phone: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer"
+              >
+                Save Emergency Contact
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Log Visitor */}
+      {isLogVisitorModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-[#D2DDD7] p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+              <h3 className="font-extrabold text-base text-[#263238]">Log Campus Visitor</h3>
+              <button onClick={() => setIsLogVisitorModalOpen(false)} className="text-[#546E7A] hover:text-[#263238]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setHostelVisitors(prev => [
+                  {
+                    id: `v-${Date.now()}`,
+                    name: visitorForm.name,
+                    purpose: visitorForm.purpose,
+                    status: visitorForm.status
+                  },
+                  ...prev
+                ]);
+                addNotification('Visitor Pass Generated', `Visitor entry logged for ${visitorForm.name}.`, 'SYSTEM');
+                setIsLogVisitorModalOpen(false);
+                setVisitorForm({ name: '', purpose: '', status: 'Inside Campus' });
+              }}
+              className="space-y-3 text-xs"
+            >
+              <div>
+                <label className="block text-[#546E7A] font-semibold mb-1">Visitor Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Sunita Devi"
+                  value={visitorForm.name}
+                  onChange={(e) => setVisitorForm({ ...visitorForm, name: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#546E7A] font-semibold mb-1">Purpose / Student Visited</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Visiting Ananya (Room 202) • 3:00 PM - 5:30 PM"
+                  value={visitorForm.purpose}
+                  onChange={(e) => setVisitorForm({ ...visitorForm, purpose: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-medium text-[#263238] focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#546E7A] font-semibold mb-1">Current Gate Status</label>
+                <select
+                  value={visitorForm.status}
+                  onChange={(e) => setVisitorForm({ ...visitorForm, status: e.target.value as any })}
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                >
+                  <option value="Inside Campus">Inside Campus (Biometric Pass Active)</option>
+                  <option value="Checked Out">Checked Out</option>
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer"
+              >
+                Log Visitor Pass
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* UPDATE ROOM SUBMETER MODAL */}
+      {isUpdateSubmeterModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+              <div>
+                <h3 className="font-extrabold text-base text-[#263238]">Update Room Sub-Meter Reading</h3>
+                <p className="text-xs text-[#546E7A]">Set latest kWh reading &amp; split allocation method</p>
+              </div>
+              <button onClick={() => setIsUpdateSubmeterModalOpen(false)} className="text-[#263238]/70 hover:text-[#263238]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              setRoomOverrides(prev => ({
+                ...prev,
+                [meterModalRoomId]: {
+                  submeterReading: Number(meterModalReading) || 0,
+                  electricitySplitMethod: meterModalSplitMethod
+                }
+              }));
+              addNotification('Sub-Meter Logged', `Room ${meterModalRoomId} reading updated to ${meterModalReading} kWh (${meterModalSplitMethod} split).`, 'RENT');
+              setIsUpdateSubmeterModalOpen(false);
+            }} className="space-y-3.5 text-xs">
+              <div>
+                <label className="text-xs font-bold text-[#263238] block mb-1">Select Room</label>
+                <select
+                  value={meterModalRoomId}
+                  onChange={(e) => {
+                    const rNum = e.target.value;
+                    setMeterModalRoomId(rNum);
+                    const found = activePgRooms.find(r => r.roomNumber === rNum);
+                    if (found) {
+                      setMeterModalReading(roomOverrides[rNum]?.submeterReading ?? (found.submeterReading || 0));
+                      setMeterModalSplitMethod(roomOverrides[rNum]?.electricitySplitMethod ?? (found.electricitySplitMethod || 'Submeter'));
+                    }
+                  }}
+                  className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                >
+                  {activePgRooms.map(r => (
+                    <option key={r.id} value={r.roomNumber}>
+                      Room {r.roomNumber} ({r.sharingType} — Floor {r.floor})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Sub-Meter Reading (kWh)</label>
+                  <input
+                    type="number"
+                    value={meterModalReading}
+                    onChange={(e) => setMeterModalReading(Number(e.target.value) || 0)}
+                    required
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238] font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Rate per kWh (₹)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={meterModalRate}
+                    onChange={(e) => setMeterModalRate(Number(e.target.value) || 8.5)}
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238] font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-[#263238] block mb-1">Split Method</label>
+                <select
+                  value={meterModalSplitMethod}
+                  onChange={(e) => setMeterModalSplitMethod(e.target.value as any)}
+                  className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                >
+                  <option value="Submeter">Submeter (Direct kWh Reading)</option>
+                  <option value="Equal">Equal (Evenly divide among building occupants)</option>
+                  <option value="Room-level">Room-level (Divided among roommates only)</option>
+                </select>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs space-y-1">
+                <span className="text-[#546E7A]">Estimated Monthly Room Charge:</span>
+                <div className="text-base font-black text-[#163B36] font-tabular">
+                  ₹{Math.round(meterModalReading * meterModalRate).toLocaleString('en-IN')}
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-full bg-[#163B36] text-white text-xs font-black hover:bg-[#0F2925] transition shadow-xs cursor-pointer"
+              >
+                Save Room Sub-Meter Reading
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADD DAILY FOOD MENU ITEM MODAL */}
+      {isFoodModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+              <div>
+                <h3 className="font-extrabold text-base text-[#263238]">Publish Food Menu Item</h3>
+                <p className="text-xs text-[#546E7A]">Dish details, meal slot &amp; dietary classification</p>
+              </div>
+              <button onClick={() => setIsFoodModalOpen(false)} className="text-[#263238]/70 hover:text-[#263238]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              addFoodMenuItem({
+                name: foodItemForm.name,
+                category: foodItemForm.category,
+                mealType: foodItemForm.mealType,
+                dietaryTag: foodItemForm.dietaryTag,
+                price: Number(foodItemForm.price) || 60,
+                availableTimings: foodItemForm.availableTimings,
+                description: foodItemForm.description
+              });
+              setIsFoodModalOpen(false);
+              setFoodItemForm({
+                name: '',
+                category: 'Standard',
+                mealType: 'Breakfast',
+                dietaryTag: 'Vegetarian',
+                price: 60,
+                availableTimings: '07:30 - 10:00 AM',
+                description: ''
+              });
+            }} className="space-y-3.5 text-xs">
+              <div>
+                <label className="text-xs font-bold text-[#263238] block mb-1">Dish Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g. South Indian Dosa &amp; Vada Combo"
+                  value={foodItemForm.name}
+                  onChange={(e) => setFoodItemForm({ ...foodItemForm, name: e.target.value })}
+                  required
+                  className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Meal Slot</label>
+                  <select
+                    value={foodItemForm.mealType}
+                    onChange={(e) => setFoodItemForm({ ...foodItemForm, mealType: e.target.value as any })}
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  >
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Lunch">Lunch</option>
+                    <option value="Dinner">Dinner</option>
+                    <option value="Snacks">Snacks &amp; Beverages</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Dietary Tag</label>
+                  <select
+                    value={foodItemForm.dietaryTag}
+                    onChange={(e) => setFoodItemForm({ ...foodItemForm, dietaryTag: e.target.value as any })}
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  >
+                    <option value="Vegetarian">Vegetarian</option>
+                    <option value="Non-Vegetarian">Non-Vegetarian</option>
+                    <option value="Jain">Jain / No Onion Garlic</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Price per Plate (₹)</label>
+                  <input
+                    type="number"
+                    value={foodItemForm.price}
+                    onChange={(e) => setFoodItemForm({ ...foodItemForm, price: Number(e.target.value) || 0 })}
+                    required
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238] font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#263238] block mb-1">Serving Timings</label>
+                  <input
+                    type="text"
+                    value={foodItemForm.availableTimings}
+                    onChange={(e) => setFoodItemForm({ ...foodItemForm, availableTimings: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-[#263238] block mb-1">Description / Accompaniments</label>
+                <textarea
+                  placeholder="e.g. Served with hot sambar, coconut chutney, and filter coffee"
+                  value={foodItemForm.description}
+                  onChange={(e) => setFoodItemForm({ ...foodItemForm, description: e.target.value })}
+                  rows={2}
+                  className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs text-[#263238]"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-full bg-[#163B36] text-white text-xs font-black hover:bg-[#0F2925] transition shadow-xs cursor-pointer"
+              >
+                Publish to Food Menu
+              </button>
+            </form>
           </div>
         </div>
       )}

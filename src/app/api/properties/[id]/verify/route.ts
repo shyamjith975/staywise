@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../../../lib/db';
+import { requireRole } from '../../../../../lib/security/authorization';
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // 1. Authoritative Super Admin Role Check (P0.2)
+    const { auth, errorResponse } = await requireRole(req, ['admin']);
+    if (errorResponse) {
+      return errorResponse;
+    }
+
     const { id } = await params;
     const body = await req.json().catch(() => ({}));
     const status = body.status === 'REJECTED' ? 'REJECTED' : 'APPROVED';

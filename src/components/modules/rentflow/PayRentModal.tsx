@@ -45,21 +45,21 @@ export default function PayRentModal() {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto font-sans">
-      <div className="w-full max-w-lg bg-white border border-[#e3e1d8] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto">
+      <div className="w-full max-w-lg bg-white border border-[#D2DDD7] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[#eeece5] bg-[#fbfbfa]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#E0E0E0] bg-[#ffffff]">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-2xl bg-[#eef3f0] text-[#274235] flex items-center justify-center">
+            <div className="h-9 w-9 rounded-2xl bg-[#E8F0EC] text-[#263238] flex items-center justify-center">
               <CreditCard className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-base font-extrabold text-[#19251f]">RentFlow Instant Checkout</h2>
-              <p className="text-[11px] text-[#6e7972]">Escrow Direct Settlement • RBI Compliant</p>
+              <h2 className="text-base font-extrabold text-[#263238]">RentFlow Instant Checkout</h2>
+              <p className="text-[11px] text-[#666666]">Escrow Direct Settlement • RBI Compliant</p>
             </div>
           </div>
           <button 
             onClick={() => { setIsPayRentOpen(false); setIsSuccess(false); }} 
-            className="text-[#6e7972] hover:text-[#19251f] p-1"
+            className="text-[#666666] hover:text-[#263238] p-1"
           >
             <X className="h-5 w-5" />
           </button>
@@ -70,31 +70,31 @@ export default function PayRentModal() {
           {!isSuccess ? (
             <div className="space-y-4 text-xs">
               {/* Invoice Breakdown */}
-              <div className="p-4 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] space-y-2">
-                <div className="flex justify-between items-center text-[#6e7972]">
+              <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-2">
+                <div className="flex justify-between items-center text-[#666666]">
                   <span>Unit & Property:</span>
-                  <span className="font-bold text-[#19251f]">
+                  <span className="font-bold text-[#263238]">
                     Unit {selectedInvoiceForPay.unitNumber}, {selectedInvoiceForPay.propertyName}
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-[#6e7972]">
+                <div className="flex justify-between items-center text-[#666666]">
                   <span>Billing Period:</span>
-                  <span className="font-bold text-[#19251f]">{selectedInvoiceForPay.period}</span>
+                  <span className="font-bold text-[#263238]">{selectedInvoiceForPay.period}</span>
                 </div>
-                <div className="flex justify-between items-center text-[#6e7972]">
+                <div className="flex justify-between items-center text-[#666666]">
                   <span>Base Rent:</span>
-                  <span className="font-bold text-[#19251f]">₹{selectedInvoiceForPay.baseRent.toLocaleString('en-IN')}</span>
+                  <span className="font-bold text-[#263238]">₹{selectedInvoiceForPay.baseRent.toLocaleString('en-IN')}</span>
                 </div>
                 {selectedInvoiceForPay.camCharges && (
-                  <div className="flex justify-between items-center text-[#6e7972]">
+                  <div className="flex justify-between items-center text-[#666666]">
                     <span>CAM & Maintenance:</span>
-                    <span className="font-bold text-[#19251f]">₹{selectedInvoiceForPay.camCharges.toLocaleString('en-IN')}</span>
+                    <span className="font-bold text-[#263238]">₹{selectedInvoiceForPay.camCharges.toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 {selectedInvoiceForPay.utilityCharges && (
-                  <div className="flex justify-between items-center text-[#6e7972]">
+                  <div className="flex justify-between items-center text-[#666666]">
                     <span>Utility Charges:</span>
-                    <span className="font-bold text-[#19251f]">₹{selectedInvoiceForPay.utilityCharges.toLocaleString('en-IN')}</span>
+                    <span className="font-bold text-[#263238]">₹{selectedInvoiceForPay.utilityCharges.toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 {selectedInvoiceForPay.lateFee && (
@@ -103,7 +103,7 @@ export default function PayRentModal() {
                     <span className="font-bold">₹{selectedInvoiceForPay.lateFee.toLocaleString('en-IN')}</span>
                   </div>
                 )}
-                <div className="pt-2 border-t border-[#eeece5] flex justify-between items-center text-sm font-bold text-[#19251f]">
+                <div className="pt-2 border-t border-[#E0E0E0] flex justify-between items-center text-sm font-bold text-[#263238]">
                   <span>Total Payable:</span>
                   <span className="text-emerald-700 font-tabular font-black text-base">
                     ₹{selectedInvoiceForPay.totalAmount.toLocaleString('en-IN')}
@@ -113,15 +113,15 @@ export default function PayRentModal() {
 
               {/* Payment Methods */}
               <div className="space-y-2">
-                <label className="block text-[#19251f] font-semibold">Select Settlement Rail</label>
+                <label className="block text-[#263238] font-semibold">Select Settlement Rail</label>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod('UPI')}
                     className={`p-3 rounded-2xl border flex flex-col items-center gap-1.5 transition ${
                       paymentMethod === 'UPI' 
-                        ? 'bg-[#eef3f0] border-[#274235] text-[#274235] font-extrabold' 
-                        : 'bg-[#f7f6f2] border-[#e3e1d8] text-[#6e7972] hover:bg-white'
+                        ? 'bg-[#E8F0EC] border-[#263238] text-[#263238] font-extrabold' 
+                        : 'bg-[#E8F0EC] border-[#D2DDD7] text-[#666666] hover:bg-white'
                     }`}
                   >
                     <QrCode className="h-5 w-5" />
@@ -133,8 +133,8 @@ export default function PayRentModal() {
                     onClick={() => setPaymentMethod('Autopay')}
                     className={`p-3 rounded-2xl border flex flex-col items-center gap-1.5 transition ${
                       paymentMethod === 'Autopay' 
-                        ? 'bg-[#eef3f0] border-[#274235] text-[#274235] font-extrabold' 
-                        : 'bg-[#f7f6f2] border-[#e3e1d8] text-[#6e7972] hover:bg-white'
+                        ? 'bg-[#E8F0EC] border-[#263238] text-[#263238] font-extrabold' 
+                        : 'bg-[#E8F0EC] border-[#D2DDD7] text-[#666666] hover:bg-white'
                     }`}
                   >
                     <Zap className="h-5 w-5" />
@@ -147,7 +147,7 @@ export default function PayRentModal() {
                     className={`p-3 rounded-2xl border flex flex-col items-center gap-1.5 transition ${
                       paymentMethod === 'FlexPay' 
                         ? 'bg-blue-50 border-blue-500 text-blue-700 font-extrabold' 
-                        : 'bg-[#f7f6f2] border-[#e3e1d8] text-[#6e7972] hover:bg-white'
+                        : 'bg-[#E8F0EC] border-[#D2DDD7] text-[#666666] hover:bg-white'
                     }`}
                   >
                     <CreditCard className="h-5 w-5" />
@@ -158,10 +158,10 @@ export default function PayRentModal() {
 
               {/* QR / FlexPay details */}
               {paymentMethod === 'UPI' && (
-                <div className="p-3.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] flex items-center justify-between">
+                <div className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <span className="font-bold text-[#19251f]">VPA: staywise.escrow@axisbank</span>
-                    <p className="text-[10px] text-[#6e7972]">Zero surcharge via GPay, PhonePe, Paytm, or BHIM</p>
+                    <span className="font-bold text-[#263238]">VPA: staywise.escrow@axisbank</span>
+                    <p className="text-[10px] text-[#666666]">Zero surcharge via GPay, PhonePe, Paytm, or BHIM</p>
                   </div>
                   <span className="text-[10px] px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold">
                     UPI Auto-Detect
@@ -180,7 +180,7 @@ export default function PayRentModal() {
                 type="button"
                 disabled={isProcessing}
                 onClick={handlePay}
-                className="w-full py-3.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs shadow-xl shadow-[#274235]/20 transition flex items-center justify-center gap-2"
+                className="w-full py-3.5 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white font-bold text-xs shadow-xl shadow-[#263238]/20 transition flex items-center justify-center gap-2"
               >
                 {isProcessing ? (
                   <span>Securing Settlement on Ledger...</span>
@@ -198,8 +198,8 @@ export default function PayRentModal() {
                 <CheckCircle className="h-9 w-9" />
               </div>
               <div>
-                <h3 className="text-lg font-extrabold text-[#19251f]">Payment Cleared & Settled!</h3>
-                <p className="text-xs text-[#6e7972] max-w-xs mx-auto mt-1 leading-relaxed">
+                <h3 className="text-lg font-extrabold text-[#263238]">Payment Cleared & Settled!</h3>
+                <p className="text-xs text-[#666666] max-w-xs mx-auto mt-1 leading-relaxed">
                   ₹{selectedInvoiceForPay.totalAmount.toLocaleString('en-IN')} has been cleared into landlord escrow. Immutable ledger entry generated.
                 </p>
               </div>
@@ -207,7 +207,7 @@ export default function PayRentModal() {
               <div className="pt-2 flex items-center justify-center gap-3">
                 <button
                   onClick={handleDone}
-                  className="px-5 py-2.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs shadow-md shadow-[#274235]/20 transition flex items-center gap-2"
+                  className="px-5 py-2.5 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white font-bold text-xs shadow-md shadow-[#263238]/20 transition flex items-center gap-2"
                 >
                   <span>View Official Rent Receipt</span>
                   <ArrowRight className="h-4 w-4" />

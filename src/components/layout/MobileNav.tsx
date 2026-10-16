@@ -79,9 +79,9 @@ export default function MobileNav() {
       <div className="lg:hidden fixed bottom-20 right-4 z-40">
         <button
           onClick={handleFabClick}
-          className="flex items-center gap-2 px-4 py-3 rounded-full bg-[#274235] text-white font-bold text-xs shadow-xl shadow-[#274235]/30 hover:scale-105 active:scale-95 transition"
+          className="flex items-center gap-2 px-4 py-3 rounded-full bg-[#163B36] text-white font-bold text-xs shadow-xl shadow-[#163B36]/30 hover:scale-105 active:scale-95 transition border border-[#C69A55]"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4 w-4 text-[#C69A55]" />
           <span>{getFabLabel()}</span>
         </button>
       </div>
@@ -90,25 +90,25 @@ export default function MobileNav() {
       {isMenuOpen && (
         <div 
           onClick={() => setIsMenuOpen(false)}
-          className="lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex flex-col justify-end animate-in fade-in duration-200"
+          className="lg:hidden fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-md flex flex-col justify-end animate-in fade-in duration-200"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="bg-white border-t border-[#e3e1d8] rounded-t-[2.5rem] p-5 pb-8 space-y-5 max-h-[88vh] overflow-y-auto shadow-2xl animate-in slide-in-from-bottom duration-250 font-sans"
+            className="bg-white border-t border-[#D2DDD7] rounded-t-[2.5rem] p-5 pb-8 space-y-5 max-h-[88vh] overflow-y-auto shadow-2xl animate-in slide-in-from-bottom duration-250 font-sans"
           >
             {/* Grabber bar */}
-            <div className="w-12 h-1.5 rounded-full bg-slate-200 mx-auto" />
+            <div className="w-12 h-1.5 rounded-full bg-[#D2DDD7] mx-auto" />
 
             {/* Profile & Header Card */}
-            <div className="flex items-center justify-between pb-3 border-b border-[#eeece5]">
+            <div className="flex items-center justify-between pb-3 border-b border-[#D2DDD7]">
               <div className="flex items-center gap-3">
-                <div className="h-11 w-11 rounded-2xl bg-[#f4f3ef] border border-[#274235]/30 flex items-center justify-center text-lg shadow-sm">
+                <div className="h-11 w-11 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-center text-lg shadow-xs">
                   {currentUser.avatar}
                 </div>
                 <div>
-                  <h3 className="font-black text-sm text-[#19251f]">{currentUser.name}</h3>
+                  <h3 className="font-black text-sm text-[#263238]">{currentUser.name}</h3>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-[#274235]">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#163B36] text-white">
                       {currentUser.roleLabel}
                     </span>
                   </div>
@@ -118,7 +118,7 @@ export default function MobileNav() {
               <button 
                 type="button"
                 onClick={() => setIsMenuOpen(false)}
-                className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:text-slate-900 transition"
+                className="h-9 w-9 rounded-full bg-[#E8F0EC] flex items-center justify-center text-[#546E7A] hover:text-[#263238] transition"
                 aria-label="Close menu"
               >
                 <X className="h-5 w-5" />
@@ -132,16 +132,16 @@ export default function MobileNav() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => { setIsAddPropertyOpen(true); setIsMenuOpen(false); }}
-                    className="p-3 rounded-2xl bg-[#274235] text-white flex items-center gap-2.5 text-xs font-bold shadow-md shadow-[#274235]/20 hover:bg-[#19251f] transition"
+                    className="p-3 rounded-2xl bg-[#163B36] text-white flex items-center gap-2.5 text-xs font-bold shadow-md shadow-[#163B36]/20 hover:bg-[#102B27] transition border border-[#163B36]"
                   >
-                    <Plus className="h-4 w-4 text-emerald-400" />
+                    <Plus className="h-4 w-4 text-[#C69A55]" />
                     <span>Add Property</span>
                   </button>
                   <button
                     onClick={() => { setIsExistingTenantWizardOpen(true); setIsMenuOpen(false); }}
-                    className="p-3 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-[#19251f] flex items-center gap-2.5 text-xs font-bold hover:bg-white transition"
+                    className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] flex items-center gap-2.5 text-xs font-bold hover:bg-white transition"
                   >
-                    <Users2 className="h-4 w-4 text-[#274235]" />
+                    <Users2 className="h-4 w-4 text-[#263238]" />
                     <span>Onboard Tenant</span>
                   </button>
                 </div>
@@ -156,12 +156,12 @@ export default function MobileNav() {
                       onClick={() => handleNavClick('dashboard')}
                       className={`p-3 rounded-2xl text-left transition flex items-center justify-between border ${
                         activeView === 'dashboard' 
-                          ? 'bg-[#19251f] text-white border-[#19251f]' 
-                          : 'bg-[#fbfbfa] text-slate-800 border-slate-200/80 hover:bg-white'
+                          ? 'bg-[#263238] text-white border-[#263238]' 
+                          : 'bg-[#ffffff] text-slate-800 border-slate-200/80 hover:bg-white'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`h-8 w-8 rounded-xl flex items-center justify-center ${activeView === 'dashboard' ? 'bg-white/10 text-emerald-400' : 'bg-slate-100 text-[#274235]'}`}>
+                        <div className={`h-8 w-8 rounded-xl flex items-center justify-center ${activeView === 'dashboard' ? 'bg-white/10 text-emerald-400' : 'bg-slate-100 text-[#263238]'}`}>
                           <LayoutDashboard className="h-4 w-4" />
                         </div>
                         <div>
@@ -176,8 +176,8 @@ export default function MobileNav() {
                       onClick={() => handleNavClick('properties')}
                       className={`p-3 rounded-2xl text-left transition flex items-center justify-between border ${
                         activeView === 'properties' 
-                          ? 'bg-[#19251f] text-white border-[#19251f]' 
-                          : 'bg-[#fbfbfa] text-slate-800 border-slate-200/80 hover:bg-white'
+                          ? 'bg-[#263238] text-white border-[#263238]' 
+                          : 'bg-[#ffffff] text-slate-800 border-slate-200/80 hover:bg-white'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -196,8 +196,8 @@ export default function MobileNav() {
                       onClick={() => handleNavClick('tenants')}
                       className={`p-3 rounded-2xl text-left transition flex items-center justify-between border ${
                         activeView === 'tenants' 
-                          ? 'bg-[#19251f] text-white border-[#19251f]' 
-                          : 'bg-[#fbfbfa] text-slate-800 border-slate-200/80 hover:bg-white'
+                          ? 'bg-[#263238] text-white border-[#263238]' 
+                          : 'bg-[#ffffff] text-slate-800 border-slate-200/80 hover:bg-white'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -216,8 +216,8 @@ export default function MobileNav() {
                       onClick={() => handleNavClick('rentflow')}
                       className={`p-3 rounded-2xl text-left transition flex items-center justify-between border ${
                         activeView === 'rentflow' 
-                          ? 'bg-[#19251f] text-white border-[#19251f]' 
-                          : 'bg-[#fbfbfa] text-slate-800 border-slate-200/80 hover:bg-white'
+                          ? 'bg-[#263238] text-white border-[#263238]' 
+                          : 'bg-[#ffffff] text-slate-800 border-slate-200/80 hover:bg-white'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -244,8 +244,8 @@ export default function MobileNav() {
                       onClick={() => handleNavClick('pg')}
                       className={`p-3 rounded-2xl text-left transition border ${
                         activeView === 'pg' 
-                          ? 'bg-[#19251f] text-white border-[#19251f]' 
-                          : 'bg-[#fbfbfa] text-slate-800 border-slate-200/80 hover:bg-white'
+                          ? 'bg-[#263238] text-white border-[#263238]' 
+                          : 'bg-[#ffffff] text-slate-800 border-slate-200/80 hover:bg-white'
                       }`}
                     >
                       <BedDouble className={`h-4 w-4 mb-2 ${activeView === 'pg' ? 'text-indigo-300' : 'text-indigo-600'}`} />
@@ -257,8 +257,8 @@ export default function MobileNav() {
                       onClick={() => handleNavClick('commercial')}
                       className={`p-3 rounded-2xl text-left transition border ${
                         activeView === 'commercial' 
-                          ? 'bg-[#19251f] text-white border-[#19251f]' 
-                          : 'bg-[#fbfbfa] text-slate-800 border-slate-200/80 hover:bg-white'
+                          ? 'bg-[#263238] text-white border-[#263238]' 
+                          : 'bg-[#ffffff] text-slate-800 border-slate-200/80 hover:bg-white'
                       }`}
                     >
                       <Briefcase className={`h-4 w-4 mb-2 ${activeView === 'commercial' ? 'text-teal-300' : 'text-teal-600'}`} />
@@ -278,8 +278,8 @@ export default function MobileNav() {
                       onClick={() => handleNavClick('moveflow')}
                       className={`p-3 rounded-2xl text-left transition flex items-center justify-between border ${
                         activeView === 'moveflow' 
-                          ? 'bg-[#19251f] text-white border-[#19251f]' 
-                          : 'bg-[#fbfbfa] text-slate-800 border-slate-200/80 hover:bg-white'
+                          ? 'bg-[#263238] text-white border-[#263238]' 
+                          : 'bg-[#ffffff] text-slate-800 border-slate-200/80 hover:bg-white'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -298,8 +298,8 @@ export default function MobileNav() {
                       onClick={() => handleNavClick('reports')}
                       className={`p-3 rounded-2xl text-left transition flex items-center justify-between border ${
                         activeView === 'reports' 
-                          ? 'bg-[#19251f] text-white border-[#19251f]' 
-                          : 'bg-[#fbfbfa] text-slate-800 border-slate-200/80 hover:bg-white'
+                          ? 'bg-[#263238] text-white border-[#263238]' 
+                          : 'bg-[#ffffff] text-slate-800 border-slate-200/80 hover:bg-white'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -318,8 +318,8 @@ export default function MobileNav() {
                       onClick={() => handleNavClick('maintenance')}
                       className={`p-3 rounded-2xl text-left transition flex items-center justify-between border ${
                         activeView === 'maintenance' 
-                          ? 'bg-[#19251f] text-white border-[#19251f]' 
-                          : 'bg-[#fbfbfa] text-slate-800 border-slate-200/80 hover:bg-white'
+                          ? 'bg-[#263238] text-white border-[#263238]' 
+                          : 'bg-[#ffffff] text-slate-800 border-slate-200/80 hover:bg-white'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -338,8 +338,8 @@ export default function MobileNav() {
                       onClick={() => handleNavClick('ai')}
                       className={`p-3 rounded-2xl text-left transition flex items-center justify-between border ${
                         activeView === 'ai' 
-                          ? 'bg-[#19251f] text-white border-[#19251f]' 
-                          : 'bg-[#fbfbfa] text-slate-800 border-slate-200/80 hover:bg-white'
+                          ? 'bg-[#263238] text-white border-[#263238]' 
+                          : 'bg-[#ffffff] text-slate-800 border-slate-200/80 hover:bg-white'
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -367,42 +367,42 @@ export default function MobileNav() {
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => handleNavClick('dashboard')}
-                    className="p-3 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-left hover:bg-white transition"
+                    className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-left hover:bg-white transition"
                   >
                     <Trees className="h-4 w-4 text-emerald-700 mb-1" />
                     <div className="text-xs font-bold">Host Overview</div>
                   </button>
                   <button
                     onClick={() => handleNavClick('bookings')}
-                    className="p-3 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-left hover:bg-white transition"
+                    className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-left hover:bg-white transition"
                   >
                     <Calendar className="h-4 w-4 text-rose-600 mb-1" />
                     <div className="text-xs font-bold">Airbnb Bookings</div>
                   </button>
                   <button
                     onClick={() => handleNavClick('villas')}
-                    className="p-3 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-left hover:bg-white transition"
+                    className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-left hover:bg-white transition"
                   >
                     <Building className="h-4 w-4 text-teal-700 mb-1" />
                     <div className="text-xs font-bold">Luxury Villas</div>
                   </button>
                   <button
                     onClick={() => handleNavClick('housekeeping')}
-                    className="p-3 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-left hover:bg-white transition"
+                    className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-left hover:bg-white transition"
                   >
                     <BedDouble className="h-4 w-4 text-blue-600 mb-1" />
                     <div className="text-xs font-bold">Turnovers</div>
                   </button>
                   <button
                     onClick={() => handleNavClick('pricing')}
-                    className="p-3 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-left hover:bg-white transition"
+                    className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-left hover:bg-white transition"
                   >
                     <Sliders className="h-4 w-4 text-purple-600 mb-1" />
                     <div className="text-xs font-bold">Dynamic Pricing</div>
                   </button>
                   <button
                     onClick={() => handleNavClick('ai')}
-                    className="p-3 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] text-left hover:bg-white transition"
+                    className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-left hover:bg-white transition"
                   >
                     <Sparkles className="h-4 w-4 text-amber-600 mb-1" />
                     <div className="text-xs font-bold">AI Concierge</div>
@@ -420,12 +420,12 @@ export default function MobileNav() {
                 <div className="grid grid-cols-1 gap-1.5">
                   <button
                     onClick={() => handleNavClick('dashboard')}
-                    className="p-3 rounded-2xl bg-[#fbfbfa] border border-slate-200 text-left hover:bg-white transition flex items-center justify-between"
+                    className="p-3 rounded-2xl bg-[#ffffff] border border-slate-200 text-left hover:bg-white transition flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
-                      <LayoutDashboard className="h-4 w-4 text-[#274235]" />
+                      <LayoutDashboard className="h-4 w-4 text-[#263238]" />
                       <div>
-                        <div className="text-xs font-bold">My Apartment</div>
+                        <div className="text-xs font-bold">My Space</div>
                         <div className="text-[10px] text-slate-500">Rent balance &amp; roommate split</div>
                       </div>
                     </div>
@@ -434,7 +434,7 @@ export default function MobileNav() {
 
                   <button
                     onClick={() => handleNavClick('find_home')}
-                    className="p-3 rounded-2xl bg-[#fbfbfa] border border-slate-200 text-left hover:bg-white transition flex items-center justify-between"
+                    className="p-3 rounded-2xl bg-[#ffffff] border border-slate-200 text-left hover:bg-white transition flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
                       <Compass className="h-4 w-4 text-emerald-600" />
@@ -448,7 +448,7 @@ export default function MobileNav() {
 
                   <button
                     onClick={() => handleNavClick('rentflow')}
-                    className="p-3 rounded-2xl bg-[#fbfbfa] border border-slate-200 text-left hover:bg-white transition flex items-center justify-between"
+                    className="p-3 rounded-2xl bg-[#ffffff] border border-slate-200 text-left hover:bg-white transition flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
                       <Receipt className="h-4 w-4 text-teal-600" />
@@ -462,7 +462,7 @@ export default function MobileNav() {
 
                   <button
                     onClick={() => handleNavClick('moveflow')}
-                    className="p-3 rounded-2xl bg-[#fbfbfa] border border-slate-200 text-left hover:bg-white transition flex items-center justify-between"
+                    className="p-3 rounded-2xl bg-[#ffffff] border border-slate-200 text-left hover:bg-white transition flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
                       <Gift className="h-4 w-4 text-amber-600" />
@@ -476,7 +476,7 @@ export default function MobileNav() {
 
                   <button
                     onClick={() => handleNavClick('ai')}
-                    className="p-3 rounded-2xl bg-[#fbfbfa] border border-slate-200 text-left hover:bg-white transition flex items-center justify-between"
+                    className="p-3 rounded-2xl bg-[#ffffff] border border-slate-200 text-left hover:bg-white transition flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
                       <Sparkles className="h-4 w-4 text-amber-500" />
@@ -516,14 +516,14 @@ export default function MobileNav() {
       )}
 
       {/* Sticky Bottom Navigation for Mobile */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#e3e1d8] px-2 py-2 flex items-center justify-around select-none">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#D2DDD7] px-2 py-2 flex items-center justify-around select-none font-sans">
         {activeRole === 'tenant' ? (
           // Tenant-Specific Bottom Nav
           <>
             <button
               onClick={() => setActiveView('dashboard')}
               className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition ${
-                activeView === 'dashboard' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'dashboard' ? 'text-[#263238] font-black' : 'text-[#666666]'
               }`}
             >
               <LayoutDashboard className="h-5 w-5" />
@@ -533,17 +533,17 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('find_home')}
               className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition ${
-                activeView === 'find_home' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'find_home' ? 'text-[#263238] font-black' : 'text-[#666666]'
               }`}
             >
-              <Compass className="h-5 w-5 text-emerald-600" />
+              <Compass className="h-5 w-5 text-[#263238]" />
               <span className="text-[10px] font-bold">Find Home</span>
             </button>
 
             <button
               onClick={() => setActiveView('rentflow')}
               className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition ${
-                activeView === 'rentflow' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'rentflow' ? 'text-[#263238] font-black' : 'text-[#666666]'
               }`}
             >
               <Receipt className="h-5 w-5" />
@@ -553,7 +553,7 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('maintenance')}
               className={`flex flex-col items-center gap-1 py-1 px-2 rounded-xl transition ${
-                activeView === 'maintenance' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'maintenance' ? 'text-[#263238] font-black' : 'text-[#666666]'
               }`}
             >
               <Wrench className="h-5 w-5" />
@@ -562,7 +562,7 @@ export default function MobileNav() {
 
             <button
               onClick={() => setIsMenuOpen(true)}
-              className="flex flex-col items-center gap-1 py-1 px-2 rounded-xl text-[#6e7972] transition"
+              className="flex flex-col items-center gap-1 py-1 px-2 rounded-xl text-[#666666] transition"
             >
               <Menu className="h-5 w-5" />
               <span className="text-[10px] font-bold">Menu</span>
@@ -574,17 +574,17 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('dashboard')}
               className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition ${
-                activeView === 'dashboard' || activeView === 'overview' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'dashboard' || activeView === 'overview' ? 'text-[#263238] font-black' : 'text-[#666666]'
               }`}
             >
-              <Trees className="h-5 w-5 text-emerald-700" />
+              <Trees className="h-5 w-5 text-[#263238]" />
               <span className="text-[10px] font-bold">Host</span>
             </button>
 
             <button
               onClick={() => setActiveView('bookings')}
               className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition ${
-                activeView === 'bookings' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'bookings' ? 'text-[#263238] font-black' : 'text-[#666666]'
               }`}
             >
               <Calendar className="h-5 w-5 text-rose-600" />
@@ -594,7 +594,7 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('villas')}
               className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition ${
-                activeView === 'villas' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'villas' ? 'text-[#263238] font-black' : 'text-[#666666]'
               }`}
             >
               <Building className="h-5 w-5" />
@@ -604,16 +604,16 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('housekeeping')}
               className={`flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl transition ${
-                activeView === 'housekeeping' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'housekeeping' ? 'text-[#263238] font-black' : 'text-[#666666]'
               }`}
             >
-              <BedDouble className="h-5 w-5 text-blue-600" />
+              <BedDouble className="h-5 w-5 text-[#163B36]" />
               <span className="text-[10px] font-bold">Turnovers</span>
             </button>
 
             <button
               onClick={() => setIsMenuOpen(true)}
-              className="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-[#6e7972] transition"
+              className="flex flex-col items-center gap-1 py-1 px-2.5 rounded-xl text-[#666666] transition"
             >
               <Menu className="h-5 w-5" />
               <span className="text-[10px] font-bold">Menu</span>
@@ -625,7 +625,7 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('dashboard')}
               className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition ${
-                activeView === 'dashboard' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'dashboard' ? 'text-[#263238] font-black' : 'text-[#666666]'
               }`}
             >
               <LayoutDashboard className="h-5 w-5" />
@@ -635,7 +635,7 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('properties')}
               className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition ${
-                activeView === 'properties' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'properties' ? 'text-[#263238] font-black' : 'text-[#666666]'
               }`}
             >
               <Building className="h-5 w-5" />
@@ -645,7 +645,7 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('rentflow')}
               className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition ${
-                activeView === 'rentflow' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'rentflow' ? 'text-[#263238] font-black' : 'text-[#666666]'
               }`}
             >
               <Receipt className="h-5 w-5" />
@@ -655,7 +655,7 @@ export default function MobileNav() {
             <button
               onClick={() => setActiveView('maintenance')}
               className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition ${
-                activeView === 'maintenance' ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                activeView === 'maintenance' ? 'text-[#263238] font-black' : 'text-[#666666]'
               }`}
             >
               <Wrench className="h-5 w-5" />
@@ -665,7 +665,7 @@ export default function MobileNav() {
             <button
               onClick={() => setIsMenuOpen(true)}
               className={`flex flex-col items-center gap-1 py-1 px-3 rounded-xl transition ${
-                isMenuOpen ? 'text-[#274235] font-black' : 'text-[#6e7972]'
+                isMenuOpen ? 'text-[#263238] font-black' : 'text-[#666666]'
               }`}
             >
               <Menu className="h-5 w-5" />

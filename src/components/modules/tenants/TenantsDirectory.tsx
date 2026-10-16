@@ -12,27 +12,54 @@ import {
   Phone, 
   Mail, 
   CreditCard, 
-  UserPlus, 
   Calendar, 
   CheckCircle2, 
   AlertCircle,
   ExternalLink,
-  Plus
+  Plus,
+  Home,
+  Building,
+  Utensils,
+  Paperclip,
+  Eye,
+  Users
 } from 'lucide-react';
 
 export default function TenantsDirectory() {
   const { 
     tenants, 
-    setIsExistingTenantWizardOpen, 
+    properties,
+    currentUser,
     addNotification, 
     setSelectedReceiptInvoice, 
-    invoices 
+    invoices,
+    activeRole,
+    tenantConnectionRequests,
+    approveTenantConnectionRequest,
+    rejectTenantConnectionRequest,
+    verifyAndSettleMoveOut
   } = useAppState();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'ACTIVE' | 'NOTICE'>('ALL');
 
-  const filteredTenants = tenants.filter(tenant => {
+  const isDemoAccount = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
+
+  // Role-scoped tenants: Owners only see residents in their properties, tenants only see themselves
+  const scopedTenants = isDemoAccount
+    ? tenants
+    : (activeRole === 'owner')
+    ? tenants.filter(t => {
+        const ownerProps = properties.filter(p => p.ownerId === currentUser?.id);
+        const ownerPropIds = ownerProps.map(p => p.id);
+        const ownerPropNames = ownerProps.map(p => p.name.toLowerCase());
+        return ownerPropIds.includes(t.propertyId) || (t.propertyName && ownerPropNames.includes(t.propertyName.toLowerCase()));
+      })
+    : (activeRole === 'tenant')
+    ? tenants.filter(t => t.userId === currentUser?.id || (currentUser?.email && t.email?.toLowerCase() === currentUser.email.toLowerCase()))
+    : tenants;
+
+  const filteredTenants = scopedTenants.filter(tenant => {
     const matchesSearch = 
       tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tenant.unitNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -43,8 +70,12 @@ export default function TenantsDirectory() {
     return matchesSearch;
   });
 
-  const totalDeposits = tenants.reduce((acc, t) => acc + (t.depositPaid || 0), 0);
-  const avgScore = Math.round(tenants.reduce((acc, t) => acc + (t.reliabilityScore || 85), 0) / (tenants.length || 1));
+  const totalDeposits = scopedTenants.reduce((acc, t) => acc + (t.depositPaid || 0), 0);
+  const avgScore = scopedTenants.length > 0
+    ? Math.round(scopedTenants.reduce((acc, t) => acc + (t.reliabilityScore || 90), 0) / scopedTenants.length)
+    : 0;
+  const autopayTenantsCount = scopedTenants.filter(t => t.autopayActive || t.id.includes('autopay')).length;
+  const autopayRate = scopedTenants.length > 0 ? ((autopayTenantsCount / scopedTenants.length) * 100).toFixed(1) : '0.0';
 
   const handleWhatsAppReminder = (name: string, phone: string) => {
     addNotification('WhatsApp Reminder Sent', `Direct WhatsApp rent ping with UPI payment link dispatched to ${name} (${phone}).`, 'RENT');
@@ -53,68 +84,208 @@ export default function TenantsDirectory() {
   return (
     <div className="space-y-6 pb-12 font-sans">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#e3e1d8]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D2DDD7]">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#19251f]">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#263238]">
               Tenants & Digital Leases
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#eef3f0] text-[#274235] font-bold border border-[#274235]/20">
-              {tenants.length} Active Leases
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#263238] font-bold border border-[#263238]/20">
+              {scopedTenants.length} Active Leases
             </span>
           </div>
-          <p className="text-xs text-[#6e7972] mt-0.5">
+          <p className="text-xs text-[#666666] mt-0.5">
             Verified resident and multi-tenant directory with escrow security deposits and Aadhaar KYC
           </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => setIsExistingTenantWizardOpen(true)}
-            className="px-4 py-2.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white text-xs font-bold shadow-md shadow-[#274235]/20 transition flex items-center gap-1.5"
-          >
-            <UserPlus className="h-4 w-4" />
-            <span>Onboard Existing Tenant</span>
-          </button>
         </div>
       </div>
 
       {/* 4 Stat Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="organic-card p-5">
-          <span className="text-xs font-semibold text-[#6e7972]">Total Verified Tenants</span>
-          <div className="text-2xl font-black text-[#19251f] font-tabular mt-1">{tenants.length}</div>
+          <span className="text-xs font-semibold text-[#666666]">Total Verified Tenants</span>
+          <div className="text-2xl font-black text-[#263238] font-tabular mt-1">{scopedTenants.length}</div>
           <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full mt-2 inline-block">
-            100% KYC Verified
+            {scopedTenants.length > 0 ? '100% KYC Verified' : 'Zero Active Leases'}
           </span>
         </div>
 
         <div className="organic-card p-5">
-          <span className="text-xs font-semibold text-[#6e7972]">Escrow Deposits Held</span>
-          <div className="text-2xl font-black text-[#19251f] font-tabular mt-1">
+          <span className="text-xs font-semibold text-[#666666]">Escrow Deposits Held</span>
+          <div className="text-2xl font-black text-[#263238] font-tabular mt-1">
             ₹{(totalDeposits / 1000).toFixed(0)}K
           </div>
-          <span className="text-[11px] font-bold text-[#274235] bg-[#eef3f0] px-2 py-0.5 rounded-full mt-2 inline-block">
+          <span className="text-[11px] font-bold text-[#263238] bg-[#E8F0EC] px-2 py-0.5 rounded-full mt-2 inline-block">
             Axis Bank Escrow Trust
           </span>
         </div>
 
         <div className="organic-card p-5">
-          <span className="text-xs font-semibold text-[#6e7972]">Autopay Penetration</span>
-          <div className="text-2xl font-black text-[#19251f] font-tabular mt-1">87.5%</div>
+          <span className="text-xs font-semibold text-[#666666]">Autopay Penetration</span>
+          <div className="text-2xl font-black text-[#263238] font-tabular mt-1">{autopayRate}%</div>
           <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full mt-2 inline-block">
-            High On-Time Rate
+            {scopedTenants.length > 0 ? 'High On-Time Rate' : 'Awaiting Mandates'}
           </span>
         </div>
 
         <div className="organic-card p-5">
-          <span className="text-xs font-semibold text-[#6e7972]">Avg Reliability Score</span>
-          <div className="text-2xl font-black text-emerald-700 font-tabular mt-1">{avgScore} / 100</div>
-          <span className="text-[11px] font-bold text-[#6e7972] mt-2 inline-block">
-            Based on payment timeliness
+          <span className="text-xs font-semibold text-[#666666]">Avg Reliability Score</span>
+          <div className="text-2xl font-black text-emerald-700 font-tabular mt-1">
+            {avgScore > 0 ? `${avgScore} / 100` : 'N/A'}
+          </div>
+          <span className="text-[11px] font-bold text-[#666666] mt-2 inline-block">
+            {avgScore > 0 ? 'Based on payment timeliness' : 'Requires settled cycles'}
           </span>
         </div>
       </div>
+
+      {/* Pending Tenant Connection Requests */}
+      {tenantConnectionRequests.filter(r => r.status === 'PENDING_APPROVAL').length > 0 && (
+        <div className="rounded-3xl bg-[#E8F0EC] border border-[#163B36]/30 p-5 space-y-3 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+              <h3 className="font-extrabold text-sm text-[#263238]">
+                Pending Tenant Connection Requests ({tenantConnectionRequests.filter(r => r.status === 'PENDING_APPROVAL').length})
+              </h3>
+            </div>
+            <span className="text-[11px] text-[#546E7A]">Awaiting your landlord approval</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            {tenantConnectionRequests.filter(r => r.status === 'PENDING_APPROVAL').map(req => (
+              <div key={req.id} className="p-4 rounded-2xl bg-white border border-[#D2DDD7] space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h4 className="font-extrabold text-sm text-[#263238]">{req.tenantName}</h4>
+                    <p className="text-[11px] text-[#546E7A] mt-0.5">{req.tenantEmail} • {req.tenantPhone}</p>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 shrink-0">
+                    Awaiting Approval
+                  </span>
+                </div>
+
+                {/* Mandatory eKYC & Agreement Verification Chips */}
+                <div className="flex items-center gap-2 flex-wrap text-[11px]">
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold flex items-center gap-1">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-700" />
+                    <span>Aadhaar: {req.aadhaarNumber || '5481 9028 1142'}</span>
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold flex items-center gap-1">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-700" />
+                    <span>PAN: {req.panNumber || 'BLRPS9912A'}</span>
+                  </span>
+                  {req.hasFood && (
+                    <span className="px-2 py-1 rounded-lg bg-[#E8F0EC] text-[#163B36] border border-[#D2DDD7] font-bold flex items-center gap-1">
+                      <Utensils className="h-3 w-3 text-[#163B36]" />
+                      <span>Mess Dining Included</span>
+                    </span>
+                  )}
+                </div>
+
+                {/* Uploaded Documents / Agreement */}
+                <div className="p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="font-bold text-[#263238] flex items-center gap-1">
+                      <Paperclip className="h-3.5 w-3.5 text-[#163B36]" />
+                      <span>Uploaded KYC &amp; Agreement Documents ({req.documents?.length || 2})</span>
+                    </span>
+                    <span className="text-[10px] text-emerald-700 font-bold">✓ Uploaded by Tenant</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {(req.documents && req.documents.length > 0 ? req.documents : [
+                      { id: '1', name: 'Aadhaar_Card_eKYC_Verified.pdf' },
+                      { id: '2', name: 'Signed_Rental_Agreement_Copy.pdf' }
+                    ]).map((d: any, idx: number) => (
+                      <span key={d.id || idx} className="text-[10px] bg-white border border-[#D2DDD7] text-[#263238] px-2 py-0.5 rounded-md font-medium flex items-center gap-1">
+                        <FileText className="h-3 w-3 text-[#546E7A]" />
+                        <span>{d.name}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[11px]">
+                  <div>
+                    <span className="text-[#546E7A] block">Unit</span>
+                    <span className="font-bold text-[#263238]">{req.unitNumber}</span>
+                  </div>
+                  <div>
+                    <span className="text-[#546E7A] block">Rent</span>
+                    <span className="font-bold text-[#163B36] font-tabular">₹{req.monthlyRent?.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div>
+                    <span className="text-[#546E7A] block">Deposit</span>
+                    <span className="font-bold text-[#263238] font-tabular">₹{req.depositAmount?.toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={() => approveTenantConnectionRequest(req.id)}
+                    className="flex-1 py-2 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer text-center"
+                  >
+                    ✓ Approve Connection &amp; Create Lease
+                  </button>
+                  <button
+                    onClick={() => rejectTenantConnectionRequest(req.id)}
+                    className="px-3 py-2 rounded-xl bg-white hover:bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200 transition cursor-pointer"
+                  >
+                    Decline
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Pending Move-Out Inspection Verifications */}
+      {tenantConnectionRequests.filter(r => r.status === 'MOVE_OUT_PENDING').length > 0 && (
+        <div className="rounded-3xl bg-amber-50/80 border border-amber-200 p-5 space-y-3 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse"></span>
+              <h3 className="font-extrabold text-sm text-[#263238]">
+                Pending Move-Out Verifications ({tenantConnectionRequests.filter(r => r.status === 'MOVE_OUT_PENDING').length})
+              </h3>
+            </div>
+            <span className="text-[11px] text-[#546E7A]">Inspection &amp; Escrow Settlement</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            {tenantConnectionRequests.filter(r => r.status === 'MOVE_OUT_PENDING').map(req => (
+              <div key={req.id} className="p-4 rounded-2xl bg-white border border-amber-200 space-y-2.5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className="font-extrabold text-sm text-[#263238]">{req.tenantName}</h4>
+                    <p className="text-[11px] text-[#546E7A]">Unit {req.unitNumber} • Move-Out: {req.moveOutDate}</p>
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-800 border border-rose-200">
+                    Settlement Pending
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-[#546E7A]">
+                  <b>Reason:</b> {req.moveOutReason || 'Tenure completed'}
+                </p>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={() => verifyAndSettleMoveOut(req.id, {
+                      inspectionNotes: 'MoveFlow handover inspection passed. All damages cleared.',
+                      depositSettledAmount: req.depositAmount
+                    })}
+                    className="flex-1 py-2 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer text-center"
+                  >
+                    Verify Inspection &amp; Settle Deposit (₹{req.depositAmount?.toLocaleString('en-IN')})
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -124,16 +295,16 @@ export default function TenantsDirectory() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search tenant name, unit, or phone..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-2xl bg-white border border-[#e3e1d8] text-xs font-medium text-[#19251f] placeholder-[#95a099] focus:outline-none focus:border-[#274235]"
+            className="w-full pl-9 pr-4 py-2.5 rounded-2xl bg-white border border-[#D2DDD7] text-xs font-medium text-[#263238] placeholder-[#888888] focus:outline-none focus:border-[#263238]"
           />
-          <Search className="absolute left-3 top-3 h-3.5 w-3.5 text-[#95a099]" />
+          <Search className="absolute left-3 top-3 h-3.5 w-3.5 text-[#888888]" />
         </div>
 
-        <div className="flex items-center gap-1.5 p-1 bg-white rounded-2xl border border-[#e3e1d8] self-start sm:self-auto text-xs">
+        <div className="flex items-center gap-1.5 p-1 bg-white rounded-2xl border border-[#D2DDD7] self-start sm:self-auto text-xs">
           <button
             onClick={() => setFilterStatus('ALL')}
             className={`px-3 py-1.5 rounded-xl font-bold transition ${
-              filterStatus === 'ALL' ? 'bg-[#274235] text-white' : 'text-[#6e7972] hover:text-[#19251f]'
+              filterStatus === 'ALL' ? 'bg-[#263238] text-white' : 'text-[#666666] hover:text-[#263238]'
             }`}
           >
             All Tenants
@@ -141,7 +312,7 @@ export default function TenantsDirectory() {
           <button
             onClick={() => setFilterStatus('ACTIVE')}
             className={`px-3 py-1.5 rounded-xl font-bold transition ${
-              filterStatus === 'ACTIVE' ? 'bg-[#274235] text-white' : 'text-[#6e7972] hover:text-[#19251f]'
+              filterStatus === 'ACTIVE' ? 'bg-[#263238] text-white' : 'text-[#666666] hover:text-[#263238]'
             }`}
           >
             Active Leases
@@ -153,7 +324,7 @@ export default function TenantsDirectory() {
       <div className="organic-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#f7f6f2] text-[#6e7972] border-b border-[#e3e1d8] text-[11px] font-bold uppercase tracking-wider">
+            <thead className="bg-[#E8F0EC] text-[#666666] border-b border-[#D2DDD7] text-[11px] font-bold uppercase tracking-wider">
               <tr>
                 <th className="py-3 px-4">Resident</th>
                 <th className="py-3 px-4">Property & Unit</th>
@@ -164,79 +335,93 @@ export default function TenantsDirectory() {
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#eeece5]">
-              {filteredTenants.map((t) => (
-                <tr key={t.id} className="hover:bg-[#fbfbfa] transition">
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-full bg-[#eef3f0] text-[#274235] font-black text-xs flex items-center justify-center border border-[#274235]/20 shrink-0">
-                        {t.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                      </div>
-                      <div>
-                        <div className="font-extrabold text-[#19251f] flex items-center gap-1.5">
-                          <span>{t.name}</span>
-                          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                        </div>
-                        <div className="text-[11px] text-[#6e7972]">{t.phone}</div>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td className="py-3.5 px-4">
-                    <div className="font-bold text-[#19251f]">{t.propertyName}</div>
-                    <div className="text-[11px] text-[#6e7972]">Unit {t.unitNumber}</div>
-                  </td>
-
-                  <td className="py-3.5 px-4 font-tabular">
-                    <div className="font-black text-[#19251f]">₹{t.monthlyRent.toLocaleString('en-IN')}</div>
-                    <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded font-bold">
-                      Autopay 5th
-                    </span>
-                  </td>
-
-                  <td className="py-3.5 px-4 font-tabular font-medium text-[#19251f]">
-                    ₹{(t.depositPaid || 0).toLocaleString('en-IN')}
-                    <div className="text-[10px] text-[#6e7972]">Escrow locked</div>
-                  </td>
-
-                  <td className="py-3.5 px-4 text-[#6e7972]">
-                    <div className="font-semibold text-[#19251f]">{t.leaseStart}</div>
-                    <div className="text-[10px]">until {t.leaseEnd}</div>
-                  </td>
-
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-black text-emerald-700 font-tabular">{t.reliabilityScore || 87}</span>
-                      <span className="text-[10px] text-[#6e7972]">/ 100</span>
-                    </div>
-                    <div className="w-16 bg-[#e3e1d8] h-1.5 rounded-full overflow-hidden mt-1">
-                      <div 
-                        className="bg-[#274235] h-full rounded-full" 
-                        style={{ width: `${t.reliabilityScore || 87}%` }}
-                      />
-                    </div>
-                  </td>
-
-                  <td className="py-3.5 px-4 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        onClick={() => handleWhatsAppReminder(t.name, t.phone)}
-                        className="p-1.5 rounded-xl bg-[#f4f3ef] hover:bg-[#274235] hover:text-white text-[#19251f] transition"
-                        title="Dispatch WhatsApp Payment Reminder"
-                      >
-                        <Phone className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => alert(`Digital Lease Agreement PDF generated for ${t.name}. Verified with Aadhaar eSign.`)}
-                        className="p-1.5 rounded-xl bg-[#f4f3ef] hover:bg-[#274235] hover:text-white text-[#19251f] transition"
-                        title="Download eSigned Lease Agreement"
-                      >
-                        <FileText className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+            <tbody className="divide-y divide-[#E0E0E0]">
+              {filteredTenants.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center">
+                    <Users2 className="h-8 w-8 text-[#D2DDD7] mx-auto mb-2 opacity-50" />
+                    <p className="text-xs font-bold text-[#666666]">No tenants found</p>
+                    <p className="text-[11px] text-[#999999] mt-0.5">
+                      {activeRole === 'owner' 
+                        ? 'Click "Onboard Existing Tenant" above to add residents to your units.' 
+                        : 'No tenant lease records matching your profile.'}
+                    </p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredTenants.map((t) => (
+                  <tr key={t.id} className="hover:bg-[#ffffff] transition">
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-full bg-[#E8F0EC] text-[#263238] font-black text-xs flex items-center justify-center border border-[#263238]/20 shrink-0">
+                          {t.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        </div>
+                        <div>
+                          <div className="font-extrabold text-[#263238] flex items-center gap-1.5">
+                            <span>{t.name}</span>
+                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                          </div>
+                          <div className="text-[11px] text-[#666666]">{t.phone}</div>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <div className="font-bold text-[#263238]">{t.propertyName}</div>
+                      <div className="text-[11px] text-[#666666]">Unit {t.unitNumber}</div>
+                    </td>
+
+                    <td className="py-3.5 px-4 font-tabular">
+                      <div className="font-black text-[#263238]">₹{t.monthlyRent.toLocaleString('en-IN')}</div>
+                      <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded font-bold">
+                        Autopay 5th
+                      </span>
+                    </td>
+
+                    <td className="py-3.5 px-4 font-tabular font-medium text-[#263238]">
+                      ₹{(t.depositPaid || 0).toLocaleString('en-IN')}
+                      <div className="text-[10px] text-[#666666]">Escrow locked</div>
+                    </td>
+
+                    <td className="py-3.5 px-4 text-[#666666]">
+                      <div className="font-semibold text-[#263238]">{t.leaseStart}</div>
+                      <div className="text-[10px]">until {t.leaseEnd}</div>
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-black text-emerald-700 font-tabular">{t.reliabilityScore || 87}</span>
+                        <span className="text-[10px] text-[#666666]">/ 100</span>
+                      </div>
+                      <div className="w-16 bg-[#D2DDD7] h-1.5 rounded-full overflow-hidden mt-1">
+                        <div 
+                          className="bg-[#263238] h-full rounded-full" 
+                          style={{ width: `${t.reliabilityScore || 87}%` }}
+                        />
+                      </div>
+                    </td>
+
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => handleWhatsAppReminder(t.name, t.phone)}
+                          className="p-1.5 rounded-xl bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] transition"
+                          title="Dispatch WhatsApp Payment Reminder"
+                        >
+                          <Phone className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => alert(`Digital Lease Agreement PDF generated for ${t.name}. Verified with Aadhaar eSign.`)}
+                          className="p-1.5 rounded-xl bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] transition"
+                          title="Download eSigned Lease Agreement"
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

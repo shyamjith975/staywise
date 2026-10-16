@@ -29,17 +29,17 @@ export default function ManagerDashboard() {
   return (
     <div className="space-y-6 pb-12 font-sans">
       {/* Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#e3e1d8]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D2DDD7]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#19251f]">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#263238]">
               Operations & Field Command
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#eef3f0] text-[#274235] font-bold border border-[#274235]/20">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#263238] font-bold border border-[#263238]/20">
               Field Active
             </span>
           </div>
-          <p className="text-xs text-[#6e7972] mt-0.5">
+          <p className="text-xs text-[#666666] mt-0.5">
             Day-to-day management of residential buildings, commercial spaces, and maintenance staff
           </p>
         </div>
@@ -48,31 +48,31 @@ export default function ManagerDashboard() {
       {/* Operational 7-Metric Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         <div className="organic-card p-3.5">
-          <span className="text-[11px] font-semibold text-[#6e7972]">Properties</span>
-          <div className="text-xl font-black text-[#19251f] mt-1 font-tabular">{totalProps}</div>
+          <span className="text-[11px] font-semibold text-[#666666]">Properties</span>
+          <div className="text-xl font-black text-[#263238] mt-1 font-tabular">{totalProps}</div>
         </div>
         <div className="organic-card p-3.5">
-          <span className="text-[11px] font-semibold text-[#6e7972]">Occupied</span>
+          <span className="text-[11px] font-semibold text-[#666666]">Occupied</span>
           <div className="text-xl font-black text-emerald-700 mt-1 font-tabular">{occupied}</div>
         </div>
         <div className="organic-card p-3.5">
-          <span className="text-[11px] font-semibold text-[#6e7972]">Vacant</span>
+          <span className="text-[11px] font-semibold text-[#666666]">Vacant</span>
           <div className="text-xl font-black text-amber-700 mt-1 font-tabular">{vacant}</div>
         </div>
         <div className="organic-card p-3.5">
-          <span className="text-[11px] font-semibold text-[#6e7972]">Pending Rent</span>
+          <span className="text-[11px] font-semibold text-[#666666]">Pending Rent</span>
           <div className="text-xl font-black text-rose-700 mt-1 font-tabular">₹{(pendingRent / 1000).toFixed(0)}K</div>
         </div>
         <div className="organic-card p-3.5">
-          <span className="text-[11px] font-semibold text-[#6e7972]">Open Tickets</span>
+          <span className="text-[11px] font-semibold text-[#666666]">Open Tickets</span>
           <div className="text-xl font-black text-amber-700 mt-1 font-tabular">{openTickets.length}</div>
         </div>
         <div className="organic-card p-3.5">
-          <span className="text-[11px] font-semibold text-[#6e7972]">Active Leads</span>
-          <div className="text-xl font-black text-[#274235] mt-1 font-tabular">{leads.length}</div>
+          <span className="text-[11px] font-semibold text-[#666666]">Active Leads</span>
+          <div className="text-xl font-black text-[#263238] mt-1 font-tabular">{leads.length}</div>
         </div>
         <div className="organic-card p-3.5 col-span-2 sm:col-span-1">
-          <span className="text-[11px] font-semibold text-[#6e7972]">Visits Today</span>
+          <span className="text-[11px] font-semibold text-[#666666]">Visits Today</span>
           <div className="text-xl font-black text-blue-700 mt-1 font-tabular">1 Showing</div>
         </div>
       </div>
@@ -83,12 +83,12 @@ export default function ManagerDashboard() {
         <div className="organic-card p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-extrabold text-[#19251f]">Maintenance Triage Queue</h3>
-              <p className="text-[11px] text-[#6e7972]">Field requests waiting for triage or vendor dispatch</p>
+              <h3 className="text-sm font-extrabold text-[#263238]">Maintenance Triage Queue</h3>
+              <p className="text-[11px] text-[#666666]">Field requests waiting for triage or vendor dispatch</p>
             </div>
             <button 
               onClick={() => setActiveView('maintenance')}
-              className="text-xs font-bold text-[#274235] hover:underline"
+              className="text-xs font-bold text-[#263238] hover:underline"
             >
               All tickets →
             </button>
@@ -98,10 +98,10 @@ export default function ManagerDashboard() {
             {openTickets.map((t) => (
               <div
                 key={t.id}
-                className="p-3.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] flex items-center justify-between gap-3 text-xs"
+                className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-between gap-3 text-xs"
               >
                 <div>
-                  <div className="font-bold text-[#19251f] flex items-center gap-2">
+                  <div className="font-bold text-[#263238] flex items-center gap-2">
                     <span>{t.title}</span>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
                       t.priority === 'Emergency' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
@@ -109,14 +109,14 @@ export default function ManagerDashboard() {
                       {t.priority}
                     </span>
                   </div>
-                  <div className="text-[11px] text-[#6e7972] mt-0.5">
+                  <div className="text-[11px] text-[#666666] mt-0.5">
                     {t.unitNumber} • {t.category}
                   </div>
                 </div>
 
                 <button
                   onClick={() => setActiveView('maintenance')}
-                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#274235] hover:text-white text-[#19251f] font-bold text-xs border border-[#e3e1d8] transition shrink-0"
+                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#263238] hover:text-white text-[#263238] font-bold text-xs border border-[#D2DDD7] transition shrink-0"
                 >
                   Dispatch
                 </button>
@@ -129,12 +129,12 @@ export default function ManagerDashboard() {
         <div className="organic-card p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-extrabold text-[#19251f]">Upcoming Property Visits</h3>
-              <p className="text-[11px] text-[#6e7972]">Prospective tenants scheduled for physical inspection</p>
+              <h3 className="text-sm font-extrabold text-[#263238]">Upcoming Property Visits</h3>
+              <p className="text-[11px] text-[#666666]">Prospective tenants scheduled for physical inspection</p>
             </div>
             <button 
               onClick={() => setActiveView('leads')}
-              className="text-xs font-bold text-[#274235] hover:underline"
+              className="text-xs font-bold text-[#263238] hover:underline"
             >
               CRM pipeline →
             </button>
@@ -144,16 +144,16 @@ export default function ManagerDashboard() {
             {leads.filter(l => l.visitDate).map((lead) => (
               <div
                 key={lead.id}
-                className="p-3.5 rounded-2xl bg-[#f7f6f2] border border-[#e3e1d8] flex items-center justify-between gap-3 text-xs"
+                className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-between gap-3 text-xs"
               >
                 <div>
-                  <div className="font-bold text-[#19251f] flex items-center gap-2">
+                  <div className="font-bold text-[#263238] flex items-center gap-2">
                     <span>{lead.name}</span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
                       {lead.stage}
                     </span>
                   </div>
-                  <div className="text-[11px] text-[#6e7972] mt-0.5">
+                  <div className="text-[11px] text-[#666666] mt-0.5">
                     {lead.assignedAgent} • Visit: {lead.visitDate}
                   </div>
                 </div>
@@ -161,13 +161,13 @@ export default function ManagerDashboard() {
                 <div className="flex items-center gap-1.5 shrink-0">
                   <a
                     href={`tel:${lead.phone}`}
-                    className="p-2 rounded-xl bg-white hover:bg-[#274235] hover:text-white text-[#19251f] border border-[#e3e1d8] transition"
+                    className="p-2 rounded-xl bg-white hover:bg-[#263238] hover:text-white text-[#263238] border border-[#D2DDD7] transition"
                   >
                     📞
                   </a>
                   <button
                     onClick={() => setActiveView('leads')}
-                    className="px-3 py-1.5 rounded-xl bg-[#274235] text-white font-bold text-xs shadow-sm hover:bg-[#1e352a] transition"
+                    className="px-3 py-1.5 rounded-xl bg-[#263238] text-white font-bold text-xs shadow-sm hover:bg-[#263238] transition"
                   >
                     Conduct Visit
                   </button>
