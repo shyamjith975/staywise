@@ -117,40 +117,40 @@ export default function ExistingTenantWizardModal() {
   return (
     <div 
       onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
-      className="fixed inset-0 z-50 bg-[#2a2a2a]/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 font-sans overflow-y-auto"
+      className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 font-sans overflow-y-auto"
     >
-      <div className="w-full max-w-xl bg-white border border-[#B5B5B5] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto animate-in fade-in zoom-in-95 duration-200">
+      <div className="w-full max-w-xl bg-white border border-[#D2DDD7] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto animate-in fade-in zoom-in-95 duration-200">
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E0E0E0] bg-[#ffffff]">
           <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-2xl bg-[#f0f0f0] text-[#2a2a2a] flex items-center justify-center">
+            <div className="h-9 w-9 rounded-2xl bg-[#E8F0EC] text-[#263238] flex items-center justify-center">
               <UserPlus className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-base font-extrabold text-[#2a2a2a]">Onboard Existing Tenant</h2>
+              <h2 className="text-base font-extrabold text-[#263238]">Onboard Existing Tenant</h2>
               <p className="text-[11px] text-[#666666]">Fast Onboarding & Digital Lease Connection</p>
             </div>
           </div>
           <button 
             type="button"
             onClick={handleClose} 
-            className="h-8 w-8 rounded-full flex items-center justify-center text-[#666666] hover:text-[#2a2a2a] hover:bg-[#f0f0f0] transition cursor-pointer"
+            className="h-8 w-8 rounded-full flex items-center justify-center text-[#666666] hover:text-[#263238] hover:bg-[#E8F0EC] transition cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Step Indicator */}
-        <div className="px-6 py-3 bg-[#f0f0f0] border-b border-[#E0E0E0] flex items-center justify-between text-xs">
-          <span className={`font-bold ${step >= 1 ? 'text-[#2a2a2a]' : 'text-[#888888]'}`}>
+        <div className="px-6 py-3 bg-[#E8F0EC] border-b border-[#E0E0E0] flex items-center justify-between text-xs">
+          <span className={`font-bold ${step >= 1 ? 'text-[#263238]' : 'text-[#888888]'}`}>
             1. Tenancy Terms
           </span>
           <span className="text-[#888888]">→</span>
-          <span className={`font-bold ${step >= 2 ? 'text-[#2a2a2a]' : 'text-[#888888]'}`}>
+          <span className={`font-bold ${step >= 2 ? 'text-[#263238]' : 'text-[#888888]'}`}>
             2. Send Invite Link
           </span>
           <span className="text-[#888888]">→</span>
-          <span className={`font-bold ${step === 3 ? 'text-[#2a2a2a]' : 'text-[#888888]'}`}>
+          <span className={`font-bold ${step === 3 ? 'text-[#263238]' : 'text-[#888888]'}`}>
             3. Connected
           </span>
         </div>
@@ -178,7 +178,7 @@ export default function ExistingTenantWizardModal() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-[#2a2a2a] font-semibold">Tenant Full Name <span className="text-rose-600">*</span></label>
+                    <label className="text-[#263238] font-semibold">Tenant Full Name <span className="text-rose-600">*</span></label>
                     {fieldErrors.name && (
                       <span className="text-[10px] font-bold text-rose-600 flex items-center gap-0.5 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">
                         <AlertCircle className="h-2.5 w-2.5 text-rose-600 shrink-0" />
@@ -194,17 +194,17 @@ export default function ExistingTenantWizardModal() {
                       setFormData({ ...formData, name: e.target.value });
                       clearFieldError('name');
                     }}
-                    className={`w-full px-3.5 py-2.5 rounded-2xl border text-[#2a2a2a] placeholder-[#888888] focus:outline-none transition ${
+                    className={`w-full px-3.5 py-2.5 rounded-2xl border text-[#263238] placeholder-[#888888] focus:outline-none transition ${
                       fieldErrors.name
                         ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                        : 'bg-[#f0f0f0] border-[#B5B5B5] focus:border-[#2a2a2a] focus:bg-white'
+                        : 'bg-[#E8F0EC] border-[#D2DDD7] focus:border-[#263238] focus:bg-white'
                     }`}
                   />
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-[#2a2a2a] font-semibold">Mobile Number <span className="text-rose-600">*</span></label>
+                    <label className="text-[#263238] font-semibold">Mobile Number <span className="text-rose-600">*</span></label>
                     {fieldErrors.phone && (
                       <span className="text-[10px] font-bold text-rose-600 flex items-center gap-0.5 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">
                         <AlertCircle className="h-2.5 w-2.5 text-rose-600 shrink-0" />
@@ -220,10 +220,10 @@ export default function ExistingTenantWizardModal() {
                       setFormData({ ...formData, phone: e.target.value });
                       clearFieldError('phone');
                     }}
-                    className={`w-full px-3.5 py-2.5 rounded-2xl border text-[#2a2a2a] placeholder-[#888888] focus:outline-none transition ${
+                    className={`w-full px-3.5 py-2.5 rounded-2xl border text-[#263238] placeholder-[#888888] focus:outline-none transition ${
                       fieldErrors.phone
                         ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                        : 'bg-[#f0f0f0] border-[#B5B5B5] focus:border-[#2a2a2a] focus:bg-white'
+                        : 'bg-[#E8F0EC] border-[#D2DDD7] focus:border-[#263238] focus:bg-white'
                     }`}
                   />
                 </div>
@@ -231,7 +231,7 @@ export default function ExistingTenantWizardModal() {
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[#2a2a2a] font-semibold">Email Address <span className="text-rose-600">*</span></label>
+                  <label className="text-[#263238] font-semibold">Email Address <span className="text-rose-600">*</span></label>
                   {fieldErrors.email && (
                     <span className="text-[10px] font-bold text-rose-600 flex items-center gap-0.5 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">
                       <AlertCircle className="h-2.5 w-2.5 text-rose-600 shrink-0" />
@@ -247,21 +247,21 @@ export default function ExistingTenantWizardModal() {
                     setFormData({ ...formData, email: e.target.value });
                     clearFieldError('email');
                   }}
-                  className={`w-full px-3.5 py-2.5 rounded-2xl border text-[#2a2a2a] placeholder-[#888888] focus:outline-none transition ${
+                  className={`w-full px-3.5 py-2.5 rounded-2xl border text-[#263238] placeholder-[#888888] focus:outline-none transition ${
                     fieldErrors.email
                       ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                      : 'bg-[#f0f0f0] border-[#B5B5B5] focus:border-[#2a2a2a] focus:bg-white'
+                      : 'bg-[#E8F0EC] border-[#D2DDD7] focus:border-[#263238] focus:bg-white'
                   }`}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#2a2a2a] font-semibold mb-1">Target Property</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Target Property</label>
                   <select
                     value={formData.propertyId}
                     onChange={(e) => setFormData({ ...formData, propertyId: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] focus:outline-none focus:border-[#2a2a2a]"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                   >
                     {properties.length === 0 ? (
                       <option value="">No properties available (add one first)</option>
@@ -275,7 +275,7 @@ export default function ExistingTenantWizardModal() {
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-[#2a2a2a] font-semibold">Unit Number <span className="text-rose-600">*</span></label>
+                    <label className="text-[#263238] font-semibold">Unit Number <span className="text-rose-600">*</span></label>
                     {fieldErrors.unitNumber && (
                       <span className="text-[10px] font-bold text-rose-600 flex items-center gap-0.5 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">
                         <AlertCircle className="h-2.5 w-2.5 text-rose-600 shrink-0" />
@@ -291,10 +291,10 @@ export default function ExistingTenantWizardModal() {
                       setFormData({ ...formData, unitNumber: e.target.value });
                       clearFieldError('unitNumber');
                     }}
-                    className={`w-full px-3.5 py-2.5 rounded-2xl border text-[#2a2a2a] placeholder-[#888888] focus:outline-none transition ${
+                    className={`w-full px-3.5 py-2.5 rounded-2xl border text-[#263238] placeholder-[#888888] focus:outline-none transition ${
                       fieldErrors.unitNumber
                         ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                        : 'bg-[#f0f0f0] border-[#B5B5B5] focus:border-[#2a2a2a] focus:bg-white'
+                        : 'bg-[#E8F0EC] border-[#D2DDD7] focus:border-[#263238] focus:bg-white'
                     }`}
                   />
                 </div>
@@ -303,7 +303,7 @@ export default function ExistingTenantWizardModal() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="text-[#2a2a2a] font-semibold">Monthly Rent (₹) <span className="text-rose-600">*</span></label>
+                    <label className="text-[#263238] font-semibold">Monthly Rent (₹) <span className="text-rose-600">*</span></label>
                     {fieldErrors.monthlyRent && (
                       <span className="text-[10px] font-bold text-rose-600 flex items-center gap-0.5 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded">
                         <AlertCircle className="h-2.5 w-2.5 text-rose-600 shrink-0" />
@@ -319,53 +319,53 @@ export default function ExistingTenantWizardModal() {
                       setFormData({ ...formData, monthlyRent: e.target.value });
                       clearFieldError('monthlyRent');
                     }}
-                    className={`w-full px-3.5 py-2.5 rounded-2xl border text-[#2a2a2a] placeholder-[#888888] focus:outline-none transition ${
+                    className={`w-full px-3.5 py-2.5 rounded-2xl border text-[#263238] placeholder-[#888888] focus:outline-none transition ${
                       fieldErrors.monthlyRent
                         ? 'border-rose-500 bg-rose-50/20 ring-1 ring-rose-500/30'
-                        : 'bg-[#f0f0f0] border-[#B5B5B5] focus:border-[#2a2a2a] focus:bg-white'
+                        : 'bg-[#E8F0EC] border-[#D2DDD7] focus:border-[#263238] focus:bg-white'
                     }`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[#2a2a2a] font-semibold mb-1">Security Deposit (₹)</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Security Deposit (₹)</label>
                   <input
                     type="number"
                     placeholder="e.g. 78000"
                     value={formData.deposit}
                     onChange={(e) => setFormData({ ...formData, deposit: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] placeholder-[#888888] focus:outline-none focus:border-[#2a2a2a]"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] placeholder-[#888888] focus:outline-none focus:border-[#263238]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[#2a2a2a] font-semibold mb-1">Lease Start</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Lease Start</label>
                   <input
                     type="date"
                     value={formData.leaseStart}
                     onChange={(e) => setFormData({ ...formData, leaseStart: e.target.value })}
-                    className="w-full px-3 py-2 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] focus:outline-none focus:border-[#2a2a2a]"
+                    className="w-full px-3 py-2 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[#2a2a2a] font-semibold mb-1">Lease End</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Lease End</label>
                   <input
                     type="date"
                     value={formData.leaseEnd}
                     onChange={(e) => setFormData({ ...formData, leaseEnd: e.target.value })}
-                    className="w-full px-3 py-2 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] focus:outline-none focus:border-[#2a2a2a]"
+                    className="w-full px-3 py-2 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[#2a2a2a] font-semibold mb-1">Rent Due Date</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Rent Due Date</label>
                   <select
                     value={formData.rentDueDate}
                     onChange={(e) => setFormData({ ...formData, rentDueDate: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] focus:outline-none focus:border-[#2a2a2a]"
+                    className="w-full px-3 py-2 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                   >
                     <option value={1}>1st of month</option>
                     <option value={5}>5th of month</option>
@@ -377,7 +377,7 @@ export default function ExistingTenantWizardModal() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full py-3.5 rounded-2xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-bold text-xs shadow-xl shadow-[#2a2a2a]/20 transition flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-3.5 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white font-bold text-xs shadow-xl shadow-[#263238]/20 transition flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Send className="h-4 w-4" />
                   <span>Generate Onboarding Invite Link</span>
@@ -388,8 +388,8 @@ export default function ExistingTenantWizardModal() {
 
           {step === 2 && (
             <div className="space-y-4 text-xs">
-              <div className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#2a2a2a]/20 text-[#2a2a2a]">
-                <div className="font-extrabold text-sm mb-1 text-[#2a2a2a]">Invitation Link Ready!</div>
+              <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#263238]/20 text-[#263238]">
+                <div className="font-extrabold text-sm mb-1 text-[#263238]">Invitation Link Ready!</div>
                 <p className="text-[11px] leading-relaxed">
                   Tenant <b>{formData.name}</b> will complete digital Aadhaar eKYC, register their bank autopay, and sign the digital lease.
                 </p>
@@ -402,7 +402,7 @@ export default function ExistingTenantWizardModal() {
                     type="text"
                     readOnly
                     value={inviteLink}
-                    className="flex-1 px-3.5 py-2.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] text-xs select-all font-mono"
+                    className="flex-1 px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] text-xs select-all font-mono"
                   />
                   <button
                     onClick={() => {
@@ -410,7 +410,7 @@ export default function ExistingTenantWizardModal() {
                       setCopied(true);
                       setTimeout(() => setCopied(false), 2000);
                     }}
-                    className="px-4 py-2.5 rounded-2xl bg-[#2a2a2a] text-white font-bold flex items-center gap-1.5 shadow-sm cursor-pointer"
+                    className="px-4 py-2.5 rounded-2xl bg-[#263238] text-white font-bold flex items-center gap-1.5 shadow-sm cursor-pointer"
                   >
                     <Copy className="h-3.5 w-3.5" />
                     <span>{copied ? 'Copied!' : 'Copy'}</span>
@@ -418,8 +418,8 @@ export default function ExistingTenantWizardModal() {
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-2">
-                <div className="font-bold text-[#2a2a2a]">Included in Onboarding Flow:</div>
+              <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-2">
+                <div className="font-bold text-[#263238]">Included in Onboarding Flow:</div>
                 <ul className="space-y-1.5 text-[#666666] text-[11px]">
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
@@ -439,14 +439,14 @@ export default function ExistingTenantWizardModal() {
               <div className="pt-2 flex items-center justify-between gap-3">
                 <button
                   onClick={() => setStep(1)}
-                  className="px-4 py-2.5 rounded-2xl bg-[#f0f0f0] text-[#2a2a2a] hover:bg-[#B5B5B5] font-bold cursor-pointer"
+                  className="px-4 py-2.5 rounded-2xl bg-[#E8F0EC] text-[#263238] hover:bg-[#D2DDD7] font-bold cursor-pointer"
                 >
                   Edit Terms
                 </button>
 
                 <button
                   onClick={handleSimulateTenantAcceptance}
-                  className="flex-1 py-3 rounded-2xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-bold shadow-md shadow-[#2a2a2a]/20 transition flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 py-3 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white font-bold shadow-md shadow-[#263238]/20 transition flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <ShieldCheck className="h-4 w-4" />
                   <span>Simulate Instant Tenant Acceptance</span>
@@ -462,7 +462,7 @@ export default function ExistingTenantWizardModal() {
               </div>
 
               <div>
-                <h3 className="text-lg font-extrabold text-[#2a2a2a]">Tenancy Successfully Connected!</h3>
+                <h3 className="text-lg font-extrabold text-[#263238]">Tenancy Successfully Connected!</h3>
                 <p className="text-xs text-[#666666] max-w-sm mx-auto mt-1 leading-relaxed">
                   <b>{formData.name}</b> has been onboarded into Unit {formData.unitNumber}. Unit marked OCCUPIED, security deposit recorded in escrow ledger, and automated rent schedule activated.
                 </p>
@@ -471,7 +471,7 @@ export default function ExistingTenantWizardModal() {
               <div className="pt-2">
                 <button
                   onClick={handleClose}
-                  className="px-6 py-2.5 rounded-2xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-bold text-xs shadow-md transition cursor-pointer"
+                  className="px-6 py-2.5 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white font-bold text-xs shadow-md transition cursor-pointer"
                 >
                   Return to Dashboard
                 </button>

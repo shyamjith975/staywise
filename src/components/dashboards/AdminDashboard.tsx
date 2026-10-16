@@ -290,10 +290,10 @@ export default function AdminDashboard() {
     <div className="space-y-6 pb-16 font-sans">
       
       {/* Super Admin Root Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#B5B5B5]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D2DDD7]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#2a2a2a]">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#263238]">
               Super Admin &amp; Governance Center
             </h1>
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-800 font-extrabold border border-rose-200">
@@ -306,7 +306,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Root Security Status Indicator */}
-        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-2xl border border-[#B5B5B5] text-xs shadow-sm self-start sm:self-auto">
+        <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-2xl border border-[#D2DDD7] text-xs shadow-sm self-start sm:self-auto">
           <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
           <span className="font-bold text-slate-700">Root Governance Active</span>
         </div>
@@ -314,19 +314,19 @@ export default function AdminDashboard() {
 
       {/* Global Platform Surveillance Aggregations */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <div className="p-4 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm">
+        <div className="p-4 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm">
           <span className="text-[10px] font-bold text-[#666666] uppercase tracking-wider block">Total Owners &amp; Hosts</span>
-          <div className="text-2xl font-black text-[#2a2a2a] mt-1">{ownersList.length} Owners</div>
+          <div className="text-2xl font-black text-[#263238] mt-1">{ownersList.length} Owners</div>
           <span className="text-[10px] text-emerald-700 font-semibold block mt-0.5">100% KYC &amp; RERA Verified</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm">
+        <div className="p-4 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm">
           <span className="text-[10px] font-bold text-[#666666] uppercase tracking-wider block">Total Rooms &amp; Units</span>
-          <div className="text-2xl font-black text-[#2a2a2a] mt-1">{totalRooms} Rooms</div>
+          <div className="text-2xl font-black text-[#263238] mt-1">{totalRooms} Rooms</div>
           <span className="text-[10px] text-slate-500 font-semibold block mt-0.5">{totalOccupiedRooms} Occupied ({Math.round((totalOccupiedRooms / (totalRooms || 1)) * 100)}%)</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm">
+        <div className="p-4 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm">
           <span className="text-[10px] font-bold text-[#666666] uppercase tracking-wider block">Total Owner Payouts</span>
           <div className="text-2xl font-black text-emerald-700 mt-1 font-tabular">
             ₹{(totalOwnerPayoutsReconciled / 100000).toFixed(2)}L
@@ -334,15 +334,15 @@ export default function AdminDashboard() {
           <span className="text-[10px] text-emerald-700 font-semibold block mt-0.5">100% Escrow Reconciled</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm">
+        <div className="p-4 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm">
           <span className="text-[10px] font-bold text-[#666666] uppercase tracking-wider block">Gross Total Payments</span>
-          <div className="text-2xl font-black text-[#2a2a2a] mt-1 font-tabular">
+          <div className="text-2xl font-black text-[#263238] mt-1 font-tabular">
             ₹{(grossPayments / 100000).toFixed(2)}L
           </div>
           <span className="text-[10px] text-purple-700 font-semibold block mt-0.5">₹{(platformTakeRateEarnings / 1000).toFixed(1)}k Platform Take-Rate</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm col-span-2 sm:col-span-1">
+        <div className="p-4 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm col-span-2 sm:col-span-1">
           <span className="text-[10px] font-bold text-[#666666] uppercase tracking-wider block">Active Disputes &amp; Delays</span>
           <div className="text-2xl font-black text-slate-900 mt-1">{depositDisputes.length} Disputes</div>
           <span className="text-[10px] text-amber-700 font-semibold block mt-0.5">RBI Trust Protected</span>
@@ -350,13 +350,13 @@ export default function AdminDashboard() {
       </div>
 
       {/* Main Navigation Tabs */}
-      <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] overflow-x-auto max-w-full text-xs font-bold">
+      <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] overflow-x-auto max-w-full text-xs font-bold">
         <button
           onClick={() => setActiveTab('OWNERS')}
           className={`px-3.5 py-2 rounded-xl transition shrink-0 flex items-center gap-2 ${
             activeTab === 'OWNERS' 
-              ? 'bg-[#e10600] text-white shadow-sm' 
-              : 'text-[#666666] hover:text-[#2a2a2a]'
+              ? 'bg-[#163B36] text-white shadow-sm' 
+              : 'text-[#666666] hover:text-[#263238]'
           }`}
         >
           <Building className="h-4 w-4" />
@@ -367,8 +367,8 @@ export default function AdminDashboard() {
           onClick={() => setActiveTab('ANALYTICS')}
           className={`px-3.5 py-2 rounded-xl transition shrink-0 flex items-center gap-2 ${
             activeTab === 'ANALYTICS' 
-              ? 'bg-[#e10600] text-white shadow-sm' 
-              : 'text-[#666666] hover:text-[#2a2a2a]'
+              ? 'bg-[#163B36] text-white shadow-sm' 
+              : 'text-[#666666] hover:text-[#263238]'
           }`}
         >
           <BarChart3 className="h-4 w-4" />
@@ -379,8 +379,8 @@ export default function AdminDashboard() {
           onClick={() => setActiveTab('MAINTENANCE_DISPUTES')}
           className={`px-3.5 py-2 rounded-xl transition shrink-0 flex items-center gap-2 ${
             activeTab === 'MAINTENANCE_DISPUTES' 
-              ? 'bg-[#e10600] text-white shadow-sm' 
-              : 'text-[#666666] hover:text-[#2a2a2a]'
+              ? 'bg-[#163B36] text-white shadow-sm' 
+              : 'text-[#666666] hover:text-[#263238]'
           }`}
         >
           <Scale className="h-4 w-4" />
@@ -396,8 +396,8 @@ export default function AdminDashboard() {
           onClick={() => setActiveTab('REFERRALS')}
           className={`px-3.5 py-2 rounded-xl transition shrink-0 flex items-center gap-2 ${
             activeTab === 'REFERRALS' 
-              ? 'bg-[#e10600] text-white shadow-sm' 
-              : 'text-[#666666] hover:text-[#2a2a2a]'
+              ? 'bg-[#163B36] text-white shadow-sm' 
+              : 'text-[#666666] hover:text-[#263238]'
           }`}
         >
           <Megaphone className="h-4 w-4 text-amber-500" />
@@ -411,8 +411,8 @@ export default function AdminDashboard() {
           onClick={() => setActiveTab('PROPERTIES')}
           className={`px-3.5 py-2 rounded-xl transition shrink-0 flex items-center gap-2 ${
             activeTab === 'PROPERTIES' 
-              ? 'bg-[#e10600] text-white shadow-sm' 
-              : 'text-[#666666] hover:text-[#2a2a2a]'
+              ? 'bg-[#163B36] text-white shadow-sm' 
+              : 'text-[#666666] hover:text-[#263238]'
           }`}
         >
           <Building2 className="h-4 w-4" />
@@ -428,8 +428,8 @@ export default function AdminDashboard() {
           onClick={() => setActiveTab('LEDGER')}
           className={`px-3.5 py-2 rounded-xl transition shrink-0 flex items-center gap-2 ${
             activeTab === 'LEDGER' 
-              ? 'bg-[#e10600] text-white shadow-sm' 
-              : 'text-[#666666] hover:text-[#2a2a2a]'
+              ? 'bg-[#163B36] text-white shadow-sm' 
+              : 'text-[#666666] hover:text-[#263238]'
           }`}
         >
           <Database className="h-4 w-4" />
@@ -442,26 +442,26 @@ export default function AdminDashboard() {
       {/* -------------------------------------------------------------------- */}
       {activeTab === 'OWNERS' && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#B5B5B5]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#D2DDD7]">
             <div>
               <h2 className="text-sm sm:text-base font-extrabold text-slate-900 flex items-center gap-2">
-                <Landmark className="h-4 w-4 text-[#2a2a2a]" />
+                <Landmark className="h-4 w-4 text-[#263238]" />
                 <span>All Property Owners, Portfolios &amp; Total Disbursed Payouts</span>
               </h2>
               <p className="text-xs text-slate-500">
                 Audited ledger of all registered asset owners, room allocations, occupancy, and reconciled escrow payouts.
               </p>
             </div>
-            <span className="text-[11px] font-bold text-slate-500 bg-[#f0f0f0] px-3 py-1.5 rounded-xl border border-[#B5B5B5]">
+            <span className="text-[11px] font-bold text-slate-500 bg-[#E8F0EC] px-3 py-1.5 rounded-xl border border-[#D2DDD7]">
               Read-Only Governance Mode
             </span>
           </div>
 
           {/* Owners Table */}
-          <div className="bg-white rounded-2xl border border-[#B5B5B5] overflow-hidden shadow-sm">
+          <div className="bg-white rounded-2xl border border-[#D2DDD7] overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#f0f0f0] text-slate-600 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200">
+                <thead className="bg-[#E8F0EC] text-slate-600 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200">
                   <tr>
                     <th className="py-3 px-4">Owner Profile</th>
                     <th className="py-3 px-3">Role / Category</th>
@@ -546,13 +546,13 @@ export default function AdminDashboard() {
       {/* -------------------------------------------------------------------- */}
       {activeTab === 'ANALYTICS' && (
         <div className="space-y-6">
-          <div className="bg-white p-5 rounded-3xl border border-[#B5B5B5] space-y-2">
+          <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] space-y-2">
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
                   Data Surveillance &amp; Performance
                 </span>
-                <h2 className="text-base sm:text-lg font-black text-[#2a2a2a] mt-1.5">
+                <h2 className="text-base sm:text-lg font-black text-[#263238] mt-1.5">
                   Platform Growth, Total Payments &amp; Revenue Analytics
                 </h2>
                 <p className="text-xs text-slate-500">
@@ -568,7 +568,7 @@ export default function AdminDashboard() {
 
           {/* Core Analytics Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white p-5 rounded-2xl border border-[#B5B5B5] shadow-sm space-y-1">
+            <div className="bg-white p-5 rounded-2xl border border-[#D2DDD7] shadow-sm space-y-1">
               <span className="text-xs font-bold text-slate-500">Platform Take-Rate Revenue (2.5%)</span>
               <div className="text-2xl font-black text-purple-700 font-tabular">
                 ₹{platformTakeRateEarnings.toLocaleString('en-IN')}
@@ -579,7 +579,7 @@ export default function AdminDashboard() {
               </span>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-[#B5B5B5] shadow-sm space-y-1">
+            <div className="bg-white p-5 rounded-2xl border border-[#D2DDD7] shadow-sm space-y-1">
               <span className="text-xs font-bold text-slate-500">On-Time Rent Collection Rate</span>
               <div className="text-2xl font-black text-emerald-700 font-tabular">
                 96.8%
@@ -589,7 +589,7 @@ export default function AdminDashboard() {
               </span>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-[#B5B5B5] shadow-sm space-y-1">
+            <div className="bg-white p-5 rounded-2xl border border-[#D2DDD7] shadow-sm space-y-1">
               <span className="text-xs font-bold text-slate-500">Active Tenant Lease Retention</span>
               <div className="text-2xl font-black text-slate-900 font-tabular">
                 94.2%
@@ -599,7 +599,7 @@ export default function AdminDashboard() {
               </span>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-[#B5B5B5] shadow-sm space-y-1">
+            <div className="bg-white p-5 rounded-2xl border border-[#D2DDD7] shadow-sm space-y-1">
               <span className="text-xs font-bold text-slate-500">Escrow Dispute Ratio</span>
               <div className="text-2xl font-black text-slate-900 font-tabular">
                 0.9%
@@ -613,10 +613,10 @@ export default function AdminDashboard() {
           {/* Growth Charts & Payment Rail Breakdown */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {/* Monthly Growth Trajectory */}
-            <div className="bg-white p-5 rounded-3xl border border-[#B5B5B5] space-y-4 shadow-sm">
+            <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] space-y-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-extrabold text-[#2a2a2a]">Month-on-Month GMV Rent Trajectory</h3>
+                  <h3 className="text-sm font-extrabold text-[#263238]">Month-on-Month GMV Rent Trajectory</h3>
                   <p className="text-[11px] text-slate-500">Total rent and deposits collected through platform escrow</p>
                 </div>
                 <span className="text-xs font-black text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-xl">
@@ -658,35 +658,35 @@ export default function AdminDashboard() {
             </div>
 
             {/* Payment Rail Distribution */}
-            <div className="bg-white p-5 rounded-3xl border border-[#B5B5B5] space-y-4 shadow-sm">
+            <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] space-y-4 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-extrabold text-[#2a2a2a]">Payment Rail Distribution (Settlement Mix)</h3>
+                  <h3 className="text-sm font-extrabold text-[#263238]">Payment Rail Distribution (Settlement Mix)</h3>
                   <p className="text-[11px] text-slate-500">Real-time payment rails utilized by active tenants &amp; clients</p>
                 </div>
                 <span className="text-xs font-bold text-slate-500">RBI Regulated</span>
               </div>
 
               <div className="grid grid-cols-2 gap-3 pt-2">
-                <div className="p-3.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5]">
+                <div className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7]">
                   <span className="text-[10px] font-bold text-slate-500 uppercase">UPI / QR Auto-Routing</span>
                   <div className="text-xl font-black text-slate-900 mt-1">58%</div>
                   <span className="text-[11px] text-slate-500 font-medium">₹16.50 Lakhs Volume</span>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5]">
+                <div className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7]">
                   <span className="text-[10px] font-bold text-slate-500 uppercase">NACH e-Mandate</span>
                   <div className="text-xl font-black text-slate-900 mt-1">24%</div>
                   <span className="text-[11px] text-slate-500 font-medium">₹6.82 Lakhs Volume</span>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5]">
+                <div className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7]">
                   <span className="text-[10px] font-bold text-slate-500 uppercase">RTGS Virtual Accounts</span>
                   <div className="text-xl font-black text-slate-900 mt-1">12%</div>
                   <span className="text-[11px] text-slate-500 font-medium">₹3.41 Lakhs Volume</span>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5]">
+                <div className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7]">
                   <span className="text-[10px] font-bold text-slate-500 uppercase">FlexPay Deposit BNPL</span>
                   <div className="text-xl font-black text-slate-900 mt-1">6%</div>
                   <span className="text-[11px] text-slate-500 font-medium">₹1.72 Lakhs Volume</span>
@@ -703,10 +703,10 @@ export default function AdminDashboard() {
       {activeTab === 'MAINTENANCE_DISPUTES' && (
         <div className="space-y-6">
           {/* Header & Sub-Filter */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#B5B5B5]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#D2DDD7]">
             <div>
               <h2 className="text-sm sm:text-base font-extrabold text-slate-900 flex items-center gap-2">
-                <Wrench className="h-4 w-4 text-[#2a2a2a]" />
+                <Wrench className="h-4 w-4 text-[#263238]" />
                 <span>Maintenance Tickets &amp; Escrow Disputes Arbitration</span>
               </h2>
               <p className="text-xs text-slate-500">
@@ -714,11 +714,11 @@ export default function AdminDashboard() {
               </p>
             </div>
 
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[11px] font-bold">
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-[11px] font-bold">
               <button
                 onClick={() => setTicketFilter('ALL')}
                 className={`px-3 py-1 rounded-lg transition ${
-                  ticketFilter === 'ALL' ? 'bg-[#2a2a2a] text-white' : 'text-slate-600 hover:text-slate-900'
+                  ticketFilter === 'ALL' ? 'bg-[#263238] text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 All Tickets ({tickets.length})
@@ -726,7 +726,7 @@ export default function AdminDashboard() {
               <button
                 onClick={() => setTicketFilter('EMERGENCY')}
                 className={`px-3 py-1 rounded-lg transition ${
-                  ticketFilter === 'EMERGENCY' ? 'bg-[#2a2a2a] text-white' : 'text-slate-600 hover:text-slate-900'
+                  ticketFilter === 'EMERGENCY' ? 'bg-[#263238] text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Emergency ({tickets.filter(t => t.priority === 'Emergency').length})
@@ -734,7 +734,7 @@ export default function AdminDashboard() {
               <button
                 onClick={() => setTicketFilter('RESOLVED')}
                 className={`px-3 py-1 rounded-lg transition ${
-                  ticketFilter === 'RESOLVED' ? 'bg-[#2a2a2a] text-white' : 'text-slate-600 hover:text-slate-900'
+                  ticketFilter === 'RESOLVED' ? 'bg-[#263238] text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Resolved ({tickets.filter(t => t.status === 'Completed' || t.status === 'Closed').length})
@@ -743,7 +743,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Section 1: Security Deposit & Escrow Disputes */}
-          <div className="bg-white p-5 rounded-3xl border border-[#B5B5B5] space-y-4 shadow-sm">
+          <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] space-y-4 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-black text-rose-900 flex items-center gap-2">
@@ -795,7 +795,7 @@ export default function AdminDashboard() {
                     <button
                       type="button"
                       onClick={() => resolveDepositDispute(dispute.id, 'Agreed')}
-                      className="px-3.5 py-2 rounded-xl bg-[#2a2a2a] hover:bg-black text-white font-black text-xs transition shadow-sm"
+                      className="px-3.5 py-2 rounded-xl bg-[#263238] hover:bg-black text-white font-black text-xs transition shadow-sm"
                     >
                       Split 50/50
                     </button>
@@ -806,15 +806,15 @@ export default function AdminDashboard() {
           </div>
 
           {/* Section 2: Maintenance Tickets Table */}
-          <div className="bg-white p-5 rounded-3xl border border-[#B5B5B5] space-y-3 shadow-sm">
-            <h3 className="text-sm font-extrabold text-[#2a2a2a] flex items-center gap-2">
-              <Wrench className="h-4 w-4 text-[#2a2a2a]" />
+          <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] space-y-3 shadow-sm">
+            <h3 className="text-sm font-extrabold text-[#263238] flex items-center gap-2">
+              <Wrench className="h-4 w-4 text-[#263238]" />
               <span>All Maintenance Tickets &amp; Contractor Work Orders ({filteredTickets.length})</span>
             </h3>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#f0f0f0] text-slate-600 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200">
+                <thead className="bg-[#E8F0EC] text-slate-600 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200">
                   <tr>
                     <th className="py-2.5 px-3">Ticket #</th>
                     <th className="py-2.5 px-3">Category</th>
@@ -866,7 +866,7 @@ export default function AdminDashboard() {
       {activeTab === 'REFERRALS' && (
         <div className="space-y-6">
           {/* Generator Header Card */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-[#B5B5B5] shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-[#D2DDD7] shadow-sm">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
@@ -874,7 +874,7 @@ export default function AdminDashboard() {
                 </span>
                 <span className="text-xs text-slate-500 font-medium">Influencer Campaigns • Resident Referrals</span>
               </div>
-              <h2 className="text-base sm:text-lg font-black text-[#2a2a2a]">
+              <h2 className="text-base sm:text-lg font-black text-[#263238]">
                 Influencer Marketing Engine &amp; Platform Referral Tracking
               </h2>
               <p className="text-xs text-slate-500">
@@ -884,7 +884,7 @@ export default function AdminDashboard() {
 
             <button
               onClick={() => setIsCreateOfferModalOpen(true)}
-              className="px-4 py-2.5 rounded-2xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-extrabold text-xs transition flex items-center gap-1.5 shadow-md shadow-[#2a2a2a]/20 shrink-0 self-start sm:self-auto"
+              className="px-4 py-2.5 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white font-extrabold text-xs transition flex items-center gap-1.5 shadow-md shadow-[#263238]/20 shrink-0 self-start sm:self-auto"
             >
               <Plus className="h-4 w-4" />
               <span>Generate Influencer Code</span>
@@ -892,10 +892,10 @@ export default function AdminDashboard() {
           </div>
 
           {/* Section A: Influencer & Marketing Campaigns Table */}
-          <div className="bg-white p-5 rounded-3xl border border-[#B5B5B5] space-y-4 shadow-sm">
+          <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] space-y-4 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-extrabold text-[#2a2a2a] flex items-center gap-2">
+                <h3 className="text-sm font-extrabold text-[#263238] flex items-center gap-2">
                   <Megaphone className="h-4 w-4 text-purple-700" />
                   <span>Active Influencer &amp; Marketing Promo Codes ({influencerOffers.length})</span>
                 </h3>
@@ -905,7 +905,7 @@ export default function AdminDashboard() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#f0f0f0] text-slate-600 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200">
+                <thead className="bg-[#E8F0EC] text-slate-600 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200">
                   <tr>
                     <th className="py-3 px-3">Promo Code</th>
                     <th className="py-3 px-3">Influencer / Partner</th>
@@ -958,7 +958,7 @@ export default function AdminDashboard() {
                         <button
                           type="button"
                           onClick={() => handleCopyCode(offer.code)}
-                          className="px-2.5 py-1.5 rounded-xl border border-slate-200 hover:border-[#2a2a2a] text-slate-700 font-bold text-[11px] transition inline-flex items-center gap-1 shadow-sm"
+                          className="px-2.5 py-1.5 rounded-xl border border-slate-200 hover:border-[#263238] text-slate-700 font-bold text-[11px] transition inline-flex items-center gap-1 shadow-sm"
                           title="Copy sharable referral link"
                         >
                           <Copy className="h-3 w-3" />
@@ -973,10 +973,10 @@ export default function AdminDashboard() {
           </div>
 
           {/* Section B: All Organic Referrals (Residents & Landlords) */}
-          <div className="bg-white p-5 rounded-3xl border border-[#B5B5B5] space-y-4 shadow-sm">
+          <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] space-y-4 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-extrabold text-[#2a2a2a] flex items-center gap-2">
+                <h3 className="text-sm font-extrabold text-[#263238] flex items-center gap-2">
                   <Gift className="h-4 w-4 text-emerald-700" />
                   <span>All Organic Platform Referrals ({referrals.length})</span>
                 </h3>
@@ -986,7 +986,7 @@ export default function AdminDashboard() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#f0f0f0] text-slate-600 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200">
+                <thead className="bg-[#E8F0EC] text-slate-600 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200">
                   <tr>
                     <th className="py-2.5 px-3">Referral Code</th>
                     <th className="py-2.5 px-3">Referred Person</th>
@@ -1027,7 +1027,7 @@ export default function AdminDashboard() {
       {/* -------------------------------------------------------------------- */}
       {activeTab === 'PROPERTIES' && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#B5B5B5]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#D2DDD7]">
             <div>
               <h2 className="text-sm sm:text-base font-extrabold text-slate-900">
                 Property Verification &amp; Document Audit Pipeline
@@ -1037,11 +1037,11 @@ export default function AdminDashboard() {
               </p>
             </div>
 
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[11px] font-bold">
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-[11px] font-bold">
               <button
                 onClick={() => setPropertyFilter('ALL')}
                 className={`px-3 py-1 rounded-lg transition ${
-                  propertyFilter === 'ALL' ? 'bg-[#2a2a2a] text-white' : 'text-slate-600 hover:text-slate-900'
+                  propertyFilter === 'ALL' ? 'bg-[#263238] text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 All ({properties.length})
@@ -1049,7 +1049,7 @@ export default function AdminDashboard() {
               <button
                 onClick={() => setPropertyFilter('PENDING')}
                 className={`px-3 py-1 rounded-lg transition ${
-                  propertyFilter === 'PENDING' ? 'bg-[#2a2a2a] text-white' : 'text-slate-600 hover:text-slate-900'
+                  propertyFilter === 'PENDING' ? 'bg-[#263238] text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Pending Verification ({pendingProperties.length})
@@ -1057,7 +1057,7 @@ export default function AdminDashboard() {
               <button
                 onClick={() => setPropertyFilter('APPROVED')}
                 className={`px-3 py-1 rounded-lg transition ${
-                  propertyFilter === 'APPROVED' ? 'bg-[#2a2a2a] text-white' : 'text-slate-600 hover:text-slate-900'
+                  propertyFilter === 'APPROVED' ? 'bg-[#263238] text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Approved ({approvedProperties.length})
@@ -1077,7 +1077,7 @@ export default function AdminDashboard() {
                   className={`p-4 sm:p-5 rounded-2xl bg-white border transition ${
                     isPending 
                       ? 'border-amber-300 shadow-md ring-1 ring-amber-200' 
-                      : 'border-[#B5B5B5] hover:border-slate-300'
+                      : 'border-[#D2DDD7] hover:border-slate-300'
                   }`}
                 >
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -1175,11 +1175,11 @@ export default function AdminDashboard() {
       {/* -------------------------------------------------------------------- */}
       {activeTab === 'LEDGER' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          <div className="lg:col-span-2 bg-white rounded-3xl p-5 sm:p-6 border border-[#B5B5B5] space-y-4 shadow-sm">
+          <div className="lg:col-span-2 bg-white rounded-3xl p-5 sm:p-6 border border-[#D2DDD7] space-y-4 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h3 className="text-sm font-extrabold text-[#2a2a2a] flex items-center gap-2">
-                  <Database className="h-4 w-4 text-[#2a2a2a] shrink-0" />
+                <h3 className="text-sm font-extrabold text-[#263238] flex items-center gap-2">
+                  <Database className="h-4 w-4 text-[#263238] shrink-0" />
                   <span>Immutable Financial Ledger (Double-Entry Trace)</span>
                 </h3>
                 <p className="text-[11px] text-[#666666]">Every adjustment and payment has an immutable statutory audit trace.</p>
@@ -1191,7 +1191,7 @@ export default function AdminDashboard() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#f0f0f0] text-[#666666] border-b border-[#B5B5B5] text-[11px] font-bold uppercase tracking-wider">
+                <thead className="bg-[#E8F0EC] text-[#666666] border-b border-[#D2DDD7] text-[11px] font-bold uppercase tracking-wider">
                   <tr>
                     <th className="py-2.5 px-3">Date</th>
                     <th className="py-2.5 px-3">Description</th>
@@ -1204,10 +1204,10 @@ export default function AdminDashboard() {
                   {ledger.slice(0, 10).map((entry) => (
                     <tr key={entry.id} className="hover:bg-[#ffffff]">
                       <td className="py-2.5 px-3 text-[#666666] font-mono text-[11px]">{entry.timestamp}</td>
-                      <td className="py-2.5 px-3 font-semibold text-[#2a2a2a]">{entry.description}</td>
+                      <td className="py-2.5 px-3 font-semibold text-[#263238]">{entry.description}</td>
                       <td className="py-2.5 px-3 text-rose-700 font-mono text-[11px]">{entry.type === 'DEBIT' ? entry.account : 'Escrow Clearing'}</td>
                       <td className="py-2.5 px-3 text-emerald-700 font-mono text-[11px]">{entry.type === 'CREDIT' ? entry.account : 'Axis Operating A/C'}</td>
-                      <td className="py-2.5 px-3 text-right font-black text-[#2a2a2a] font-tabular">
+                      <td className="py-2.5 px-3 text-right font-black text-[#263238] font-tabular">
                         ₹{entry.amount.toLocaleString('en-IN')}
                       </td>
                     </tr>
@@ -1217,10 +1217,10 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#B5B5B5] space-y-4 shadow-sm">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#D2DDD7] space-y-4 shadow-sm">
             <div>
-              <h3 className="text-sm font-extrabold text-[#2a2a2a] flex items-center gap-2">
-                <Sliders className="h-4 w-4 text-[#2a2a2a]" />
+              <h3 className="text-sm font-extrabold text-[#263238] flex items-center gap-2">
+                <Sliders className="h-4 w-4 text-[#263238]" />
                 <span>Feature Flags &amp; Governance</span>
               </h3>
               <p className="text-[11px] text-[#666666]">Enable or disable enterprise modules platform-wide.</p>
@@ -1231,10 +1231,10 @@ export default function AdminDashboard() {
                 <div
                   key={key}
                   onClick={() => toggleFeature(key as keyof typeof features)}
-                  className="p-3 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] flex items-center justify-between cursor-pointer hover:bg-white transition"
+                  className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-between cursor-pointer hover:bg-white transition"
                 >
                   <div>
-                    <div className="font-bold text-[#2a2a2a] capitalize">
+                    <div className="font-bold text-[#263238] capitalize">
                       {key.replace(/_/g, ' ')}
                     </div>
                     <div className="text-[10px] text-[#666666]">
@@ -1259,7 +1259,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Load Balancer & High-Availability Cluster Infrastructure Card */}
-          <div className="lg:col-span-3 bg-white rounded-3xl p-5 sm:p-6 border border-[#B5B5B5] space-y-5 shadow-sm">
+          <div className="lg:col-span-3 bg-white rounded-3xl p-5 sm:p-6 border border-[#D2DDD7] space-y-5 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
@@ -1268,8 +1268,8 @@ export default function AdminDashboard() {
                   </span>
                   <span className="text-xs text-slate-500 font-medium">NGINX L7 Reverse Proxy • Multi-Node Cluster</span>
                 </div>
-                <h3 className="text-base font-black text-[#2a2a2a] mt-1 flex items-center gap-2">
-                  <Server className="h-4 w-4 text-[#2a2a2a]" />
+                <h3 className="text-base font-black text-[#263238] mt-1 flex items-center gap-2">
+                  <Server className="h-4 w-4 text-[#263238]" />
                   <span>Load Balancer, Cluster Health &amp; WAF Security</span>
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -1281,7 +1281,7 @@ export default function AdminDashboard() {
                 type="button"
                 onClick={handleProbeHealth}
                 disabled={probingHealth}
-                className="px-4 py-2.5 rounded-2xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-extrabold text-xs transition flex items-center gap-2 shadow-md shadow-[#2a2a2a]/20 shrink-0 self-start sm:self-auto disabled:opacity-50"
+                className="px-4 py-2.5 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white font-extrabold text-xs transition flex items-center gap-2 shadow-md shadow-[#263238]/20 shrink-0 self-start sm:self-auto disabled:opacity-50"
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${probingHealth ? 'animate-spin' : ''}`} />
                 <span>{probingHealth ? 'Probing Cluster...' : 'Probe Live Health (/api/health)'}</span>
@@ -1291,7 +1291,7 @@ export default function AdminDashboard() {
             {/* Architecture Diagnostics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-sans">
               {/* Card 1: Load Balancer Pool */}
-              <div className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-2">
+              <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-extrabold text-slate-800 flex items-center gap-1.5">
                     <Activity className="h-4 w-4 text-emerald-600" />
@@ -1302,15 +1302,15 @@ export default function AdminDashboard() {
                   </span>
                 </div>
                 <div className="space-y-1.5 pt-1 text-[11px]">
-                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#B5B5B5]">
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#D2DDD7]">
                     <span className="font-mono text-slate-700">staywise-node-1 :3005</span>
                     <span className="font-bold text-emerald-700">Primary (Active)</span>
                   </div>
-                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#B5B5B5]">
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#D2DDD7]">
                     <span className="font-mono text-slate-700">staywise-node-2 :3006</span>
                     <span className="font-bold text-emerald-700">Replica (Healthy)</span>
                   </div>
-                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#B5B5B5]">
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#D2DDD7]">
                     <span className="font-mono text-slate-700">staywise-node-3 :3007</span>
                     <span className="font-bold text-emerald-700">Replica (Healthy)</span>
                   </div>
@@ -1318,7 +1318,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* Card 2: Security & Rate Limiting */}
-              <div className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-2">
+              <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-extrabold text-slate-800 flex items-center gap-1.5">
                     <ShieldCheck className="h-4 w-4 text-purple-700" />
@@ -1329,15 +1329,15 @@ export default function AdminDashboard() {
                   </span>
                 </div>
                 <div className="space-y-1.5 pt-1 text-[11px]">
-                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#B5B5B5]">
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#D2DDD7]">
                     <span className="text-slate-600">Auth Endpoints</span>
                     <span className="font-mono font-bold text-slate-900">15 req/min per IP</span>
                   </div>
-                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#B5B5B5]">
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#D2DDD7]">
                     <span className="text-slate-600">General API</span>
                     <span className="font-mono font-bold text-slate-900">120 req/min per IP</span>
                   </div>
-                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#B5B5B5]">
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#D2DDD7]">
                     <span className="text-slate-600">Security Headers</span>
                     <span className="font-bold text-emerald-700">CSP • HSTS • SAMEORIGIN</span>
                   </div>
@@ -1345,7 +1345,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* Card 3: System Diagnostics */}
-              <div className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-2">
+              <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="font-extrabold text-slate-800 flex items-center gap-1.5">
                     <Cpu className="h-4 w-4 text-teal-700" />
@@ -1356,15 +1356,15 @@ export default function AdminDashboard() {
                   </span>
                 </div>
                 <div className="space-y-1.5 pt-1 text-[11px]">
-                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#B5B5B5]">
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#D2DDD7]">
                     <span className="text-slate-600">Active Database</span>
                     <span className="font-bold text-emerald-700">AtomicJson (ACID Safe)</span>
                   </div>
-                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#B5B5B5]">
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#D2DDD7]">
                     <span className="text-slate-600">Internal Latency</span>
                     <span className="font-mono font-bold text-slate-900">{healthData ? `${healthData.latencyMs} ms` : '< 4 ms'}</span>
                   </div>
-                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#B5B5B5]">
+                  <div className="flex items-center justify-between p-1.5 rounded-lg bg-white border border-[#D2DDD7]">
                     <span className="text-slate-600">Serving Worker</span>
                     <span className="font-mono font-bold text-slate-900 truncate max-w-[130px]">
                       {healthData?.clusterNode || 'staywise-worker-node'}
@@ -1376,7 +1376,7 @@ export default function AdminDashboard() {
 
             {/* Live Health Probe JSON Result */}
             {healthData && (
-              <div className="p-4 rounded-2xl bg-[#2a2a2a] text-emerald-300 font-mono text-[11px] space-y-2 border border-emerald-900/50">
+              <div className="p-4 rounded-2xl bg-[#263238] text-emerald-300 font-mono text-[11px] space-y-2 border border-emerald-900/50">
                 <div className="flex items-center justify-between text-white border-b border-emerald-900/50 pb-2">
                   <span className="font-bold flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-emerald-400" />
@@ -1400,9 +1400,9 @@ export default function AdminDashboard() {
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-3xl border border-[#B5B5B5] shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            className="bg-white rounded-3xl border border-[#D2DDD7] shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150"
           >
-            <div className="p-5 bg-gradient-to-r from-[#2a2a2a] to-[#2a2a2a] text-white flex items-center justify-between">
+            <div className="p-5 bg-gradient-to-r from-[#263238] to-[#263238] text-white flex items-center justify-between">
               <div>
                 <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-teal-400/20 text-teal-300 border border-teal-400/30">
                   Affiliate &amp; Marketing Engine
@@ -1426,7 +1426,7 @@ export default function AdminDashboard() {
                   placeholder="e.g. BANGALOREHOMES, REALTYCREATOR20"
                   value={newOffer.code}
                   onChange={(e) => setNewOffer({ ...newOffer, code: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono font-bold uppercase focus:outline-none focus:border-[#2a2a2a]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono font-bold uppercase focus:outline-none focus:border-[#263238]"
                 />
               </div>
 
@@ -1439,7 +1439,7 @@ export default function AdminDashboard() {
                     placeholder="e.g. Rahul Sharma"
                     value={newOffer.influencerName}
                     onChange={(e) => setNewOffer({ ...newOffer, influencerName: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:border-[#2a2a2a]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:border-[#263238]"
                   />
                 </div>
                 <div>
@@ -1449,7 +1449,7 @@ export default function AdminDashboard() {
                     placeholder="e.g. @rahul_vlogs"
                     value={newOffer.influencerHandle}
                     onChange={(e) => setNewOffer({ ...newOffer, influencerHandle: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:border-[#2a2a2a]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:border-[#263238]"
                   />
                 </div>
               </div>
@@ -1460,7 +1460,7 @@ export default function AdminDashboard() {
                   <select
                     value={newOffer.commissionType}
                     onChange={(e) => setNewOffer({ ...newOffer, commissionType: e.target.value as 'FLAT' | 'PERCENTAGE' })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:border-[#2a2a2a] bg-white font-bold"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:border-[#263238] bg-white font-bold"
                   >
                     <option value="FLAT">Flat Cash (₹ per join)</option>
                     <option value="PERCENTAGE">Percentage (%)</option>
@@ -1476,7 +1476,7 @@ export default function AdminDashboard() {
                     required
                     value={newOffer.commissionValue}
                     onChange={(e) => setNewOffer({ ...newOffer, commissionValue: Number(e.target.value) })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold focus:outline-none focus:border-[#2a2a2a]"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold focus:outline-none focus:border-[#263238]"
                   />
                 </div>
               </div>
@@ -1489,7 +1489,7 @@ export default function AdminDashboard() {
                   placeholder="e.g. ₹1,500 Off 1st Month Rent + Zero Brokerage"
                   value={newOffer.audienceOffer}
                   onChange={(e) => setNewOffer({ ...newOffer, audienceOffer: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-[#2a2a2a]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:border-[#263238]"
                 />
               </div>
 
@@ -1498,7 +1498,7 @@ export default function AdminDashboard() {
                 <select
                   value={newOffer.targetAudience}
                   onChange={(e) => setNewOffer({ ...newOffer, targetAudience: e.target.value as 'Tenants' | 'Landlords' | 'Both' })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:border-[#2a2a2a] bg-white"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:border-[#263238] bg-white"
                 >
                   <option value="Both">Both (Tenants &amp; Landlords)</option>
                   <option value="Tenants">Tenants Only</option>
@@ -1516,7 +1516,7 @@ export default function AdminDashboard() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-black text-xs transition shadow-md shadow-[#2a2a2a]/20"
+                  className="px-5 py-2 rounded-xl bg-[#263238] hover:bg-[#263238] text-white font-black text-xs transition shadow-md shadow-[#263238]/20"
                 >
                   Generate &amp; Activate Code
                 </button>
@@ -1531,9 +1531,9 @@ export default function AdminDashboard() {
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-3xl border border-[#B5B5B5] shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            className="bg-white rounded-3xl border border-[#D2DDD7] shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150"
           >
-            <div className="p-5 bg-gradient-to-r from-[#2a2a2a] to-[#2a2a2a] text-white flex items-center justify-between">
+            <div className="p-5 bg-gradient-to-r from-[#263238] to-[#263238] text-white flex items-center justify-between">
               <div>
                 <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-teal-400/20 text-teal-300 border border-teal-400/30">
                   Document Audit Vault
@@ -1555,7 +1555,7 @@ export default function AdminDashboard() {
 
               <div className="space-y-2">
                 {selectedAuditDocs.docs.map((doc, idx) => (
-                  <div key={idx} className="p-3 rounded-xl bg-[#ffffff] border border-[#B5B5B5] flex items-center justify-between">
+                  <div key={idx} className="p-3 rounded-xl bg-[#ffffff] border border-[#D2DDD7] flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <FileText className="h-4 w-4 text-emerald-700" />
                       <span className="font-bold text-slate-800">{doc}</span>
@@ -1571,7 +1571,7 @@ export default function AdminDashboard() {
                 <button
                   type="button"
                   onClick={() => setSelectedAuditDocs(null)}
-                  className="px-4 py-2 rounded-xl bg-[#2a2a2a] text-white font-bold text-xs hover:bg-black transition"
+                  className="px-4 py-2 rounded-xl bg-[#263238] text-white font-bold text-xs hover:bg-black transition"
                 >
                   Close Viewer
                 </button>

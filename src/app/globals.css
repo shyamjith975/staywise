@@ -2,82 +2,124 @@
 
 @layer base {
   :root {
-    /* User's Exact Color Palette */
-    --color-pine-dark: #2a2a2a;
-    /* Primary Deep Dark Charcoal */
-    --color-forest: #383838;
-    /* Charcoal Surface / Secondary Dark */
-    --color-moss: #E1E2EF;
-    /* Highlight / Red Accent */
-    --color-lime-glow: #E1E2EF;
-    /* Highlight Accent */
+    /* ==========================================================================
+       STAYWISE CURATED 5-COLOR BRAND PALETTE
+       ========================================================================== */
+    
+    /* 1. Deep Forest Green — Primary Brand (#163B36) */
+    --color-primary-brand: #163B36;
+    --color-primary-hover: #102B27;
+    --color-primary-active: #0B1E1B;
 
-    /* Canvas & Surfaces */
-    --color-background-canvas: #c0c0c0;
-    /* Silver canvas background */
-    --color-background: #c0c0c0;
-    /* Silver dashboard background */
+    /* 2. Soft Sage — Secondary Surfaces (#E8F0EC) */
+    --color-surface-sage: #E8F0EC;
+    --color-surface-sage-hover: #DCE8E1;
+    --color-surface-sage-active: #D0E0D6;
+
+    /* 3. Warm Off-White — Main Background (#F7F8F6) */
+    --color-bg-canvas: #F7F8F6;
+    --color-bg-white: #FFFFFF;
+
+    /* 4. Muted Gold — Accent (#C69A55) */
+    --color-accent-gold: #C69A55;
+    --color-accent-gold-hover: #B58B47;
+    --color-accent-gold-subtle: #FAF5EB;
+
+    /* 5. Charcoal Slate — Text & Structure (#263238) */
+    --color-text-charcoal: #263238;
+    --color-text-body: #37474F;
+    --color-text-muted: #546E7A;
+    --color-text-subtle: #78909C;
+
+    /* Borders & Dividers */
+    --color-border: #D2DDD7;
+    --color-border-subtle: #E2EAE6;
+
+    /* Legacy mapping aliases */
+    --color-pine-dark: #163B36;
+    --color-forest: #1F4D46;
+    --color-moss: #E8F0EC;
+    --color-lime-glow: #C69A55;
+    --color-background-canvas: #F7F8F6;
+    --color-background: #F7F8F6;
     --color-surface: #FFFFFF;
-    /* Crisp white card surface */
-    --color-surface-subtle: #f0f0f0;
-    /* Soft silver/grey tinted card */
-    --color-surface-hover: #e0e0e0;
-
-    --color-border: #B5B5B5;
-    --color-border-subtle: #D1D5DB;
-
-    /* Text Hierarchy */
-    --color-text-primary: #2a2a2a;
-    /* Charcoal text */
-    --color-text-secondary: #404040;
-    /* Dark secondary */
-    --color-text-muted: #666666;
-    /* Muted grey */
-
-    /* Accent & Functional */
-    --color-accent-lime: #E1E2EF;
-    --color-accent-forest: #2a2a2a;
-    --color-accent-moss: #E1E2EF;
-    --color-accent-orange: #E1E2EF;
-    --color-accent-emerald: #E1E2EF;
+    --color-surface-subtle: #E8F0EC;
+    --color-surface-hover: #DCE8E1;
+    --color-text-primary: #263238;
+    --color-text-secondary: #37474F;
   }
 }
 
 body {
-  background-color: #c0c0c0;
-  color: #2a2a2a;
+  background-color: #F7F8F6;
+  color: #263238;
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Inter", -apple-system, Roboto, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Organic Cards */
+/* Organic Cards — Crisp White on Warm Off-White canvas */
 .organic-card,
 .logip-card {
-  background-color: #ffffff;
+  background-color: #FFFFFF;
   border-radius: 1.5rem;
-  /* rounded-3xl */
-  box-shadow: 0 1px 4px 0 rgba(42, 42, 42, 0.06), 0 1px 2px -1px rgba(42, 42, 42, 0.04);
-  border: 1px solid #B5B5B5;
+  box-shadow: 0 1px 3px 0 rgba(22, 59, 54, 0.05), 0 1px 2px -1px rgba(22, 59, 54, 0.03);
+  border: 1px solid #D2DDD7;
   transition: all 0.2s ease-in-out;
 }
 
 .organic-card:hover,
 .logip-card:hover {
-  box-shadow: 0 6px 16px -2px rgba(42, 42, 42, 0.12);
+  box-shadow: 0 8px 20px -3px rgba(22, 59, 54, 0.08);
 }
 
+/* Secondary Surface Cards — Soft Sage */
+.logip-card-subtle,
+.card-sage {
+  background-color: #E8F0EC;
+  border-radius: 1.5rem;
+  border: 1px solid #D2DDD7;
+}
+
+/* Primary Dark Cards — Deep Forest Green */
 .organic-card-dark {
-  background-color: #2a2a2a;
-  color: #ffffff;
+  background-color: #163B36;
+  color: #F7F8F6;
   border-radius: 1.5rem;
-  border: 1px solid #383838;
+  border: 1px solid #1F4D46;
 }
 
-.logip-card-subtle {
-  background-color: #f0f0f0;
-  border-radius: 1.5rem;
-  border: 1px solid #B5B5B5;
+/* Accent Badges & Buttons */
+.badge-gold {
+  background-color: #FAF5EB;
+  color: #8C6B2E;
+  border: 1px solid #ECCFA4;
+}
+
+.badge-sage {
+  background-color: #E8F0EC;
+  color: #163B36;
+  border: 1px solid #D2DDD7;
+}
+
+.btn-primary-brand {
+  background-color: #163B36;
+  color: #FFFFFF;
+  border: 1px solid #163B36;
+  transition: all 0.15s ease-in-out;
+}
+.btn-primary-brand:hover {
+  background-color: #102B27;
+}
+
+.btn-accent-gold {
+  background-color: #C69A55;
+  color: #FFFFFF;
+  border: 1px solid #C69A55;
+  transition: all 0.15s ease-in-out;
+}
+.btn-accent-gold:hover {
+  background-color: #B58B47;
 }
 
 /* Custom Sleek Scrollbar */
@@ -87,16 +129,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #c0c0c0;
+  background: #F7F8F6;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888888;
+  background: #B4C4BC;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #E1E2EF;
+  background: #163B36;
 }
 
 .font-tabular {

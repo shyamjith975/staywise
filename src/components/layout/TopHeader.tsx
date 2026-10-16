@@ -43,31 +43,31 @@ export default function TopHeader() {
   ];
 
   return (
-    <header className="w-full px-4 sm:px-6 pt-3 pb-2 flex items-center justify-between gap-3 border-b border-[#D1D5DB] lg:border-none">
+    <header className="w-full px-4 sm:px-6 pt-3 pb-2 flex items-center justify-between gap-3 border-b border-[#D2DDD7] lg:border-none">
       
       {/* Mobile Brand & Hamburger */}
       <div className="lg:hidden flex items-center gap-2.5">
         <button
           onClick={() => setShowMobileMenu(!showMobileMenu)}
-          className="p-1.5 rounded-xl hover:bg-[#f0f0f0] text-[#2a2a2a] transition"
+          className="p-1.5 rounded-xl hover:bg-[#E8F0EC] text-[#263238] transition"
         >
           {showMobileMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
 
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-md bg-[#2a2a2a] text-[#e10600] flex items-center justify-center font-black text-[10px]">
+          <div className="h-6 w-6 rounded-md bg-[#163B36] text-[#C69A55] flex items-center justify-center font-black text-[10px]">
             ✦
           </div>
-          <span className="font-extrabold text-sm text-[#2a2a2a]">STAYWISE</span>
+          <span className="font-extrabold text-sm text-[#263238]">STAYWISE</span>
         </div>
       </div>
 
       {/* Search Input (Pill search) */}
       <div 
         onClick={() => setIsSearchOpen(true)}
-        className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#f0f0f0] border border-[#B5B5B5] text-xs text-[#666666] hover:text-[#2a2a2a] hover:border-[#e10600] transition cursor-pointer w-64 xl:w-80 shadow-2xs"
+        className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E8F0EC] border border-[#D2DDD7] text-xs text-[#546E7A] hover:text-[#263238] hover:border-[#163B36] transition cursor-pointer w-64 xl:w-80 shadow-2xs"
       >
-        <Search className="h-3.5 w-3.5 text-[#e10600]" />
+        <Search className="h-3.5 w-3.5 text-[#163B36]" />
         <span>Search properties, tenants, bills... (Ctrl + K)</span>
       </div>
 
@@ -78,7 +78,7 @@ export default function TopHeader() {
         {activeRole !== 'tenant' && (
           <button
             onClick={() => setIsAddPropertyOpen(true)}
-            className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white text-xs font-extrabold transition shadow-xs"
+            className="hidden sm:flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-extrabold transition shadow-xs cursor-pointer"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>Add Property</span>
@@ -89,33 +89,33 @@ export default function TopHeader() {
         <div className="relative">
           <button
             onClick={() => setShowNotifDropdown(!showNotifDropdown)}
-            className="h-8 w-8 rounded-full bg-[#f0f0f0] hover:bg-[#e0e0e0] border border-[#B5B5B5] flex items-center justify-center text-[#2a2a2a] transition relative shadow-2xs"
+            className="h-8 w-8 rounded-full bg-[#E8F0EC] hover:bg-[#DCE8E1] border border-[#D2DDD7] flex items-center justify-center text-[#263238] transition relative shadow-2xs cursor-pointer"
             title="Notifications"
           >
             <Bell className="h-4 w-4" />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[#e10600] ring-2 ring-white" />
+              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-[#C69A55] ring-2 ring-white" />
             )}
           </button>
 
           {showNotifDropdown && (
-            <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 rounded-2xl bg-white border border-[#B5B5B5] shadow-xl p-4 z-50 animate-in fade-in">
-              <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#D1D5DB]">
-                <span className="text-xs font-bold text-[#2a2a2a]">Notifications</span>
+            <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 rounded-2xl bg-white border border-[#D2DDD7] shadow-xl p-4 z-50 animate-in fade-in">
+              <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#D2DDD7]">
+                <span className="text-xs font-bold text-[#263238]">Notifications</span>
                 {unreadCount > 0 && (
-                  <button onClick={markAllNotificationsRead} className="text-[11px] text-[#e10600] font-semibold hover:underline">
+                  <button onClick={markAllNotificationsRead} className="text-[11px] text-[#163B36] font-semibold hover:underline">
                     Mark read
                   </button>
                 )}
               </div>
               <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                 {notifications.slice(0, 5).map(n => (
-                  <div key={n.id} className="p-2.5 rounded-xl bg-[#f0f0f0] border border-[#D1D5DB] text-xs space-y-0.5">
-                    <div className="font-bold text-[#2a2a2a] flex items-center justify-between">
+                  <div key={n.id} className="p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs space-y-0.5">
+                    <div className="font-bold text-[#263238] flex items-center justify-between">
                       <span>{n.title}</span>
-                      <span className="text-[10px] text-[#666666] font-normal">{n.time}</span>
+                      <span className="text-[10px] text-[#546E7A] font-normal">{n.time}</span>
                     </div>
-                    <p className="text-[11px] text-[#404040]">{n.message}</p>
+                    <p className="text-[11px] text-[#37474F]">{n.message}</p>
                   </div>
                 ))}
               </div>
@@ -126,12 +126,12 @@ export default function TopHeader() {
         {/* Profile Avatar */}
         <div 
           onClick={logout}
-          className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full bg-[#f0f0f0] border border-[#B5B5B5] text-xs font-bold text-[#2a2a2a] cursor-pointer hover:bg-[#e0e0e0] transition shadow-2xs"
+          className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238] cursor-pointer hover:bg-[#DCE8E1] transition shadow-2xs"
           title="Click to sign out or switch user"
         >
-          <div className="relative h-6 w-6 rounded-full bg-[#2a2a2a] text-[#e10600] flex items-center justify-center text-[11px] font-black">
-            {currentUser.avatar || 'S'}
-            <span className="absolute bottom-0 right-0 h-1.5 w-1.5 rounded-full bg-[#e10600] ring-1 ring-white" />
+          <div className="relative h-6 w-6 rounded-full bg-[#163B36] text-[#C69A55] flex items-center justify-center text-[11px] font-black">
+            {currentUser.avatar || currentUser.name.charAt(0).toUpperCase()}
+            <span className="absolute bottom-0 right-0 h-1.5 w-1.5 rounded-full bg-[#C69A55] ring-1 ring-white" />
           </div>
           <span className="hidden sm:inline font-bold">{currentUser.name.split(' ')[0]}</span>
         </div>
@@ -140,7 +140,7 @@ export default function TopHeader() {
 
       {/* Mobile Menu Drawer */}
       {showMobileMenu && (
-        <div className="lg:hidden fixed inset-x-0 top-[52px] bg-white border-b border-[#B5B5B5] shadow-xl p-4 z-40 space-y-2 animate-in slide-in-from-top duration-150">
+        <div className="lg:hidden fixed inset-x-0 top-[52px] bg-white border-b border-[#D2DDD7] shadow-xl p-4 z-40 space-y-2 animate-in slide-in-from-top duration-150">
           <div className="grid grid-cols-2 gap-2">
             {ownerNavItems.map(item => (
               <button
@@ -151,8 +151,8 @@ export default function TopHeader() {
                 }}
                 className={`p-2.5 rounded-xl text-xs font-bold text-left transition ${
                   activeView === item.id 
-                    ? 'bg-[#e10600] text-white' 
-                    : 'bg-[#f0f0f0] text-[#2a2a2a] hover:bg-[#e0e0e0]'
+                    ? 'bg-[#163B36] text-white' 
+                    : 'bg-[#E8F0EC] text-[#263238] hover:bg-[#DCE8E1]'
                 }`}
               >
                 {item.label}

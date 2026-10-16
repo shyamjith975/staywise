@@ -299,12 +299,12 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
   };
 
   return (
-    <div className="min-h-screen bg-[#c0c0c0] text-[#2a2a2a] selection:bg-[#e10600] selection:text-white font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-[#F7F8F6] text-[#263238] selection:bg-[#163B36] selection:text-white font-sans antialiased overflow-x-hidden">
       
       {/* ---------------------------------------------------- */}
       {/* 1. TOP RESPONSIVE HEADER BAR                         */}
       {/* ---------------------------------------------------- */}
-      <header className="w-full px-4 sm:px-8 lg:px-12 py-3 sm:py-3.5 flex items-center justify-between border-b border-[#B5B5B5] bg-white/95 backdrop-blur-md sticky top-0 z-50 shadow-xs">
+      <header className="w-full px-4 sm:px-8 lg:px-12 py-3 sm:py-3.5 flex items-center justify-between border-b border-[#D2DDD7] bg-white/95 backdrop-blur-md sticky top-0 z-50 shadow-xs">
         {/* Left: Geometric Emblem + Brand Name */}
         <div className="flex items-center gap-2.5 sm:gap-3">
           <a 
@@ -312,11 +312,11 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             onClick={(e) => handleNavClick(e, '#overview')}
             className="flex items-center gap-2 sm:gap-2.5 group cursor-pointer"
           >
-            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-[#2a2a2a] text-[#e10600] flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-150 shrink-0 font-black">
+            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-[#263238] text-[#163B36] flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-150 shrink-0 font-black">
               <span className="text-sm font-black">✦</span>
             </div>
             <div className="flex flex-col text-left">
-              <span className="font-black text-sm sm:text-base tracking-tight text-[#2a2a2a] leading-none">
+              <span className="font-black text-sm sm:text-base tracking-tight text-[#263238] leading-none">
                 STAYWISE
               </span>
               <span className="text-[9px] text-[#666666] font-bold tracking-wider uppercase mt-0.5 hidden xs:inline">
@@ -331,57 +331,57 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           <a 
             href="#overview" 
             onClick={(e) => handleNavClick(e, '#overview')}
-            className="hover:text-[#2a2a2a] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#263238] transition-colors duration-100 cursor-pointer"
           >
             Home
           </a>
           <a 
             href="#pain-points" 
             onClick={(e) => handleNavClick(e, '#pain-points')}
-            className="hover:text-[#2a2a2a] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#263238] transition-colors duration-100 cursor-pointer"
           >
             Where Owners Lose Time
           </a>
           <a 
             href="#interactive-building" 
             onClick={(e) => handleNavClick(e, '#interactive-building')}
-            className="hover:text-[#2a2a2a] transition-colors duration-100 flex items-center gap-1 font-bold text-[#383838] cursor-pointer"
+            className="hover:text-[#263238] transition-colors duration-100 flex items-center gap-1 font-bold text-[#263238] cursor-pointer"
           >
             <span>Architecture</span>
-            <span className="h-1.5 w-1.5 rounded-full bg-[#383838] animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[#263238] animate-pulse" />
           </a>
           <a 
             href="#everything-inside" 
             onClick={(e) => handleNavClick(e, '#everything-inside')}
-            className="hover:text-[#2a2a2a] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#263238] transition-colors duration-100 cursor-pointer"
           >
             Everything Inside
           </a>
           <a 
             href="#how-it-works" 
             onClick={(e) => handleNavClick(e, '#how-it-works')}
-            className="hover:text-[#2a2a2a] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#263238] transition-colors duration-100 cursor-pointer"
           >
             How it Works
           </a>
           <a 
             href="#pricing" 
             onClick={(e) => handleNavClick(e, '#pricing')}
-            className="hover:text-[#2a2a2a] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#263238] transition-colors duration-100 cursor-pointer"
           >
             Pricing
           </a>
           <a 
             href="#faq" 
             onClick={(e) => handleNavClick(e, '#faq')}
-            className="hover:text-[#2a2a2a] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#263238] transition-colors duration-100 cursor-pointer"
           >
             FAQ
           </a>
           <a 
             href="#resources" 
             onClick={(e) => handleNavClick(e, '#resources')}
-            className="hover:text-[#2a2a2a] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#263238] transition-colors duration-100 cursor-pointer"
           >
             Resources
           </a>
@@ -392,15 +392,15 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           <a
             href="/login"
             onClick={handleSignInClick}
-            className="px-3.5 sm:px-4 py-1.5 rounded-full border border-[#B5B5B5] text-[11px] sm:text-xs font-bold text-[#2a2a2a] hover:bg-[#f0f0f0] transition-all duration-150 shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 group shrink-0"
+            className="px-3.5 sm:px-4 py-1.5 rounded-full border border-[#D2DDD7] text-[11px] sm:text-xs font-bold text-[#263238] hover:bg-[#E8F0EC] transition-all duration-150 shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 group shrink-0"
           >
             <span>Sign in</span>
-            <ArrowUpRight className="h-3 w-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-150 text-[#383838]" />
+            <ArrowUpRight className="h-3 w-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-150 text-[#263238]" />
           </a>
 
           <button
             onClick={() => handleOpenTrial('growth_pro')}
-            className="hidden sm:inline-flex px-4 py-1.5 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white text-xs font-black shadow-xs transition duration-150 cursor-pointer border border-[#2a2a2a]/20"
+            className="hidden sm:inline-flex px-4 py-1.5 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-black shadow-xs transition duration-150 cursor-pointer border border-[#263238]/20"
           >
             Start Free Trial →
           </button>
@@ -410,7 +410,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle navigation menu"
-            className="lg:hidden p-1.5 rounded-xl text-[#2a2a2a] hover:bg-[#f0f0f0] transition-colors cursor-pointer"
+            className="lg:hidden p-1.5 rounded-xl text-[#263238] hover:bg-[#E8F0EC] transition-colors cursor-pointer"
           >
             {isMobileMenuOpen ? (
               <X className="h-5 w-5" />
@@ -431,7 +431,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 handleNavClick(e, '#overview');
                 setIsMobileMenuOpen(false);
               }}
-              className="py-1 hover:text-[#2a2a2a] transition-colors"
+              className="py-1 hover:text-[#263238] transition-colors"
             >
               Home
             </a>
@@ -441,7 +441,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 handleNavClick(e, '#pain-points');
                 setIsMobileMenuOpen(false);
               }}
-              className="py-1 hover:text-[#2a2a2a] transition-colors"
+              className="py-1 hover:text-[#263238] transition-colors"
             >
               Where Owners Lose Time
             </a>
@@ -451,7 +451,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 handleNavClick(e, '#interactive-building');
                 setIsMobileMenuOpen(false);
               }}
-              className="py-1 flex items-center justify-between text-[#2a2a2a] font-bold"
+              className="py-1 flex items-center justify-between text-[#263238] font-bold"
             >
               <span>Architecture</span>
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -462,7 +462,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 handleNavClick(e, '#everything-inside');
                 setIsMobileMenuOpen(false);
               }}
-              className="py-1 hover:text-[#2a2a2a] transition-colors"
+              className="py-1 hover:text-[#263238] transition-colors"
             >
               Everything Inside
             </a>
@@ -472,7 +472,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 handleNavClick(e, '#how-it-works');
                 setIsMobileMenuOpen(false);
               }}
-              className="py-1 hover:text-[#2a2a2a] transition-colors"
+              className="py-1 hover:text-[#263238] transition-colors"
             >
               How it Works
             </a>
@@ -482,7 +482,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 handleNavClick(e, '#pricing');
                 setIsMobileMenuOpen(false);
               }}
-              className="py-1 hover:text-[#2a2a2a] transition-colors"
+              className="py-1 hover:text-[#263238] transition-colors"
             >
               Pricing Plans
             </a>
@@ -492,7 +492,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 handleNavClick(e, '#faq');
                 setIsMobileMenuOpen(false);
               }}
-              className="py-1 hover:text-[#2a2a2a] transition-colors"
+              className="py-1 hover:text-[#263238] transition-colors"
             >
               FAQ
             </a>
@@ -502,7 +502,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 handleNavClick(e, '#resources');
                 setIsMobileMenuOpen(false);
               }}
-              className="py-1 hover:text-[#2a2a2a] transition-colors"
+              className="py-1 hover:text-[#263238] transition-colors"
             >
               Resources &amp; Cities
             </a>
@@ -514,7 +514,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 setIsMobileMenuOpen(false);
                 handleOpenTrial('growth_pro');
               }}
-              className="w-full py-2.5 rounded-full bg-[#2a2a2a] hover:bg-[#1f1f1f] text-white font-bold text-xs shadow-md transition text-center cursor-pointer"
+              className="w-full py-2.5 rounded-full bg-[#263238] hover:bg-[#1f1f1f] text-white font-bold text-xs shadow-md transition text-center cursor-pointer"
             >
               Start 7-Day Free Trial (₹0 Today)
             </button>
@@ -543,7 +543,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
         {/* Floating Pill Announcement */}
         <div className="relative z-10 mb-4 sm:mb-6 animate-in fade-in slide-in-from-top-3 duration-500 w-full flex justify-center px-2">
-          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-white/95 border border-[#B5B5B5] text-[#2a2a2a] text-[10px] sm:text-xs font-bold shadow-xs hover:bg-white transition-colors max-w-full text-center">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-white/95 border border-[#D2DDD7] text-[#263238] text-[10px] sm:text-xs font-bold shadow-xs hover:bg-white transition-colors max-w-full text-center">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
             <span>Staywise Enterprise OS • Multi-Asset Property Intelligence &amp; Rent Automation</span>
           </div>
@@ -551,7 +551,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
         {/* Distinctive Editorial Serif Headline */}
         <div ref={heroContentRef} className="relative z-10 max-w-4xl mx-auto space-y-4 sm:space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-600 will-change-transform transform-gpu px-2 sm:px-0">
-          <h1 className="font-editorial text-3xl xs:text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-[#2a2a2a] leading-[1.12]">
+          <h1 className="font-editorial text-3xl xs:text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-[#263238] leading-[1.12]">
             Universal Property Operations. <br className="hidden sm:inline" />
             Effortless Yield Intelligence.
           </h1>
@@ -566,7 +566,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             <button
               type="button"
               onClick={() => handleOpenTrial('growth_pro')}
-              className="w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white font-bold text-xs sm:text-base shadow-lg shadow-[#e10600]/30 transition-all duration-150 transform hover:-translate-y-0.5 flex items-center justify-center gap-2.5 group cursor-pointer"
+              className="w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white font-bold text-xs sm:text-base shadow-lg shadow-[#163B36]/30 transition-all duration-150 transform hover:-translate-y-0.5 flex items-center justify-center gap-2.5 group cursor-pointer"
             >
               <span>Start 7-Day Free Trial (₹0 Today)</span>
               <span className="text-base sm:text-lg group-hover:translate-x-1.5 transition-transform duration-150">→</span>
@@ -575,14 +575,14 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             <a
               href="#how-it-works"
               onClick={(e) => handleNavClick(e, '#how-it-works')}
-              className="w-full sm:w-auto px-6 py-3.5 sm:py-4 rounded-full bg-white/95 border border-[#B5B5B5] text-[#2a2a2a] font-bold text-xs sm:text-sm hover:bg-[#f0f0f0] transition-colors shadow-xs cursor-pointer"
+              className="w-full sm:w-auto px-6 py-3.5 sm:py-4 rounded-full bg-white/95 border border-[#D2DDD7] text-[#263238] font-bold text-xs sm:text-sm hover:bg-[#E8F0EC] transition-colors shadow-xs cursor-pointer"
             >
               See How It Works (15 Mins)
             </a>
           </div>
 
           {/* 7-Day Free Trial & Autopay Guarantee */}
-          <div className="pt-1 text-[11px] sm:text-xs font-semibold text-[#2a2a2a] flex items-center justify-center gap-2 flex-wrap px-2">
+          <div className="pt-1 text-[11px] sm:text-xs font-semibold text-[#263238] flex items-center justify-center gap-2 flex-wrap px-2">
             <span className="flex items-center gap-1">
               <Check className="h-3.5 w-3.5 text-emerald-700" />
               <span>₹0 charged today</span>
@@ -623,7 +623,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <span className="font-serif italic font-bold text-sm sm:text-base">NoBroker</span>
             </span>
             <span className="flex items-center justify-center gap-1">
-              <span className="font-sans font-black text-sm sm:text-base text-[#2a2a2a]">BESCOM / KSEB</span>
+              <span className="font-sans font-black text-sm sm:text-base text-[#263238]">BESCOM / KSEB</span>
             </span>
           </div>
         </div>
@@ -637,12 +637,12 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       {/* ---------------------------------------------------- */}
       <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-12 bg-white border-y border-[#E0E0E0]">
         <div className="max-w-4xl mx-auto text-center space-y-5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f0f0f0] border border-[#B5B5B5] text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#666666]">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E8F0EC] border border-[#D2DDD7] text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#666666]">
             <span>What is Staywise</span>
-            <span className="text-[#2a2a2a]">• IN ONE LINE</span>
+            <span className="text-[#263238]">• IN ONE LINE</span>
           </div>
 
-          <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#2a2a2a] leading-snug">
+          <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#263238] leading-snug">
             A free property operating system for Paying Guest (PG), hostel, co-living, flat, and villa owners in India.
           </h2>
 
@@ -651,26 +651,26 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 max-w-2xl mx-auto text-left">
-            <div className="p-3.5 rounded-2xl bg-[#f5f5f5] border border-[#B5B5B5] flex items-center gap-3">
-              <Clock className="h-5 w-5 text-[#2a2a2a] shrink-0" />
+            <div className="p-3.5 rounded-2xl bg-[#f5f5f5] border border-[#D2DDD7] flex items-center gap-3">
+              <Clock className="h-5 w-5 text-[#263238] shrink-0" />
               <div>
-                <div className="font-bold text-xs text-[#2a2a2a]">Ready in 15 Minutes</div>
+                <div className="font-bold text-xs text-[#263238]">Ready in 15 Minutes</div>
                 <div className="text-[10px] text-[#666666]">Zero complex manuals</div>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#f5f5f5] border border-[#B5B5B5] flex items-center gap-3">
+            <div className="p-3.5 rounded-2xl bg-[#f5f5f5] border border-[#D2DDD7] flex items-center gap-3">
               <Bot className="h-5 w-5 text-emerald-700 shrink-0" />
               <div>
-                <div className="font-bold text-xs text-[#2a2a2a]">Works on WhatsApp</div>
+                <div className="font-bold text-xs text-[#263238]">Works on WhatsApp</div>
                 <div className="text-[10px] text-[#666666]">English Natural Language AI</div>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#f5f5f5] border border-[#B5B5B5] flex items-center gap-3">
-              <ShieldCheck className="h-5 w-5 text-[#2a2a2a] shrink-0" />
+            <div className="p-3.5 rounded-2xl bg-[#f5f5f5] border border-[#D2DDD7] flex items-center gap-3">
+              <ShieldCheck className="h-5 w-5 text-[#263238] shrink-0" />
               <div>
-                <div className="font-bold text-xs text-[#2a2a2a]">Free 7-Day Autopay Trial</div>
+                <div className="font-bold text-xs text-[#263238]">Free 7-Day Autopay Trial</div>
                 <div className="text-[10px] text-[#666666]">₹0 due today • Cancel anytime</div>
               </div>
             </div>
@@ -688,10 +688,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       >
         <ScrollReveal>
           <div className="text-center max-w-3xl mx-auto space-y-2.5 px-2 sm:px-0">
-            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#e10600]">
+            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#163B36]">
               Where Property Owners Lose Time
             </span>
-            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#2a2a2a]">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#263238]">
               The 5 Daily Headaches Draining Your Rental Profits
             </h2>
             <p className="text-xs sm:text-sm text-[#666666] max-w-xl mx-auto leading-relaxed">
@@ -706,7 +706,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           {/* PAIN 1: The Rent Chase */}
           <div 
             ref={painCard1Ref}
-            className="p-6 rounded-3xl bg-white border border-[#B5B5B5] shadow-xs hover:shadow-md transition-shadow duration-150 flex flex-col justify-between space-y-4 will-change-transform transform-gpu"
+            className="p-6 rounded-3xl bg-white border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow duration-150 flex flex-col justify-between space-y-4 will-change-transform transform-gpu"
           >
             <div className="space-y-3">
               <div className="h-10 w-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
@@ -715,7 +715,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-50 text-rose-700">
                 Pain #1 • The Rent Chase
               </span>
-              <h3 className="font-editorial text-lg font-bold text-[#2a2a2a]">
+              <h3 className="font-editorial text-lg font-bold text-[#263238]">
                 &ldquo;When will the rent be paid?&rdquo;
               </h3>
               <p className="text-xs text-[#666666] leading-relaxed">
@@ -723,7 +723,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               </p>
             </div>
 
-            <div className="pt-3 border-t border-[#E0E0E0] text-xs text-[#2a2a2a]">
+            <div className="pt-3 border-t border-[#E0E0E0] text-xs text-[#263238]">
               <span className="font-bold text-emerald-800">Staywise Fix: </span>
               <span>Automated WhatsApp reminders at T-3, Due Date, and T+3 with instant UPI QR links. 99.4% collected on time without one awkward call.</span>
             </div>
@@ -732,7 +732,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           {/* PAIN 2: The Lost Portal Leads */}
           <div 
             ref={painCard2Ref}
-            className="p-6 rounded-3xl bg-white border border-[#B5B5B5] shadow-xs hover:shadow-md transition-shadow duration-150 flex flex-col justify-between space-y-4 will-change-transform transform-gpu"
+            className="p-6 rounded-3xl bg-white border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow duration-150 flex flex-col justify-between space-y-4 will-change-transform transform-gpu"
           >
             <div className="space-y-3">
               <div className="h-10 w-10 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
@@ -741,7 +741,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-800">
                 Pain #2 • The Lost Lead
               </span>
-              <h3 className="font-editorial text-lg font-bold text-[#2a2a2a]">
+              <h3 className="font-editorial text-lg font-bold text-[#263238]">
                 Missed calls &amp; lost bookings
               </h3>
               <p className="text-xs text-[#666666] leading-relaxed">
@@ -749,7 +749,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               </p>
             </div>
 
-            <div className="pt-3 border-t border-[#E0E0E0] text-xs text-[#2a2a2a]">
+            <div className="pt-3 border-t border-[#E0E0E0] text-xs text-[#263238]">
               <span className="font-bold text-emerald-800">Staywise Fix: </span>
               <span>Centralized CRM uniting 99acres, MagicBricks &amp; NoBroker with instant AI WhatsApp replies, location pins, and scheduled site visits.</span>
             </div>
@@ -758,7 +758,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           {/* PAIN 3: Vacancy Guessing & Caretaker Disconnect */}
           <div 
             ref={painCard3Ref}
-            className="p-6 rounded-3xl bg-white border border-[#B5B5B5] shadow-xs hover:shadow-md transition-shadow duration-150 flex flex-col justify-between space-y-4 will-change-transform transform-gpu"
+            className="p-6 rounded-3xl bg-white border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow duration-150 flex flex-col justify-between space-y-4 will-change-transform transform-gpu"
           >
             <div className="space-y-3">
               <div className="h-10 w-10 rounded-2xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold">
@@ -767,7 +767,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-teal-50 text-teal-800">
                 Pain #3 • Vacancy Guesswork
               </span>
-              <h3 className="font-editorial text-lg font-bold text-[#2a2a2a]">
+              <h3 className="font-editorial text-lg font-bold text-[#263238]">
                 &ldquo;Is Room 204 vacant right now?&rdquo;
               </h3>
               <p className="text-xs text-[#666666] leading-relaxed">
@@ -775,7 +775,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               </p>
             </div>
 
-            <div className="pt-3 border-t border-[#E0E0E0] text-xs text-[#2a2a2a]">
+            <div className="pt-3 border-t border-[#E0E0E0] text-xs text-[#263238]">
               <span className="font-bold text-emerald-800">Staywise Fix: </span>
               <span>Live visual floor plan on your phone showing exactly which bed is occupied, vacant, or under 30-day notice.</span>
             </div>
@@ -786,7 +786,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
         {/* 2 Additional Pain Points: Electricity & Disputed Deposits */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-6xl mx-auto">
           {/* PAIN 4: Electricity Bill Splitting */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-white border border-[#B5B5B5] shadow-xs flex flex-col sm:flex-row items-start gap-4">
+          <div className="p-5 sm:p-6 rounded-3xl bg-white border border-[#D2DDD7] shadow-xs flex flex-col sm:flex-row items-start gap-4">
             <div className="h-10 w-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold shrink-0">
               <Zap className="h-5 w-5" />
             </div>
@@ -794,20 +794,20 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <span className="text-[10px] font-black uppercase text-indigo-700">
                 Pain #4 • Electricity Bill Disputes
               </span>
-              <h4 className="font-bold text-sm text-[#2a2a2a]">
+              <h4 className="font-bold text-sm text-[#263238]">
                 Tenants arguing over meter readings &amp; Excel sheets
               </h4>
               <p className="text-[#666666] leading-relaxed">
                 Tenants accuse each other of using the AC all night. You pull out a calculator, forget fixed charge slabs, and spend Sunday evening resolving a ₹400 dispute.
               </p>
-              <div className="text-[#2a2a2a] pt-1">
+              <div className="text-[#263238] pt-1">
                 <b>Staywise Solution: </b>Snap a photo of the Discom bill. The OCR engine reads slab tariffs, divides sub-meter units, and posts itemized bills to tenant WhatsApp accounts.
               </div>
             </div>
           </div>
 
           {/* PAIN 5: MoveFlow Deposits & Paper KYC */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-white border border-[#B5B5B5] shadow-xs flex flex-col sm:flex-row items-start gap-4">
+          <div className="p-5 sm:p-6 rounded-3xl bg-white border border-[#D2DDD7] shadow-xs flex flex-col sm:flex-row items-start gap-4">
             <div className="h-10 w-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold shrink-0">
               <Scale className="h-5 w-5" />
             </div>
@@ -815,13 +815,13 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <span className="text-[10px] font-black uppercase text-emerald-800">
                 Pain #5 • Deposit &amp; Damage Battles
               </span>
-              <h4 className="font-bold text-sm text-[#2a2a2a]">
+              <h4 className="font-bold text-sm text-[#263238]">
                 Tenant leaves damaged walls. You have no move-in proof.
               </h4>
               <p className="text-[#666666] leading-relaxed">
                 Tenant moves out and demands full security deposit. The bathroom tiles are cracked, but with no move-in checklist, you either absorb the loss or face a bitter argument.
               </p>
-              <div className="text-[#2a2a2a] pt-1">
+              <div className="text-[#263238] pt-1">
                 <b>Staywise Solution: </b>MoveFlow digital photo inspection with timestamp seals at check-in. Legally compliant e-stamped agreements generated in 5 minutes.
               </div>
             </div>
@@ -841,11 +841,11 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           
           <ScrollReveal>
             <div className="text-center max-w-3xl mx-auto space-y-2 sm:space-y-2.5 px-2 sm:px-0">
-              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 rounded-full bg-[#f0f0f0] text-[#2a2a2a] text-[10px] sm:text-xs font-black tracking-wider uppercase shadow-xs">
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 rounded-full bg-[#E8F0EC] text-[#263238] text-[10px] sm:text-xs font-black tracking-wider uppercase shadow-xs">
                 <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-emerald-600 animate-ping" />
                 <span>Physical Building Telemetry In Motion</span>
               </div>
-              <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#2a2a2a]">
+              <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#263238]">
                 Operate Real-World Real Estate with Software Precision
               </h2>
               <p className="text-xs sm:text-sm text-[#666666] max-w-xl mx-auto leading-relaxed">
@@ -861,7 +861,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             <div className="lg:col-span-6 relative flex items-center justify-center py-2 sm:py-4 order-1 lg:order-2">
               <div 
                 ref={buildingParallaxRef} 
-                className="w-full relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-[#B5B5B5] will-change-transform transform-gpu"
+                className="w-full relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-[#D2DDD7] will-change-transform transform-gpu"
               >
                 <img
                   src="/images/parallax-building-light.jpg"
@@ -872,14 +872,14 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 {/* Live Telemetry Floating Pill on Building */}
                 <div 
                   ref={buildingBadgeRef}
-                  className="absolute top-3 sm:top-5 left-3 sm:left-5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-white/95 border border-[#B5B5B5] text-[10px] sm:text-xs font-bold text-[#2a2a2a] shadow-md flex items-center gap-1.5 sm:gap-2 will-change-transform transform-gpu max-w-[85%] truncate"
+                  className="absolute top-3 sm:top-5 left-3 sm:left-5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-white/95 border border-[#D2DDD7] text-[10px] sm:text-xs font-bold text-[#263238] shadow-md flex items-center gap-1.5 sm:gap-2 will-change-transform transform-gpu max-w-[85%] truncate"
                 >
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                   <span className="truncate">Sai Krishna PG • 126 Beds Active • 98.4% Occupied</span>
                 </div>
 
                 {/* Floating Scan Marker */}
-                <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-5 px-2.5 sm:px-3.5 py-1 rounded-full bg-[#2a2a2a]/90 text-white text-[10px] sm:text-[11px] font-semibold flex items-center gap-1.5 shadow-sm">
+                <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-5 px-2.5 sm:px-3.5 py-1 rounded-full bg-[#263238]/90 text-white text-[10px] sm:text-[11px] font-semibold flex items-center gap-1.5 shadow-sm">
                   <Sparkles className="h-3 w-3 text-amber-400 shrink-0" />
                   <span>MoveFlow AI Sealed</span>
                 </div>
@@ -889,13 +889,13 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             {/* Left Symmetrical Column (Parallax Flank) */}
             <div ref={leftCardsParallaxRef} className="lg:col-span-3 space-y-4 sm:space-y-5 order-2 lg:order-1 will-change-transform transform-gpu">
               {/* CARD 1: Autonomous RentFlow */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm hover:shadow-md transition-shadow duration-200 space-y-2">
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm hover:shadow-md transition-shadow duration-200 space-y-2">
                 <div className="flex items-center gap-2.5">
                   <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold shrink-0">
                     <Zap className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-xs text-[#2a2a2a]">Autonomous RentFlow</h4>
+                    <h4 className="font-bold text-xs text-[#263238]">Autonomous RentFlow</h4>
                     <span className="text-[10px] text-emerald-700 font-extrabold">99.4% On-Time Rate</span>
                   </div>
                 </div>
@@ -905,13 +905,13 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               </div>
 
               {/* CARD 2: Sub-Meter OCR Engine */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm hover:shadow-md transition-shadow duration-200 space-y-2">
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm hover:shadow-md transition-shadow duration-200 space-y-2">
                 <div className="flex items-center gap-2.5">
                   <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold shrink-0">
                     <FileText className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-xs text-[#2a2a2a]">Sub-Meter OCR Engine</h4>
+                    <h4 className="font-bold text-xs text-[#263238]">Sub-Meter OCR Engine</h4>
                     <span className="text-[10px] text-amber-700 font-extrabold">Automated BESCOM Split</span>
                   </div>
                 </div>
@@ -924,13 +924,13 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             {/* Right Symmetrical Column (Parallax Flank) */}
             <div ref={rightCardsParallaxRef} className="lg:col-span-3 space-y-4 sm:space-y-5 order-3 lg:order-3 will-change-transform transform-gpu">
               {/* CARD 3: MoveFlow Inspections */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm hover:shadow-md transition-shadow duration-200 space-y-2">
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm hover:shadow-md transition-shadow duration-200 space-y-2">
                 <div className="flex items-center gap-2.5">
                   <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center font-bold shrink-0">
                     <ShieldCheck className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-xs text-[#2a2a2a]">MoveFlow Inspections</h4>
+                    <h4 className="font-bold text-xs text-[#263238]">MoveFlow Inspections</h4>
                     <span className="text-[10px] text-teal-700 font-extrabold">Zero Deposit Disputes</span>
                   </div>
                 </div>
@@ -940,13 +940,13 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               </div>
 
               {/* CARD 4: Double-Entry Ledger */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm hover:shadow-md transition-shadow duration-200 space-y-2">
+              <div className="p-4 sm:p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm hover:shadow-md transition-shadow duration-200 space-y-2">
                 <div className="flex items-center gap-2.5">
                   <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold shrink-0">
                     <Landmark className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-xs text-[#2a2a2a]">Double-Entry Ledger</h4>
+                    <h4 className="font-bold text-xs text-[#263238]">Double-Entry Ledger</h4>
                     <span className="text-[10px] text-indigo-700 font-extrabold">Audited GST Invoicing</span>
                   </div>
                 </div>
@@ -971,10 +971,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       >
         <ScrollReveal>
           <div className="text-center max-w-3xl mx-auto space-y-2 sm:space-y-2.5 px-2 sm:px-0">
-            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#2a2a2a]">
+            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#263238]">
               Everything Inside Staywise
             </span>
-            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#2a2a2a]">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#263238]">
               One Unified Dashboard. Every Rental Tool You Need.
             </h2>
             <p className="text-xs sm:text-sm text-[#666666] max-w-xl mx-auto leading-relaxed">
@@ -986,14 +986,14 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
         {/* Interactive Feature Tabs */}
         <ScrollReveal delay={40}>
           <div className="flex items-center justify-center w-full px-1">
-            <div className="p-1 rounded-2xl sm:rounded-full bg-[#f0f0f0] border border-[#B5B5B5] flex flex-wrap sm:flex-nowrap gap-1 max-w-full overflow-x-auto justify-center">
+            <div className="p-1 rounded-2xl sm:rounded-full bg-[#E8F0EC] border border-[#D2DDD7] flex flex-wrap sm:flex-nowrap gap-1 max-w-full overflow-x-auto justify-center">
               <button
                 type="button"
                 onClick={() => setActiveTab('RENT')}
                 className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   activeTab === 'RENT'
-                    ? 'bg-[#e10600] text-white shadow-xs'
-                    : 'text-[#666666] hover:text-[#2a2a2a]'
+                    ? 'bg-[#163B36] text-white shadow-xs'
+                    : 'text-[#666666] hover:text-[#263238]'
                 }`}
               >
                 <Zap className="h-3.5 w-3.5" />
@@ -1005,8 +1005,8 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 onClick={() => setActiveTab('BEDS')}
                 className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   activeTab === 'BEDS'
-                    ? 'bg-[#e10600] text-white shadow-xs'
-                    : 'text-[#666666] hover:text-[#2a2a2a]'
+                    ? 'bg-[#163B36] text-white shadow-xs'
+                    : 'text-[#666666] hover:text-[#263238]'
                 }`}
               >
                 <Home className="h-3.5 w-3.5" />
@@ -1018,8 +1018,8 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 onClick={() => setActiveTab('WHATSAPP')}
                 className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   activeTab === 'WHATSAPP'
-                    ? 'bg-[#e10600] text-white shadow-xs'
-                    : 'text-[#666666] hover:text-[#2a2a2a]'
+                    ? 'bg-[#163B36] text-white shadow-xs'
+                    : 'text-[#666666] hover:text-[#263238]'
                 }`}
               >
                 <Bot className="h-3.5 w-3.5" />
@@ -1031,8 +1031,8 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 onClick={() => setActiveTab('OCR')}
                 className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   activeTab === 'OCR'
-                    ? 'bg-[#e10600] text-white shadow-xs'
-                    : 'text-[#666666] hover:text-[#2a2a2a]'
+                    ? 'bg-[#163B36] text-white shadow-xs'
+                    : 'text-[#666666] hover:text-[#263238]'
                 }`}
               >
                 <FileText className="h-3.5 w-3.5" />
@@ -1044,8 +1044,8 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 onClick={() => setActiveTab('CRM')}
                 className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   activeTab === 'CRM'
-                    ? 'bg-[#e10600] text-white shadow-xs'
-                    : 'text-[#666666] hover:text-[#2a2a2a]'
+                    ? 'bg-[#163B36] text-white shadow-xs'
+                    : 'text-[#666666] hover:text-[#263238]'
                 }`}
               >
                 <Users className="h-3.5 w-3.5" />
@@ -1057,8 +1057,8 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 onClick={() => setActiveTab('MOVEFLOW')}
                 className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   activeTab === 'MOVEFLOW'
-                    ? 'bg-[#e10600] text-white shadow-xs'
-                    : 'text-[#666666] hover:text-[#2a2a2a]'
+                    ? 'bg-[#163B36] text-white shadow-xs'
+                    : 'text-[#666666] hover:text-[#263238]'
                 }`}
               >
                 <ShieldCheck className="h-3.5 w-3.5" />
@@ -1072,15 +1072,15 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
         <ScrollReveal delay={70}>
           <div 
             ref={dashboardCardRef}
-            className="max-w-5xl mx-auto rounded-3xl bg-[#f5f5f5] border border-[#B5B5B5] p-5 sm:p-8 shadow-xs will-change-transform transform-gpu"
+            className="max-w-5xl mx-auto rounded-3xl bg-[#f5f5f5] border border-[#D2DDD7] p-5 sm:p-8 shadow-xs will-change-transform transform-gpu"
           >
             {activeTab === 'RENT' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
-                  <span className="text-[10px] font-black uppercase text-[#2a2a2a] bg-[#f0f0f0] px-3 py-1 rounded-full">
+                  <span className="text-[10px] font-black uppercase text-[#263238] bg-[#E8F0EC] px-3 py-1 rounded-full">
                     Rent Collection on Autopilot
                   </span>
-                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#2a2a2a]">
+                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#263238]">
                     Auto reminders, UPI links &amp; structured bank payouts.
                   </h3>
                   <p className="text-xs sm:text-sm text-[#666666] leading-relaxed">
@@ -1088,22 +1088,22 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   </p>
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#2a2a2a]" />
+                      <Check className="h-4 w-4 text-[#263238]" />
                       <span><b>WhatsApp Auto Nudge:</b> T-3, Due Date, and T+3 with dynamic UPI QR code.</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#2a2a2a]" />
+                      <Check className="h-4 w-4 text-[#263238]" />
                       <span><b>Axis Escrow Instant Settlement:</b> 100% statutory security with direct bank sweep.</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#2a2a2a]" />
+                      <Check className="h-4 w-4 text-[#263238]" />
                       <span><b>One-Tap PDF Receipts:</b> Automatically shared with tenants upon successful payment.</span>
                     </div>
                   </div>
                   <div className="pt-2">
                     <button
                       onClick={() => handleOpenTrial('starter')}
-                      className="px-6 py-2.5 rounded-full bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-bold text-xs transition duration-150 cursor-pointer"
+                      className="px-6 py-2.5 rounded-full bg-[#263238] hover:bg-[#263238] text-white font-bold text-xs transition duration-150 cursor-pointer"
                     >
                       Start Free Trial →
                     </button>
@@ -1111,34 +1111,34 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 </div>
 
                 {/* Interactive Simulated UI */}
-                <div className="p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm space-y-3.5 text-xs font-mono">
+                <div className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm space-y-3.5 text-xs font-mono">
                   <div className="flex justify-between items-center pb-2 border-b border-[#E0E0E0]">
                     <div className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="font-bold text-[#2a2a2a]">Rent Collection · Day 3 Status</span>
+                      <span className="font-bold text-[#263238]">Rent Collection · Day 3 Status</span>
                     </div>
                     <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">99.4% On-Time</span>
                   </div>
                   <div className="space-y-2.5">
-                    <div className="p-2.5 rounded-xl bg-[#f5f5f5] border border-[#B5B5B5] flex justify-between items-center">
+                    <div className="p-2.5 rounded-xl bg-[#f5f5f5] border border-[#D2DDD7] flex justify-between items-center">
                       <div>
-                        <div className="font-bold text-[#2a2a2a]">Priya Sharma (Room 204)</div>
+                        <div className="font-bold text-[#263238]">Priya Sharma (Room 204)</div>
                         <div className="text-[10px] text-[#666666]">AutoPay Scheduled · ₹14,500</div>
                       </div>
                       <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Paid via UPI</span>
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-[#f5f5f5] border border-[#B5B5B5] flex justify-between items-center">
+                    <div className="p-2.5 rounded-xl bg-[#f5f5f5] border border-[#D2DDD7] flex justify-between items-center">
                       <div>
-                        <div className="font-bold text-[#2a2a2a]">Arjun Mehta (Bed 102-B)</div>
+                        <div className="font-bold text-[#263238]">Arjun Mehta (Bed 102-B)</div>
                         <div className="text-[10px] text-[#666666]">WhatsApp Reminder Sent · ₹8,500</div>
                       </div>
                       <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Link Clicked</span>
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-[#f5f5f5] border border-[#B5B5B5] flex justify-between items-center">
+                    <div className="p-2.5 rounded-xl bg-[#f5f5f5] border border-[#D2DDD7] flex justify-between items-center">
                       <div>
-                        <div className="font-bold text-[#2a2a2a]">Karan Singh (Room 301)</div>
+                        <div className="font-bold text-[#263238]">Karan Singh (Room 301)</div>
                         <div className="text-[10px] text-[#666666]">Auto AI Call Reminder · ₹12,000</div>
                       </div>
                       <span className="text-[10px] font-bold text-teal-700 bg-teal-100 px-2 py-0.5 rounded-full">Promised 5 PM</span>
@@ -1151,10 +1151,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             {activeTab === 'BEDS' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
-                  <span className="text-[10px] font-black uppercase text-[#2a2a2a] bg-[#f0f0f0] px-3 py-1 rounded-full">
+                  <span className="text-[10px] font-black uppercase text-[#263238] bg-[#E8F0EC] px-3 py-1 rounded-full">
                     Bed-Level Property &amp; Inventory Management
                   </span>
-                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#2a2a2a]">
+                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#263238]">
                     Track every bed, room, and flat across all buildings.
                   </h3>
                   <p className="text-xs sm:text-sm text-[#666666] leading-relaxed">
@@ -1162,27 +1162,27 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   </p>
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#2a2a2a]" />
+                      <Check className="h-4 w-4 text-[#263238]" />
                       <span><b>Bed-Level Allocation:</b> Single, double, and triple sharing bed tracking.</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#2a2a2a]" />
+                      <Check className="h-4 w-4 text-[#263238]" />
                       <span><b>Notice Period Countdown:</b> Automatic vacancy warning 30 days prior.</span>
                     </div>
                   </div>
                   <div className="pt-2">
                     <button
                       onClick={() => handleOpenTrial('growth_pro')}
-                      className="px-6 py-2.5 rounded-full bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-bold text-xs transition duration-150 cursor-pointer"
+                      className="px-6 py-2.5 rounded-full bg-[#263238] hover:bg-[#263238] text-white font-bold text-xs transition duration-150 cursor-pointer"
                     >
                       Start Free Trial →
                     </button>
                   </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm space-y-3.5 text-xs font-mono">
+                <div className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm space-y-3.5 text-xs font-mono">
                   <div className="flex justify-between items-center pb-2 border-b border-[#E0E0E0]">
-                    <span className="font-bold text-[#2a2a2a]">HSR Layout Tech PG (126 Beds)</span>
+                    <span className="font-bold text-[#263238]">HSR Layout Tech PG (126 Beds)</span>
                     <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">98% Full</span>
                   </div>
                   <div className="grid grid-cols-4 gap-2 pt-1">
@@ -1196,7 +1196,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                       { bed: "202-A", status: "Occupied", bg: "bg-emerald-100 text-emerald-800" },
                       { bed: "202-B", status: "Occupied", bg: "bg-emerald-100 text-emerald-800" },
                     ].map((b, i) => (
-                      <div key={i} className={`p-2 rounded-xl text-center border border-[#B5B5B5] ${b.bg}`}>
+                      <div key={i} className={`p-2 rounded-xl text-center border border-[#D2DDD7] ${b.bg}`}>
                         <div className="font-bold text-[11px]">{b.bed}</div>
                         <div className="text-[9px] uppercase font-extrabold">{b.status}</div>
                       </div>
@@ -1209,10 +1209,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             {activeTab === 'WHATSAPP' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
-                  <span className="text-[10px] font-black uppercase text-[#2a2a2a] bg-[#f0f0f0] px-3 py-1 rounded-full">
+                  <span className="text-[10px] font-black uppercase text-[#263238] bg-[#E8F0EC] px-3 py-1 rounded-full">
                     WhatsApp AI Concierge
                   </span>
-                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#2a2a2a]">
+                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#263238]">
                     Run your entire rental business from WhatsApp.
                   </h3>
                   <p className="text-xs sm:text-sm text-[#666666] leading-relaxed">
@@ -1220,34 +1220,34 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   </p>
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#2a2a2a]" />
+                      <Check className="h-4 w-4 text-[#263238]" />
                       <span><b>Instant Queries:</b> Ask occupancy, pending balance, or tenant phone numbers.</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#2a2a2a]" />
+                      <Check className="h-4 w-4 text-[#263238]" />
                       <span><b>Smart Nudges:</b> <i>&ldquo;₹16,000 pending from 2 tenants. Want me to nudge them?&rdquo;</i></span>
                     </div>
                   </div>
                   <div className="pt-2">
                     <button
                       onClick={() => handleOpenTrial('growth_pro')}
-                      className="px-6 py-2.5 rounded-full bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-bold text-xs transition duration-150 cursor-pointer"
+                      className="px-6 py-2.5 rounded-full bg-[#263238] hover:bg-[#263238] text-white font-bold text-xs transition duration-150 cursor-pointer"
                     >
                       Connect WhatsApp AI →
                     </button>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-[#f5f5f5] border border-[#B5B5B5] shadow-sm space-y-3 text-xs">
-                  <div className="flex items-center gap-2 pb-2 border-b border-[#B5B5B5]">
+                <div className="p-4 rounded-2xl bg-[#f5f5f5] border border-[#D2DDD7] shadow-sm space-y-3 text-xs">
+                  <div className="flex items-center gap-2 pb-2 border-b border-[#D2DDD7]">
                     <Bot className="h-4 w-4 text-emerald-800" />
-                    <span className="font-bold text-[#2a2a2a]">Staywise WhatsApp Assistant</span>
+                    <span className="font-bold text-[#263238]">Staywise WhatsApp Assistant</span>
                   </div>
                   <div className="space-y-2">
-                    <div className="p-2.5 rounded-2xl rounded-tr-none bg-white text-[#2a2a2a] max-w-[85%] ml-auto shadow-xs">
+                    <div className="p-2.5 rounded-2xl rounded-tr-none bg-white text-[#263238] max-w-[85%] ml-auto shadow-xs">
                       What is today's rent collection? Are there any pending dues?
                     </div>
-                    <div className="p-2.5 rounded-2xl rounded-tl-none bg-[#ffe5e5] text-[#2a2a2a] max-w-[85%] shadow-xs">
+                    <div className="p-2.5 rounded-2xl rounded-tl-none bg-[#ffe5e5] text-[#263238] max-w-[85%] shadow-xs">
                       <b>Good evening Vikram!</b><br />
                       • Collected today: ₹1,42,000 (8 tenants)<br />
                       • Pending: ₹16,000 (2 tenants)<br />
@@ -1261,10 +1261,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             {activeTab === 'OCR' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
-                  <span className="text-[10px] font-black uppercase text-[#2a2a2a] bg-[#f0f0f0] px-3 py-1 rounded-full">
+                  <span className="text-[10px] font-black uppercase text-[#263238] bg-[#E8F0EC] px-3 py-1 rounded-full">
                     Discom Sub-Meter Electricity OCR
                   </span>
-                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#2a2a2a]">
+                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#263238]">
                     Upload electricity bill. Auto-split without disputes.
                   </h3>
                   <p className="text-xs sm:text-sm text-[#666666] leading-relaxed">
@@ -1273,26 +1273,26 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   <div className="pt-2">
                     <button
                       onClick={() => handleOpenTrial('growth_pro')}
-                      className="px-6 py-2.5 rounded-full bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-bold text-xs transition duration-150 cursor-pointer"
+                      className="px-6 py-2.5 rounded-full bg-[#263238] hover:bg-[#263238] text-white font-bold text-xs transition duration-150 cursor-pointer"
                     >
                       Start Free Trial →
                     </button>
                   </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm space-y-3 text-xs font-mono">
+                <div className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm space-y-3 text-xs font-mono">
                   <div className="flex justify-between items-center pb-2 border-b border-[#E0E0E0]">
-                    <span className="font-bold text-[#2a2a2a]">BESCOM LT-2 Bill OCR</span>
+                    <span className="font-bold text-[#263238]">BESCOM LT-2 Bill OCR</span>
                     <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">OCR Verified</span>
                   </div>
                   <div className="space-y-1.5 text-[#666666]">
                     <div className="flex justify-between">
                       <span>Total Discom Bill:</span>
-                      <span className="font-bold text-[#2a2a2a]">₹8,450 (1,120 units)</span>
+                      <span className="font-bold text-[#263238]">₹8,450 (1,120 units)</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Common Area Split (4 flats):</span>
-                      <span className="font-bold text-[#2a2a2a]">₹420 / flat</span>
+                      <span className="font-bold text-[#263238]">₹420 / flat</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Room 102 Sub-Meter (240 units):</span>
@@ -1306,10 +1306,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             {activeTab === 'CRM' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
-                  <span className="text-[10px] font-black uppercase text-[#2a2a2a] bg-[#f0f0f0] px-3 py-1 rounded-full">
+                  <span className="text-[10px] font-black uppercase text-[#263238] bg-[#E8F0EC] px-3 py-1 rounded-full">
                     Omnichannel Leads CRM &amp; Visit Scheduling
                   </span>
-                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#2a2a2a]">
+                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#263238]">
                     99acres, MagicBricks &amp; NoBroker in one unified inbox.
                   </h3>
                   <p className="text-xs sm:text-sm text-[#666666] leading-relaxed">
@@ -1318,30 +1318,30 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   <div className="pt-2">
                     <button
                       onClick={() => handleOpenTrial('growth_pro')}
-                      className="px-6 py-2.5 rounded-full bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-bold text-xs transition duration-150 cursor-pointer"
+                      className="px-6 py-2.5 rounded-full bg-[#263238] hover:bg-[#263238] text-white font-bold text-xs transition duration-150 cursor-pointer"
                     >
                       Start Free Trial →
                     </button>
                   </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm space-y-3 text-xs font-mono">
+                <div className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm space-y-3 text-xs font-mono">
                   <div className="flex justify-between items-center pb-2 border-b border-[#E0E0E0]">
-                    <span className="font-bold text-[#2a2a2a]">Unified Inquiries Pipeline</span>
+                    <span className="font-bold text-[#263238]">Unified Inquiries Pipeline</span>
                     <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded">12 New Today</span>
                   </div>
                   <div className="space-y-2">
-                    <div className="p-2 rounded-xl bg-[#f5f5f5] border border-[#B5B5B5] flex justify-between items-center">
+                    <div className="p-2 rounded-xl bg-[#f5f5f5] border border-[#D2DDD7] flex justify-between items-center">
                       <div>
-                        <div className="font-bold text-[#2a2a2a]">Rahul Verma · 99acres</div>
+                        <div className="font-bold text-[#263238]">Rahul Verma · 99acres</div>
                         <div className="text-[10px] text-[#666666]">2-Sharing • Move-in Oct 10</div>
                       </div>
                       <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded">Visit Scheduled</span>
                     </div>
 
-                    <div className="p-2 rounded-xl bg-[#f5f5f5] border border-[#B5B5B5] flex justify-between items-center">
+                    <div className="p-2 rounded-xl bg-[#f5f5f5] border border-[#D2DDD7] flex justify-between items-center">
                       <div>
-                        <div className="font-bold text-[#2a2a2a]">Anjali Iyer · MagicBricks</div>
+                        <div className="font-bold text-[#263238]">Anjali Iyer · MagicBricks</div>
                         <div className="text-[10px] text-[#666666]">1 BHK Independent flat</div>
                       </div>
                       <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">WhatsApp Pin Sent</span>
@@ -1354,10 +1354,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             {activeTab === 'MOVEFLOW' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
-                  <span className="text-[10px] font-black uppercase text-[#2a2a2a] bg-[#f0f0f0] px-3 py-1 rounded-full">
+                  <span className="text-[10px] font-black uppercase text-[#263238] bg-[#E8F0EC] px-3 py-1 rounded-full">
                     MoveFlow Digital KYC &amp; Agreements
                   </span>
-                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#2a2a2a]">
+                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#263238]">
                     Real-time Aadhaar KYC, e-stamps &amp; zero dispute deposits.
                   </h3>
                   <p className="text-xs sm:text-sm text-[#666666] leading-relaxed">
@@ -1366,28 +1366,28 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   <div className="pt-2">
                     <button
                       onClick={() => handleOpenTrial('growth_pro')}
-                      className="px-6 py-2.5 rounded-full bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-bold text-xs transition duration-150 cursor-pointer"
+                      className="px-6 py-2.5 rounded-full bg-[#263238] hover:bg-[#263238] text-white font-bold text-xs transition duration-150 cursor-pointer"
                     >
                       Start Free Trial →
                     </button>
                   </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm space-y-3 text-xs font-mono">
+                <div className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm space-y-3 text-xs font-mono">
                   <div className="flex justify-between items-center pb-2 border-b border-[#E0E0E0]">
-                    <span className="font-bold text-[#2a2a2a]">Tenant Onboarding Vault</span>
+                    <span className="font-bold text-[#263238]">Tenant Onboarding Vault</span>
                     <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">100% Paperless</span>
                   </div>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-[#f5f5f5] border border-[#B5B5B5]">
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-[#f5f5f5] border border-[#D2DDD7]">
                       <span>Aadhaar Identity Verification</span>
                       <span className="text-[10px] font-bold text-emerald-700">Verified ✓</span>
                     </div>
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-[#f5f5f5] border border-[#B5B5B5]">
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-[#f5f5f5] border border-[#D2DDD7]">
                       <span>E-Stamp Agreement (Karnataka)</span>
                       <span className="text-[10px] font-bold text-emerald-700">E-Signed ✓</span>
                     </div>
-                    <div className="flex items-center justify-between p-2 rounded-xl bg-[#f5f5f5] border border-[#B5B5B5]">
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-[#f5f5f5] border border-[#D2DDD7]">
                       <span>MoveFlow Photo Checklist (14 photos)</span>
                       <span className="text-[10px] font-bold text-emerald-700">Timestamp Sealed ✓</span>
                     </div>
@@ -1408,10 +1408,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       >
         <ScrollReveal>
           <div className="text-center max-w-3xl mx-auto space-y-2 px-2 sm:px-0">
-            <span className="text-[10px] sm:text-xs font-black uppercase text-[#2a2a2a]">
+            <span className="text-[10px] sm:text-xs font-black uppercase text-[#263238]">
               Ready in 15 Minutes
             </span>
-            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#2a2a2a]">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#263238]">
               How Staywise Runs Your Property on Autopilot
             </h2>
             <p className="text-xs sm:text-sm text-[#666666] max-w-xl mx-auto leading-relaxed">
@@ -1422,33 +1422,33 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto items-stretch">
           {/* STEP 1 */}
-          <div className="p-6 rounded-3xl bg-white border border-[#B5B5B5] space-y-4 shadow-xs">
-            <div className="h-10 w-10 rounded-2xl bg-[#f0f0f0] text-[#2a2a2a] flex items-center justify-center font-bold text-sm">
+          <div className="p-6 rounded-3xl bg-white border border-[#D2DDD7] space-y-4 shadow-xs">
+            <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#263238] flex items-center justify-center font-bold text-sm">
               01
             </div>
-            <h3 className="font-bold text-base text-[#2a2a2a]">Sign up free in 2 minutes</h3>
+            <h3 className="font-bold text-base text-[#263238]">Sign up free in 2 minutes</h3>
             <p className="text-xs text-[#666666] leading-relaxed">
               Create your account with your phone number and email. No setup fees, zero hidden contracts, and ₹0 due today.
             </p>
           </div>
 
           {/* STEP 2 */}
-          <div className="p-6 rounded-3xl bg-white border border-[#B5B5B5] space-y-4 shadow-xs">
-            <div className="h-10 w-10 rounded-2xl bg-[#f0f0f0] text-[#2a2a2a] flex items-center justify-center font-bold text-sm">
+          <div className="p-6 rounded-3xl bg-white border border-[#D2DDD7] space-y-4 shadow-xs">
+            <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#263238] flex items-center justify-center font-bold text-sm">
               02
             </div>
-            <h3 className="font-bold text-base text-[#2a2a2a]">Add properties &amp; import tenants</h3>
+            <h3 className="font-bold text-base text-[#263238]">Add properties &amp; import tenants</h3>
             <p className="text-xs text-[#666666] leading-relaxed">
               Configure your buildings, floors, rooms, and beds. Import your existing tenants with 1-click Excel or WhatsApp contact sync.
             </p>
           </div>
 
           {/* STEP 3 */}
-          <div className="p-6 rounded-3xl bg-white border border-[#B5B5B5] space-y-4 shadow-xs">
-            <div className="h-10 w-10 rounded-2xl bg-[#f0f0f0] text-[#2a2a2a] flex items-center justify-center font-bold text-sm">
+          <div className="p-6 rounded-3xl bg-white border border-[#D2DDD7] space-y-4 shadow-xs">
+            <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#263238] flex items-center justify-center font-bold text-sm">
               03
             </div>
-            <h3 className="font-bold text-base text-[#2a2a2a]">Run on complete autopilot</h3>
+            <h3 className="font-bold text-base text-[#263238]">Run on complete autopilot</h3>
             <p className="text-xs text-[#666666] leading-relaxed">
               Rent collection, UPI Autopay, WhatsApp reminders, portal leads, and caretaker tasks automatically flow from Day 1.
             </p>
@@ -1466,10 +1466,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       >
         <ScrollReveal>
           <div className="text-center max-w-2xl mx-auto space-y-2 px-2 sm:px-0">
-            <span className="text-[10px] sm:text-xs font-black uppercase text-[#2a2a2a]">
+            <span className="text-[10px] sm:text-xs font-black uppercase text-[#263238]">
               Institutional Scale &amp; Reliability
             </span>
-            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl font-semibold text-[#2a2a2a]">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl font-semibold text-[#263238]">
               Trusted by 900+ Owners Across India
             </h2>
           </div>
@@ -1479,27 +1479,27 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 max-w-5xl mx-auto text-center items-center">
             <div 
               ref={statsBox1Ref} 
-              className="p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#f5f5f5] border border-[#B5B5B5] space-y-0.5 sm:space-y-1 will-change-transform transform-gpu shadow-xs"
+              className="p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#f5f5f5] border border-[#D2DDD7] space-y-0.5 sm:space-y-1 will-change-transform transform-gpu shadow-xs"
             >
-              <div className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#2a2a2a]">₹142Cr+</div>
+              <div className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#263238]">₹142Cr+</div>
               <div className="text-[10px] sm:text-xs text-[#666666] font-semibold mt-1">Gross Assets Under Management</div>
             </div>
 
-            <div className="p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#f5f5f5] border border-[#B5B5B5] space-y-0.5 sm:space-y-1 shadow-xs">
-              <div className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#2a2a2a]">18,400+</div>
+            <div className="p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#f5f5f5] border border-[#D2DDD7] space-y-0.5 sm:space-y-1 shadow-xs">
+              <div className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#263238]">18,400+</div>
               <div className="text-[10px] sm:text-xs text-[#666666] font-semibold mt-1">Managed Units &amp; Beds</div>
             </div>
 
-            <div className="p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#f5f5f5] border border-[#B5B5B5] space-y-0.5 sm:space-y-1 shadow-xs">
+            <div className="p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#f5f5f5] border border-[#D2DDD7] space-y-0.5 sm:space-y-1 shadow-xs">
               <div className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-emerald-700">99.4%</div>
               <div className="text-[10px] sm:text-xs text-[#666666] font-semibold mt-1">On-Time Rent Collection</div>
             </div>
 
             <div 
               ref={statsBox4Ref} 
-              className="p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#f5f5f5] border border-[#B5B5B5] space-y-0.5 sm:space-y-1 will-change-transform transform-gpu shadow-xs"
+              className="p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#f5f5f5] border border-[#D2DDD7] space-y-0.5 sm:space-y-1 will-change-transform transform-gpu shadow-xs"
             >
-              <div className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#2a2a2a]">100%</div>
+              <div className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#263238]">100%</div>
               <div className="text-[10px] sm:text-xs text-[#666666] font-semibold mt-1">Axis Bank Escrow Settled</div>
             </div>
           </div>
@@ -1507,47 +1507,47 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
         {/* Real Indian Landlord Testimonials */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto pt-4">
-          <div className="p-5 rounded-2xl bg-[#f5f5f5] border border-[#B5B5B5] space-y-3 shadow-xs">
+          <div className="p-5 rounded-2xl bg-[#f5f5f5] border border-[#D2DDD7] space-y-3 shadow-xs">
             <div className="flex text-amber-500 gap-1">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className="h-3.5 w-3.5 fill-amber-500" />
               ))}
             </div>
-            <p className="text-xs text-[#2a2a2a] italic leading-relaxed">
+            <p className="text-xs text-[#263238] italic leading-relaxed">
               &ldquo;Rent reminders are dispatched automatically. I no longer have to make awkward collection calls. A complete game-changer for our 120 beds in Bangalore.&rdquo;
             </p>
             <div className="text-[11px]">
-              <div className="font-bold text-[#2a2a2a]">Sai Krishna PG</div>
+              <div className="font-bold text-[#263238]">Sai Krishna PG</div>
               <div className="text-[#666666]">Bengaluru</div>
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#f5f5f5] border border-[#B5B5B5] space-y-3 shadow-xs">
+          <div className="p-5 rounded-2xl bg-[#f5f5f5] border border-[#D2DDD7] space-y-3 shadow-xs">
             <div className="flex text-amber-500 gap-1">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className="h-3.5 w-3.5 fill-amber-500" />
               ))}
             </div>
-            <p className="text-xs text-[#2a2a2a] italic leading-relaxed">
+            <p className="text-xs text-[#263238] italic leading-relaxed">
               &ldquo;My caretaker updates everything directly from his mobile phone. I reside in Mumbai while managing properties in Bangalore with complete visibility and peace of mind.&rdquo;
             </p>
             <div className="text-[11px]">
-              <div className="font-bold text-[#2a2a2a]">Singhania Asset Holdings</div>
+              <div className="font-bold text-[#263238]">Singhania Asset Holdings</div>
               <div className="text-[#666666]">Mumbai / Bangalore</div>
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#f5f5f5] border border-[#B5B5B5] space-y-3 shadow-xs">
+          <div className="p-5 rounded-2xl bg-[#f5f5f5] border border-[#D2DDD7] space-y-3 shadow-xs">
             <div className="flex text-amber-500 gap-1">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className="h-3.5 w-3.5 fill-amber-500" />
               ))}
             </div>
-            <p className="text-xs text-[#2a2a2a] italic leading-relaxed">
+            <p className="text-xs text-[#263238] italic leading-relaxed">
               &ldquo;Electricity billing disputes are completely eliminated. Staywise reads the sub-meters via OCR and divides utility slabs automatically. Both tenants and management are delighted.&rdquo;
             </p>
             <div className="text-[11px]">
-              <div className="font-bold text-[#2a2a2a]">Green View Co-Living</div>
+              <div className="font-bold text-[#263238]">Green View Co-Living</div>
               <div className="text-[#666666]">Hyderabad</div>
             </div>
           </div>
@@ -1565,12 +1565,12 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       >
         <ScrollReveal>
           <div className="text-center max-w-3xl mx-auto space-y-2 sm:space-y-3 px-2 sm:px-0">
-            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1 rounded-full bg-[#f0f0f0] text-[#2a2a2a] text-[10px] sm:text-xs font-bold">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1 rounded-full bg-[#E8F0EC] text-[#263238] text-[10px] sm:text-xs font-bold">
               <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-700" />
               <span>7-Day Risk-Free Trial On Every Plan</span>
             </div>
 
-            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#2a2a2a] tracking-tight">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#263238] tracking-tight">
               Transparent Plans. ₹0 Due Today.
             </h2>
 
@@ -1580,14 +1580,14 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
             {/* Monthly / Annual Toggle - Fully Responsive */}
             <div className="pt-2 flex items-center justify-center w-full px-1">
-              <div className="inline-flex items-center p-1 rounded-full bg-white border border-[#B5B5B5] shadow-xs max-w-full">
+              <div className="inline-flex items-center p-1 rounded-full bg-white border border-[#D2DDD7] shadow-xs max-w-full">
                 <button
                   type="button"
                   onClick={() => setBillingCycle('monthly')}
                   className={`px-2.5 xs:px-3.5 sm:px-4.5 py-1.5 rounded-full text-[10px] xs:text-[11px] sm:text-xs font-bold transition-all duration-100 cursor-pointer whitespace-nowrap ${
                     billingCycle === 'monthly'
-                      ? 'bg-[#2a2a2a] text-white shadow-xs'
-                      : 'text-[#666666] hover:text-[#2a2a2a]'
+                      ? 'bg-[#263238] text-white shadow-xs'
+                      : 'text-[#666666] hover:text-[#263238]'
                   }`}
                 >
                   <span>Monthly <span className="hidden xs:inline">Flexible</span></span>
@@ -1598,8 +1598,8 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   onClick={() => setBillingCycle('annual')}
                   className={`px-2.5 xs:px-3.5 sm:px-4.5 py-1.5 rounded-full text-[10px] xs:text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1 sm:gap-1.5 cursor-pointer whitespace-nowrap ${
                     billingCycle === 'annual'
-                      ? 'bg-[#2a2a2a] text-white shadow-xs'
-                      : 'text-[#666666] hover:text-[#2a2a2a]'
+                      ? 'bg-[#263238] text-white shadow-xs'
+                      : 'text-[#666666] hover:text-[#263238]'
                   }`}
                 >
                   <span>Annual <span className="hidden sm:inline">Commitment</span></span>
@@ -1617,13 +1617,13 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           
           {/* TIER 1: STARTER */}
           <ScrollReveal delay={40} className="flex w-full">
-            <div className="w-full rounded-2xl sm:rounded-3xl bg-white border border-[#B5B5B5] p-4.5 xs:p-5 sm:p-7 flex flex-col justify-between space-y-4 sm:space-y-5 shadow-xs hover:shadow-md transition-shadow duration-150">
+            <div className="w-full rounded-2xl sm:rounded-3xl bg-white border border-[#D2DDD7] p-4.5 xs:p-5 sm:p-7 flex flex-col justify-between space-y-4 sm:space-y-5 shadow-xs hover:shadow-md transition-shadow duration-150">
               <div className="space-y-3.5 sm:space-y-4">
                 <div>
-                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#f0f0f0] text-[#666666]">
+                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#666666]">
                     1 Property
                   </span>
-                  <h3 className="font-editorial text-lg sm:text-xl font-bold text-[#2a2a2a] mt-2">Starter (1 Property)</h3>
+                  <h3 className="font-editorial text-lg sm:text-xl font-bold text-[#263238] mt-2">Starter (1 Property)</h3>
                   <p className="text-xs text-[#666666] mt-0.5 leading-relaxed">
                     Ideal for single-building landlords &amp; independent assets.
                   </p>
@@ -1631,7 +1631,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                 <div className="pt-2 pb-3.5 sm:pb-4 border-b border-[#E0E0E0]">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl xs:text-3xl sm:text-4xl font-black text-[#2a2a2a] tracking-tight">
+                    <span className="text-2xl xs:text-3xl sm:text-4xl font-black text-[#263238] tracking-tight">
                       ₹{billingCycle === 'annual' ? (599).toLocaleString('en-IN') : (59).toLocaleString('en-IN')}
                     </span>
                     <span className="text-xs text-[#666666]">/{billingCycle === 'annual' ? 'year' : 'month'}</span>
@@ -1643,19 +1643,19 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                 <div className="space-y-2 text-xs text-[#666666]">
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#2a2a2a] shrink-0" />
+                    <Check className="h-4 w-4 text-[#263238] shrink-0" />
                     <span><b>1 Property (PG, Flat, House, or Commercial)</b></span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#2a2a2a] shrink-0" />
+                    <Check className="h-4 w-4 text-[#263238] shrink-0" />
                     <span>Automated Invoices &amp; PDF Receipts</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#2a2a2a] shrink-0" />
+                    <Check className="h-4 w-4 text-[#263238] shrink-0" />
                     <span>WhatsApp Payment Reminders</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#2a2a2a] shrink-0" />
+                    <Check className="h-4 w-4 text-[#263238] shrink-0" />
                     <span>Dynamic UPI QR Code Collection</span>
                   </div>
                 </div>
@@ -1665,7 +1665,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 <button
                   type="button"
                   onClick={() => handleOpenTrial('starter')}
-                  className="w-full py-2.5 sm:py-3 rounded-full bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white text-[#2a2a2a] font-bold text-xs transition-colors duration-150 cursor-pointer shadow-xs"
+                  className="w-full py-2.5 sm:py-3 rounded-full bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] font-bold text-xs transition-colors duration-150 cursor-pointer shadow-xs"
                 >
                   Start 7-Day Free Trial
                 </button>
@@ -1680,18 +1680,18 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           <ScrollReveal delay={80} className="flex w-full md:col-span-2 lg:col-span-1">
             <div 
               ref={pricingFeaturedCardRef}
-              className="w-full rounded-2xl sm:rounded-3xl bg-white border-2 border-[#e10600] p-4.5 xs:p-5 sm:p-7 flex flex-col justify-between space-y-4 sm:space-y-5 shadow-lg relative mt-3 sm:mt-0 transform lg:-translate-y-2 will-change-transform transform-gpu"
+              className="w-full rounded-2xl sm:rounded-3xl bg-white border-2 border-[#163B36] p-4.5 xs:p-5 sm:p-7 flex flex-col justify-between space-y-4 sm:space-y-5 shadow-lg relative mt-3 sm:mt-0 transform lg:-translate-y-2 will-change-transform transform-gpu"
             >
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 sm:px-3.5 py-0.5 sm:py-1 rounded-full bg-[#e10600] text-white text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-xs whitespace-nowrap">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 sm:px-3.5 py-0.5 sm:py-1 rounded-full bg-[#163B36] text-white text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-xs whitespace-nowrap">
                 Most Popular
               </span>
 
               <div className="space-y-3.5 sm:space-y-4 pt-1">
                 <div>
-                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#f0f0f0] text-[#2a2a2a]">
+                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#263238]">
                     10 Properties
                   </span>
-                  <h3 className="font-editorial text-xl sm:text-2xl font-bold text-[#2a2a2a] mt-2">Growth Pro (10 Properties)</h3>
+                  <h3 className="font-editorial text-xl sm:text-2xl font-bold text-[#263238] mt-2">Growth Pro (10 Properties)</h3>
                   <p className="text-xs text-[#666666] mt-0.5 leading-relaxed">
                     Unified multi-asset system with sub-meter OCR &amp; MoveFlow.
                   </p>
@@ -1699,35 +1699,35 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                 <div className="pt-2 pb-3.5 sm:pb-4 border-b border-[#E0E0E0]">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-black text-[#2a2a2a] tracking-tight">
+                    <span className="text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-black text-[#263238] tracking-tight">
                       ₹{billingCycle === 'annual' ? (1499).toLocaleString('en-IN') : (149).toLocaleString('en-IN')}
                     </span>
                     <span className="text-xs text-[#666666]">/{billingCycle === 'annual' ? 'year' : 'month'}</span>
                   </div>
-                  <div className="text-[11px] text-[#2a2a2a] font-semibold mt-0.5">
+                  <div className="text-[11px] text-[#263238] font-semibold mt-0.5">
                     {billingCycle === 'annual' ? '₹1,499/year (Equivalent to ~₹125/month)' : '₹149 billed monthly'}
                   </div>
                 </div>
 
-                <div className="space-y-2 text-xs text-[#2a2a2a]">
+                <div className="space-y-2 text-xs text-[#263238]">
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#e10600] shrink-0" />
+                    <Check className="h-4 w-4 text-[#163B36] shrink-0" />
                     <span><b>Up to 10 Properties &amp; PG Co-Living Buildings</b></span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#e10600] shrink-0" />
+                    <Check className="h-4 w-4 text-[#163B36] shrink-0" />
                     <span><b>Sub-Meter Electricity OCR Splitting</b></span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#e10600] shrink-0" />
+                    <Check className="h-4 w-4 text-[#163B36] shrink-0" />
                     <span><b>MoveFlow Digital Inspections (Zero Disputes)</b></span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#e10600] shrink-0" />
+                    <Check className="h-4 w-4 text-[#163B36] shrink-0" />
                     <span><b>Statutory Double-Entry Ledger</b></span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#e10600] shrink-0" />
+                    <Check className="h-4 w-4 text-[#163B36] shrink-0" />
                     <span><b>Vacancy Cost Engine &amp; Leak Detector</b></span>
                   </div>
                 </div>
@@ -1737,11 +1737,11 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 <button
                   type="button"
                   onClick={() => handleOpenTrial('growth_pro')}
-                  className="w-full py-2.5 sm:py-3.5 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white font-bold text-xs sm:text-sm shadow-md shadow-[#e10600]/20 transition duration-150 cursor-pointer"
+                  className="w-full py-2.5 sm:py-3.5 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white font-bold text-xs sm:text-sm shadow-md shadow-[#163B36]/20 transition duration-150 cursor-pointer"
                 >
                   Start 7-Day Free Trial (₹0 Today)
                 </button>
-                <div className="text-center text-[10px] text-[#2a2a2a] font-semibold leading-tight">
+                <div className="text-center text-[10px] text-[#263238] font-semibold leading-tight">
                   Connect Card or Bank Autopay • Cancel before 7 days in 1 click
                 </div>
               </div>
@@ -1750,13 +1750,13 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
           {/* TIER 3: ENTERPRISE */}
           <ScrollReveal delay={110} className="flex w-full md:col-span-2 lg:col-span-1">
-            <div className="w-full rounded-2xl sm:rounded-3xl bg-white border border-[#B5B5B5] p-4.5 xs:p-5 sm:p-7 flex flex-col justify-between space-y-4 sm:space-y-5 shadow-xs hover:shadow-md transition-shadow duration-150">
+            <div className="w-full rounded-2xl sm:rounded-3xl bg-white border border-[#D2DDD7] p-4.5 xs:p-5 sm:p-7 flex flex-col justify-between space-y-4 sm:space-y-5 shadow-xs hover:shadow-md transition-shadow duration-150">
               <div className="space-y-3.5 sm:space-y-4">
                 <div>
-                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#f0f0f0] text-[#666666]">
+                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#666666]">
                     Unlimited Properties
                   </span>
-                  <h3 className="font-editorial text-lg sm:text-xl font-bold text-[#2a2a2a] mt-2">Enterprise (Unlimited Properties)</h3>
+                  <h3 className="font-editorial text-lg sm:text-xl font-bold text-[#263238] mt-2">Enterprise (Unlimited Properties)</h3>
                   <p className="text-xs text-[#666666] mt-0.5 leading-relaxed">
                     For family offices, LLPs &amp; commercial campuses.
                   </p>
@@ -1764,7 +1764,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                 <div className="pt-2 pb-3.5 sm:pb-4 border-b border-[#E0E0E0]">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl xs:text-3xl sm:text-4xl font-black text-[#2a2a2a] tracking-tight">
+                    <span className="text-2xl xs:text-3xl sm:text-4xl font-black text-[#263238] tracking-tight">
                       ₹{billingCycle === 'annual' ? (2999).toLocaleString('en-IN') : (299).toLocaleString('en-IN')}
                     </span>
                     <span className="text-xs text-[#666666]">/{billingCycle === 'annual' ? 'year' : 'month'}</span>
@@ -1776,19 +1776,19 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                 <div className="space-y-2 text-xs text-[#666666]">
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#2a2a2a] shrink-0" />
+                    <Check className="h-4 w-4 text-[#263238] shrink-0" />
                     <span><b>Unlimited Properties, Portfolios &amp; LLPs</b></span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#2a2a2a] shrink-0" />
+                    <Check className="h-4 w-4 text-[#263238] shrink-0" />
                     <span>Axis Bank Escrow Direct Instant T+0 Sweeps</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#2a2a2a] shrink-0" />
+                    <Check className="h-4 w-4 text-[#263238] shrink-0" />
                     <span>Commercial CAM Allocation Engine</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#2a2a2a] shrink-0" />
+                    <Check className="h-4 w-4 text-[#263238] shrink-0" />
                     <span>Dedicated 24/7 Account Director</span>
                   </div>
                 </div>
@@ -1798,7 +1798,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 <button
                   type="button"
                   onClick={() => handleOpenTrial('enterprise')}
-                  className="w-full py-2.5 sm:py-3 rounded-full bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white text-[#2a2a2a] font-bold text-xs transition-colors duration-150 cursor-pointer shadow-xs"
+                  className="w-full py-2.5 sm:py-3 rounded-full bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] font-bold text-xs transition-colors duration-150 cursor-pointer shadow-xs"
                 >
                   Start 7-Day Free Trial
                 </button>
@@ -1815,13 +1815,13 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
         <ScrollReveal delay={70}>
           <div 
             ref={pricingGuaranteeRef}
-            className="max-w-4xl mx-auto p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#f0f0f0] border border-[#B5B5B5] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 will-change-transform transform-gpu shadow-xs"
+            className="max-w-4xl mx-auto p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#E8F0EC] border border-[#D2DDD7] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 will-change-transform transform-gpu shadow-xs"
           >
             <div className="flex items-start sm:items-center gap-3 sm:gap-3.5">
-              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-[#2a2a2a] text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5 sm:mt-0">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-[#263238] text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5 sm:mt-0">
                 <ShieldCheck className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </div>
-              <div className="text-[11px] sm:text-xs text-[#2a2a2a] leading-relaxed">
+              <div className="text-[11px] sm:text-xs text-[#263238] leading-relaxed">
                 <span className="font-extrabold">How does the 7-day trial autopay work? </span>
                 <span className="text-[#333333]">
                   ₹0.00 is charged today. You connect your card or bank account, but payment is only processed on Day 7 if you keep the plan. Cancel anytime before Day 7 from Settings with 1 click to pay nothing.
@@ -1831,7 +1831,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
             <button
               onClick={() => handleOpenTrial('growth_pro')}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-[#2a2a2a] hover:bg-[#1f1f1f] text-white font-bold text-xs shrink-0 transition-colors shadow-xs cursor-pointer text-center"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-[#263238] hover:bg-[#1f1f1f] text-white font-bold text-xs shrink-0 transition-colors shadow-xs cursor-pointer text-center"
             >
               Start Free Trial →
             </button>
@@ -1851,10 +1851,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
         
         <ScrollReveal>
           <div className="text-center max-w-2xl mx-auto space-y-2 px-2 sm:px-0">
-            <span className="text-[10px] sm:text-xs font-black uppercase text-[#2a2a2a]">
+            <span className="text-[10px] sm:text-xs font-black uppercase text-[#263238]">
               Questions &amp; Answers
             </span>
-            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl font-semibold text-[#2a2a2a]">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl font-semibold text-[#263238]">
               Frequently Asked Questions
             </h2>
           </div>
@@ -1895,12 +1895,12 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               return (
                 <div 
                   key={idx}
-                  className="rounded-xl sm:rounded-2xl bg-[#f5f5f5] border border-[#B5B5B5] overflow-hidden transition-colors duration-100"
+                  className="rounded-xl sm:rounded-2xl bg-[#f5f5f5] border border-[#D2DDD7] overflow-hidden transition-colors duration-100"
                 >
                   <button
                     type="button"
                     onClick={() => toggleFaq(idx)}
-                    className="w-full p-3.5 sm:p-5 text-left flex items-center justify-between gap-3 font-bold text-xs sm:text-sm text-[#2a2a2a] hover:text-[#2a2a2a] transition-colors cursor-pointer"
+                    className="w-full p-3.5 sm:p-5 text-left flex items-center justify-between gap-3 font-bold text-xs sm:text-sm text-[#263238] hover:text-[#263238] transition-colors cursor-pointer"
                   >
                     <span className="leading-snug">{faq.q}</span>
                     <ChevronDown className={`h-4 w-4 text-[#666666] shrink-0 transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`} />
@@ -1927,10 +1927,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       >
         <div className="max-w-6xl mx-auto space-y-6">
           <div className="space-y-1 text-center md:text-left">
-            <span className="text-[10px] sm:text-xs font-black uppercase text-[#2a2a2a]">
+            <span className="text-[10px] sm:text-xs font-black uppercase text-[#263238]">
               Explore Staywise Hub
             </span>
-            <h3 className="font-editorial text-xl sm:text-2xl font-bold text-[#2a2a2a]">
+            <h3 className="font-editorial text-xl sm:text-2xl font-bold text-[#263238]">
               Property Management Resources by City &amp; Comparisons
             </h3>
             <p className="text-xs text-[#666666]">
@@ -1938,49 +1938,49 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             </p>
           </div>
 
-          <div className="rounded-2xl border border-[#B5B5B5] bg-white divide-y divide-[#E0E0E0] overflow-hidden text-xs">
+          <div className="rounded-2xl border border-[#D2DDD7] bg-white divide-y divide-[#E0E0E0] overflow-hidden text-xs">
             {/* By City */}
             <div className="p-5 sm:p-6 space-y-3">
-              <h4 className="font-bold text-sm text-[#2a2a2a]">Operations By City</h4>
+              <h4 className="font-bold text-sm text-[#263238]">Operations By City</h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[#666666]">
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">Bangalore Property Management</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">Hyderabad PG Operations</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">Delhi NCR Hostel Software</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">Pune Rental Management</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">Chennai Co-Living Systems</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">Gurgaon High-Street Flats</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">Noida Tech Park Rentals</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">Mumbai Luxury Estates</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">Bangalore Property Management</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">Hyderabad PG Operations</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">Delhi NCR Hostel Software</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">Pune Rental Management</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">Chennai Co-Living Systems</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">Gurgaon High-Street Flats</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">Noida Tech Park Rentals</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">Mumbai Luxury Estates</span>
               </div>
             </div>
 
             {/* Comparisons & Alternatives */}
             <div className="p-5 sm:p-6 space-y-3">
-              <h4 className="font-bold text-sm text-[#2a2a2a]">Comparisons &amp; Modern Upgrades</h4>
+              <h4 className="font-bold text-sm text-[#263238]">Comparisons &amp; Modern Upgrades</h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[#666666]">
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">Staywise vs Google Sheets</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">Staywise vs Manual WhatsApp</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">Staywise vs Pen &amp; Paper</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">Staywise vs Excel Workbooks</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">Staywise vs Tally Accounting</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">Staywise vs Crib / RentOk</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">Staywise vs Generic CRMs</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">MoveFlow vs Paper Checklists</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">Staywise vs Google Sheets</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">Staywise vs Manual WhatsApp</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">Staywise vs Pen &amp; Paper</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">Staywise vs Excel Workbooks</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">Staywise vs Tally Accounting</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">Staywise vs Crib / RentOk</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">Staywise vs Generic CRMs</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">MoveFlow vs Paper Checklists</span>
               </div>
             </div>
 
             {/* Core Integrations */}
             <div className="p-5 sm:p-6 space-y-3">
-              <h4 className="font-bold text-sm text-[#2a2a2a]">Integrations &amp; Portals</h4>
+              <h4 className="font-bold text-sm text-[#263238]">Integrations &amp; Portals</h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[#666666]">
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">WhatsApp Business Cloud API</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">Axis Bank Escrow Settlement</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">UPI Recurring AutoPay Mandates</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">RBI e-NACH NetBanking</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">99acres Leads Sync</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">MagicBricks Inquiries</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">NoBroker Direct Leads</span>
-                <span className="hover:text-[#2a2a2a] transition-colors cursor-pointer">Bescom / KSEB Electricity OCR</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">WhatsApp Business Cloud API</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">Axis Bank Escrow Settlement</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">UPI Recurring AutoPay Mandates</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">RBI e-NACH NetBanking</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">99acres Leads Sync</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">MagicBricks Inquiries</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">NoBroker Direct Leads</span>
+                <span className="hover:text-[#263238] transition-colors cursor-pointer">Bescom / KSEB Electricity OCR</span>
               </div>
             </div>
           </div>
@@ -1990,11 +1990,11 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       {/* ---------------------------------------------------- */}
       {/* 12. CLEAN MINIMALIST FOOTER                          */}
       {/* ---------------------------------------------------- */}
-      <footer className="bg-[#2a2a2a] text-white/80 py-10 sm:py-12 px-4 sm:px-6 lg:px-12 text-xs relative overflow-hidden">
+      <footer className="bg-[#263238] text-white/80 py-10 sm:py-12 px-4 sm:px-6 lg:px-12 text-xs relative overflow-hidden">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 text-center md:text-left">
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white text-[#2a2a2a] flex items-center justify-center font-bold text-xs shrink-0">
+              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white text-[#263238] flex items-center justify-center font-bold text-xs shrink-0">
                 SW
               </div>
               <span className="font-extrabold text-white text-sm tracking-tight">STAYWISE</span>

@@ -55,13 +55,13 @@ export default function PropertyList() {
   return (
     <div className="space-y-6 pb-12 font-sans">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#B5B5B5]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D2DDD7]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#2a2a2a]">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#263238]">
               Properties & Unit Hierarchy
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#f0f0f0] text-[#2a2a2a] font-bold border border-[#2a2a2a]/20">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#263238] font-bold border border-[#263238]/20">
               {displayedProperties.length} Properties
             </span>
           </div>
@@ -74,14 +74,14 @@ export default function PropertyList() {
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => setIsExistingTenantWizardOpen(true)}
-              className="px-4 py-2.5 rounded-2xl bg-white hover:bg-[#f0f0f0] text-[#2a2a2a] text-xs font-bold border border-[#B5B5B5] transition flex items-center gap-1.5 shadow-sm"
+              className="px-4 py-2.5 rounded-2xl bg-white hover:bg-[#E8F0EC] text-[#263238] text-xs font-bold border border-[#D2DDD7] transition flex items-center gap-1.5 shadow-sm"
             >
-              <UserPlus className="h-4 w-4 text-[#2a2a2a]" />
+              <UserPlus className="h-4 w-4 text-[#263238]" />
               <span>Onboard Tenant</span>
             </button>
             <button
               onClick={() => setIsAddPropertyOpen(true)}
-              className="px-4 py-2.5 rounded-2xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-bold text-xs shadow-md shadow-[#2a2a2a]/20 transition flex items-center gap-1.5"
+              className="px-4 py-2.5 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white font-bold text-xs shadow-md shadow-[#263238]/20 transition flex items-center gap-1.5"
             >
               <Plus className="h-4 w-4" />
               <span>Add Property</span>
@@ -98,8 +98,8 @@ export default function PropertyList() {
             onClick={() => setActivePortfolio('all')}
             className={`px-3 py-1.5 rounded-full font-bold transition shrink-0 ${
               activePortfolio === 'all'
-                ? 'bg-[#2a2a2a] text-white shadow-xs'
-                : 'bg-white hover:bg-[#f0f0f0] text-[#666666] border border-[#B5B5B5]'
+                ? 'bg-[#263238] text-white shadow-xs'
+                : 'bg-white hover:bg-[#E8F0EC] text-[#666666] border border-[#D2DDD7]'
             }`}
           >
             All Portfolios ({baseProperties.length})
@@ -114,8 +114,8 @@ export default function PropertyList() {
                 onClick={() => setActivePortfolio(port)}
                 className={`px-3 py-1.5 rounded-full font-bold transition shrink-0 ${
                   isSelected
-                    ? 'bg-[#2a2a2a] text-white shadow-xs'
-                    : 'bg-white hover:bg-[#f0f0f0] text-[#666666] border border-[#B5B5B5]'
+                    ? 'bg-[#263238] text-white shadow-xs'
+                    : 'bg-white hover:bg-[#E8F0EC] text-[#666666] border border-[#D2DDD7]'
                 }`}
               >
                 {port} ({count})
@@ -127,12 +127,12 @@ export default function PropertyList() {
 
       {/* Empty State when no properties found */}
       {displayedProperties.length === 0 && (
-        <div className="bg-white rounded-3xl border border-[#B5B5B5] p-10 text-center space-y-4">
-          <div className="h-16 w-16 mx-auto rounded-full bg-[#f0f0f0] flex items-center justify-center text-[#2a2a2a]">
+        <div className="bg-white rounded-3xl border border-[#D2DDD7] p-10 text-center space-y-4">
+          <div className="h-16 w-16 mx-auto rounded-full bg-[#E8F0EC] flex items-center justify-center text-[#263238]">
             <Building className="h-8 w-8" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-[#2a2a2a]">No Properties in This Portfolio Yet</h3>
+            <h3 className="text-base font-bold text-[#263238]">No Properties in This Portfolio Yet</h3>
             <p className="text-xs text-[#666666] mt-1 max-w-sm mx-auto">
               Add your first building, apartment complex, or commercial unit to start collecting rent and onboarding tenants.
             </p>
@@ -140,7 +140,7 @@ export default function PropertyList() {
           {activeRole !== 'admin' && (
             <button
               onClick={() => setIsAddPropertyOpen(true)}
-              className="px-5 py-2.5 rounded-2xl bg-[#2a2a2a] text-white text-xs font-bold hover:bg-[#1a1a1a] transition inline-flex items-center gap-2 shadow-md"
+              className="px-5 py-2.5 rounded-2xl bg-[#263238] text-white text-xs font-bold hover:bg-[#1a1a1a] transition inline-flex items-center gap-2 shadow-md"
             >
               <Plus className="h-4 w-4" />
               <span>Add Your First Property</span>
@@ -160,7 +160,7 @@ export default function PropertyList() {
             >
               <div>
                 {/* Property Image Header with Badges */}
-                <div className="relative h-44 w-full bg-[#B5B5B5] overflow-hidden">
+                <div className="relative h-44 w-full bg-[#D2DDD7] overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={prop.imageUrl}
@@ -171,10 +171,10 @@ export default function PropertyList() {
                   
                   {/* Status Tag */}
                   <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-md text-[#2a2a2a] border border-white/40">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-md text-[#263238] border border-white/40">
                       {prop.type}
                     </span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#2a2a2a] text-white">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#263238] text-white">
                       {prop.status}
                     </span>
                     {prop.verificationStatus === 'PENDING' ? (
@@ -207,26 +207,26 @@ export default function PropertyList() {
                 <div className="p-5 space-y-3 text-xs">
                   <div className="flex justify-between items-center text-[#666666]">
                     <span>Portfolio</span>
-                    <span className="font-bold text-[#2a2a2a]">{prop.portfolio}</span>
+                    <span className="font-bold text-[#263238]">{prop.portfolio}</span>
                   </div>
                   <div className="flex justify-between items-center text-[#666666]">
                     <span>Units</span>
-                    <span className="font-bold text-[#2a2a2a]">{prop.occupiedUnits} / {prop.totalUnits} Occupied</span>
+                    <span className="font-bold text-[#263238]">{prop.occupiedUnits} / {prop.totalUnits} Occupied</span>
                   </div>
                   <div className="flex justify-between items-center text-[#666666]">
                     <span>Expected Monthly Rent</span>
-                    <span className="font-black text-[#2a2a2a] font-tabular">₹{(prop.expectedMonthlyRent / 1000).toFixed(0)}K</span>
+                    <span className="font-black text-[#263238] font-tabular">₹{(prop.expectedMonthlyRent / 1000).toFixed(0)}K</span>
                   </div>
 
                   {/* Amenities Chips */}
                   <div className="pt-2 flex flex-wrap gap-1.5">
                     {prop.amenities.slice(0, 3).map((amenity, idx) => (
-                      <span key={idx} className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#f0f0f0] text-[#666666] border border-[#B5B5B5] font-medium">
+                      <span key={idx} className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#666666] border border-[#D2DDD7] font-medium">
                         {amenity}
                       </span>
                     ))}
                     {prop.amenities.length > 3 && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#f0f0f0] text-[#666666]">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#E8F0EC] text-[#666666]">
                         +{prop.amenities.length - 3} more
                       </span>
                     )}
@@ -243,7 +243,7 @@ export default function PropertyList() {
                       setPropertyToEdit(prop);
                       setIsEditPropertyModalOpen(true);
                     }}
-                    className="py-2 px-3 rounded-xl bg-slate-100 hover:bg-[#2a2a2a] hover:text-white text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1.5"
+                    className="py-2 px-3 rounded-xl bg-slate-100 hover:bg-[#263238] hover:text-white text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1.5"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                     <span>Edit</span>
@@ -264,7 +264,7 @@ export default function PropertyList() {
 
                 <button
                   onClick={() => setSelectedProperty(selectedProperty?.id === prop.id ? null : prop)}
-                  className="w-full py-2.5 rounded-2xl bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white border border-[#B5B5B5] text-[#2a2a2a] font-bold text-xs transition flex items-center justify-center gap-1.5"
+                  className="w-full py-2.5 rounded-2xl bg-[#E8F0EC] hover:bg-[#263238] hover:text-white border border-[#D2DDD7] text-[#263238] font-bold text-xs transition flex items-center justify-center gap-1.5"
                 >
                   <Layers className="h-3.5 w-3.5" />
                   <span>{selectedProperty?.id === prop.id ? 'Hide Units Breakdown' : `Explore ${prop.units.length} Units`}</span>
@@ -282,10 +282,10 @@ export default function PropertyList() {
                     {prop.units.map(unit => (
                       <div
                         key={unit.id}
-                        className="p-3 rounded-xl bg-white border border-[#B5B5B5] flex items-center justify-between text-xs shadow-sm"
+                        className="p-3 rounded-xl bg-white border border-[#D2DDD7] flex items-center justify-between text-xs shadow-sm"
                       >
                         <div>
-                          <div className="font-bold text-[#2a2a2a] flex items-center gap-2">
+                          <div className="font-bold text-[#263238] flex items-center gap-2">
                             <span>Unit {unit.unitNumber}</span>
                             <span className="text-[10px] text-[#666666]">({unit.type} • Floor {unit.floor})</span>
                           </div>
@@ -302,7 +302,7 @@ export default function PropertyList() {
                           }`}>
                             {unit.status}
                           </span>
-                          <div className="text-[11px] font-tabular font-black text-[#2a2a2a] mt-1">
+                          <div className="text-[11px] font-tabular font-black text-[#263238] mt-1">
                             ₹{unit.rentAmount.toLocaleString('en-IN')}/mo
                           </div>
                         </div>

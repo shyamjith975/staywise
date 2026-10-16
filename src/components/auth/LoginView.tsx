@@ -28,11 +28,11 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
   const [authMode, setAuthMode] = useState<'SIGNIN' | 'SIGNUP' | 'FORGOT_PASSWORD'>('SIGNIN');
   const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
 
-  // Sign In State
+  // Sign In State - Start empty so newly registered accounts (e.g. test) can sign in cleanly
   const ALLOWED_LOGIN_ROLES: UserRole[] = ['owner', 'tenant', 'estate_manager'];
   const [selectedRole, setSelectedRole] = useState<UserRole>('owner');
-  const [email, setEmail] = useState(DEMO_CREDENTIALS.owner.email);
-  const [password, setPassword] = useState(DEMO_CREDENTIALS.owner.pass);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loginLoading, setLoginLoading] = useState(false);
@@ -114,7 +114,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
 
   const activeCred = DEMO_CREDENTIALS[selectedRole] || DEMO_CREDENTIALS.owner;
 
-  const handleRoleSelect = (role: UserRole) => {
+  const handleFillDemoCredentials = (role: UserRole) => {
     setSelectedRole(role);
     setEmail(DEMO_CREDENTIALS[role].email);
     setPassword(DEMO_CREDENTIALS[role].pass);
@@ -184,7 +184,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#c0c0c0] flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 font-sans selection:bg-[#e10600] selection:text-white">
+    <div className="min-h-screen bg-[#F7F8F6] flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 font-sans selection:bg-[#163B36] selection:text-white">
       
       {/* Navigation bar to return to Landing Page */}
       {onBackToLanding && (
@@ -192,18 +192,18 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
           <button
             type="button"
             onClick={onBackToLanding}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#B5B5B5] text-[#2a2a2a] text-xs font-bold shadow-2xs hover:bg-[#f0f0f0] transition"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#D2DDD7] text-[#263238] text-xs font-bold shadow-2xs hover:bg-[#E8F0EC] transition cursor-pointer"
           >
-            <ArrowLeft className="h-3.5 w-3.5 text-[#e10600]" />
+            <ArrowLeft className="h-3.5 w-3.5 text-[#163B36]" />
             <span>← Back to Website</span>
           </button>
 
           <button
             type="button"
             onClick={() => setIsTrialModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#e10600] border border-[#e10600] text-white text-xs font-black shadow-2xs hover:bg-[#c50500] transition"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#163B36] border border-[#163B36] text-white text-xs font-black shadow-2xs hover:bg-[#102B27] transition cursor-pointer"
           >
-            <Sparkles className="h-3.5 w-3.5 text-white" />
+            <Sparkles className="h-3.5 w-3.5 text-[#C69A55]" />
             <span>Start Free Trial</span>
           </button>
         </div>
@@ -212,30 +212,30 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
       {/* Brand Header */}
       <div className="mb-5 text-center space-y-1.5">
         <div className="flex items-center justify-center gap-2.5">
-          <div className="h-9 w-9 rounded-xl bg-[#2a2a2a] text-[#e10600] flex items-center justify-center font-black text-sm shadow-xs">
+          <div className="h-9 w-9 rounded-xl bg-[#163B36] text-[#C69A55] flex items-center justify-center font-black text-sm shadow-xs">
             ✦
           </div>
-          <span className="text-2xl font-black tracking-tight text-[#2a2a2a]">
+          <span className="text-2xl font-black tracking-tight text-[#263238]">
             STAYWISE
           </span>
         </div>
-        <p className="text-xs font-semibold text-[#666666]">
+        <p className="text-xs font-semibold text-[#546E7A]">
           Unified Property Operating System • Landlords, Estates &amp; Residents
         </p>
       </div>
 
       {/* Main Container Card */}
-      <div className="w-full max-w-xl bg-white rounded-3xl p-6 sm:p-8 shadow-md border border-[#B5B5B5] space-y-6">
+      <div className="w-full max-w-xl bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-[#D2DDD7] space-y-6">
         
         {/* Sign In vs Sign Up Segmented Controller */}
-        <div className="flex items-center p-1 rounded-full bg-[#f0f0f0] border border-[#B5B5B5]">
+        <div className="flex items-center p-1 rounded-full bg-[#E8F0EC] border border-[#D2DDD7]">
           <button
             type="button"
             onClick={() => { setAuthMode('SIGNIN'); setSignupError(null); }}
-            className={`flex-1 py-2 rounded-full text-xs font-bold transition text-center ${
+            className={`flex-1 py-2 rounded-full text-xs font-bold transition text-center cursor-pointer ${
               authMode === 'SIGNIN'
-                ? 'bg-[#2a2a2a] text-[#e10600] shadow-xs'
-                : 'text-[#666666] hover:text-[#2a2a2a]'
+                ? 'bg-[#163B36] text-white shadow-xs'
+                : 'text-[#546E7A] hover:text-[#263238]'
             }`}
           >
             Sign In
@@ -243,13 +243,13 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
           <button
             type="button"
             onClick={() => { setAuthMode('SIGNUP'); setSignupError(null); }}
-            className={`flex-1 py-2 rounded-full text-xs font-bold transition text-center flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-2 rounded-full text-xs font-bold transition text-center flex items-center justify-center gap-1.5 cursor-pointer ${
               authMode === 'SIGNUP'
-                ? 'bg-[#2a2a2a] text-[#e10600] shadow-xs'
-                : 'text-[#666666] hover:text-[#2a2a2a]'
+                ? 'bg-[#163B36] text-white shadow-xs'
+                : 'text-[#546E7A] hover:text-[#263238]'
             }`}
           >
-            <Sparkles className="h-3.5 w-3.5 text-[#e10600]" />
+            <Sparkles className="h-3.5 w-3.5 text-[#C69A55]" />
             <span>Create Account</span>
           </button>
         </div>
@@ -258,68 +258,12 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
         {authMode === 'SIGNIN' ? (
           <div className="space-y-5">
             <div>
-              <h2 className="text-lg font-black text-[#2a2a2a]">
-                Sign In to Workspace
+              <h2 className="text-lg font-black text-[#263238]">
+                Sign In to Your Workspace
               </h2>
-              <p className="text-xs text-[#666666] mt-0.5">
-                Select your persona to access customized dashboards
+              <p className="text-xs text-[#546E7A] mt-0.5">
+                Enter your registered email and password to access your dashboard
               </p>
-            </div>
-
-            {/* Role Selector Tabs */}
-            <div className="grid grid-cols-3 gap-2 p-1.5 bg-[#f0f0f0] rounded-2xl border border-[#B5B5B5]">
-              {ALLOWED_LOGIN_ROLES.map((role) => {
-                const cred = DEMO_CREDENTIALS[role];
-                const isSelected = selectedRole === role;
-                return (
-                  <button
-                    key={role}
-                    type="button"
-                    onClick={() => handleRoleSelect(role)}
-                    className={`py-2 px-2 rounded-xl text-xs font-bold transition flex flex-col items-center text-center gap-1 ${
-                      isSelected
-                        ? 'bg-[#2a2a2a] text-[#e10600] shadow-2xs border border-[#e10600]'
-                        : 'text-[#2a2a2a] hover:text-[#e10600] hover:bg-white'
-                    }`}
-                  >
-                    <span className="text-xl">{cred.avatar}</span>
-                    <span className="font-extrabold text-[11px] leading-tight line-clamp-1">{cred.roleLabel}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Demo ID & Password Quick Login Banner */}
-            <div className="p-3.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-[#2a2a2a] flex items-center gap-1.5">
-                  <KeyRound className="h-3.5 w-3.5 text-[#e10600]" />
-                  <span>Demo ID &amp; Password ({activeCred.roleLabel})</span>
-                </span>
-                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#e10600] text-white">
-                  Ready
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                <div className="p-2 rounded-xl bg-white border border-[#B5B5B5] truncate">
-                  <span className="text-[#666666] mr-1">ID:</span>
-                  <span className="font-bold text-[#2a2a2a]">{activeCred.email}</span>
-                </div>
-                <div className="p-2 rounded-xl bg-white border border-[#B5B5B5] truncate">
-                  <span className="text-[#666666] mr-1">Pass:</span>
-                  <span className="font-bold text-[#2a2a2a]">{activeCred.pass}</span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => handleQuickDemoLogin(selectedRole)}
-                className="w-full py-2 rounded-xl bg-[#e10600] hover:bg-[#c50500] text-white text-xs font-black shadow-xs transition flex items-center justify-center gap-1"
-              >
-                <span>Instant Login as {activeCred.roleLabel}</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </button>
             </div>
 
             {/* Login Error Alert */}
@@ -330,26 +274,27 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
               </div>
             )}
 
-            {/* Form */}
+            {/* Primary Sign In Form */}
             <form onSubmit={handleFormSubmit} className="space-y-3.5 text-xs">
               <div>
-                <label className="block text-[#2a2a2a] font-bold mb-1">
-                  Email
+                <label className="block text-[#263238] font-bold mb-1">
+                  Email Address
                 </label>
                 <div className="relative">
                   <input
-                    type="text"
+                    type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600] transition"
+                    placeholder="e.g. test@tenent.com or your email"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#163B36] transition"
                   />
-                  <Mail className="absolute left-3 top-3 h-3.5 w-3.5 text-[#666666]" />
+                  <Mail className="absolute left-3 top-3 h-3.5 w-3.5 text-[#546E7A]" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[#2a2a2a] font-bold mb-1">
+                <label className="block text-[#263238] font-bold mb-1">
                   Password
                 </label>
                 <div className="relative">
@@ -358,13 +303,14 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600] transition"
+                    placeholder="Enter your account password"
+                    className="w-full pl-9 pr-9 py-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#163B36] transition"
                   />
-                  <Lock className="absolute left-3 top-3 h-3.5 w-3.5 text-[#666666]" />
+                  <Lock className="absolute left-3 top-3 h-3.5 w-3.5 text-[#546E7A]" />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-[#666666] hover:text-[#2a2a2a]"
+                    className="absolute right-3 top-3 text-[#546E7A] hover:text-[#263238]"
                   >
                     {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                   </button>
@@ -372,12 +318,12 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
               </div>
 
               <div className="flex items-center justify-between text-[11px] pt-0.5">
-                <label className="flex items-center gap-1.5 text-[#666666] cursor-pointer">
+                <label className="flex items-center gap-1.5 text-[#546E7A] cursor-pointer">
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="rounded border-[#B5B5B5] text-[#e10600] focus:ring-[#e10600]"
+                    className="rounded border-[#D2DDD7] text-[#163B36] focus:ring-[#163B36]"
                   />
                   <span>Remember session</span>
                 </label>
@@ -388,7 +334,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                     setResetEmail(email);
                     setResetStatus(null);
                   }}
-                  className="font-bold text-[#e10600] hover:underline cursor-pointer"
+                  className="font-bold text-[#163B36] hover:underline cursor-pointer"
                 >
                   Forgot password?
                 </button>
@@ -397,21 +343,72 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
               <button
                 type="submit"
                 disabled={loginLoading}
-                className="w-full py-3 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white font-black text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
+                className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-black text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
               >
                 {loginLoading ? 'Authenticating with SHA-256...' : 'Sign In'}
               </button>
             </form>
+
+            {/* Collapsible / Distinct Demo Persona Quick Access */}
+            <div className="pt-2 border-t border-[#D2DDD7]">
+              <div className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-3 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-[#263238] flex items-center gap-1.5">
+                    <KeyRound className="h-3.5 w-3.5 text-[#C69A55]" />
+                    <span>Quick Demo Personas (1-Click Switcher)</span>
+                  </span>
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#163B36] text-white">
+                    Demo
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-[#546E7A]">
+                  Exploring Staywise? Click any persona below to load demo portfolios or instant sign in:
+                </p>
+
+                <div className="grid grid-cols-3 gap-2">
+                  {ALLOWED_LOGIN_ROLES.map((role) => {
+                    const cred = DEMO_CREDENTIALS[role];
+                    return (
+                      <button
+                        key={role}
+                        type="button"
+                        onClick={() => handleFillDemoCredentials(role)}
+                        className={`p-2 rounded-xl text-xs font-bold transition flex flex-col items-center text-center gap-1 border cursor-pointer ${
+                          selectedRole === role && email === cred.email
+                            ? 'bg-[#163B36] text-white border-[#163B36]'
+                            : 'bg-white border-[#D2DDD7] text-[#263238] hover:bg-[#DCE8E1]'
+                        }`}
+                        title={`Fill ${cred.roleLabel} credentials`}
+                      >
+                        <span className="text-lg">{cred.avatar}</span>
+                        <span className="font-bold text-[10px] leading-tight line-clamp-1">{cred.roleLabel.split(' ')[0]}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleQuickDemoLogin(selectedRole)}
+                  className="w-full py-2 rounded-xl bg-white hover:bg-[#DCE8E1] text-[#163B36] border border-[#D2DDD7] text-xs font-bold shadow-2xs transition flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <span>Instant 1-Click Login as {activeCred.roleLabel}</span>
+                  <ArrowRight className="h-3.5 w-3.5 text-[#C69A55]" />
+                </button>
+              </div>
+            </div>
+
           </div>
         ) : authMode === 'FORGOT_PASSWORD' ? (
           /* MODE 3: FORGOT / RESET PASSWORD */
           <div className="space-y-4 text-xs">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-black text-[#2a2a2a]">
+                <h2 className="text-lg font-black text-[#263238]">
                   Reset Your Password
                 </h2>
-                <p className="text-xs text-[#666666] mt-0.5">
+                <p className="text-xs text-[#546E7A] mt-0.5">
                   Verify your account and create a new secure password
                 </p>
               </div>
@@ -422,7 +419,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                   setResetStatus(null);
                   setResetStep('REQUEST');
                 }}
-                className="text-xs font-bold text-[#666666] hover:text-[#e10600] cursor-pointer"
+                className="text-xs font-bold text-[#546E7A] hover:text-[#163B36] cursor-pointer"
               >
                 ← Back to Login
               </button>
@@ -444,7 +441,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
             {resetStep === 'REQUEST' ? (
               <form onSubmit={handleRequestReset} className="space-y-3">
                 <div>
-                  <label className="block text-[#666666] font-semibold mb-1">
+                  <label className="block text-[#546E7A] font-semibold mb-1">
                     Registered Email Address
                   </label>
                   <input
@@ -453,9 +450,9 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                     value={resetEmail}
                     onChange={(e) => setResetEmail(e.target.value)}
                     placeholder="e.g. rajesh@staywise.app"
-                    className="w-full p-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600]"
+                    className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#163B36]"
                   />
-                  <p className="text-[10px] text-[#666666] mt-1">
+                  <p className="text-[10px] text-[#546E7A] mt-1">
                     We will generate a time-limited HMAC-SHA256 reset token for this account.
                   </p>
                 </div>
@@ -463,7 +460,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                 <button
                   type="submit"
                   disabled={resetLoading}
-                  className="w-full py-3 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white font-black text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
+                  className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-black text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
                 >
                   {resetLoading ? 'Generating HMAC Token...' : 'Send Password Reset Token'}
                 </button>
@@ -471,7 +468,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
             ) : (
               <form onSubmit={handleConfirmReset} className="space-y-3">
                 <div>
-                  <label className="block text-[#666666] font-semibold mb-1">
+                  <label className="block text-[#546E7A] font-semibold mb-1">
                     Security Reset Token
                   </label>
                   <input
@@ -480,12 +477,12 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                     value={resetTokenInput}
                     onChange={(e) => setResetTokenInput(e.target.value)}
                     placeholder="Paste your 64-char HMAC token"
-                    className="w-full p-2.5 font-mono text-[11px] rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600]"
+                    className="w-full p-2.5 font-mono text-[11px] rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#163B36]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[#666666] font-semibold mb-1">
+                  <label className="block text-[#546E7A] font-semibold mb-1">
                     New Secure Password (SHA-256 Encrypted)
                   </label>
                   <input
@@ -495,7 +492,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                     value={resetNewPassword}
                     onChange={(e) => setResetNewPassword(e.target.value)}
                     placeholder="Min 8 characters"
-                    className="w-full p-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600]"
+                    className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#163B36]"
                   />
                 </div>
 
@@ -503,14 +500,14 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                   <button
                     type="button"
                     onClick={() => setResetStep('REQUEST')}
-                    className="w-1/3 py-2.5 rounded-full border border-[#B5B5B5] text-[#2a2a2a] font-bold text-xs hover:bg-[#f0f0f0] transition cursor-pointer"
+                    className="w-1/3 py-2.5 rounded-full border border-[#D2DDD7] text-[#263238] font-bold text-xs hover:bg-[#E8F0EC] transition cursor-pointer"
                   >
                     Back
                   </button>
                   <button
                     type="submit"
                     disabled={resetLoading}
-                    className="flex-1 py-2.5 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white font-black text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
+                    className="flex-1 py-2.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-black text-xs shadow-xs transition cursor-pointer disabled:opacity-50"
                   >
                     {resetLoading ? 'Updating Hash...' : 'Set New Password'}
                   </button>
@@ -521,8 +518,8 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
         ) : (
           /* MODE 2: SIGN UP */
           <div className="space-y-4 text-xs">
-            <h2 className="text-lg font-black text-[#2a2a2a]">
-              Create Your Account
+            <h2 className="text-lg font-black text-[#263238]">
+              Create Your Staywise Account
             </h2>
 
             {signupError && (
@@ -534,107 +531,107 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
 
             <form onSubmit={handleSignupSubmit} className="space-y-3">
               <div>
-                <label className="block text-[#666666] font-semibold mb-1">Select Role</label>
+                <label className="block text-[#546E7A] font-semibold mb-1">Select Role</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setSignupRole('owner')}
-                    className={`p-2.5 rounded-xl border text-left transition font-bold ${
+                    className={`p-2.5 rounded-xl border text-left transition font-bold cursor-pointer ${
                       signupRole === 'owner'
-                        ? 'border-[#e10600] bg-red-50/50 text-[#e10600]'
-                        : 'border-[#B5B5B5] bg-[#f0f0f0] text-[#2a2a2a]'
+                        ? 'border-[#163B36] bg-[#E8F0EC] text-[#163B36]'
+                        : 'border-[#D2DDD7] bg-white text-[#263238] hover:bg-[#F7F8F6]'
                     }`}
                   >
                     <div className="text-sm">👨‍💼 Property Owner</div>
-                    <div className="text-[10px] text-[#666666] font-normal">Landlord / Portfolio</div>
+                    <div className="text-[10px] text-[#546E7A] font-normal">Landlord / Portfolio</div>
                   </button>
                   <button
                     type="button"
                     onClick={() => setSignupRole('tenant')}
-                    className={`p-2.5 rounded-xl border text-left transition font-bold ${
+                    className={`p-2.5 rounded-xl border text-left transition font-bold cursor-pointer ${
                       signupRole === 'tenant'
-                        ? 'border-[#e10600] bg-red-50/50 text-[#e10600]'
-                        : 'border-[#B5B5B5] bg-[#f0f0f0] text-[#2a2a2a]'
+                        ? 'border-[#163B36] bg-[#E8F0EC] text-[#163B36]'
+                        : 'border-[#D2DDD7] bg-white text-[#263238] hover:bg-[#F7F8F6]'
                     }`}
                   >
                     <div className="text-sm">👨‍🎓 Tenant / Resident</div>
-                    <div className="text-[10px] text-[#666666] font-normal">Renter / Resident</div>
+                    <div className="text-[10px] text-[#546E7A] font-normal">Renter / Resident</div>
                   </button>
                   <button
                     type="button"
                     onClick={() => setSignupRole('estate_manager')}
-                    className={`p-2.5 rounded-xl border text-left transition font-bold ${
+                    className={`p-2.5 rounded-xl border text-left transition font-bold cursor-pointer ${
                       signupRole === 'estate_manager'
-                        ? 'border-[#e10600] bg-red-50/50 text-[#e10600]'
-                        : 'border-[#B5B5B5] bg-[#f0f0f0] text-[#2a2a2a]'
+                        ? 'border-[#163B36] bg-[#E8F0EC] text-[#163B36]'
+                        : 'border-[#D2DDD7] bg-white text-[#263238] hover:bg-[#F7F8F6]'
                     }`}
                   >
                     <div className="text-sm">🏡 EstateOS Host</div>
-                    <div className="text-[10px] text-[#666666] font-normal">Villas &amp; Keys</div>
+                    <div className="text-[10px] text-[#546E7A] font-normal">Villas &amp; Keys</div>
                   </button>
                   <button
                     type="button"
                     onClick={() => setSignupRole('manager')}
-                    className={`p-2.5 rounded-xl border text-left transition font-bold ${
+                    className={`p-2.5 rounded-xl border text-left transition font-bold cursor-pointer ${
                       signupRole === 'manager'
-                        ? 'border-[#e10600] bg-red-50/50 text-[#e10600]'
-                        : 'border-[#B5B5B5] bg-[#f0f0f0] text-[#2a2a2a]'
+                        ? 'border-[#163B36] bg-[#E8F0EC] text-[#163B36]'
+                        : 'border-[#D2DDD7] bg-white text-[#263238] hover:bg-[#F7F8F6]'
                     }`}
                   >
                     <div className="text-sm">🧑‍💻 Property Manager</div>
-                    <div className="text-[10px] text-[#666666] font-normal">Operations &amp; Field</div>
+                    <div className="text-[10px] text-[#546E7A] font-normal">Operations &amp; Field</div>
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[#666666] font-semibold mb-1">Full Name</label>
+                <label className="block text-[#546E7A] font-semibold mb-1">Full Name</label>
                 <input
                   type="text"
                   required
                   value={signupName}
                   onChange={e => setSignupName(e.target.value)}
-                  placeholder="e.g. Anand Kumar"
-                  className="w-full p-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600]"
+                  placeholder="e.g. test or Anand Kumar"
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#163B36]"
                 />
               </div>
               <div>
-                <label className="block text-[#666666] font-semibold mb-1">Email</label>
+                <label className="block text-[#546E7A] font-semibold mb-1">Email</label>
                 <input
                   type="email"
                   required
                   value={signupEmail}
                   onChange={e => setSignupEmail(e.target.value)}
-                  placeholder="anand@staywise.app"
-                  className="w-full p-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600]"
+                  placeholder="test@tenent.com"
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#163B36]"
                 />
               </div>
               <div>
-                <label className="block text-[#666666] font-semibold mb-1">Phone Number (Optional)</label>
+                <label className="block text-[#546E7A] font-semibold mb-1">Phone Number (Optional)</label>
                 <input
                   type="tel"
                   value={signupPhone}
                   onChange={e => setSignupPhone(e.target.value)}
                   placeholder="+91 98765 43210"
-                  className="w-full p-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600]"
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#163B36]"
                 />
               </div>
               <div>
-                <label className="block text-[#666666] font-semibold mb-1">Password</label>
+                <label className="block text-[#546E7A] font-semibold mb-1">Password</label>
                 <input
                   type="password"
                   required
                   value={signupPassword}
                   onChange={e => setSignupPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full p-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e10600]"
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#163B36]"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={signupLoading}
-                className="w-full py-3 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white font-black text-xs transition cursor-pointer disabled:opacity-50"
+                className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-black text-xs transition cursor-pointer disabled:opacity-50"
               >
                 {signupLoading ? 'Onboarding & Initializing SQLite...' : `Complete ${signupRole === 'tenant' ? 'Tenant' : signupRole === 'owner' ? 'Owner' : 'User'} Onboarding`}
               </button>

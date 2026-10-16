@@ -335,9 +335,9 @@ export default function RentFlowOverview() {
   return (
     <div className="space-y-6 pb-12 font-sans">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#B5B5B5]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D2DDD7]">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#2a2a2a]">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#263238]">
             {activeRole === 'tenant' ? 'My Rent & Payments' : 'Payments & Collections'}
           </h1>
           <div className="text-xs text-[#666666] font-semibold uppercase tracking-wider mt-0.5">
@@ -349,11 +349,11 @@ export default function RentFlowOverview() {
 
         <div className="flex items-center gap-2.5 max-w-full overflow-x-auto pb-1">
           {/* Tab Switcher */}
-          <div className="flex items-center p-1 bg-white rounded-2xl border border-[#B5B5B5] text-xs whitespace-nowrap shrink-0">
+          <div className="flex items-center p-1 bg-white rounded-2xl border border-[#D2DDD7] text-xs whitespace-nowrap shrink-0">
             <button
               onClick={() => setActiveTab('OVERVIEW')}
               className={`px-3.5 py-1.5 rounded-xl font-bold transition ${
-                activeTab === 'OVERVIEW' ? 'bg-[#2a2a2a] text-white' : 'text-[#666666] hover:text-[#2a2a2a]'
+                activeTab === 'OVERVIEW' ? 'bg-[#263238] text-white' : 'text-[#666666] hover:text-[#263238]'
               }`}
             >
               {activeRole === 'tenant' ? 'My Receipts' : 'Collections'}
@@ -361,7 +361,7 @@ export default function RentFlowOverview() {
             <button
               onClick={() => setActiveTab('LEDGER')}
               className={`px-3.5 py-1.5 rounded-xl font-bold transition ${
-                activeTab === 'LEDGER' ? 'bg-[#2a2a2a] text-white' : 'text-[#666666] hover:text-[#2a2a2a]'
+                activeTab === 'LEDGER' ? 'bg-[#263238] text-white' : 'text-[#666666] hover:text-[#263238]'
               }`}
             >
               {activeRole === 'tenant' ? 'My Statement' : 'Double-Entry Ledger'}
@@ -369,7 +369,7 @@ export default function RentFlowOverview() {
             <button
               onClick={() => setActiveTab('ELECTRICITY')}
               className={`px-3.5 py-1.5 rounded-xl font-bold transition ${
-                activeTab === 'ELECTRICITY' ? 'bg-[#2a2a2a] text-white' : 'text-[#666666] hover:text-[#2a2a2a]'
+                activeTab === 'ELECTRICITY' ? 'bg-[#263238] text-white' : 'text-[#666666] hover:text-[#263238]'
               }`}
             >
               {activeRole === 'tenant' ? 'My Electricity Bill' : 'Electricity Bills'}
@@ -378,7 +378,7 @@ export default function RentFlowOverview() {
               <button
                 onClick={() => setActiveTab('SCHEDULE')}
                 className={`px-3.5 py-1.5 rounded-xl font-bold transition ${
-                  activeTab === 'SCHEDULE' ? 'bg-[#2a2a2a] text-white' : 'text-[#666666] hover:text-[#2a2a2a]'
+                  activeTab === 'SCHEDULE' ? 'bg-[#263238] text-white' : 'text-[#666666] hover:text-[#263238]'
                 }`}
               >
                 Auto Reminders
@@ -423,7 +423,7 @@ export default function RentFlowOverview() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="organic-card p-5 bg-gradient-to-br from-[#ffffff] to-white border-amber-200">
                   <span className="text-xs font-bold text-amber-800">Current Rent Due</span>
-                  <div className="text-2xl sm:text-3xl font-black text-[#2a2a2a] font-tabular mt-1">
+                  <div className="text-2xl sm:text-3xl font-black text-[#263238] font-tabular mt-1">
                     ₹{tenantDisplayDue.toLocaleString('en-IN')}
                   </div>
                   <div className="text-[11px] text-amber-700 font-bold mt-2 flex items-center gap-1">
@@ -445,10 +445,10 @@ export default function RentFlowOverview() {
 
                 <div className="organic-card p-5 bg-white">
                   <span className="text-xs font-bold text-[#666666]">Bank Autopay Status</span>
-                  <div className="text-xl font-black text-[#2a2a2a] mt-1">
+                  <div className="text-xl font-black text-[#263238] mt-1">
                     {isDemoTenant ? 'Active (Axis Bank)' : (scopedInvoices.length > 0 ? 'Active Mandate' : 'No Mandate Active')}
                   </div>
-                  <div className="text-[11px] text-[#2a2a2a] font-bold mt-2 flex items-center gap-1">
+                  <div className="text-[11px] text-[#263238] font-bold mt-2 flex items-center gap-1">
                     <Zap className="h-3.5 w-3.5" />
                     <span>{isDemoTenant ? 'Next auto-debit on 5th Oct' : (tenantPendingInvoice ? `Due on ${tenantPendingInvoice.dueDate}` : 'Autopay ready')}</span>
                   </div>
@@ -516,8 +516,8 @@ export default function RentFlowOverview() {
                   onClick={() => setFilter(f as any)}
                   className={`px-3.5 py-1.5 rounded-2xl text-xs font-bold transition ${
                     filter === f 
-                      ? 'bg-[#2a2a2a] text-white shadow-sm' 
-                      : 'bg-white text-[#666666] hover:text-[#2a2a2a] border border-[#B5B5B5]'
+                      ? 'bg-[#263238] text-white shadow-sm' 
+                      : 'bg-white text-[#666666] hover:text-[#263238] border border-[#D2DDD7]'
                   }`}
                 >
                   {f === 'ALL' ? (activeRole === 'tenant' ? 'All My Payments' : 'All Payments') : f}
@@ -532,11 +532,11 @@ export default function RentFlowOverview() {
 
           {/* Payment Rows */}
           {filteredRows.length === 0 ? (
-            <div className="py-12 text-center bg-white rounded-3xl border border-dashed border-[#B5B5B5] p-8 space-y-3">
-              <div className="h-12 w-12 rounded-full bg-[#f0f0f0] text-[#383838] flex items-center justify-center mx-auto">
-                <Receipt className="h-6 w-6 text-[#2a2a2a]" />
+            <div className="py-12 text-center bg-white rounded-3xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
+              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#263238] flex items-center justify-center mx-auto">
+                <Receipt className="h-6 w-6 text-[#263238]" />
               </div>
-              <h3 className="text-base font-extrabold text-[#2a2a2a]">
+              <h3 className="text-base font-extrabold text-[#263238]">
                 {activeRole === 'tenant' ? 'No rent invoices found' : 'No rent collections recorded yet'}
               </h3>
               <p className="text-xs text-[#666666] max-w-md mx-auto">
@@ -550,20 +550,20 @@ export default function RentFlowOverview() {
               {filteredRows.map((row) => (
                 <div
                   key={row.id}
-                  className="organic-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition hover:border-[#2a2a2a]/40"
+                  className="organic-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition hover:border-[#263238]/40"
                 >
                   {/* Left: Avatar + Tenant Name + Room & Due Date */}
                   <div className="flex items-center gap-4">
-                    <div className="h-11 w-11 rounded-2xl bg-[#f0f0f0] border border-[#2a2a2a]/20 flex items-center justify-center font-black text-[#2a2a2a] text-sm shadow-inner shrink-0">
+                    <div className="h-11 w-11 rounded-2xl bg-[#E8F0EC] border border-[#263238]/20 flex items-center justify-center font-black text-[#263238] text-sm shadow-inner shrink-0">
                       {row.initial}
                     </div>
 
                     <div>
-                      <h3 className="font-extrabold text-[#2a2a2a] text-sm sm:text-base">
+                      <h3 className="font-extrabold text-[#263238] text-sm sm:text-base">
                         {row.name}
                       </h3>
                       <div className="text-xs text-[#666666] mt-0.5 flex items-center gap-1.5">
-                        <span className="font-semibold text-[#2a2a2a]">{row.unit}</span>
+                        <span className="font-semibold text-[#263238]">{row.unit}</span>
                         <span>•</span>
                         <span>{row.dueDate}</span>
                         <span className="hidden md:inline">• {row.property}</span>
@@ -574,7 +574,7 @@ export default function RentFlowOverview() {
                   {/* Right: Amount + Status Badge + 1-Click Actions */}
                   <div className="flex items-center justify-between sm:justify-end gap-5 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#E0E0E0]">
                     <div className="sm:text-right">
-                      <div className="text-base sm:text-lg font-black text-[#2a2a2a] font-tabular">
+                      <div className="text-base sm:text-lg font-black text-[#263238] font-tabular">
                         ₹{row.amount.toLocaleString('en-IN')}
                       </div>
                       <div className="text-xs font-bold mt-0.5">
@@ -603,7 +603,7 @@ export default function RentFlowOverview() {
                               totalAmount: row.amount
                             });
                           }}
-                          className="px-3.5 py-2 rounded-xl bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white text-[#2a2a2a] text-xs font-bold border border-[#B5B5B5] flex items-center gap-1.5 transition shadow-sm"
+                          className="px-3.5 py-2 rounded-xl bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] text-xs font-bold border border-[#D2DDD7] flex items-center gap-1.5 transition shadow-sm"
                         >
                           <Download className="h-3.5 w-3.5" />
                           <span>Download Receipt</span>
@@ -625,7 +625,7 @@ export default function RentFlowOverview() {
                                   addNotification('Payment Recorded', `Marked ₹${row.amount.toLocaleString('en-IN')} as collected offline for ${row.name}.`, 'RENT');
                                   alert(`Recorded offline payment of ₹${row.amount.toLocaleString('en-IN')} for ${row.name}.`);
                                 }}
-                                className="px-3.5 py-1.5 rounded-xl bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white text-[#2a2a2a] text-xs font-bold border border-[#B5B5B5] flex items-center gap-1 transition"
+                                className="px-3.5 py-1.5 rounded-xl bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] text-xs font-bold border border-[#D2DDD7] flex items-center gap-1 transition"
                                 title="Record cash or direct bank transfer"
                               >
                                 <span>Record Offline</span>
@@ -634,7 +634,7 @@ export default function RentFlowOverview() {
                           ) : (
                             <button
                               onClick={() => handlePayNowSim(row)}
-                              className="px-4 py-2 rounded-xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white text-xs font-bold shadow-md shadow-[#2a2a2a]/20 transition"
+                              className="px-4 py-2 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold shadow-md shadow-[#263238]/20 transition"
                             >
                               Pay Rent Now
                             </button>
@@ -656,8 +656,8 @@ export default function RentFlowOverview() {
         <div className="organic-card p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-extrabold text-[#2a2a2a] flex items-center gap-2">
-                <Database className="h-4 w-4 text-[#2a2a2a]" />
+              <h3 className="text-sm font-extrabold text-[#263238] flex items-center gap-2">
+                <Database className="h-4 w-4 text-[#263238]" />
                 <span>{activeRole === 'tenant' ? 'My Statement & Transaction Ledger' : 'Statutory Double-Entry Ledger'}</span>
               </h3>
               <p className="text-[11px] text-[#666666]">
@@ -673,7 +673,7 @@ export default function RentFlowOverview() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#f0f0f0] text-[#666666] border-b border-[#B5B5B5] text-[11px] font-bold uppercase tracking-wider">
+              <thead className="bg-[#E8F0EC] text-[#666666] border-b border-[#D2DDD7] text-[11px] font-bold uppercase tracking-wider">
                 <tr>
                   <th className="py-2.5 px-3">Entry ID</th>
                   <th className="py-2.5 px-3">Timestamp</th>
@@ -684,11 +684,11 @@ export default function RentFlowOverview() {
                   <th className="py-2.5 px-3 text-center">Settlement</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E0E0E0] text-[#2a2a2a]">
+              <tbody className="divide-y divide-[#E0E0E0] text-[#263238]">
                 {displayedLedger.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="py-12 text-center">
-                      <Database className="h-8 w-8 text-[#B5B5B5] mx-auto mb-2 opacity-50" />
+                      <Database className="h-8 w-8 text-[#D2DDD7] mx-auto mb-2 opacity-50" />
                       <p className="text-xs font-bold text-[#666666]">No ledger transactions recorded yet</p>
                       <p className="text-[11px] text-[#999999] mt-0.5">Transactions will appear automatically as rent and deposit entries are settled.</p>
                     </td>
@@ -729,53 +729,53 @@ export default function RentFlowOverview() {
       {activeTab === 'SCHEDULE' && activeRole !== 'tenant' && (
         <div className="organic-card p-6 space-y-4">
           <div>
-            <h3 className="text-sm font-extrabold text-[#2a2a2a]">Automated Rent Reminders Schedule</h3>
+            <h3 className="text-sm font-extrabold text-[#263238]">Automated Rent Reminders Schedule</h3>
             <p className="text-[11px] text-[#666666]">
               Configurable schedule across WhatsApp, SMS, Email, and Push Notifications
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            <div className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-3">
-              <span className="font-extrabold text-[#2a2a2a] flex items-center gap-2">
-                <Clock className="h-4 w-4 text-[#2a2a2a]" />
+            <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-3">
+              <span className="font-extrabold text-[#263238] flex items-center gap-2">
+                <Clock className="h-4 w-4 text-[#263238]" />
                 <span>Pre-Due Date Reminders</span>
               </span>
-              <div className="space-y-2 text-[#2a2a2a]">
-                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#B5B5B5]">
+              <div className="space-y-2 text-[#263238]">
+                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#D2DDD7]">
                   <span>7 days before due date</span>
                   <span className="text-emerald-700 font-bold">Active (WhatsApp + Email)</span>
                 </div>
-                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#B5B5B5]">
+                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#D2DDD7]">
                   <span>3 days before due date</span>
                   <span className="text-emerald-700 font-bold">Active (WhatsApp + SMS)</span>
                 </div>
-                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#B5B5B5]">
+                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#D2DDD7]">
                   <span>1 day before due date</span>
                   <span className="text-emerald-700 font-bold">Active (Push + WhatsApp)</span>
                 </div>
-                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#B5B5B5] font-bold">
+                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#D2DDD7] font-bold">
                   <span>Due Date Morning (09:00 AM)</span>
-                  <span className="text-[#2a2a2a]">Active (Instant UPI QR)</span>
+                  <span className="text-[#263238]">Active (Instant UPI QR)</span>
                 </div>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-3">
-              <span className="font-extrabold text-[#2a2a2a] flex items-center gap-2">
+            <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-3">
+              <span className="font-extrabold text-[#263238] flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-rose-600" />
                 <span>Overdue Escalation Workflow</span>
               </span>
-              <div className="space-y-2 text-[#2a2a2a]">
-                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#B5B5B5]">
+              <div className="space-y-2 text-[#263238]">
+                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#D2DDD7]">
                   <span>1 day overdue</span>
                   <span className="text-amber-700 font-bold">Polite WhatsApp Alert</span>
                 </div>
-                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#B5B5B5]">
+                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#D2DDD7]">
                   <span>3 days overdue</span>
                   <span className="text-amber-700 font-bold">SMS + Manager Notification</span>
                 </div>
-                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#B5B5B5]">
+                <div className="flex justify-between p-2.5 rounded-xl bg-white border border-[#D2DDD7]">
                   <span>7 days overdue</span>
                   <span className="text-rose-700 font-bold">Formal Overdue Escalation Notice</span>
                 </div>
@@ -791,7 +791,7 @@ export default function RentFlowOverview() {
           {/* Header Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="text-base font-extrabold text-[#2a2a2a] flex items-center gap-2">
+              <h3 className="text-base font-extrabold text-[#263238] flex items-center gap-2">
                 <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
                 <span>{activeRole === 'tenant' ? (isDemoTenant ? 'My Apartment 302 Electricity Bill' : 'My Electricity & Power Bills') : 'Electricity & Sub-Meter Utility Billing'}</span>
               </h3>
@@ -809,7 +809,7 @@ export default function RentFlowOverview() {
                     setPreselectedUnitForUpload(null);
                     setIsUploadBillModalOpen(true);
                   }}
-                  className="px-4 py-2.5 rounded-2xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white text-xs font-bold shadow-md shadow-[#2a2a2a]/20 transition flex items-center gap-1.5"
+                  className="px-4 py-2.5 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold shadow-md shadow-[#263238]/20 transition flex items-center gap-1.5"
                 >
                   <UploadCloud className="h-4 w-4" />
                   <span>Upload Bill to Tenant</span>
@@ -817,7 +817,7 @@ export default function RentFlowOverview() {
 
                 <button
                   onClick={() => setIsGenBillModalOpen(true)}
-                  className="px-3.5 py-2.5 rounded-2xl bg-white hover:bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                  className="px-3.5 py-2.5 rounded-2xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Generate Bill</span>
@@ -836,7 +836,7 @@ export default function RentFlowOverview() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="organic-card p-5">
                   <span className="text-xs font-semibold text-[#666666]">Units Consumed (This Month)</span>
-                  <div className="text-2xl font-black text-[#2a2a2a] font-tabular mt-1">
+                  <div className="text-2xl font-black text-[#263238] font-tabular mt-1">
                     {totalUnitsConsumed} kWh
                   </div>
                   <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full mt-2 inline-block">
@@ -846,10 +846,10 @@ export default function RentFlowOverview() {
 
                 <div className="organic-card p-5">
                   <span className="text-xs font-semibold text-[#666666]">Tariff Rate / Unit</span>
-                  <div className="text-2xl font-black text-[#2a2a2a] font-tabular mt-1">
+                  <div className="text-2xl font-black text-[#263238] font-tabular mt-1">
                     ₹8.50 <span className="text-xs font-normal text-[#666666]">/ kWh</span>
                   </div>
-                  <span className="text-[11px] font-bold text-[#2a2a2a] bg-[#f0f0f0] px-2 py-0.5 rounded-full mt-2 inline-block">
+                  <span className="text-[11px] font-bold text-[#263238] bg-[#E8F0EC] px-2 py-0.5 rounded-full mt-2 inline-block">
                     Govt Regulated Discom Rate
                   </span>
                 </div>
@@ -874,7 +874,7 @@ export default function RentFlowOverview() {
           {/* Electricity Bills List */}
           <div className="organic-card overflow-hidden">
             <div className="p-4 border-b border-[#E0E0E0] bg-[#ffffff] flex items-center justify-between">
-              <span className="font-extrabold text-xs text-[#2a2a2a]">
+              <span className="font-extrabold text-xs text-[#263238]">
                 {activeRole === 'tenant' ? (isDemoTenant ? 'Apartment 302 Billing History' : 'My Unit Billing History') : 'All Unit Power Meters'}
               </span>
               <span className="text-[11px] text-[#666666]">BESCOM Discom Provider</span>
@@ -883,7 +883,7 @@ export default function RentFlowOverview() {
             <div className="divide-y divide-[#E0E0E0]">
               {userElectricityBills.length === 0 ? (
                 <div className="p-12 text-center">
-                  <Zap className="h-8 w-8 text-[#B5B5B5] mx-auto mb-2 opacity-50" />
+                  <Zap className="h-8 w-8 text-[#D2DDD7] mx-auto mb-2 opacity-50" />
                   <p className="text-xs font-bold text-[#666666]">No electricity or utility bills found</p>
                   <p className="text-[11px] text-[#999999] mt-0.5">
                     {activeRole === 'tenant'
@@ -901,7 +901,7 @@ export default function RentFlowOverview() {
 
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-[#2a2a2a] text-sm sm:text-base">
+                        <span className="font-extrabold text-[#263238] text-sm sm:text-base">
                           Unit {bill.unitNumber} • {bill.tenantName}
                         </span>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
@@ -918,7 +918,7 @@ export default function RentFlowOverview() {
                       </div>
 
                       <div className="text-xs text-[#666666] mt-0.5 flex flex-wrap items-center gap-2">
-                        <span>Meter: <b className="font-mono text-[#2a2a2a]">{bill.meterNumber}</b></span>
+                        <span>Meter: <b className="font-mono text-[#263238]">{bill.meterNumber}</b></span>
                         <span>•</span>
                         <span>Reading: {bill.previousReading} → {bill.currentReading} ({bill.unitsConsumed} kWh)</span>
                         <span>•</span>
@@ -934,7 +934,7 @@ export default function RentFlowOverview() {
 
                   <div className="flex items-center justify-between md:justify-end gap-4 pt-2 md:pt-0 border-t md:border-t-0 border-[#E0E0E0]">
                     <div className="text-left md:text-right">
-                      <div className="text-base sm:text-lg font-black text-[#2a2a2a] font-tabular">
+                      <div className="text-base sm:text-lg font-black text-[#263238] font-tabular">
                         ₹{bill.totalAmount.toLocaleString('en-IN')}
                       </div>
                       <div className="text-[10px] text-[#666666]">
@@ -948,10 +948,10 @@ export default function RentFlowOverview() {
                           setSelectedBillForDocView(bill);
                           setIsViewDocModalOpen(true);
                         }}
-                        className="px-3 py-2 rounded-xl bg-white hover:bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
+                        className="px-3 py-2 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
                         title="View and download official scanned Discom bill document"
                       >
-                        <FileText className="h-3.5 w-3.5 text-[#2a2a2a]" />
+                        <FileText className="h-3.5 w-3.5 text-[#263238]" />
                         <span>View Bill</span>
                       </button>
 
@@ -968,7 +968,7 @@ export default function RentFlowOverview() {
                         activeRole === 'tenant' ? (
                           <button
                             onClick={() => handlePayElectricityBill(bill)}
-                            className="px-4 py-2 rounded-xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white text-xs font-bold shadow-md shadow-[#2a2a2a]/20 transition"
+                            className="px-4 py-2 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold shadow-md shadow-[#263238]/20 transition"
                           >
                             Pay (UPI)
                           </button>
@@ -978,7 +978,7 @@ export default function RentFlowOverview() {
                               updateElectricityBill(bill.id, { status: 'Paid', paidDate: 'Today' });
                               addNotification('Electricity Bill Cleared', `Unit ${bill.unitNumber} marked as settled offline.`, 'RENT');
                             }}
-                            className="px-3.5 py-2 rounded-xl bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white text-[#2a2a2a] text-xs font-bold border border-[#B5B5B5] transition"
+                            className="px-3.5 py-2 rounded-xl bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] text-xs font-bold border border-[#D2DDD7] transition"
                           >
                             Mark Paid
                           </button>
@@ -1000,13 +1000,13 @@ export default function RentFlowOverview() {
       {/* Generate Electricity Bill Modal */}
       {isGenBillModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white border border-[#B5B5B5] rounded-3xl p-6 space-y-4 shadow-2xl">
+          <div className="w-full max-w-md bg-white border border-[#D2DDD7] rounded-3xl p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between pb-2 border-b border-[#E0E0E0]">
               <div className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
-                <h3 className="font-extrabold text-base text-[#2a2a2a]">Generate Unit Electricity Bill</h3>
+                <h3 className="font-extrabold text-base text-[#263238]">Generate Unit Electricity Bill</h3>
               </div>
-              <button onClick={() => setIsGenBillModalOpen(false)} className="text-[#666666] hover:text-[#2a2a2a]">
+              <button onClick={() => setIsGenBillModalOpen(false)} className="text-[#666666] hover:text-[#263238]">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -1014,95 +1014,95 @@ export default function RentFlowOverview() {
             <form onSubmit={handleGenerateBillSubmit} className="space-y-3.5 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#2a2a2a] font-semibold mb-1">Unit Number</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Unit Number</label>
                   <input
                     type="text"
                     required
                     value={newBillForm.unitNumber}
                     onChange={(e) => setNewBillForm({ ...newBillForm, unitNumber: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] focus:outline-none focus:border-[#2a2a2a]"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[#2a2a2a] font-semibold mb-1">Tenant Name</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Tenant Name</label>
                   <input
                     type="text"
                     required
                     value={newBillForm.tenantName}
                     onChange={(e) => setNewBillForm({ ...newBillForm, tenantName: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] focus:outline-none focus:border-[#2a2a2a]"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[#2a2a2a] font-semibold mb-1">Meter ID & Discom</label>
+                <label className="block text-[#263238] font-semibold mb-1">Meter ID & Discom</label>
                 <input
                   type="text"
                   required
                   value={newBillForm.meterNumber}
                   onChange={(e) => setNewBillForm({ ...newBillForm, meterNumber: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] focus:outline-none focus:border-[#2a2a2a]"
+                  className="w-full px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#2a2a2a] font-semibold mb-1">Previous Reading (kWh)</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Previous Reading (kWh)</label>
                   <input
                     type="number"
                     required
                     value={newBillForm.previousReading}
                     onChange={(e) => setNewBillForm({ ...newBillForm, previousReading: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] focus:outline-none focus:border-[#2a2a2a]"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[#2a2a2a] font-semibold mb-1">Current Reading (kWh)</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Current Reading (kWh)</label>
                   <input
                     type="number"
                     required
                     value={newBillForm.currentReading}
                     onChange={(e) => setNewBillForm({ ...newBillForm, currentReading: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] focus:outline-none focus:border-[#2a2a2a]"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#2a2a2a] font-semibold mb-1">Tariff Rate (₹/kWh)</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Tariff Rate (₹/kWh)</label>
                   <input
                     type="number"
                     step="0.1"
                     required
                     value={newBillForm.ratePerUnit}
                     onChange={(e) => setNewBillForm({ ...newBillForm, ratePerUnit: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] focus:outline-none focus:border-[#2a2a2a]"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[#2a2a2a] font-semibold mb-1">Fixed Meter Charge (₹)</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Fixed Meter Charge (₹)</label>
                   <input
                     type="number"
                     required
                     value={newBillForm.fixedCharges}
                     onChange={(e) => setNewBillForm({ ...newBillForm, fixedCharges: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] focus:outline-none focus:border-[#2a2a2a]"
+                    className="w-full px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] focus:outline-none focus:border-[#263238]"
                   />
                 </div>
               </div>
 
-              <div className="p-3 rounded-2xl bg-[#f0f0f0] border border-[#2a2a2a]/20 flex justify-between items-center text-xs">
+              <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#263238]/20 flex justify-between items-center text-xs">
                 <span className="text-[#666666]">Estimated Bill Total:</span>
-                <span className="text-base font-black text-[#2a2a2a] font-tabular">
+                <span className="text-base font-black text-[#263238] font-tabular">
                   ₹{Math.max(0, Math.round((newBillForm.currentReading - newBillForm.previousReading) * newBillForm.ratePerUnit + newBillForm.fixedCharges)).toLocaleString('en-IN')}
                 </span>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-2xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-bold text-xs shadow-md shadow-[#2a2a2a]/20 transition"
+                className="w-full py-3 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white font-bold text-xs shadow-md shadow-[#263238]/20 transition"
               >
                 Create Bill & Ready WhatsApp Share
               </button>

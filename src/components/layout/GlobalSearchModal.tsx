@@ -75,26 +75,26 @@ export default function GlobalSearchModal() {
       onClick={(e) => { if (e.target === e.currentTarget) setIsSearchOpen(false); }}
       className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-start justify-center p-3 sm:p-4 pt-16 sm:pt-24 font-sans overflow-y-auto"
     >
-      <div className="w-full max-w-2xl bg-white border border-[#B5B5B5] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] my-auto">
+      <div className="w-full max-w-2xl bg-white border border-[#D2DDD7] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh] my-auto">
         {/* Search Input Bar */}
         <div className="flex items-center px-5 py-4 border-b border-[#E0E0E0] bg-[#ffffff] gap-3">
-          <Search className="h-5 w-5 text-[#2a2a2a]" />
+          <Search className="h-5 w-5 text-[#263238]" />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={activeRole === 'tenant' ? 'Search your invoices, receipts, and maintenance...' : 'Search properties, tenants, units, tickets, payments, leads...'}
-            className="flex-1 bg-transparent text-sm text-[#2a2a2a] placeholder-[#888888] focus:outline-none font-medium"
+            className="flex-1 bg-transparent text-sm text-[#263238] placeholder-[#888888] focus:outline-none font-medium"
           />
           {query && (
-            <button onClick={() => setQuery('')} className="text-[#666666] hover:text-[#2a2a2a]">
+            <button onClick={() => setQuery('')} className="text-[#666666] hover:text-[#263238]">
               <X className="h-4 w-4" />
             </button>
           )}
           <button
             onClick={() => setIsSearchOpen(false)}
-            className="px-2.5 py-1 text-[11px] font-bold rounded-xl bg-[#f0f0f0] text-[#666666] hover:text-[#2a2a2a] border border-[#B5B5B5]"
+            className="px-2.5 py-1 text-[11px] font-bold rounded-xl bg-[#E8F0EC] text-[#666666] hover:text-[#263238] border border-[#D2DDD7]"
           >
             ESC
           </button>
@@ -108,15 +108,15 @@ export default function GlobalSearchModal() {
               <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
                 {activeRole === 'tenant' ? (
                   <>
-                    <span className="text-[11px] px-2.5 py-1 rounded-xl bg-[#f0f0f0] text-[#2a2a2a] border border-[#B5B5B5]">Try &quot;Rent&quot;</span>
-                    <span className="text-[11px] px-2.5 py-1 rounded-xl bg-[#f0f0f0] text-[#2a2a2a] border border-[#B5B5B5]">Try &quot;AC&quot;</span>
-                    <span className="text-[11px] px-2.5 py-1 rounded-xl bg-[#f0f0f0] text-[#2a2a2a] border border-[#B5B5B5]">Try &quot;Receipt&quot;</span>
+                    <span className="text-[11px] px-2.5 py-1 rounded-xl bg-[#E8F0EC] text-[#263238] border border-[#D2DDD7]">Try &quot;Rent&quot;</span>
+                    <span className="text-[11px] px-2.5 py-1 rounded-xl bg-[#E8F0EC] text-[#263238] border border-[#D2DDD7]">Try &quot;AC&quot;</span>
+                    <span className="text-[11px] px-2.5 py-1 rounded-xl bg-[#E8F0EC] text-[#263238] border border-[#D2DDD7]">Try &quot;Receipt&quot;</span>
                   </>
                 ) : (
                   <>
-                    <span className="text-[11px] px-2.5 py-1 rounded-xl bg-[#f0f0f0] text-[#2a2a2a] border border-[#B5B5B5]">Try &quot;Beach Road&quot;</span>
-                    <span className="text-[11px] px-2.5 py-1 rounded-xl bg-[#f0f0f0] text-[#2a2a2a] border border-[#B5B5B5]">Try &quot;Shyam&quot;</span>
-                    <span className="text-[11px] px-2.5 py-1 rounded-xl bg-[#f0f0f0] text-[#2a2a2a] border border-[#B5B5B5]">Try &quot;Overdue&quot;</span>
+                    <span className="text-[11px] px-2.5 py-1 rounded-xl bg-[#E8F0EC] text-[#263238] border border-[#D2DDD7]">Try &quot;Beach Road&quot;</span>
+                    <span className="text-[11px] px-2.5 py-1 rounded-xl bg-[#E8F0EC] text-[#263238] border border-[#D2DDD7]">Try &quot;Shyam&quot;</span>
+                    <span className="text-[11px] px-2.5 py-1 rounded-xl bg-[#E8F0EC] text-[#263238] border border-[#D2DDD7]">Try &quot;Overdue&quot;</span>
                   </>
                 )}
               </div>
@@ -131,7 +131,7 @@ export default function GlobalSearchModal() {
               {matchedProperties.length > 0 && (
                 <div>
                   <div className="text-[11px] font-bold uppercase tracking-wider text-[#666666] mb-2 flex items-center gap-1.5">
-                    <Building className="h-3.5 w-3.5 text-[#2a2a2a]" />
+                    <Building className="h-3.5 w-3.5 text-[#263238]" />
                     <span>Properties ({matchedProperties.length})</span>
                   </div>
                   <div className="space-y-1.5">
@@ -139,10 +139,10 @@ export default function GlobalSearchModal() {
                       <div
                         key={p.id}
                         onClick={() => { setActiveView('properties'); setIsSearchOpen(false); }}
-                        className="p-3 rounded-2xl bg-[#f0f0f0] hover:bg-white border border-[#B5B5B5] hover:border-[#2a2a2a]/40 transition cursor-pointer flex items-center justify-between text-xs"
+                        className="p-3 rounded-2xl bg-[#E8F0EC] hover:bg-white border border-[#D2DDD7] hover:border-[#263238]/40 transition cursor-pointer flex items-center justify-between text-xs"
                       >
                         <div>
-                          <div className="font-bold text-[#2a2a2a]">{p.name}</div>
+                          <div className="font-bold text-[#263238]">{p.name}</div>
                           <div className="text-[11px] text-[#666666]">{p.portfolio} • {p.city} • {p.totalUnits} Units</div>
                         </div>
                         <ArrowRight className="h-4 w-4 text-[#888888]" />
@@ -164,10 +164,10 @@ export default function GlobalSearchModal() {
                       <div
                         key={t.id}
                         onClick={() => { setActiveView('tenants'); setIsSearchOpen(false); }}
-                        className="p-3 rounded-2xl bg-[#f0f0f0] hover:bg-white border border-[#B5B5B5] hover:border-blue-500/40 transition cursor-pointer flex items-center justify-between text-xs"
+                        className="p-3 rounded-2xl bg-[#E8F0EC] hover:bg-white border border-[#D2DDD7] hover:border-blue-500/40 transition cursor-pointer flex items-center justify-between text-xs"
                       >
                         <div>
-                          <div className="font-bold text-[#2a2a2a]">{t.name} (Unit {t.unitNumber})</div>
+                          <div className="font-bold text-[#263238]">{t.name} (Unit {t.unitNumber})</div>
                           <div className="text-[11px] text-[#666666]">{t.propertyName} • {t.phone} • ₹{t.monthlyRent.toLocaleString('en-IN')}/mo</div>
                         </div>
                         <ArrowRight className="h-4 w-4 text-[#888888]" />
@@ -189,10 +189,10 @@ export default function GlobalSearchModal() {
                       <div
                         key={i.id}
                         onClick={() => { setActiveView('rentflow'); setIsSearchOpen(false); }}
-                        className="p-3 rounded-2xl bg-[#f0f0f0] hover:bg-white border border-[#B5B5B5] hover:border-amber-500/40 transition cursor-pointer flex items-center justify-between text-xs"
+                        className="p-3 rounded-2xl bg-[#E8F0EC] hover:bg-white border border-[#D2DDD7] hover:border-amber-500/40 transition cursor-pointer flex items-center justify-between text-xs"
                       >
                         <div>
-                          <div className="font-bold text-[#2a2a2a]">{i.invoiceNumber} — {i.tenantName}</div>
+                          <div className="font-bold text-[#263238]">{i.invoiceNumber} — {i.tenantName}</div>
                           <div className="text-[11px] text-[#666666]">₹{i.totalAmount.toLocaleString('en-IN')} • Status: {i.status}</div>
                         </div>
                         <ArrowRight className="h-4 w-4 text-[#888888]" />
@@ -214,10 +214,10 @@ export default function GlobalSearchModal() {
                       <div
                         key={tk.id}
                         onClick={() => { setActiveView('maintenance'); setIsSearchOpen(false); }}
-                        className="p-3 rounded-2xl bg-[#f0f0f0] hover:bg-white border border-[#B5B5B5] hover:border-purple-500/40 transition cursor-pointer flex items-center justify-between text-xs"
+                        className="p-3 rounded-2xl bg-[#E8F0EC] hover:bg-white border border-[#D2DDD7] hover:border-purple-500/40 transition cursor-pointer flex items-center justify-between text-xs"
                       >
                         <div>
-                          <div className="font-bold text-[#2a2a2a]">{tk.ticketNumber}: {tk.title}</div>
+                          <div className="font-bold text-[#263238]">{tk.ticketNumber}: {tk.title}</div>
                           <div className="text-[11px] text-[#666666]">Unit {tk.unitNumber} • Priority: {tk.priority} • Status: {tk.status}</div>
                         </div>
                         <ArrowRight className="h-4 w-4 text-[#888888]" />

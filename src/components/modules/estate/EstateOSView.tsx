@@ -24,14 +24,14 @@ export default function EstateOSView() {
   return (
     <div className="space-y-6 pb-12 font-sans">
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#B5B5B5]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D2DDD7]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#2a2a2a] flex items-center gap-2">
-              <Trees className="h-6 w-6 text-[#2a2a2a]" />
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#263238] flex items-center gap-2">
+              <Trees className="h-6 w-6 text-[#263238]" />
               <span>EstateOS — Villas & Campuses</span>
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#f0f0f0] text-[#2a2a2a] font-bold border border-[#2a2a2a]/20">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#263238] font-bold border border-[#263238]/20">
               Campus Operations
             </span>
           </div>
@@ -41,11 +41,11 @@ export default function EstateOSView() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center p-1 bg-white rounded-2xl border border-[#B5B5B5] text-xs self-start sm:self-auto">
+        <div className="flex items-center p-1 bg-white rounded-2xl border border-[#D2DDD7] text-xs self-start sm:self-auto">
           <button
             onClick={() => setActiveTab('ASSETS')}
             className={`px-3 py-1.5 rounded-xl font-bold transition ${
-              activeTab === 'ASSETS' ? 'bg-[#2a2a2a] text-white' : 'text-[#666666] hover:text-[#2a2a2a]'
+              activeTab === 'ASSETS' ? 'bg-[#263238] text-white' : 'text-[#666666] hover:text-[#263238]'
             }`}
           >
             Physical Assets ({estateAssets.length})
@@ -53,7 +53,7 @@ export default function EstateOSView() {
           <button
             onClick={() => setActiveTab('STAFF')}
             className={`px-3 py-1.5 rounded-xl font-bold transition ${
-              activeTab === 'STAFF' ? 'bg-[#2a2a2a] text-white' : 'text-[#666666] hover:text-[#2a2a2a]'
+              activeTab === 'STAFF' ? 'bg-[#263238] text-white' : 'text-[#666666] hover:text-[#263238]'
             }`}
           >
             Estate Staff ({staff.length})
@@ -61,7 +61,7 @@ export default function EstateOSView() {
           <button
             onClick={() => setActiveTab('UTILITIES')}
             className={`px-3 py-1.5 rounded-xl font-bold transition ${
-              activeTab === 'UTILITIES' ? 'bg-[#2a2a2a] text-white' : 'text-[#666666] hover:text-[#2a2a2a]'
+              activeTab === 'UTILITIES' ? 'bg-[#263238] text-white' : 'text-[#666666] hover:text-[#263238]'
             }`}
           >
             Utility Meters
@@ -78,8 +78,8 @@ export default function EstateOSView() {
         </div>
         <div className="organic-card p-5">
           <span className="text-xs font-semibold text-[#666666]">Dedicated Staff</span>
-          <div className="text-2xl font-black text-[#2a2a2a] mt-1 font-tabular">4 Members</div>
-          <span className="text-[11px] text-[#2a2a2a] font-bold mt-1 inline-block">All Present Today</span>
+          <div className="text-2xl font-black text-[#263238] mt-1 font-tabular">4 Members</div>
+          <span className="text-[11px] text-[#263238] font-bold mt-1 inline-block">All Present Today</span>
         </div>
         <div className="organic-card p-5">
           <span className="text-xs font-semibold text-[#666666]">Solar Net Export</span>
@@ -88,7 +88,7 @@ export default function EstateOSView() {
         </div>
         <div className="organic-card p-5">
           <span className="text-xs font-semibold text-[#666666]">Monthly Operating Budget</span>
-          <div className="text-2xl font-black text-[#2a2a2a] mt-1 font-tabular">₹86,000</div>
+          <div className="text-2xl font-black text-[#263238] mt-1 font-tabular">₹86,000</div>
           <span className="text-[11px] text-[#666666] mt-1 inline-block">Staff + AMC + Fuel</span>
         </div>
       </div>
@@ -97,7 +97,7 @@ export default function EstateOSView() {
       {activeTab === 'ASSETS' && (
         <div className="organic-card p-6 space-y-4">
           <div>
-            <h3 className="text-sm font-extrabold text-[#2a2a2a]">Campus & Villa Asset Registry</h3>
+            <h3 className="text-sm font-extrabold text-[#263238]">Campus & Villa Asset Registry</h3>
             <p className="text-[11px] text-[#666666]">AMC contracts, servicing schedules, and asset condition</p>
           </div>
 
@@ -105,12 +105,12 @@ export default function EstateOSView() {
             {estateAssets.map(asset => (
               <div
                 key={asset.id}
-                className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-3 text-xs"
+                className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-3 text-xs"
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="font-mono text-[10px] text-[#2a2a2a] font-bold">{asset.tag}</span>
-                    <h4 className="font-extrabold text-[#2a2a2a] text-sm mt-0.5">{asset.name}</h4>
+                    <span className="font-mono text-[10px] text-[#263238] font-bold">{asset.tag}</span>
+                    <h4 className="font-extrabold text-[#263238] text-sm mt-0.5">{asset.name}</h4>
                   </div>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                     asset.condition === 'Excellent' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
@@ -122,25 +122,25 @@ export default function EstateOSView() {
                 <div className="space-y-1.5 text-[#666666] text-[11px]">
                   <div className="flex justify-between">
                     <span>Category:</span>
-                    <span className="text-[#2a2a2a] font-semibold">{asset.category}</span>
+                    <span className="text-[#263238] font-semibold">{asset.category}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>AMC Partner:</span>
-                    <span className="text-[#2a2a2a] font-semibold">{asset.amcProvider}</span>
+                    <span className="text-[#263238] font-semibold">{asset.amcProvider}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Last Service:</span>
-                    <span className="text-[#2a2a2a]">{asset.lastService}</span>
+                    <span className="text-[#263238]">{asset.lastService}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Next Due:</span>
-                    <span className="text-[#2a2a2a] font-bold">{asset.nextService}</span>
+                    <span className="text-[#263238] font-bold">{asset.nextService}</span>
                   </div>
                 </div>
 
                 <div className="pt-2 border-t border-[#E0E0E0] flex justify-between items-center text-[10px] text-[#666666]">
                   <span>Warranty: {asset.warrantyUntil}</span>
-                  <span className="text-[#2a2a2a] font-bold cursor-pointer hover:underline">Log Service →</span>
+                  <span className="text-[#263238] font-bold cursor-pointer hover:underline">Log Service →</span>
                 </div>
               </div>
             ))}
@@ -152,13 +152,13 @@ export default function EstateOSView() {
       {activeTab === 'STAFF' && (
         <div className="organic-card p-6 space-y-4">
           <div>
-            <h3 className="text-sm font-extrabold text-[#2a2a2a]">Estate Staff Roster & Shifts</h3>
+            <h3 className="text-sm font-extrabold text-[#263238]">Estate Staff Roster & Shifts</h3>
             <p className="text-[11px] text-[#666666]">Security, Caretaker, Gardener, and Housekeeping</p>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#f0f0f0] text-[#666666] border-b border-[#B5B5B5] text-[11px] font-bold uppercase tracking-wider">
+              <thead className="bg-[#E8F0EC] text-[#666666] border-b border-[#D2DDD7] text-[11px] font-bold uppercase tracking-wider">
                 <tr>
                   <th className="py-2.5 px-4">Staff Member</th>
                   <th className="py-2.5 px-4">Role</th>
@@ -168,13 +168,13 @@ export default function EstateOSView() {
                   <th className="py-2.5 px-4">Today&apos;s Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E0E0E0] text-[#2a2a2a]">
+              <tbody className="divide-y divide-[#E0E0E0] text-[#263238]">
                 {staff.map(s => (
                   <tr key={s.id} className="hover:bg-[#ffffff]">
                     <td className="py-3 px-4 font-bold">{s.name}</td>
                     <td className="py-3 px-4 text-[#666666]">{s.role}</td>
                     <td className="py-3 px-4">{s.estateName}</td>
-                    <td className="py-3 px-4 text-[#2a2a2a] font-bold">{s.shift}</td>
+                    <td className="py-3 px-4 text-[#263238] font-bold">{s.shift}</td>
                     <td className="py-3 px-4 font-tabular font-medium">₹{s.monthlySalary.toLocaleString('en-IN')}/mo</td>
                     <td className="py-3 px-4">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
@@ -194,7 +194,7 @@ export default function EstateOSView() {
       {activeTab === 'UTILITIES' && (
         <div className="organic-card p-6 space-y-4">
           <div>
-            <h3 className="text-sm font-extrabold text-[#2a2a2a]">Utility Meter Logs & Solar Generation</h3>
+            <h3 className="text-sm font-extrabold text-[#263238]">Utility Meter Logs & Solar Generation</h3>
             <p className="text-[11px] text-[#666666]">Real-time recording of KSEB, Solar export, and Generator fuel levels</p>
           </div>
 
@@ -202,26 +202,26 @@ export default function EstateOSView() {
             {utilities.map(u => (
               <div
                 key={u.id}
-                className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-3 text-xs"
+                className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-3 text-xs"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {u.utilityType === 'Solar Grid' && <Sun className="h-5 w-5 text-amber-600" />}
-                    {u.utilityType === 'Electricity' && <Zap className="h-5 w-5 text-[#2a2a2a]" />}
+                    {u.utilityType === 'Electricity' && <Zap className="h-5 w-5 text-[#263238]" />}
                     {u.utilityType === 'Generator Fuel' && <Fuel className="h-5 w-5 text-rose-600" />}
-                    <span className="font-extrabold text-[#2a2a2a]">{u.utilityType}</span>
+                    <span className="font-extrabold text-[#263238]">{u.utilityType}</span>
                   </div>
                   <span className="font-mono text-[10px] text-[#666666]">{u.meterNumber}</span>
                 </div>
 
-                <div className="p-3 rounded-xl bg-white border border-[#B5B5B5] space-y-1.5">
+                <div className="p-3 rounded-xl bg-white border border-[#D2DDD7] space-y-1.5">
                   <div className="flex justify-between text-[#666666]">
                     <span>Current Reading:</span>
-                    <span className="font-bold text-[#2a2a2a] font-tabular">{u.currentReading.toLocaleString()} {u.consumptionUnit}</span>
+                    <span className="font-bold text-[#263238] font-tabular">{u.currentReading.toLocaleString()} {u.consumptionUnit}</span>
                   </div>
                   <div className="flex justify-between text-[#666666]">
                     <span>Net Bill / Credit:</span>
-                    <span className={`font-bold font-tabular ${u.billAmount < 0 ? 'text-emerald-700' : 'text-[#2a2a2a]'}`}>
+                    <span className={`font-bold font-tabular ${u.billAmount < 0 ? 'text-emerald-700' : 'text-[#263238]'}`}>
                       {u.billAmount < 0 ? `- ₹${Math.abs(u.billAmount)} (Credit)` : `₹${u.billAmount.toLocaleString('en-IN')}`}
                     </span>
                   </div>
@@ -229,7 +229,7 @@ export default function EstateOSView() {
 
                 <div className="text-[10px] text-[#666666] flex justify-between items-center">
                   <span>Logged: {u.readingDate}</span>
-                  <span className="text-[#2a2a2a] font-bold">{u.paymentStatus}</span>
+                  <span className="text-[#263238] font-bold">{u.paymentStatus}</span>
                 </div>
               </div>
             ))}

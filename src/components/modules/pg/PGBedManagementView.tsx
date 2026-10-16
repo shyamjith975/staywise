@@ -127,7 +127,7 @@ export default function PGBedManagementView() {
     <div className="space-y-6 font-sans">
       
       {/* Top Banner & Overview */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-[#B5B5B5] shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-[#D2DDD7] shadow-sm">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
@@ -135,7 +135,7 @@ export default function PGBedManagementView() {
             </span>
             <span className="text-xs text-slate-500 font-medium">PGs • Private Rooms • Commercial Buildings • Residential</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-[#2a2a2a]">
+          <h1 className="text-xl sm:text-2xl font-black text-[#263238]">
             Bed, Room &amp; Building Universe
           </h1>
           <p className="text-xs text-[#666666]">
@@ -144,13 +144,13 @@ export default function PGBedManagementView() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] self-start md:self-auto overflow-x-auto max-w-full">
+        <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] self-start md:self-auto overflow-x-auto max-w-full">
           <button
             onClick={() => setActiveTab('LISTINGS')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'LISTINGS'
-                ? 'bg-[#2a2a2a] text-white shadow-sm'
-                : 'text-[#666666] hover:text-[#2a2a2a]'
+                ? 'bg-[#263238] text-white shadow-sm'
+                : 'text-[#666666] hover:text-[#263238]'
             }`}
           >
             <Building2 className="h-3.5 w-3.5" />
@@ -160,8 +160,8 @@ export default function PGBedManagementView() {
             onClick={() => setActiveTab('BEDS')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'BEDS'
-                ? 'bg-[#2a2a2a] text-white shadow-sm'
-                : 'text-[#666666] hover:text-[#2a2a2a]'
+                ? 'bg-[#263238] text-white shadow-sm'
+                : 'text-[#666666] hover:text-[#263238]'
             }`}
           >
             <BedDouble className="h-3.5 w-3.5" />
@@ -171,8 +171,8 @@ export default function PGBedManagementView() {
             onClick={() => setActiveTab('ELECTRICITY')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'ELECTRICITY'
-                ? 'bg-[#2a2a2a] text-white shadow-sm'
-                : 'text-[#666666] hover:text-[#2a2a2a]'
+                ? 'bg-[#263238] text-white shadow-sm'
+                : 'text-[#666666] hover:text-[#263238]'
             }`}
           >
             <Zap className="h-3.5 w-3.5" />
@@ -182,8 +182,8 @@ export default function PGBedManagementView() {
             onClick={() => setActiveTab('MEALS')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'MEALS'
-                ? 'bg-[#2a2a2a] text-white shadow-sm'
-                : 'text-[#666666] hover:text-[#2a2a2a]'
+                ? 'bg-[#263238] text-white shadow-sm'
+                : 'text-[#666666] hover:text-[#263238]'
             }`}
           >
             <Utensils className="h-3.5 w-3.5" />
@@ -193,8 +193,8 @@ export default function PGBedManagementView() {
             onClick={() => setActiveTab('HOSTEL')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'HOSTEL'
-                ? 'bg-[#2a2a2a] text-white shadow-sm'
-                : 'text-[#666666] hover:text-[#2a2a2a]'
+                ? 'bg-[#263238] text-white shadow-sm'
+                : 'text-[#666666] hover:text-[#263238]'
             }`}
           >
             <Users className="h-3.5 w-3.5" />
@@ -205,7 +205,7 @@ export default function PGBedManagementView() {
 
       {/* SECTION 5: PG Dashboard Key Metrics Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-        <div className="p-3.5 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm">
+        <div className="p-3.5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm">
           <div className="text-[10px] uppercase font-bold text-slate-400">Total Beds</div>
           <div className="text-xl font-black text-slate-900 mt-1">{totalBeds}</div>
           <div className="text-[10px] text-slate-500 mt-0.5">{activePgRooms.length} Active Rooms</div>
@@ -229,7 +229,7 @@ export default function PGBedManagementView() {
           <div className="text-[10px] text-amber-600 font-medium mt-0.5">Deposits Received</div>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm">
+        <div className="p-3.5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm">
           <div className="text-[10px] uppercase font-bold text-slate-400">Expected Rev</div>
           <div className="text-xl font-black text-slate-900 mt-1">
             {expectedRevenue >= 100000 ? `₹${(expectedRevenue / 100000).toFixed(1)}L` : `₹${expectedRevenue.toLocaleString('en-IN')}`}
@@ -239,7 +239,7 @@ export default function PGBedManagementView() {
           </div>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-white border border-[#B5B5B5] shadow-sm">
+        <div className="p-3.5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm">
           <div className="text-[10px] uppercase font-bold text-emerald-700">Collected</div>
           <div className="text-xl font-black text-emerald-900 mt-1">
             {collectedRevenue >= 100000 ? `₹${(collectedRevenue / 100000).toFixed(1)}L` : `₹${collectedRevenue.toLocaleString('en-IN')}`}
@@ -264,7 +264,7 @@ export default function PGBedManagementView() {
       {activeTab === 'LISTINGS' && (
         <div className="space-y-5">
           {/* Controls Bar */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#B5B5B5] shadow-sm">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#D2DDD7] shadow-sm">
             {/* Category Filter Pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
               {[
@@ -279,8 +279,8 @@ export default function PGBedManagementView() {
                   onClick={() => setListingCategoryFilter(cat.id as any)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap ${
                     listingCategoryFilter === cat.id
-                      ? 'bg-[#2a2a2a] text-white shadow-sm'
-                      : 'bg-[#f0f0f0] text-slate-600 hover:text-slate-900 hover:bg-[#c0c0c0]'
+                      ? 'bg-[#263238] text-white shadow-sm'
+                      : 'bg-[#E8F0EC] text-slate-600 hover:text-slate-900 hover:bg-[#E8F0EC]'
                   }`}
                 >
                   {cat.icon}
@@ -292,7 +292,7 @@ export default function PGBedManagementView() {
             {/* Quick Action: Add Property / Space */}
             <button
               onClick={() => setIsAddPropertyOpen(true)}
-              className="py-2 px-4 rounded-xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition shrink-0"
+              className="py-2 px-4 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition shrink-0"
             >
               <Plus className="h-4 w-4" />
               <span>+ Add to Universe</span>
@@ -300,17 +300,17 @@ export default function PGBedManagementView() {
           </div>
 
           {(!isDemoAccount && userOwnedProperties.length === 0) ? (
-            <div className="bg-white rounded-3xl p-10 border-2 border-dashed border-[#B5B5B5] text-center space-y-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-3xl p-10 border-2 border-dashed border-[#D2DDD7] text-center space-y-4 animate-in fade-in duration-200">
               <Building2 className="h-12 w-12 text-slate-300 mx-auto" />
               <div className="space-y-1">
-                <h3 className="text-base font-extrabold text-[#2a2a2a]">No assets or properties registered yet</h3>
+                <h3 className="text-base font-extrabold text-[#263238]">No assets or properties registered yet</h3>
                 <p className="text-xs text-[#666666] max-w-md mx-auto">
                   Your asset universe is currently clean. Add your first PG, residential apartment, or commercial floor to start managing beds and tenants.
                 </p>
               </div>
               <button
                 onClick={() => setIsAddPropertyOpen(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#e10600] text-white text-xs font-bold hover:bg-[#c50500] transition shadow-xs"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
               >
                 <Plus className="h-4 w-4" />
                 <span>Add Property to Universe</span>
@@ -319,17 +319,17 @@ export default function PGBedManagementView() {
           ) : !isDemoAccount ? (
             <div className="space-y-4 animate-in fade-in duration-200">
               <div className="flex items-center justify-between">
-                <h2 className="font-extrabold text-[#2a2a2a] text-sm">Your Registered Properties ({userOwnedProperties.length})</h2>
+                <h2 className="font-extrabold text-[#263238] text-sm">Your Registered Properties ({userOwnedProperties.length})</h2>
                 <button
                   onClick={() => setIsAddPropertyOpen(true)}
-                  className="px-3.5 py-1.5 rounded-full bg-[#e10600] text-white text-xs font-bold hover:bg-[#c50500] transition shadow-xs"
+                  className="px-3.5 py-1.5 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
                 >
                   + Add Property
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {userOwnedProperties.map(p => (
-                  <div key={p.id} className="bg-white p-5 rounded-3xl border border-[#B5B5B5] shadow-sm space-y-3">
+                  <div key={p.id} className="bg-white p-5 rounded-3xl border border-[#D2DDD7] shadow-sm space-y-3">
                     <div className="flex items-start justify-between">
                       <div>
                         <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-indigo-50 text-indigo-700">
@@ -342,7 +342,7 @@ export default function PGBedManagementView() {
                         {p.totalUnits > 0 ? `${Math.round((p.occupiedUnits / p.totalUnits) * 100)}% Occupied` : '0 Units'}
                       </span>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-[#f0f0f0] text-xs">
+                    <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-[#E8F0EC] text-xs">
                       <div>
                         <span className="text-[10px] text-slate-500 block">Units</span>
                         <span className="font-bold text-slate-900">{p.occupiedUnits} / {p.totalUnits}</span>
@@ -364,7 +364,7 @@ export default function PGBedManagementView() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <BedDouble className="h-4 w-4 text-indigo-600" />
-                  <h2 className="font-extrabold text-[#2a2a2a] text-sm">Managed PG &amp; Co-Living Buildings</h2>
+                  <h2 className="font-extrabold text-[#263238] text-sm">Managed PG &amp; Co-Living Buildings</h2>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
                     2 Properties • 168 Total Beds
                   </span>
@@ -380,7 +380,7 @@ export default function PGBedManagementView() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Staywise Urban PG */}
-                <div className="bg-white p-5 rounded-3xl border border-[#B5B5B5] shadow-sm hover:shadow-md transition space-y-4">
+                <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] shadow-sm hover:shadow-md transition space-y-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider flex items-center gap-1.5 flex-wrap">
@@ -398,7 +398,7 @@ export default function PGBedManagementView() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] text-center">
+                  <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-center">
                     <div>
                       <span className="text-[10px] text-slate-400 font-bold block">Capacity</span>
                       <span className="text-sm font-black text-slate-800">120 Beds</span>
@@ -420,14 +420,14 @@ export default function PGBedManagementView() {
                     <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200 font-semibold text-slate-600">High-Speed Wi-Fi</span>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#f0f0f0]">
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#E8F0EC]">
                     <button
                       onClick={() => {
                         setSelectedRoomFilter(null);
                         setSelectedPropertyFilter('Staywise Urban PG');
                         setActiveTab('BEDS');
                       }}
-                      className="py-2 px-2 rounded-xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white text-xs font-bold text-center transition"
+                      className="py-2 px-2 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold text-center transition"
                     >
                       Bed Grid
                     </button>
@@ -451,7 +451,7 @@ export default function PGBedManagementView() {
                 </div>
 
                 {/* Indiranagar Co-Living */}
-                <div className="bg-white p-5 rounded-3xl border border-[#B5B5B5] shadow-sm hover:shadow-md transition space-y-4">
+                <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] shadow-sm hover:shadow-md transition space-y-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="text-[10px] uppercase font-bold text-indigo-600 tracking-wider flex items-center gap-1.5 flex-wrap">
@@ -469,7 +469,7 @@ export default function PGBedManagementView() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] text-center">
+                  <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-center">
                     <div>
                       <span className="text-[10px] text-slate-400 font-bold block">Capacity</span>
                       <span className="text-sm font-black text-slate-800">48 Beds</span>
@@ -490,10 +490,10 @@ export default function PGBedManagementView() {
                     <span className="px-2 py-0.5 rounded-md bg-white border border-slate-200 font-semibold text-slate-600">CCTV &amp; Warden</span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#f0f0f0]">
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#E8F0EC]">
                     <button
                       onClick={() => setActiveTab('HOSTEL')}
-                      className="py-2 px-3 rounded-xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white text-xs font-bold text-center transition"
+                      className="py-2 px-3 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold text-center transition"
                     >
                       Warden &amp; Visitors
                     </button>
@@ -519,7 +519,7 @@ export default function PGBedManagementView() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <DoorOpen className="h-4 w-4 text-emerald-600" />
-                  <h2 className="font-extrabold text-[#2a2a2a] text-sm">Individual Rooms &amp; Studio Suites</h2>
+                  <h2 className="font-extrabold text-[#263238] text-sm">Individual Rooms &amp; Studio Suites</h2>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                     4 Active Units
                   </span>
@@ -585,7 +585,7 @@ export default function PGBedManagementView() {
                     attachedBath: true
                   },
                 ].map((room, idx) => (
-                  <div key={idx} className="bg-white p-4 rounded-2xl border border-[#B5B5B5] space-y-3 shadow-sm hover:border-[#2a2a2a] transition">
+                  <div key={idx} className="bg-white p-4 rounded-2xl border border-[#D2DDD7] space-y-3 shadow-sm hover:border-[#263238] transition">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <span className="text-xs font-black text-slate-900">{room.code}</span>
@@ -603,10 +603,10 @@ export default function PGBedManagementView() {
                     <div className="space-y-1">
                       <div className="text-xs font-bold text-slate-800">{room.type}</div>
                       <div className="text-[11px] text-slate-500">{room.property} • Floor {room.floor}</div>
-                      <div className="text-sm font-black text-[#2a2a2a] pt-1">₹{room.rent.toLocaleString('en-IN')}<span className="text-[10px] font-medium text-slate-400">/mo</span></div>
+                      <div className="text-sm font-black text-[#263238] pt-1">₹{room.rent.toLocaleString('en-IN')}<span className="text-[10px] font-medium text-slate-400">/mo</span></div>
                     </div>
 
-                    <div className="pt-2 border-t border-[#f0f0f0] space-y-1 text-[11px] text-slate-600">
+                    <div className="pt-2 border-t border-[#E8F0EC] space-y-1 text-[11px] text-slate-600">
                       <div className="flex items-center justify-between">
                         <span className="text-slate-400 font-medium">Tenant:</span>
                         <span className="font-bold text-slate-800 truncate max-w-[120px]">{room.occupant}</span>
@@ -624,7 +624,7 @@ export default function PGBedManagementView() {
                           setSelectedRoomFilter(room.roomNumber);
                           setActiveTab('BEDS');
                         }}
-                        className="py-1.5 px-2 rounded-xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white text-[11px] font-bold transition flex items-center justify-center gap-1 shadow-sm"
+                        className="py-1.5 px-2 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-[11px] font-bold transition flex items-center justify-center gap-1 shadow-sm"
                         title={`View Bed Grid for Room ${room.roomNumber} only`}
                       >
                         <BedDouble className="h-3 w-3" />
@@ -655,7 +655,7 @@ export default function PGBedManagementView() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Briefcase className="h-4 w-4 text-teal-600" />
-                  <h2 className="font-extrabold text-[#2a2a2a] text-sm">Commercial Buildings, Offices &amp; Logistics</h2>
+                  <h2 className="font-extrabold text-[#263238] text-sm">Commercial Buildings, Offices &amp; Logistics</h2>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200">
                     2 Properties • 50,500 sq.ft
                   </span>
@@ -671,7 +671,7 @@ export default function PGBedManagementView() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Commercial Tech Park */}
-                <div className="bg-white p-5 rounded-3xl border border-[#B5B5B5] shadow-sm space-y-4">
+                <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] shadow-sm space-y-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="text-[10px] uppercase font-bold text-teal-600 tracking-wider flex items-center gap-1.5 flex-wrap">
@@ -686,7 +686,7 @@ export default function PGBedManagementView() {
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-2 text-xs">
+                  <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-2 text-xs">
                     <div className="flex items-center justify-between font-bold text-slate-700">
                       <span>Floor 1: Suite 101 — BlueFin Capital</span>
                       <span className="font-black text-slate-900">₹1,80,000 + ₹57,600 CAM</span>
@@ -701,10 +701,10 @@ export default function PGBedManagementView() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#f0f0f0]">
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#E8F0EC]">
                     <button
                       onClick={() => setActiveView('commercial')}
-                      className="py-2 px-3 rounded-xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white text-xs font-bold text-center transition"
+                      className="py-2 px-3 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold text-center transition"
                     >
                       Commercial Leases
                     </button>
@@ -718,7 +718,7 @@ export default function PGBedManagementView() {
                 </div>
 
                 {/* Logistics & Cargo Park */}
-                <div className="bg-white p-5 rounded-3xl border border-[#B5B5B5] shadow-sm space-y-4">
+                <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] shadow-sm space-y-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="text-[10px] uppercase font-bold text-teal-600 tracking-wider flex items-center gap-1.5 flex-wrap">
@@ -733,7 +733,7 @@ export default function PGBedManagementView() {
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-2 text-xs">
+                  <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-2 text-xs">
                     <div className="flex items-center justify-between font-bold text-slate-700">
                       <span>Zone A: Bay 1-2 — TransIndia Cold Storage</span>
                       <span className="font-black text-slate-900">₹2,80,000/mo</span>
@@ -744,10 +744,10 @@ export default function PGBedManagementView() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#f0f0f0]">
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#E8F0EC]">
                     <button
                       onClick={() => setActiveView('commercial')}
-                      className="py-2 px-3 rounded-xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white text-xs font-bold text-center transition"
+                      className="py-2 px-3 rounded-xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold text-center transition"
                     >
                       Bay Compliance
                     </button>
@@ -769,7 +769,7 @@ export default function PGBedManagementView() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Home className="h-4 w-4 text-amber-600" />
-                  <h2 className="font-extrabold text-[#2a2a2a] text-sm">Residential Apartments, Villas &amp; Duplexes</h2>
+                  <h2 className="font-extrabold text-[#263238] text-sm">Residential Apartments, Villas &amp; Duplexes</h2>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
                     2 Buildings • 8 Total Units
                   </span>
@@ -785,7 +785,7 @@ export default function PGBedManagementView() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Beach Road */}
-                <div className="bg-white p-4 rounded-2xl border border-[#B5B5B5] space-y-2">
+                <div className="bg-white p-4 rounded-2xl border border-[#D2DDD7] space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-slate-900 text-xs">Beach Road Luxury Apartments</h3>
@@ -798,7 +798,7 @@ export default function PGBedManagementView() {
                 </div>
 
                 {/* Palm Grove */}
-                <div className="bg-white p-4 rounded-2xl border border-[#B5B5B5] space-y-2">
+                <div className="bg-white p-4 rounded-2xl border border-[#D2DDD7] space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold text-slate-900 text-xs">Palm Grove Residences</h3>
@@ -847,7 +847,7 @@ export default function PGBedManagementView() {
           )}
 
           {/* Controls & Filter Bar */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-[#B5B5B5]">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-[#D2DDD7]">
             {/* Search */}
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
@@ -856,17 +856,17 @@ export default function PGBedManagementView() {
                 placeholder="Search bed code, room, or tenant..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3.5 py-1.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#2a2a2a]"
+                className="w-full pl-9 pr-3.5 py-1.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-[#263238]"
               />
             </div>
 
             {/* Filter Buttons */}
             <div className="flex items-center gap-2 overflow-x-auto">
-              <div className="flex items-center gap-1 bg-[#f0f0f0] p-1 rounded-xl border border-[#B5B5B5]">
+              <div className="flex items-center gap-1 bg-[#E8F0EC] p-1 rounded-xl border border-[#D2DDD7]">
                 <button
                   onClick={() => setSelectedFloor('ALL')}
                   className={`px-2.5 py-1 rounded-lg text-[11px] font-bold ${
-                    selectedFloor === 'ALL' ? 'bg-[#2a2a2a] text-white' : 'text-slate-600 hover:text-slate-900'
+                    selectedFloor === 'ALL' ? 'bg-[#263238] text-white' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   All Floors
@@ -876,7 +876,7 @@ export default function PGBedManagementView() {
                     key={floor}
                     onClick={() => setSelectedFloor(floor)}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-bold ${
-                      selectedFloor === floor ? 'bg-[#2a2a2a] text-white' : 'text-slate-600 hover:text-slate-900'
+                      selectedFloor === floor ? 'bg-[#263238] text-white' : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     Floor {floor}
@@ -887,7 +887,7 @@ export default function PGBedManagementView() {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-3 py-1.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-xs font-semibold text-slate-800"
+                className="px-3 py-1.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-semibold text-slate-800"
               >
                 <option value="ALL">All Statuses (7 States)</option>
                 <option value="Available">Available</option>
@@ -903,7 +903,7 @@ export default function PGBedManagementView() {
 
           {/* Bed Inventory Cards Grid */}
           {filteredBeds.length === 0 ? (
-            <div className="py-12 text-center bg-white rounded-3xl border border-dashed border-[#B5B5B5] p-8 space-y-3">
+            <div className="py-12 text-center bg-white rounded-3xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
               <BedDouble className="h-10 w-10 text-slate-300 mx-auto" />
               <h3 className="font-bold text-slate-800 text-sm">No PG Beds Found</h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
@@ -913,7 +913,7 @@ export default function PGBedManagementView() {
               </p>
               <button
                 onClick={() => setIsAddPropertyOpen(true)}
-                className="px-4 py-2 rounded-xl bg-[#2a2a2a] text-white text-xs font-bold hover:bg-[#2a2a2a]/90 transition"
+                className="px-4 py-2 rounded-xl bg-[#263238] text-white text-xs font-bold hover:bg-[#263238]/90 transition"
               >
                 + Add PG Property
               </button>
@@ -923,7 +923,7 @@ export default function PGBedManagementView() {
               {filteredBeds.map((bed) => (
                 <div
                   key={bed.id}
-                  className="bg-white rounded-2xl border border-[#B5B5B5] p-3.5 shadow-sm hover:border-[#2a2a2a] hover:shadow-md transition flex flex-col justify-between"
+                  className="bg-white rounded-2xl border border-[#D2DDD7] p-3.5 shadow-sm hover:border-[#263238] hover:shadow-md transition flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex items-center justify-between gap-1 mb-2">
@@ -940,7 +940,7 @@ export default function PGBedManagementView() {
                     <div className="flex items-center justify-between border-t border-b border-slate-100 py-2 my-2">
                       <div>
                         <div className="text-[10px] text-slate-400 font-medium">Bed Identity</div>
-                        <div className="text-sm font-black text-[#2a2a2a]">{bed.bedCode}</div>
+                        <div className="text-sm font-black text-[#263238]">{bed.bedCode}</div>
                         <div className="text-[9px] font-mono text-indigo-600 font-bold">BED-{bed.roomNumber}{bed.bedCode.replace(/^R\d+-?/, '') || bed.bedCode}</div>
                       </div>
                       <div className="text-right">
@@ -988,7 +988,7 @@ export default function PGBedManagementView() {
                   <div className="mt-3 pt-2 border-t border-slate-100">
                     <button
                       onClick={() => setSelectedBedForAction(bed)}
-                      className="w-full py-1.5 rounded-xl bg-slate-100 hover:bg-[#2a2a2a] hover:text-white text-slate-700 text-[10px] font-bold transition flex items-center justify-center gap-1"
+                      className="w-full py-1.5 rounded-xl bg-slate-100 hover:bg-[#263238] hover:text-white text-slate-700 text-[10px] font-bold transition flex items-center justify-center gap-1"
                     >
                       <span>Update State</span>
                       <ChevronRight className="h-3 w-3" />
@@ -1005,7 +1005,7 @@ export default function PGBedManagementView() {
               className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
               onClick={(e) => { if (e.target === e.currentTarget) setSelectedBedForAction(null); }}
             >
-              <div className="w-full max-w-md bg-white rounded-3xl p-5 border border-[#B5B5B5] shadow-2xl space-y-4">
+              <div className="w-full max-w-md bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-2xl space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <div>
                     <h3 className="font-extrabold text-sm text-slate-900">Transition Bed Status</h3>
@@ -1075,7 +1075,7 @@ export default function PGBedManagementView() {
             </div>
           )}
 
-          <div className="bg-white p-5 rounded-3xl border border-[#B5B5B5] space-y-4">
+          <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] space-y-4">
             <div>
               <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider bg-amber-50 px-2.5 py-0.5 rounded-full">
                 Sub-Meter Billing Architecture
@@ -1205,7 +1205,7 @@ export default function PGBedManagementView() {
       {/* TAB 3: PG FOOD & MESS MANAGEMENT */}
       {activeTab === 'MEALS' && (
         <div className="space-y-4">
-          <div className="bg-white p-5 rounded-3xl border border-[#B5B5B5] space-y-4">
+          <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] space-y-4">
             <div>
               <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider bg-emerald-50 px-2.5 py-0.5 rounded-full">
                 Mess &amp; Meal Operations
@@ -1252,7 +1252,7 @@ export default function PGBedManagementView() {
       {/* TAB 4: HOSTEL, STUDENTS & VISITORS */}
       {activeTab === 'HOSTEL' && (
         <div className="space-y-4">
-          <div className="bg-white p-5 rounded-3xl border border-[#B5B5B5] space-y-4">
+          <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] space-y-4">
             <div>
               <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider bg-indigo-50 px-2.5 py-0.5 rounded-full">
                 Hostel Operations &amp; Safety Protocol

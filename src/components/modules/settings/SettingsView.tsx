@@ -181,13 +181,13 @@ export default function SettingsView() {
   return (
     <div className="space-y-6 pb-12 font-sans">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#B5B5B5]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D2DDD7]">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#2a2a2a]">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#263238]">
               Platform &amp; Portfolio Settings
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#c0c0c0] text-[#383838] font-bold border border-[#383838]/20">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#263238] font-bold border border-[#263238]/20">
               Live Configuration
             </span>
           </div>
@@ -199,15 +199,15 @@ export default function SettingsView() {
         <div className="flex items-center gap-2.5">
           <button
             onClick={handleExportBackup}
-            className="px-3.5 py-2 rounded-2xl bg-white hover:bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] text-xs font-bold flex items-center gap-1.5 transition shadow-2xs"
+            className="px-3.5 py-2 rounded-2xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] text-xs font-bold flex items-center gap-1.5 transition shadow-2xs"
           >
-            <Download className="h-4 w-4 text-[#383838]" />
+            <Download className="h-4 w-4 text-[#263238]" />
             <span>Export Full Backup</span>
           </button>
 
           <button
             onClick={handleSaveSettings}
-            className="px-5 py-2 rounded-2xl bg-[#e10600] hover:bg-[#c50500] text-white text-xs font-bold shadow-md shadow-[#2a2a2a]/20 flex items-center gap-2 transition"
+            className="px-5 py-2 rounded-2xl bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-bold shadow-md shadow-[#263238]/20 flex items-center gap-2 transition"
           >
             <Save className="h-4 w-4" />
             <span>Save Configurations</span>
@@ -221,13 +221,13 @@ export default function SettingsView() {
           onClick={() => handleTabChange('SUBSCRIPTION')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'SUBSCRIPTION'
-              ? 'bg-[#2a2a2a] text-[#e10600] shadow-sm'
-              : 'text-[#666666] hover:text-[#2a2a2a] hover:bg-white'
+              ? 'bg-[#263238] text-[#163B36] shadow-sm'
+              : 'text-[#666666] hover:text-[#263238] hover:bg-white'
           }`}
         >
           <Crown className="h-4 w-4 text-amber-400" />
           <span>Subscription &amp; Plans</span>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#e10600]/30 text-[#e10600] font-extrabold border border-[#e10600]/40">
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#163B36]/30 text-[#163B36] font-extrabold border border-[#163B36]/40">
             Active
           </span>
         </button>
@@ -236,8 +236,8 @@ export default function SettingsView() {
           onClick={() => handleTabChange('PORTFOLIO')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'PORTFOLIO'
-              ? 'bg-[#2a2a2a] text-[#e10600] shadow-sm'
-              : 'text-[#666666] hover:text-[#2a2a2a] hover:bg-white'
+              ? 'bg-[#263238] text-[#163B36] shadow-sm'
+              : 'text-[#666666] hover:text-[#263238] hover:bg-white'
           }`}
         >
           <Building2 className="h-4 w-4" />
@@ -248,8 +248,8 @@ export default function SettingsView() {
           onClick={() => handleTabChange('RENT_RULES')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'RENT_RULES'
-              ? 'bg-[#2a2a2a] text-[#e10600] shadow-sm'
-              : 'text-[#666666] hover:text-[#2a2a2a] hover:bg-white'
+              ? 'bg-[#263238] text-[#163B36] shadow-sm'
+              : 'text-[#666666] hover:text-[#263238] hover:bg-white'
           }`}
         >
           <Sliders className="h-4 w-4" />
@@ -260,8 +260,8 @@ export default function SettingsView() {
           onClick={() => handleTabChange('UTILITIES')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'UTILITIES'
-              ? 'bg-[#2a2a2a] text-[#e10600] shadow-sm'
-              : 'text-[#666666] hover:text-[#2a2a2a] hover:bg-white'
+              ? 'bg-[#263238] text-[#163B36] shadow-sm'
+              : 'text-[#666666] hover:text-[#263238] hover:bg-white'
           }`}
         >
           <Zap className="h-4 w-4 text-amber-500" />
@@ -272,8 +272,8 @@ export default function SettingsView() {
           onClick={() => handleTabChange('BANKING')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'BANKING'
-              ? 'bg-[#2a2a2a] text-[#e10600] shadow-sm'
-              : 'text-[#666666] hover:text-[#2a2a2a] hover:bg-white'
+              ? 'bg-[#263238] text-[#163B36] shadow-sm'
+              : 'text-[#666666] hover:text-[#263238] hover:bg-white'
           }`}
         >
           <CreditCard className="h-4 w-4" />
@@ -284,8 +284,8 @@ export default function SettingsView() {
           onClick={() => handleTabChange('DELEGATES')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'DELEGATES'
-              ? 'bg-[#2a2a2a] text-[#e10600] shadow-sm'
-              : 'text-[#666666] hover:text-[#2a2a2a] hover:bg-white'
+              ? 'bg-[#263238] text-[#163B36] shadow-sm'
+              : 'text-[#666666] hover:text-[#263238] hover:bg-white'
           }`}
         >
           <Users className="h-4 w-4" />
@@ -296,8 +296,8 @@ export default function SettingsView() {
           onClick={() => handleTabChange('SECURITY')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'SECURITY'
-              ? 'bg-[#2a2a2a] text-[#e10600] shadow-sm'
-              : 'text-[#666666] hover:text-[#2a2a2a] hover:bg-white'
+              ? 'bg-[#263238] text-[#163B36] shadow-sm'
+              : 'text-[#666666] hover:text-[#263238] hover:bg-white'
           }`}
         >
           <ShieldCheck className="h-4 w-4" />
@@ -309,13 +309,13 @@ export default function SettingsView() {
       {activeTab === 'SUBSCRIPTION' && (
         <div className="space-y-6">
           {/* Top Hero Banner */}
-          <div className="organic-card p-6 sm:p-8 bg-gradient-to-br from-[#2a2a2a] via-[#383838] to-[#2a2a2a] text-white relative overflow-hidden rounded-3xl shadow-xl border border-[#e10600]">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-[#e10600]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="organic-card p-6 sm:p-8 bg-gradient-to-br from-[#263238] via-[#263238] to-[#263238] text-white relative overflow-hidden rounded-3xl shadow-xl border border-[#163B36]">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-[#163B36]/10 rounded-full blur-3xl pointer-events-none" />
             <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2.5">
                   {subscription?.status === 'TRIAL' ? (
-                    <span className="px-3 py-1 rounded-full bg-[#e10600] text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
+                    <span className="px-3 py-1 rounded-full bg-[#163B36] text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs">
                       <span className="h-2 w-2 rounded-full bg-rose-600 animate-ping" />
                       7-Day Free Trial • Autopay Scheduled
                     </span>
@@ -324,8 +324,8 @@ export default function SettingsView() {
                       Trial Cancelled • Autopay Revoked
                     </span>
                   ) : (
-                    <span className="px-3 py-1 rounded-full bg-[#e10600]/20 text-[#e10600] text-xs font-black uppercase tracking-wider border border-[#e10600]/40 flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-[#e10600] animate-ping" />
+                    <span className="px-3 py-1 rounded-full bg-[#163B36]/20 text-[#163B36] text-xs font-black uppercase tracking-wider border border-[#163B36]/40 flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-[#163B36] animate-ping" />
                       Active Plan • Auto-Renew ON
                     </span>
                   )}
@@ -340,7 +340,7 @@ export default function SettingsView() {
                   <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-3">
                     {subscription?.planName || 'Growth Portfolio Pro OS'}
                   </h2>
-                  <p className="text-xs text-[#e10600]/80 mt-1 max-w-2xl leading-relaxed">
+                  <p className="text-xs text-[#163B36]/80 mt-1 max-w-2xl leading-relaxed">
                     {subscription?.status === 'TRIAL' 
                       ? `Your 7-day risk-free trial is active. You have full access to all features. Your card/bank will only process autopay on ${subscription.endDate} (₹${subscription.amount}) if not cancelled before then.`
                       : 'Unified multi-asset property management operating system with statutory double-entry ledger, sub-meter OCR tariff splitting, automated WhatsApp dunning, and Axis Bank Escrow clearance.'
@@ -350,7 +350,7 @@ export default function SettingsView() {
 
                 <div className="flex flex-wrap items-center gap-6 pt-2 text-xs text-white/90">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-[#e10600]" />
+                    <Calendar className="h-4 w-4 text-[#163B36]" />
                     <span>Plan Started: <b className="text-white">{subscription?.startDate || '01 Oct 2026'}</b></span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -358,8 +358,8 @@ export default function SettingsView() {
                     <span>{subscription?.status === 'TRIAL' ? 'Trial Ends / First Charge:' : 'Next Renewal:'} <b className="text-white">{subscription?.endDate || '01 Oct 2027'}</b></span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-[#e10600]" />
-                    <span>{subscription?.status === 'TRIAL' ? 'Trial Remaining:' : 'Validity Countdown:'} <b className="text-[#e10600]">{subscription?.daysRemaining ?? 7} Days Left</b></span>
+                    <Sparkles className="h-4 w-4 text-[#163B36]" />
+                    <span>{subscription?.status === 'TRIAL' ? 'Trial Remaining:' : 'Validity Countdown:'} <b className="text-[#163B36]">{subscription?.daysRemaining ?? 7} Days Left</b></span>
                   </div>
                 </div>
               </div>
@@ -367,7 +367,7 @@ export default function SettingsView() {
               <div className="flex flex-col sm:flex-row lg:flex-col gap-3 min-w-[220px]">
                 <button
                   onClick={() => setIsUpgradeModalOpen(true)}
-                  className="px-5 py-3 rounded-2xl bg-[#e10600] hover:bg-[#c50500] text-white font-black text-xs transition shadow-lg shadow-[#2a2a2a]/20 flex items-center justify-center gap-2 border border-[#2a2a2a]/10"
+                  className="px-5 py-3 rounded-2xl bg-[#163B36] hover:bg-[#0F2925] text-white font-black text-xs transition shadow-lg shadow-[#263238]/20 flex items-center justify-center gap-2 border border-[#263238]/10"
                 >
                   <Sparkles className="h-4 w-4" />
                   <span>{subscription?.status === 'CANCELLED' ? 'Reactivate Subscription' : 'Upgrade / Switch Tier'}</span>
@@ -397,7 +397,7 @@ export default function SettingsView() {
                   }}
                   className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition border border-white/15 flex items-center justify-center gap-2"
                 >
-                  <RefreshCw className="h-3.5 w-3.5 text-[#e10600]" />
+                  <RefreshCw className="h-3.5 w-3.5 text-[#163B36]" />
                   <span>Sync Server Status</span>
                 </button>
               </div>
@@ -407,15 +407,15 @@ export default function SettingsView() {
           {/* 2-Column Plan Details & Quota Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Card 1: Subscription Financials */}
-            <div className="organic-card p-5 space-y-3.5 border border-[#B5B5B5] bg-white">
+            <div className="organic-card p-5 space-y-3.5 border border-[#D2DDD7] bg-white">
               <div className="flex items-center justify-between pb-2 border-b border-[#D1D5DB]">
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-xl bg-[#c0c0c0] text-[#383838] flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-xl bg-[#E8F0EC] text-[#263238] flex items-center justify-center">
                     <DollarSign className="h-4 w-4" />
                   </div>
-                  <h4 className="font-extrabold text-sm text-[#2a2a2a]">Subscription Billing</h4>
+                  <h4 className="font-extrabold text-sm text-[#263238]">Subscription Billing</h4>
                 </div>
-                <span className="text-[11px] font-bold text-[#383838] bg-[#c0c0c0] px-2 py-0.5 rounded-md">
+                <span className="text-[11px] font-bold text-[#263238] bg-[#E8F0EC] px-2 py-0.5 rounded-md">
                   Cleared
                 </span>
               </div>
@@ -423,25 +423,25 @@ export default function SettingsView() {
               <div className="space-y-2.5 text-xs">
                 <div className="flex justify-between items-center text-[#666666]">
                   <span>Annual Invoiced Fee:</span>
-                  <span className="font-black text-[#2a2a2a] text-sm">
+                  <span className="font-black text-[#263238] text-sm">
                     ₹{(subscription?.amount || 79990).toLocaleString('en-IN')}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-[#666666]">
                   <span>GST Applicable (18%):</span>
-                  <span className="font-bold text-[#2a2a2a]">Included (₹12,202)</span>
+                  <span className="font-bold text-[#263238]">Included (₹12,202)</span>
                 </div>
                 <div className="flex justify-between items-center text-[#666666]">
                   <span>Active Payment Method:</span>
-                  <span className="font-bold text-[#2a2a2a]">{subscription?.paymentMethod || 'Axis Bank Escrow Auto-Debit'}</span>
+                  <span className="font-bold text-[#263238]">{subscription?.paymentMethod || 'Axis Bank Escrow Auto-Debit'}</span>
                 </div>
                 <div className="flex justify-between items-center text-[#666666]">
                   <span>Billing Entity GSTIN:</span>
-                  <span className="font-mono text-[#2a2a2a] font-semibold">{subscription?.gstin || '29AAACS1928K1Z5'}</span>
+                  <span className="font-mono text-[#263238] font-semibold">{subscription?.gstin || '29AAACS1928K1Z5'}</span>
                 </div>
                 <div className="flex justify-between items-center text-[#666666]">
                   <span>Last Cleared Txn:</span>
-                  <span className="font-mono text-[11px] text-[#383838] bg-[#c0c0c0] px-1.5 py-0.5 rounded font-bold">
+                  <span className="font-mono text-[11px] text-[#263238] bg-[#E8F0EC] px-1.5 py-0.5 rounded font-bold">
                     {subscription?.lastPaymentTxnId || 'TXN-STAY-SUB-SECURE-98124'}
                   </span>
                 </div>
@@ -449,13 +449,13 @@ export default function SettingsView() {
             </div>
 
             {/* Card 2: Quota & Capacity Usage */}
-            <div className="organic-card p-5 space-y-3.5 border border-[#B5B5B5] bg-white">
+            <div className="organic-card p-5 space-y-3.5 border border-[#D2DDD7] bg-white">
               <div className="flex items-center justify-between pb-2 border-b border-[#D1D5DB]">
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
                     <Building2 className="h-4 w-4" />
                   </div>
-                  <h4 className="font-extrabold text-sm text-[#2a2a2a]">Unit &amp; Asset Quota</h4>
+                  <h4 className="font-extrabold text-sm text-[#263238]">Unit &amp; Asset Quota</h4>
                 </div>
                 <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md">
                   {Math.round(((subscription?.currentUnits || 24) / (subscription?.maxUnits || 50)) * 100)}% Used
@@ -466,30 +466,30 @@ export default function SettingsView() {
                 <div>
                   <div className="flex justify-between text-[#666666] mb-1">
                     <span>Managed Units Allocation:</span>
-                    <span className="font-bold text-[#2a2a2a]">
+                    <span className="font-bold text-[#263238]">
                       {subscription?.currentUnits || 24} of {subscription?.maxUnits || 50} Units
                     </span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-[#c0c0c0] overflow-hidden">
+                  <div className="w-full h-2 rounded-full bg-[#E8F0EC] overflow-hidden">
                     <div 
-                      className="h-full bg-[#383838] rounded-full transition-all duration-500"
+                      className="h-full bg-[#263238] rounded-full transition-all duration-500"
                       style={{ width: `${Math.min(100, Math.round(((subscription?.currentUnits || 24) / (subscription?.maxUnits || 50)) * 100))}%` }}
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 pt-1">
-                  <div className="p-2 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5]">
+                  <div className="p-2 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7]">
                     <div className="text-[10px] text-[#666666]">PG Co-living Beds</div>
-                    <div className="text-xs font-black text-[#2a2a2a]">18 Active Beds</div>
+                    <div className="text-xs font-black text-[#263238]">18 Active Beds</div>
                   </div>
-                  <div className="p-2 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5]">
+                  <div className="p-2 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7]">
                     <div className="text-[10px] text-[#666666]">Commercial Area</div>
-                    <div className="text-xs font-black text-[#2a2a2a]">15,000 sq.ft</div>
+                    <div className="text-xs font-black text-[#263238]">15,000 sq.ft</div>
                   </div>
-                  <div className="p-2 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5]">
+                  <div className="p-2 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7]">
                     <div className="text-[10px] text-[#666666]">WhatsApp Dunning</div>
-                    <div className="text-xs font-black text-[#383838]">Unlimited</div>
+                    <div className="text-xs font-black text-[#263238]">Unlimited</div>
                   </div>
                   <span className="font-mono text-[11px] text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded">
                     {subscription?.lastPaymentTxnId || 'TXN-STAY-SUB-SECURE-98124'}
@@ -499,13 +499,13 @@ export default function SettingsView() {
             </div>
 
             {/* Card 2: Quota & Capacity Usage */}
-            <div className="organic-card p-5 space-y-3.5 border border-[#B5B5B5] bg-white">
+            <div className="organic-card p-5 space-y-3.5 border border-[#D2DDD7] bg-white">
               <div className="flex items-center justify-between pb-2 border-b border-[#E0E0E0]">
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
                     <Building2 className="h-4 w-4" />
                   </div>
-                  <h4 className="font-extrabold text-sm text-[#2a2a2a]">Unit &amp; Asset Quota</h4>
+                  <h4 className="font-extrabold text-sm text-[#263238]">Unit &amp; Asset Quota</h4>
                 </div>
                 <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md">
                   {Math.round(((subscription?.currentUnits || 24) / (subscription?.maxUnits || 50)) * 100)}% Used
@@ -516,11 +516,11 @@ export default function SettingsView() {
                 <div>
                   <div className="flex justify-between text-[#666666] mb-1">
                     <span>Managed Units Allocation:</span>
-                    <span className="font-bold text-[#2a2a2a]">
+                    <span className="font-bold text-[#263238]">
                       {subscription?.currentUnits || 24} of {subscription?.maxUnits || 50} Units
                     </span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-[#f0f0f0] overflow-hidden">
+                  <div className="w-full h-2 rounded-full bg-[#E8F0EC] overflow-hidden">
                     <div 
                       className="h-full bg-emerald-600 rounded-full transition-all duration-500"
                       style={{ width: `${Math.min(100, Math.round(((subscription?.currentUnits || 24) / (subscription?.maxUnits || 50)) * 100))}%` }}
@@ -529,21 +529,21 @@ export default function SettingsView() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 pt-1">
-                  <div className="p-2 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5]">
+                  <div className="p-2 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7]">
                     <div className="text-[10px] text-[#666666]">PG Co-living Beds</div>
-                    <div className="text-xs font-black text-[#2a2a2a]">18 Active Beds</div>
+                    <div className="text-xs font-black text-[#263238]">18 Active Beds</div>
                   </div>
-                  <div className="p-2 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5]">
+                  <div className="p-2 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7]">
                     <div className="text-[10px] text-[#666666]">Commercial Area</div>
-                    <div className="text-xs font-black text-[#2a2a2a]">15,000 sq.ft</div>
+                    <div className="text-xs font-black text-[#263238]">15,000 sq.ft</div>
                   </div>
-                  <div className="p-2 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5]">
+                  <div className="p-2 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7]">
                     <div className="text-[10px] text-[#666666]">WhatsApp Dunning</div>
                     <div className="text-xs font-black text-emerald-700">Unlimited</div>
                   </div>
-                  <div className="p-2 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5]">
+                  <div className="p-2 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7]">
                     <div className="text-[10px] text-[#666666]">OCR Bill Reads</div>
-                    <div className="text-xs font-black text-[#2a2a2a]">89 / 500 Used</div>
+                    <div className="text-xs font-black text-[#263238]">89 / 500 Used</div>
                   </div>
                 </div>
               </div>
@@ -552,10 +552,10 @@ export default function SettingsView() {
 
 
           {/* Subscription Invoices History */}
-          <div className="organic-card p-6 border border-[#B5B5B5] bg-white space-y-4">
+          <div className="organic-card p-6 border border-[#D2DDD7] bg-white space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 className="text-base font-extrabold text-[#2a2a2a]">Subscription Tax Invoices &amp; Receipts</h3>
+                <h3 className="text-base font-extrabold text-[#263238]">Subscription Tax Invoices &amp; Receipts</h3>
                 <p className="text-xs text-[#666666]">
                   RBI-compliant GST tax invoices generated for all subscription periods and upgrades
                 </p>
@@ -563,9 +563,9 @@ export default function SettingsView() {
 
               <button
                 onClick={() => alert('Downloading official GST Tax Invoices ZIP archive...')}
-                className="px-3.5 py-2 rounded-xl bg-[#f0f0f0] hover:bg-[#E0E0E0] border border-[#B5B5B5] text-xs font-bold text-[#2a2a2a] flex items-center gap-1.5 transition"
+                className="px-3.5 py-2 rounded-xl bg-[#E8F0EC] hover:bg-[#E0E0E0] border border-[#D2DDD7] text-xs font-bold text-[#263238] flex items-center gap-1.5 transition"
               >
-                <Download className="h-3.5 w-3.5 text-[#2a2a2a]" />
+                <Download className="h-3.5 w-3.5 text-[#263238]" />
                 <span>Export Tax Invoices (PDF)</span>
               </button>
             </div>
@@ -600,12 +600,12 @@ export default function SettingsView() {
                     }
                   ]).map((item, idx) => (
                     <tr key={idx} className="hover:bg-[#ffffff]">
-                      <td className="py-3 font-mono font-bold text-[#2a2a2a]">{item.invoiceId}</td>
+                      <td className="py-3 font-mono font-bold text-[#263238]">{item.invoiceId}</td>
                       <td className="py-3 text-[#666666]">{item.date}</td>
-                      <td className="py-3 font-semibold text-[#2a2a2a]">{item.planName}</td>
+                      <td className="py-3 font-semibold text-[#263238]">{item.planName}</td>
                       <td className="py-3 text-[#666666] capitalize">{item.billingCycle}</td>
                       <td className="py-3 font-mono text-[10px] text-[#666666]">{item.txnId}</td>
-                      <td className="py-3 font-black text-[#2a2a2a]">₹{item.amount.toLocaleString('en-IN')}</td>
+                      <td className="py-3 font-black text-[#263238]">₹{item.amount.toLocaleString('en-IN')}</td>
                       <td className="py-3">
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-700">
                           {item.status}
@@ -614,7 +614,7 @@ export default function SettingsView() {
                       <td className="py-3 text-right">
                         <button
                           onClick={() => alert(`Opening official GST tax receipt for ${item.invoiceId}`)}
-                          className="px-2.5 py-1 rounded-lg bg-white border border-[#B5B5B5] text-[#2a2a2a] hover:bg-[#f0f0f0] font-bold text-[11px] inline-flex items-center gap-1 shadow-sm"
+                          className="px-2.5 py-1 rounded-lg bg-white border border-[#D2DDD7] text-[#263238] hover:bg-[#E8F0EC] font-bold text-[11px] inline-flex items-center gap-1 shadow-sm"
                         >
                           <Download className="h-3 w-3" />
                           <span>PDF</span>
@@ -634,7 +634,7 @@ export default function SettingsView() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 organic-card p-6 space-y-4">
             <div>
-              <h3 className="text-base font-extrabold text-[#2a2a2a]">Asset Owner &amp; Legal Entity Information</h3>
+              <h3 className="text-base font-extrabold text-[#263238]">Asset Owner &amp; Legal Entity Information</h3>
               <p className="text-xs text-[#666666]">
                 Appears on all official rent receipts, lease agreements, and Form 16/Schedule HP filings
               </p>
@@ -642,72 +642,72 @@ export default function SettingsView() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
-                <label className="block text-[#2a2a2a] font-semibold mb-1">Entity / Trust Legal Name</label>
+                <label className="block text-[#263238] font-semibold mb-1">Entity / Trust Legal Name</label>
                 <input
                   type="text"
                   value={entityName}
                   onChange={(e) => setEntityName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white text-[#2a2a2a] font-bold"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-bold"
                 />
               </div>
 
               <div>
-                <label className="block text-[#2a2a2a] font-semibold mb-1">Primary Landlord / Signatory</label>
+                <label className="block text-[#263238] font-semibold mb-1">Primary Landlord / Signatory</label>
                 <input
                   type="text"
                   value={ownerName}
                   onChange={(e) => setOwnerName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white text-[#2a2a2a] font-bold"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-bold"
                 />
               </div>
 
               <div>
-                <label className="block text-[#2a2a2a] font-semibold mb-1">Income Tax PAN Number</label>
+                <label className="block text-[#263238] font-semibold mb-1">Income Tax PAN Number</label>
                 <input
                   type="text"
                   value={panNumber}
                   onChange={(e) => setPanNumber(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white font-mono font-bold text-[#2a2a2a]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-mono font-bold text-[#263238]"
                 />
               </div>
 
               <div>
-                <label className="block text-[#2a2a2a] font-semibold mb-1">GSTIN (Commercial Leases)</label>
+                <label className="block text-[#263238] font-semibold mb-1">GSTIN (Commercial Leases)</label>
                 <input
                   type="text"
                   value={gstin}
                   onChange={(e) => setGstin(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white font-mono font-bold text-[#2a2a2a]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-mono font-bold text-[#263238]"
                 />
               </div>
 
               <div>
-                <label className="block text-[#2a2a2a] font-semibold mb-1">Official WhatsApp &amp; SMS Phone</label>
+                <label className="block text-[#263238] font-semibold mb-1">Official WhatsApp &amp; SMS Phone</label>
                 <input
                   type="text"
                   value={supportPhone}
                   onChange={(e) => setSupportPhone(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white font-bold text-[#2a2a2a]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#263238]"
                 />
               </div>
 
               <div>
-                <label className="block text-[#2a2a2a] font-semibold mb-1">Support &amp; Escrow Email</label>
+                <label className="block text-[#263238] font-semibold mb-1">Support &amp; Escrow Email</label>
                 <input
                   type="email"
                   value={supportEmail}
                   onChange={(e) => setSupportEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white font-bold text-[#2a2a2a]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#263238]"
                 />
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-[#2a2a2a] font-semibold mb-1">Registered Statutory Office Address</label>
+                <label className="block text-[#263238] font-semibold mb-1">Registered Statutory Office Address</label>
                 <input
                   type="text"
                   value={registeredAddress}
                   onChange={(e) => setRegisteredAddress(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white text-[#2a2a2a]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238]"
                 />
               </div>
             </div>
@@ -715,16 +715,16 @@ export default function SettingsView() {
 
           <div className="organic-card p-6 flex flex-col justify-between space-y-4">
             <div>
-              <h3 className="text-base font-extrabold text-[#2a2a2a]">Digital Seal &amp; Brand Stamp</h3>
+              <h3 className="text-base font-extrabold text-[#263238]">Digital Seal &amp; Brand Stamp</h3>
               <p className="text-xs text-[#666666]">Auto-applied to digital rent receipts and eKYC tenant contracts</p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] flex flex-col items-center justify-center text-center space-y-3">
-              <div className="h-20 w-20 rounded-full border-4 border-[#2a2a2a] bg-white flex items-center justify-center shadow-md">
-                <span className="text-2xl font-black text-[#2a2a2a]">SW</span>
+            <div className="p-6 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex flex-col items-center justify-center text-center space-y-3">
+              <div className="h-20 w-20 rounded-full border-4 border-[#263238] bg-white flex items-center justify-center shadow-md">
+                <span className="text-2xl font-black text-[#263238]">SW</span>
               </div>
               <div>
-                <div className="font-extrabold text-sm text-[#2a2a2a]">{entityName}</div>
+                <div className="font-extrabold text-sm text-[#263238]">{entityName}</div>
                 <div className="text-[11px] text-[#666666]">Staywise Verified Digital Signatory</div>
               </div>
               <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
@@ -734,7 +734,7 @@ export default function SettingsView() {
 
             <button
               onClick={() => alert('Certificate is active and synchronized with DigiLocker and MCA.')}
-              className="w-full py-2.5 rounded-2xl bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white text-[#2a2a2a] font-bold text-xs transition"
+              className="w-full py-2.5 rounded-2xl bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] font-bold text-xs transition"
             >
               Update DSC Certificate
             </button>
@@ -747,7 +747,7 @@ export default function SettingsView() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="organic-card p-6 space-y-5">
             <div>
-              <h3 className="text-base font-extrabold text-[#2a2a2a]">Rent Collection Schedule &amp; Penalties</h3>
+              <h3 className="text-base font-extrabold text-[#263238]">Rent Collection Schedule &amp; Penalties</h3>
               <p className="text-xs text-[#666666]">
                 Configure when invoices are generated, grace period before overdue fees, and late fee formulas
               </p>
@@ -756,11 +756,11 @@ export default function SettingsView() {
             <div className="space-y-4 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#2a2a2a] font-semibold mb-1">Monthly Due Date</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Monthly Due Date</label>
                   <select
                     value={rentDueDay}
                     onChange={(e) => setRentDueDay(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white font-bold text-[#2a2a2a]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#263238]"
                   >
                     <option value={1}>1st of every month</option>
                     <option value={5}>5th of every month</option>
@@ -769,11 +769,11 @@ export default function SettingsView() {
                 </div>
 
                 <div>
-                  <label className="block text-[#2a2a2a] font-semibold mb-1">Grace Period (Days)</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Grace Period (Days)</label>
                   <select
                     value={gracePeriodDays}
                     onChange={(e) => setGracePeriodDays(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white font-bold text-[#2a2a2a]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#263238]"
                   >
                     <option value={3}>3 Days</option>
                     <option value={5}>5 Days (Recommended)</option>
@@ -782,15 +782,15 @@ export default function SettingsView() {
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-3">
-                <span className="font-extrabold text-[#2a2a2a] block">Late Fee Computation</span>
+              <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-3">
+                <span className="font-extrabold text-[#263238] block">Late Fee Computation</span>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[#666666] font-semibold mb-1">Fee Mode</label>
                     <select
                       value={lateFeeType}
                       onChange={(e) => setLateFeeType(e.target.value as any)}
-                      className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] bg-white font-bold text-[#2a2a2a]"
+                      className="w-full px-3 py-2 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#263238]"
                     >
                       <option value="flat">Flat Per Day (₹)</option>
                       <option value="percentage">Percentage (1.5% / month)</option>
@@ -802,7 +802,7 @@ export default function SettingsView() {
                       type="number"
                       value={lateFeeAmount}
                       onChange={(e) => setLateFeeAmount(Number(e.target.value))}
-                      className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] bg-white font-bold text-[#2a2a2a]"
+                      className="w-full px-3 py-2 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#263238]"
                     />
                   </div>
                 </div>
@@ -815,66 +815,66 @@ export default function SettingsView() {
 
           <div className="organic-card p-6 space-y-5">
             <div>
-              <h3 className="text-base font-extrabold text-[#2a2a2a]">Automated Reminder Matrix</h3>
+              <h3 className="text-base font-extrabold text-[#263238]">Automated Reminder Matrix</h3>
               <p className="text-xs text-[#666666]">
                 Multichannel alerts sent to tenants via WhatsApp, SMS, Push, and Email
               </p>
             </div>
 
             <div className="space-y-3 text-xs">
-              <label className="flex items-center justify-between p-3 rounded-2xl bg-[#ffffff] border border-[#B5B5B5] cursor-pointer hover:bg-white transition">
+              <label className="flex items-center justify-between p-3 rounded-2xl bg-[#ffffff] border border-[#D2DDD7] cursor-pointer hover:bg-white transition">
                 <div>
-                  <span className="font-bold text-[#2a2a2a] block">7 Days Before Due Date</span>
+                  <span className="font-bold text-[#263238] block">7 Days Before Due Date</span>
                   <span className="text-[11px] text-[#666666]">Friendly advance statement &amp; Autopay confirmation</span>
                 </div>
                 <input
                   type="checkbox"
                   checked={autoReminder7Days}
                   onChange={(e) => setAutoReminder7Days(e.target.checked)}
-                  className="h-4 w-4 accent-[#2a2a2a]"
+                  className="h-4 w-4 accent-[#263238]"
                 />
               </label>
 
-              <label className="flex items-center justify-between p-3 rounded-2xl bg-[#ffffff] border border-[#B5B5B5] cursor-pointer hover:bg-white transition">
+              <label className="flex items-center justify-between p-3 rounded-2xl bg-[#ffffff] border border-[#D2DDD7] cursor-pointer hover:bg-white transition">
                 <div>
-                  <span className="font-bold text-[#2a2a2a] block">3 Days Before Due Date</span>
+                  <span className="font-bold text-[#263238] block">3 Days Before Due Date</span>
                   <span className="text-[11px] text-[#666666]">WhatsApp reminder with 1-click UPI quick pay</span>
                 </div>
                 <input
                   type="checkbox"
                   checked={autoReminder3Days}
                   onChange={(e) => setAutoReminder3Days(e.target.checked)}
-                  className="h-4 w-4 accent-[#2a2a2a]"
+                  className="h-4 w-4 accent-[#263238]"
                 />
               </label>
 
-              <label className="flex items-center justify-between p-3 rounded-2xl bg-[#ffffff] border border-[#B5B5B5] cursor-pointer hover:bg-white transition">
+              <label className="flex items-center justify-between p-3 rounded-2xl bg-[#ffffff] border border-[#D2DDD7] cursor-pointer hover:bg-white transition">
                 <div>
-                  <span className="font-bold text-[#2a2a2a] block">Due Date Morning (09:00 AM)</span>
+                  <span className="font-bold text-[#263238] block">Due Date Morning (09:00 AM)</span>
                   <span className="text-[11px] text-[#666666]">Direct UPI dynamic QR dispatched on WhatsApp</span>
                 </div>
                 <input
                   type="checkbox"
                   checked={autoReminderDueDate}
                   onChange={(e) => setAutoReminderDueDate(e.target.checked)}
-                  className="h-4 w-4 accent-[#2a2a2a]"
+                  className="h-4 w-4 accent-[#263238]"
                 />
               </label>
 
-              <label className="flex items-center justify-between p-3 rounded-2xl bg-[#ffffff] border border-[#B5B5B5] cursor-pointer hover:bg-white transition">
+              <label className="flex items-center justify-between p-3 rounded-2xl bg-[#ffffff] border border-[#D2DDD7] cursor-pointer hover:bg-white transition">
                 <div>
-                  <span className="font-bold text-[#2a2a2a] block">1 Day Overdue (Grace Alert)</span>
+                  <span className="font-bold text-[#263238] block">1 Day Overdue (Grace Alert)</span>
                   <span className="text-[11px] text-[#666666]">Polite notification reminding 4 days remain before late fine</span>
                 </div>
                 <input
                   type="checkbox"
                   checked={autoReminderOverdue1Day}
                   onChange={(e) => setAutoReminderOverdue1Day(e.target.checked)}
-                  className="h-4 w-4 accent-[#2a2a2a]"
+                  className="h-4 w-4 accent-[#263238]"
                 />
               </label>
 
-              <label className="flex items-center justify-between p-3 rounded-2xl bg-[#ffffff] border border-[#B5B5B5] cursor-pointer hover:bg-white transition">
+              <label className="flex items-center justify-between p-3 rounded-2xl bg-[#ffffff] border border-[#D2DDD7] cursor-pointer hover:bg-white transition">
                 <div>
                   <span className="font-bold text-rose-700 block">7 Days Overdue (Formal Escalation)</span>
                   <span className="text-[11px] text-[#666666]">Overdue notice + manager phone follow-up task created</span>
@@ -896,7 +896,7 @@ export default function SettingsView() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="organic-card p-6 space-y-4">
             <div>
-              <h3 className="text-base font-extrabold text-[#2a2a2a]">Electricity Board &amp; Sub-meter Defaults</h3>
+              <h3 className="text-base font-extrabold text-[#263238]">Electricity Board &amp; Sub-meter Defaults</h3>
               <p className="text-xs text-[#666666]">
                 Applied when uploading or calculating monthly power bills for residential and commercial units
               </p>
@@ -904,11 +904,11 @@ export default function SettingsView() {
 
             <div className="space-y-4 text-xs">
               <div>
-                <label className="block text-[#2a2a2a] font-semibold mb-1">Primary State Discom Provider</label>
+                <label className="block text-[#263238] font-semibold mb-1">Primary State Discom Provider</label>
                 <select
                   value={defaultDiscom}
                   onChange={(e) => setDefaultDiscom(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white font-bold text-[#2a2a2a]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#263238]"
                 >
                   <option value="BESCOM Bangalore">BESCOM (Bangalore Electricity Supply Co.)</option>
                   <option value="KSEB Kerala">KSEB (Kerala State Electricity Board)</option>
@@ -920,46 +920,46 @@ export default function SettingsView() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#2a2a2a] font-semibold mb-1">Default Tariff / Unit (₹)</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Default Tariff / Unit (₹)</label>
                   <input
                     type="number"
                     step="0.1"
                     value={defaultRatePerUnit}
                     onChange={(e) => setDefaultRatePerUnit(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white font-bold text-[#2a2a2a]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#263238]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[#2a2a2a] font-semibold mb-1">Fixed Meter Charge / Mo (₹)</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Fixed Meter Charge / Mo (₹)</label>
                   <input
                     type="number"
                     value={defaultFixedCharges}
                     onChange={(e) => setDefaultFixedCharges(Number(e.target.value))}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white font-bold text-[#2a2a2a]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#263238]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[#2a2a2a] font-semibold mb-1">Monthly Meter Reading Cycle</label>
+                <label className="block text-[#263238] font-semibold mb-1">Monthly Meter Reading Cycle</label>
                 <input
                   type="text"
                   value={meterReadingCycle}
                   onChange={(e) => setMeterReadingCycle(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white text-[#2a2a2a] font-bold"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-bold"
                 />
               </div>
 
               <div>
-                <label className="block text-[#2a2a2a] font-semibold mb-1">
+                <label className="block text-[#263238] font-semibold mb-1">
                   Common Area Lighting &amp; Lift Allocation Ratio (%)
                 </label>
                 <input
                   type="number"
                   value={commonAreaPowerRatio}
                   onChange={(e) => setCommonAreaPowerRatio(Number(e.target.value))}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white font-bold text-[#2a2a2a]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#263238]"
                 />
               </div>
             </div>
@@ -967,15 +967,15 @@ export default function SettingsView() {
 
           <div className="organic-card p-6 flex flex-col justify-between space-y-4">
             <div>
-              <h3 className="text-base font-extrabold text-[#2a2a2a]">Sub-Meter Calibration &amp; IoT Smart Meters</h3>
+              <h3 className="text-base font-extrabold text-[#263238]">Sub-Meter Calibration &amp; IoT Smart Meters</h3>
               <p className="text-xs text-[#666666]">
                 Automated pulse counters and photo OCR meter verification
               </p>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="p-3.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-1">
-                <span className="font-bold text-[#2a2a2a]">Smart IoT Pulse Reader</span>
+              <div className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-1">
+                <span className="font-bold text-[#263238]">Smart IoT Pulse Reader</span>
                 <p className="text-[11px] text-[#666666]">
                   Reads kWh consumption directly from RS-485 Modbus meters every 24 hours.
                 </p>
@@ -984,12 +984,12 @@ export default function SettingsView() {
                 </span>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-1">
-                <span className="font-bold text-[#2a2a2a]">Caretaker Photo OCR Verification</span>
+              <div className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-1">
+                <span className="font-bold text-[#263238]">Caretaker Photo OCR Verification</span>
                 <p className="text-[11px] text-[#666666]">
                   When caretaker uploads meter dial photograph, Staywise AI extracts kWh numbers automatically.
                 </p>
-                <span className="text-[10px] font-bold text-[#2a2a2a] bg-[#f0f0f0] px-2 py-0.5 rounded-full inline-block mt-1">
+                <span className="text-[10px] font-bold text-[#263238] bg-[#E8F0EC] px-2 py-0.5 rounded-full inline-block mt-1">
                   AI OCR Active
                 </span>
               </div>
@@ -997,7 +997,7 @@ export default function SettingsView() {
 
             <button
               onClick={() => alert('All 12 sub-meters calibrated with official BESCOM master meter.')}
-              className="w-full py-2.5 rounded-2xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-bold text-xs shadow-sm transition"
+              className="w-full py-2.5 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white font-bold text-xs shadow-sm transition"
             >
               Calibrate Sub-Meters Now
             </button>
@@ -1010,7 +1010,7 @@ export default function SettingsView() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="organic-card p-6 space-y-4">
             <div>
-              <h3 className="text-base font-extrabold text-[#2a2a2a]">Primary Escrow Payout Bank Account</h3>
+              <h3 className="text-base font-extrabold text-[#263238]">Primary Escrow Payout Bank Account</h3>
               <p className="text-xs text-[#666666]">
                 Where collected tenant rents and security deposits are deposited and swept
               </p>
@@ -1018,53 +1018,53 @@ export default function SettingsView() {
 
             <div className="space-y-4 text-xs">
               <div>
-                <label className="block text-[#2a2a2a] font-semibold mb-1">Escrow Bank &amp; Branch</label>
+                <label className="block text-[#263238] font-semibold mb-1">Escrow Bank &amp; Branch</label>
                 <input
                   type="text"
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white text-[#2a2a2a] font-bold"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-bold"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[#2a2a2a] font-semibold mb-1">Account Number</label>
+                  <label className="block text-[#263238] font-semibold mb-1">Account Number</label>
                   <input
                     type="text"
                     value={bankAccount}
                     onChange={(e) => setBankAccount(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white font-mono font-bold text-[#2a2a2a]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-mono font-bold text-[#263238]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[#2a2a2a] font-semibold mb-1">IFSC Code</label>
+                  <label className="block text-[#263238] font-semibold mb-1">IFSC Code</label>
                   <input
                     type="text"
                     value={ifsc}
                     onChange={(e) => setIfsc(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white font-mono font-bold text-[#2a2a2a]"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-mono font-bold text-[#263238]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[#2a2a2a] font-semibold mb-1">Dedicated UPI Virtual Payment Address (VPA)</label>
+                <label className="block text-[#263238] font-semibold mb-1">Dedicated UPI Virtual Payment Address (VPA)</label>
                 <input
                   type="text"
                   value={upiId}
                   onChange={(e) => setUpiId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white font-mono font-bold text-[#2a2a2a]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-mono font-bold text-[#263238]"
                 />
               </div>
 
               <div>
-                <label className="block text-[#2a2a2a] font-semibold mb-1">Auto-Sweep Cadence to Landlord Operating Account</label>
+                <label className="block text-[#263238] font-semibold mb-1">Auto-Sweep Cadence to Landlord Operating Account</label>
                 <select
                   value={autoSweepCadence}
                   onChange={(e) => setAutoSweepCadence(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#B5B5B5] bg-white font-bold text-[#2a2a2a]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#263238]"
                 >
                   <option value="Daily at 18:00 IST">Daily at 18:00 IST (Default)</option>
                   <option value="Instant per Rent Payment">Instant per Rent Payment</option>
@@ -1076,19 +1076,19 @@ export default function SettingsView() {
 
           <div className="organic-card p-6 flex flex-col justify-between space-y-4">
             <div>
-              <h3 className="text-base font-extrabold text-[#2a2a2a]">Escrow Trustee Verification</h3>
+              <h3 className="text-base font-extrabold text-[#263238]">Escrow Trustee Verification</h3>
               <p className="text-xs text-[#666666]">RBI-regulated tri-party escrow structure</p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#2a2a2a]/20 space-y-2 text-xs">
+            <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#263238]/20 space-y-2 text-xs">
               <div className="flex items-center gap-2 text-emerald-800 font-extrabold">
                 <CheckCircle2 className="h-4 w-4" />
                 <span>Verified Escrow Node Active</span>
               </div>
-              <p className="text-[11px] text-[#2a2a2a] leading-relaxed">
+              <p className="text-[11px] text-[#263238] leading-relaxed">
                 Rent is received directly in RBI-monitored escrow account. Landlord and vendor payouts are disbursed with automated digital audit logs.
               </p>
-              <div className="pt-2 border-t border-[#2a2a2a]/20 flex justify-between font-bold text-[#2a2a2a]">
+              <div className="pt-2 border-t border-[#263238]/20 flex justify-between font-bold text-[#263238]">
                 <span>Escrow Trustee:</span>
                 <span>Axis Trustee Services Ltd.</span>
               </div>
@@ -1096,7 +1096,7 @@ export default function SettingsView() {
 
             <button
               onClick={() => alert('Bank statements and penny-drop test verified.')}
-              className="w-full py-2.5 rounded-2xl bg-white hover:bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold text-xs shadow-sm transition"
+              className="w-full py-2.5 rounded-2xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] font-bold text-xs shadow-sm transition"
             >
               Run Penny-Drop Re-Verification
             </button>
@@ -1109,7 +1109,7 @@ export default function SettingsView() {
         <div className="organic-card p-6 space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E0E0E0]">
             <div>
-              <h3 className="text-base font-extrabold text-[#2a2a2a]">Authorized Delegate Access Control</h3>
+              <h3 className="text-base font-extrabold text-[#263238]">Authorized Delegate Access Control</h3>
               <p className="text-xs text-[#666666]">
                 Grant scoped read/audit access to external Accountants, Property Managers, and Tax Consultants
               </p>
@@ -1117,17 +1117,17 @@ export default function SettingsView() {
 
             <button
               onClick={() => alert('Invite new Accountant or Property Manager with scoped permissions')}
-              className="px-4 py-2 rounded-2xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white text-xs font-bold shadow-md shadow-[#2a2a2a]/20 transition flex items-center gap-1.5 self-start sm:self-auto"
+              className="px-4 py-2 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold shadow-md shadow-[#263238]/20 transition flex items-center gap-1.5 self-start sm:self-auto"
             >
               <span>+ Invite New Delegate</span>
             </button>
           </div>
 
           <div className="space-y-3">
-            <div className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+            <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-sm text-[#2a2a2a]">CA Rajesh K.</span>
+                  <span className="font-extrabold text-sm text-[#263238]">CA Rajesh K.</span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-800">
                     Chartered Accountant
                   </span>
@@ -1137,16 +1137,16 @@ export default function SettingsView() {
                 </div>
                 <div className="text-[11px] text-[#666666]">rajesh.k@cacafe.in • +91 98410 44219</div>
                 <div className="flex flex-wrap gap-1.5 pt-1">
-                  <span className="text-[10px] bg-white border border-[#B5B5B5] text-[#2a2a2a] px-2 py-0.5 rounded-md font-medium">Double-Entry Ledger</span>
-                  <span className="text-[10px] bg-white border border-[#B5B5B5] text-[#2a2a2a] px-2 py-0.5 rounded-md font-medium">Section 24 Tax P&amp;L</span>
-                  <span className="text-[10px] bg-white border border-[#B5B5B5] text-[#2a2a2a] px-2 py-0.5 rounded-md font-medium">Invoices &amp; TDS</span>
+                  <span className="text-[10px] bg-white border border-[#D2DDD7] text-[#263238] px-2 py-0.5 rounded-md font-medium">Double-Entry Ledger</span>
+                  <span className="text-[10px] bg-white border border-[#D2DDD7] text-[#263238] px-2 py-0.5 rounded-md font-medium">Section 24 Tax P&amp;L</span>
+                  <span className="text-[10px] bg-white border border-[#D2DDD7] text-[#263238] px-2 py-0.5 rounded-md font-medium">Invoices &amp; TDS</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => alert('Permissions updated for CA Rajesh K.')}
-                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold text-xs transition"
+                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] font-bold text-xs transition"
                 >
                   Configure Scope
                 </button>
@@ -1159,10 +1159,10 @@ export default function SettingsView() {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+            <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-sm text-[#2a2a2a]">Arjun Das</span>
+                  <span className="font-extrabold text-sm text-[#263238]">Arjun Das</span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800">
                     Field Operations Manager
                   </span>
@@ -1172,16 +1172,16 @@ export default function SettingsView() {
                 </div>
                 <div className="text-[11px] text-[#666666]">arjun.das@staywise.com • +91 94470 12891</div>
                 <div className="flex flex-wrap gap-1.5 pt-1">
-                  <span className="text-[10px] bg-white border border-[#B5B5B5] text-[#2a2a2a] px-2 py-0.5 rounded-md font-medium">Leads &amp; Showing Visits</span>
-                  <span className="text-[10px] bg-white border border-[#B5B5B5] text-[#2a2a2a] px-2 py-0.5 rounded-md font-medium">Maintenance Work Orders</span>
-                  <span className="text-[10px] bg-white border border-[#B5B5B5] text-[#2a2a2a] px-2 py-0.5 rounded-md font-medium">Electricity Sub-Meters</span>
+                  <span className="text-[10px] bg-white border border-[#D2DDD7] text-[#263238] px-2 py-0.5 rounded-md font-medium">Leads &amp; Showing Visits</span>
+                  <span className="text-[10px] bg-white border border-[#D2DDD7] text-[#263238] px-2 py-0.5 rounded-md font-medium">Maintenance Work Orders</span>
+                  <span className="text-[10px] bg-white border border-[#D2DDD7] text-[#263238] px-2 py-0.5 rounded-md font-medium">Electricity Sub-Meters</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => alert('Permissions updated for Arjun Das')}
-                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] font-bold text-xs transition"
+                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] font-bold text-xs transition"
                 >
                   Configure Scope
                 </button>
@@ -1202,17 +1202,17 @@ export default function SettingsView() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="organic-card p-6 space-y-4">
             <div>
-              <h3 className="text-base font-extrabold text-[#2a2a2a]">Account Security &amp; MFA</h3>
+              <h3 className="text-base font-extrabold text-[#263238]">Account Security &amp; MFA</h3>
               <p className="text-xs text-[#666666]">
                 Protect portfolio bank withdrawals and sensitive lease agreements
               </p>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#2a2a2a]/20 flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#263238]/20 flex items-center justify-between">
                 <div>
-                  <span className="font-extrabold text-[#2a2a2a] flex items-center gap-1.5">
-                    <Smartphone className="h-4 w-4 text-[#2a2a2a]" />
+                  <span className="font-extrabold text-[#263238] flex items-center gap-1.5">
+                    <Smartphone className="h-4 w-4 text-[#263238]" />
                     <span>Two-Factor Authentication (2FA)</span>
                   </span>
                   <span className="text-[11px] text-[#666666]">SMS OTP + Google Authenticator Active</span>
@@ -1222,20 +1222,20 @@ export default function SettingsView() {
                 </span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-between">
                 <div>
-                  <span className="font-extrabold text-[#2a2a2a] block">Session Inactivity Timeout</span>
+                  <span className="font-extrabold text-[#263238] block">Session Inactivity Timeout</span>
                   <span className="text-[11px] text-[#666666]">Auto-lock dashboard after 30 minutes of idle time</span>
                 </div>
-                <span className="text-xs font-bold text-[#2a2a2a]">30 min</span>
+                <span className="text-xs font-bold text-[#263238]">30 min</span>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-between">
                 <div>
-                  <span className="font-extrabold text-[#2a2a2a] block">Audit Log Retention</span>
+                  <span className="font-extrabold text-[#263238] block">Audit Log Retention</span>
                   <span className="text-[11px] text-[#666666]">Immutable ledger and activity history archived</span>
                 </div>
-                <span className="text-xs font-bold text-[#2a2a2a]">7 Years Statutory</span>
+                <span className="text-xs font-bold text-[#263238]">7 Years Statutory</span>
               </div>
             </div>
           </div>
@@ -1243,7 +1243,7 @@ export default function SettingsView() {
           <div className="organic-card p-6 flex flex-col justify-between space-y-4">
             <div>
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-extrabold text-[#2a2a2a]">Change Password</h3>
+                <h3 className="text-base font-extrabold text-[#263238]">Change Password</h3>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
                   SHA-256 Encrypted
                 </span>
@@ -1253,23 +1253,23 @@ export default function SettingsView() {
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block text-[#2a2a2a] font-semibold mb-1">Current Password</label>
+                <label className="block text-[#263238] font-semibold mb-1">Current Password</label>
                 <input
                   type="password"
                   placeholder="Enter current password"
                   value={currentPasswordInput}
                   onChange={(e) => setCurrentPasswordInput(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] bg-white text-[#2a2a2a] focus:outline-none focus:ring-1 focus:ring-[#e10600]"
+                  className="w-full px-3 py-2 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] focus:outline-none focus:ring-1 focus:ring-[#163B36]"
                 />
               </div>
               <div>
-                <label className="block text-[#2a2a2a] font-semibold mb-1">New Password</label>
+                <label className="block text-[#263238] font-semibold mb-1">New Password</label>
                 <input
                   type="password"
                   placeholder="Enter strong new password (min 6 chars)"
                   value={newPasswordInput}
                   onChange={(e) => setNewPasswordInput(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-[#B5B5B5] bg-white text-[#2a2a2a] focus:outline-none focus:ring-1 focus:ring-[#e10600]"
+                  className="w-full px-3 py-2 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] focus:outline-none focus:ring-1 focus:ring-[#163B36]"
                 />
               </div>
             </div>
@@ -1283,7 +1283,7 @@ export default function SettingsView() {
             <button
               onClick={handleUpdatePassword}
               disabled={passwordLoading}
-              className="w-full py-2.5 rounded-2xl bg-[#e10600] hover:bg-[#c50500] disabled:opacity-60 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-2"
+              className="w-full py-2.5 rounded-2xl bg-[#163B36] hover:bg-[#0F2925] disabled:opacity-60 text-white font-bold text-xs shadow-sm transition flex items-center justify-center space-x-2"
             >
               {passwordLoading ? (
                 <span>Encrypting & Updating...</span>
@@ -1297,22 +1297,22 @@ export default function SettingsView() {
 
       {/* Tier Switcher & Upgrade Modal */}
       {isUpgradeModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#2a2a2a]/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto font-sans">
-          <div className="w-full max-w-4xl bg-white border border-[#B5B5B5] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] my-auto">
+        <div className="fixed inset-0 z-50 bg-[#263238]/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto font-sans">
+          <div className="w-full max-w-4xl bg-white border border-[#D2DDD7] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] my-auto">
             {/* Modal Header */}
             <div className="p-6 border-b border-[#D1D5DB] bg-[#f5f5f5] flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-2xl bg-[#e10600] text-white flex items-center justify-center font-bold">
+                <div className="h-10 w-10 rounded-2xl bg-[#163B36] text-white flex items-center justify-center font-bold">
                   <Crown className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-[#2a2a2a]">Staywise Platform Tier Selection</h3>
+                  <h3 className="text-lg font-black text-[#263238]">Staywise Platform Tier Selection</h3>
                   <p className="text-xs text-[#666666]">Server-Authoritative Pricing • Protected by HMAC-SHA256 Tokenization</p>
                 </div>
               </div>
               <button
                 onClick={() => { setIsUpgradeModalOpen(false); setUpgradeError(null); }}
-                className="text-[#666666] hover:text-[#2a2a2a] p-1.5 rounded-xl hover:bg-[#c0c0c0] text-lg font-bold"
+                className="text-[#666666] hover:text-[#263238] p-1.5 rounded-xl hover:bg-[#E8F0EC] text-lg font-bold"
               >
                 ✕
               </button>
@@ -1321,11 +1321,11 @@ export default function SettingsView() {
             {/* Cycle Toggle */}
             <div className="p-6 overflow-y-auto space-y-6">
               <div className="flex justify-center">
-                <div className="p-1 rounded-2xl bg-[#c0c0c0] flex items-center gap-1 border border-[#B5B5B5]">
+                <div className="p-1 rounded-2xl bg-[#E8F0EC] flex items-center gap-1 border border-[#D2DDD7]">
                   <button
                     onClick={() => setSelectedCycle('monthly')}
                     className={`px-4 py-1.5 rounded-xl text-xs font-bold transition ${
-                      selectedCycle === 'monthly' ? 'bg-[#2a2a2a] text-[#e10600] shadow-sm' : 'text-[#666666] hover:text-[#2a2a2a]'
+                      selectedCycle === 'monthly' ? 'bg-[#263238] text-[#163B36] shadow-sm' : 'text-[#666666] hover:text-[#263238]'
                     }`}
                   >
                     Monthly Billing
@@ -1333,11 +1333,11 @@ export default function SettingsView() {
                   <button
                     onClick={() => setSelectedCycle('annual')}
                     className={`px-4 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                      selectedCycle === 'annual' ? 'bg-[#2a2a2a] text-[#e10600] shadow-sm' : 'text-[#666666] hover:text-[#2a2a2a]'
+                      selectedCycle === 'annual' ? 'bg-[#263238] text-[#163B36] shadow-sm' : 'text-[#666666] hover:text-[#263238]'
                     }`}
                   >
                     <span>Annual Billing</span>
-                    <span className="px-1.5 py-0.2 rounded-full bg-[#e10600] text-white font-black text-[9px]">
+                    <span className="px-1.5 py-0.2 rounded-full bg-[#163B36] text-white font-black text-[9px]">
                       SAVE 17%
                     </span>
                   </button>
@@ -1352,8 +1352,8 @@ export default function SettingsView() {
               )}
 
               {upgradeSuccess && (
-                <div className="p-3.5 rounded-2xl bg-[#c0c0c0] border border-[#383838]/30 text-[#2a2a2a] text-xs font-bold flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-[#383838]" />
+                <div className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#263238]/30 text-[#263238] text-xs font-bold flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-[#263238]" />
                   <span>Plan upgraded and cryptographically verified! Refreshing workspace...</span>
                 </div>
               )}
@@ -1370,10 +1370,10 @@ export default function SettingsView() {
                       key={tierId}
                       className={`rounded-2xl p-5 border flex flex-col justify-between transition-all ${
                         isCurrent 
-                          ? 'border-[#383838] bg-[#c0c0c0]/50 shadow-md ring-2 ring-[#383838]/20' 
+                          ? 'border-[#263238] bg-[#E8F0EC]/50 shadow-md ring-2 ring-[#263238]/20' 
                           : plan.popular 
-                            ? 'border-[#383838] bg-[#f0f0f0]' 
-                            : 'border-[#B5B5B5] bg-white'
+                            ? 'border-[#263238] bg-[#E8F0EC]' 
+                            : 'border-[#D2DDD7] bg-white'
                       }`}
                     >
                       <div className="space-y-3">
@@ -1382,17 +1382,17 @@ export default function SettingsView() {
                             <span className="text-[10px] font-black uppercase tracking-wider text-[#666666]">
                               {plan.badge || 'Tier Plan'}
                             </span>
-                            <h4 className="text-base font-extrabold text-[#2a2a2a]">{plan.name}</h4>
+                            <h4 className="text-base font-extrabold text-[#263238]">{plan.name}</h4>
                           </div>
                           {isCurrent && (
-                            <span className="px-2 py-0.5 rounded-full bg-[#e10600] text-white text-[10px] font-black">
+                            <span className="px-2 py-0.5 rounded-full bg-[#163B36] text-white text-[10px] font-black">
                               Current
                             </span>
                           )}
                         </div>
 
                         <div className="pt-1 pb-2">
-                          <span className="text-2xl font-black text-[#2a2a2a]">
+                          <span className="text-2xl font-black text-[#263238]">
                             ₹{price.toLocaleString('en-IN')}
                           </span>
                           <span className="text-xs text-[#666666] font-semibold">
@@ -1403,10 +1403,10 @@ export default function SettingsView() {
                           </div>
                         </div>
 
-                        <div className="pt-2 border-t border-[#D1D5DB] space-y-2 text-xs text-[#2a2a2a]">
+                        <div className="pt-2 border-t border-[#D1D5DB] space-y-2 text-xs text-[#263238]">
                           {plan.features.slice(0, 5).map((f, i) => (
                             <div key={i} className="flex items-start gap-2 text-[11px]">
-                              <Check className="h-3 w-3 text-[#383838] mt-0.5 shrink-0" />
+                              <Check className="h-3 w-3 text-[#263238] mt-0.5 shrink-0" />
                               <span>{f}</span>
                             </div>
                           ))}
@@ -1419,10 +1419,10 @@ export default function SettingsView() {
                           onClick={() => handleUpgradeTier(tierId)}
                           className={`w-full py-2.5 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 ${
                             isCurrent
-                              ? 'bg-white border border-[#383838] text-[#383838] hover:bg-[#c0c0c0]'
+                              ? 'bg-white border border-[#263238] text-[#263238] hover:bg-[#E8F0EC]'
                               : plan.popular
-                                ? 'bg-[#2a2a2a] text-[#e10600] hover:bg-[#383838] shadow-sm'
-                                : 'bg-[#383838] text-white hover:bg-[#2a2a2a] shadow-sm'
+                                ? 'bg-[#263238] text-[#163B36] hover:bg-[#263238] shadow-sm'
+                                : 'bg-[#263238] text-white hover:bg-[#263238] shadow-sm'
                           }`}
                         >
                           {isUpgrading ? (
@@ -1443,8 +1443,8 @@ export default function SettingsView() {
               </div>
 
               {/* White Hat Audit Notice */}
-              <div className="p-3.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] flex items-center gap-3 text-xs text-[#666666]">
-                <ShieldCheck className="h-5 w-5 text-[#383838] shrink-0" />
+              <div className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center gap-3 text-xs text-[#666666]">
+                <ShieldCheck className="h-5 w-5 text-[#263238] shrink-0" />
                 <span>
                   <b>White-Hat Security Active:</b> Checkout tokens are cryptographically generated on server. Burp Suite request interception and client-side amount tampering are neutralized and quarantined.
                 </span>
@@ -1456,8 +1456,8 @@ export default function SettingsView() {
 
       {/* Floating Save Toast feedback */}
       {isSavedToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#2a2a2a] text-[#e10600] px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-[#e10600] animate-bounce">
-          <CheckCircle2 className="h-5 w-5 text-[#e10600]" />
+        <div className="fixed bottom-6 right-6 z-50 bg-[#263238] text-[#163B36] px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-[#163B36] animate-bounce">
+          <CheckCircle2 className="h-5 w-5 text-[#163B36]" />
           <span className="text-xs font-bold">Settings and automation rules saved!</span>
         </div>
       )}

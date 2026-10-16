@@ -34,7 +34,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className="min-h-full bg-[#c0c0c0] text-[#2a2a2a] flex flex-col selection:bg-[#e10600] selection:text-white">
+      <body className="min-h-full bg-[#F7F8F6] text-[#263238] flex flex-col selection:bg-[#163B36] selection:text-white">
         {children}
       </body>
     </html>

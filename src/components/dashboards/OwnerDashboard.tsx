@@ -146,7 +146,7 @@ const DEMO_TASKS_LIST = [
     id: 'tsk-1',
     title: 'Monthly Rent Verification & Autopay Sync',
     status: 'In progress',
-    statusColor: 'bg-[#e10600]',
+    statusColor: 'bg-[#163B36]',
     hours: '4h',
     icon: 'sparkles'
   },
@@ -154,7 +154,7 @@ const DEMO_TASKS_LIST = [
     id: 'tsk-2',
     title: 'BESCOM Electricity Meter OCR Scan (Unit 302)',
     status: 'On hold',
-    statusColor: 'bg-[#383838]',
+    statusColor: 'bg-[#263238]',
     hours: '8h',
     icon: 'search'
   },
@@ -162,7 +162,7 @@ const DEMO_TASKS_LIST = [
     id: 'tsk-3',
     title: 'Digital Tenancy Agreement (Aadhaar eSign)',
     status: 'Done',
-    statusColor: 'bg-[#e10600]',
+    statusColor: 'bg-[#163B36]',
     hours: '32h',
     icon: 'code'
   }
@@ -338,7 +338,7 @@ export default function OwnerDashboard() {
   });
 
   return (
-    <div className="space-y-6 pb-12 font-sans text-[#2a2a2a]">
+    <div className="space-y-6 pb-12 font-sans text-[#263238]">
       
       {/* ========================================================================= */}
       {/* 1. SUB-NAVIGATION TABS (Overview, Properties, Banks, Vault, Team, Power)  */}
@@ -349,8 +349,8 @@ export default function OwnerDashboard() {
             onClick={() => setActiveTab('overview')}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
               activeTab === 'overview'
-                ? 'bg-[#e10600] text-white shadow-2xs'
-                : 'text-[#383838] hover:text-[#2a2a2a] hover:bg-[#f0f0f0]'
+                ? 'bg-[#163B36] text-white shadow-2xs'
+                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
             }`}
           >
             Universal Overview
@@ -359,8 +359,8 @@ export default function OwnerDashboard() {
             onClick={() => setActiveTab('properties')}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
               activeTab === 'properties'
-                ? 'bg-[#e10600] text-white shadow-2xs'
-                : 'text-[#383838] hover:text-[#2a2a2a] hover:bg-[#f0f0f0]'
+                ? 'bg-[#163B36] text-white shadow-2xs'
+                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
             }`}
           >
             Properties &amp; Units ({activeProperties.length})
@@ -369,8 +369,8 @@ export default function OwnerDashboard() {
             onClick={() => setActiveTab('bank_accounts')}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
               activeTab === 'bank_accounts'
-                ? 'bg-[#e10600] text-white shadow-2xs'
-                : 'text-[#383838] hover:text-[#2a2a2a] hover:bg-[#f0f0f0]'
+                ? 'bg-[#163B36] text-white shadow-2xs'
+                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
             }`}
           >
             Direct Banks ({bankAccounts.length})
@@ -379,8 +379,8 @@ export default function OwnerDashboard() {
             onClick={() => setActiveTab('documents')}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
               activeTab === 'documents'
-                ? 'bg-[#e10600] text-white shadow-2xs'
-                : 'text-[#383838] hover:text-[#2a2a2a] hover:bg-[#f0f0f0]'
+                ? 'bg-[#163B36] text-white shadow-2xs'
+                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
             }`}
           >
             Deeds &amp; Vault ({documents.length})
@@ -389,8 +389,8 @@ export default function OwnerDashboard() {
             onClick={() => setActiveTab('delegates')}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
               activeTab === 'delegates'
-                ? 'bg-[#e10600] text-white shadow-2xs'
-                : 'text-[#383838] hover:text-[#2a2a2a] hover:bg-[#f0f0f0]'
+                ? 'bg-[#163B36] text-white shadow-2xs'
+                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
             }`}
           >
             Team Delegates ({delegates.length})
@@ -399,8 +399,8 @@ export default function OwnerDashboard() {
             onClick={() => setActiveTab('utilities')}
             className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
               activeTab === 'utilities'
-                ? 'bg-[#e10600] text-white shadow-2xs'
-                : 'text-[#383838] hover:text-[#2a2a2a] hover:bg-[#f0f0f0]'
+                ? 'bg-[#163B36] text-white shadow-2xs'
+                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
             }`}
           >
             Utility OCR Bills ({electricityBills.length})
@@ -409,7 +409,7 @@ export default function OwnerDashboard() {
 
         <button
           onClick={() => setIsAddPropertyOpen(true)}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white text-xs font-extrabold transition shrink-0 shadow-xs"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold transition shrink-0 shadow-xs"
         >
           <Plus className="h-3.5 w-3.5" />
           <span>Add Property</span>
@@ -430,7 +430,7 @@ export default function OwnerDashboard() {
             {/* Header: Greeting + Date */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#2a2a2a] tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#263238] tracking-tight">
                   Hello, {currentUser.name.split(' ')[0] || 'Vikram'}
                 </h1>
                 <p className="text-xs text-[#666666] mt-1 font-medium">
@@ -442,31 +442,31 @@ export default function OwnerDashboard() {
               <div className="flex items-center gap-2 self-start sm:self-auto">
                 <button 
                   onClick={() => setActiveView('reports')}
-                  className="px-3 py-1.5 rounded-full bg-white hover:bg-[#f0f0f0] border border-[#B5B5B5] text-xs font-bold text-[#383838] transition shadow-2xs flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-full bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238] transition shadow-2xs flex items-center gap-1"
                 >
                   <span>P&amp;L Statement</span>
                   <ArrowUpRight className="h-3 w-3" />
                 </button>
-                <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#f0f0f0] border border-[#B5B5B5] text-xs font-bold text-[#383838] shadow-2xs">
+                <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238] shadow-2xs">
                   <span>16 May, 2026</span>
-                  <CalendarIcon className="h-3.5 w-3.5 text-[#e10600]" />
+                  <CalendarIcon className="h-3.5 w-3.5 text-[#163B36]" />
                 </div>
               </div>
             </div>
 
             {/* Clean Slate Onboarding State for New Users */}
             {activeProperties.length === 0 && (
-              <div className="bg-white rounded-3xl p-6 border-2 border-dashed border-[#B5B5B5] text-center space-y-3 animate-in fade-in duration-200">
-                <div className="w-12 h-12 rounded-full bg-[#f0f0f0] flex items-center justify-center mx-auto text-[#e10600]">
+              <div className="bg-white rounded-3xl p-6 border-2 border-dashed border-[#D2DDD7] text-center space-y-3 animate-in fade-in duration-200">
+                <div className="w-12 h-12 rounded-full bg-[#E8F0EC] flex items-center justify-center mx-auto text-[#163B36]">
                   <Plus className="h-6 w-6" />
                 </div>
-                <h3 className="text-lg font-bold text-[#2a2a2a]">Welcome to Staywise! No properties added yet.</h3>
+                <h3 className="text-lg font-bold text-[#263238]">Welcome to Staywise! No properties added yet.</h3>
                 <p className="text-xs text-[#666666] max-w-md mx-auto">
                   Your workspace starts with a clean slate. Click below to add your first property, residential apartment, or PG hostel.
                 </p>
                 <button
                   onClick={() => setIsAddPropertyOpen(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#e10600] text-white text-xs font-bold hover:bg-[#c50500] transition shadow-xs"
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Add Your First Property</span>
@@ -480,14 +480,14 @@ export default function OwnerDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               
               {/* Card 1: Total Revenue & Inflow */}
-              <div className="bg-white rounded-3xl p-5 border border-[#B5B5B5] shadow-xs hover:shadow-md transition-shadow">
+              <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-[#666666]">Hospitality &amp; Rent Inflow</span>
-                  <span className="text-[10px] font-bold text-[#383838] bg-[#c0c0c0] px-2.5 py-0.5 rounded-full border border-[#383838]/10">
+                  <span className="text-[10px] font-bold text-[#263238] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#263238]/10">
                     {activeProperties.length > 0 ? '+24% YoY' : '0%'}
                   </span>
                 </div>
-                <div className="text-2xl sm:text-3xl font-black text-[#2a2a2a] font-tabular mt-2 tracking-tight">
+                <div className="text-2xl sm:text-3xl font-black text-[#263238] font-tabular mt-2 tracking-tight">
                   ₹{totalCollectedRent.toLocaleString('en-IN')}
                 </div>
                 <span className="text-[11px] text-[#666666] mt-1 block">
@@ -499,14 +499,14 @@ export default function OwnerDashboard() {
               </div>
 
               {/* Card 2: Unit & Bed Occupancy */}
-              <div className="bg-white rounded-3xl p-5 border border-[#B5B5B5] shadow-xs hover:shadow-md transition-shadow">
+              <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-[#666666]">Portfolio Unit Occupancy</span>
-                  <span className="text-[10px] font-bold text-[#383838] bg-[#c0c0c0] px-2.5 py-0.5 rounded-full border border-[#383838]/10">
+                  <span className="text-[10px] font-bold text-[#263238] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#263238]/10">
                     {activeProperties.length > 0 ? 'Active' : 'No Units'}
                   </span>
                 </div>
-                <div className="text-2xl sm:text-3xl font-black text-[#383838] font-tabular mt-2 tracking-tight">
+                <div className="text-2xl sm:text-3xl font-black text-[#263238] font-tabular mt-2 tracking-tight">
                   {occupancyPercentage}%
                 </div>
                 <span className="text-[11px] text-[#666666] mt-1 block">
@@ -515,14 +515,14 @@ export default function OwnerDashboard() {
               </div>
 
               {/* Card 3: Active Stays & Leases */}
-              <div className="bg-white rounded-3xl p-5 border border-[#B5B5B5] shadow-xs hover:shadow-md transition-shadow">
+              <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-[#666666]">Active Stays &amp; Leases</span>
-                  <span className="text-[10px] font-bold text-[#383838] bg-[#c0c0c0] px-2.5 py-0.5 rounded-full border border-[#383838]/10">
+                  <span className="text-[10px] font-bold text-[#263238] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#263238]/10">
                     {occupiedUnitsCount} Leases
                   </span>
                 </div>
-                <div className="text-2xl sm:text-3xl font-black text-[#2a2a2a] font-tabular mt-2 tracking-tight">
+                <div className="text-2xl sm:text-3xl font-black text-[#263238] font-tabular mt-2 tracking-tight">
                   {occupiedUnitsCount} Stays Live
                 </div>
                 <span className="text-[11px] text-[#666666] mt-1 block">
@@ -531,14 +531,14 @@ export default function OwnerDashboard() {
               </div>
 
               {/* Card 4: Net Operating Cashflow (NOI) */}
-              <div className="bg-white rounded-3xl p-5 border border-[#B5B5B5] shadow-xs hover:shadow-md transition-shadow">
+              <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-[#666666]">Net Operating Cashflow</span>
-                  <span className="text-[10px] font-bold text-[#383838] bg-[#c0c0c0] px-2.5 py-0.5 rounded-full border border-[#383838]/10">
+                  <span className="text-[10px] font-bold text-[#263238] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#263238]/10">
                     {activeProperties.length > 0 ? 'Net Surplus' : 'No Inflow'}
                   </span>
                 </div>
-                <div className="text-2xl sm:text-3xl font-black text-[#383838] font-tabular mt-2 tracking-tight">
+                <div className="text-2xl sm:text-3xl font-black text-[#263238] font-tabular mt-2 tracking-tight">
                   +₹{Math.round(totalCollectedRent * 0.844).toLocaleString('en-IN')}
                 </div>
                 <span className="text-[11px] text-[#666666] mt-1 block">
@@ -550,14 +550,14 @@ export default function OwnerDashboard() {
 
             {/* Performance Chart Card (Human-Readable, Responsive with Clear Y-Axis & Tooltips) */}
             {activeProperties.length > 0 && (
-            <div className="rounded-3xl bg-white border border-[#B5B5B5] p-4 sm:p-5 md:p-6 shadow-xs space-y-4">
+            <div className="rounded-3xl bg-white border border-[#D2DDD7] p-4 sm:p-5 md:p-6 shadow-xs space-y-4">
               
               {/* Header & Range Controls */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#D1D5DB]">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-base sm:text-lg font-black text-[#2a2a2a] tracking-tight">Collection &amp; Yield Performance</h3>
-                    <span className="text-[10px] sm:text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-[#e10600] text-white border border-[#383838]/20 shrink-0">
+                    <h3 className="text-base sm:text-lg font-black text-[#263238] tracking-tight">Collection &amp; Yield Performance</h3>
+                    <span className="text-[10px] sm:text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-[#163B36] text-white border border-[#263238]/20 shrink-0">
                       +12% vs Last Month
                     </span>
                   </div>
@@ -568,26 +568,26 @@ export default function OwnerDashboard() {
                 
                 {/* Legend & Cycle Toggle */}
                 <div className="flex items-center gap-2 flex-wrap text-xs self-start sm:self-auto">
-                  <div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-[#f0f0f0] border border-[#B5B5B5]">
-                    <span className="flex items-center gap-1.5 text-xs font-bold text-[#2a2a2a]">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#383838] shrink-0" />
+                  <div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-[#E8F0EC] border border-[#D2DDD7]">
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-[#263238]">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#263238] shrink-0" />
                       <span>May 2026 (Active)</span>
                     </span>
                     <span className="flex items-center gap-1.5 text-xs font-semibold text-[#666666]">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#e10600]/40 border border-[#e10600] shrink-0" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#163B36]/40 border border-[#163B36] shrink-0" />
                       <span>Apr 2026</span>
                     </span>
                   </div>
 
-                  <div className="flex items-center rounded-full bg-[#f0f0f0] p-0.5 border border-[#B5B5B5]">
+                  <div className="flex items-center rounded-full bg-[#E8F0EC] p-0.5 border border-[#D2DDD7]">
                     {['01-07 May', 'Monthly', 'Quarterly'].map((range) => (
                       <button
                         key={range}
                         onClick={() => setSelectedChartRange(range)}
                         className={`px-3 py-1 rounded-full text-[11px] font-bold transition ${
                           selectedChartRange === range
-                            ? 'bg-[#2a2a2a] text-[#e10600] shadow-2xs'
-                            : 'text-[#666666] hover:text-[#2a2a2a]'
+                            ? 'bg-[#263238] text-[#163B36] shadow-2xs'
+                            : 'text-[#666666] hover:text-[#263238]'
                         }`}
                       >
                         {range}
@@ -599,9 +599,9 @@ export default function OwnerDashboard() {
 
               {/* Summary Stats Row */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 text-xs">
-                <div className="p-3 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] transition hover:border-[#383838]">
+                <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] transition hover:border-[#263238]">
                   <div className="text-[10px] sm:text-[11px] text-[#666666] font-semibold">Selected Day Collection</div>
-                  <div className="text-sm sm:text-base font-black text-[#2a2a2a] font-tabular mt-0.5">
+                  <div className="text-sm sm:text-base font-black text-[#263238] font-tabular mt-0.5">
                     {hoveredDay === '01' ? '₹4.20 Lakhs' :
                      hoveredDay === '02' ? '₹9.50 Lakhs' :
                      hoveredDay === '03' ? '₹15.90 Lakhs' :
@@ -609,7 +609,7 @@ export default function OwnerDashboard() {
                      hoveredDay === '05' ? '₹16.25 Lakhs' :
                      hoveredDay === '06' ? '₹16.35 Lakhs' : '₹16.40 Lakhs'}
                   </div>
-                  <span className="text-[10px] text-[#383838] font-bold mt-0.5 block">
+                  <span className="text-[10px] text-[#263238] font-bold mt-0.5 block">
                     {hoveredDay === '03' ? '🔥 Peak Inflow (97% Met)' :
                      hoveredDay === '01' ? 'Cycle start • 25.6% Met' :
                      hoveredDay === '02' ? 'UPI Autopay • 57.9% Met' :
@@ -617,9 +617,9 @@ export default function OwnerDashboard() {
                   </span>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] transition hover:border-[#383838]">
+                <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] transition hover:border-[#263238]">
                   <div className="text-[10px] sm:text-[11px] text-[#666666] font-semibold">Monthly Peak Day</div>
-                  <div className="text-sm sm:text-base font-black text-[#383838] font-tabular mt-0.5">
+                  <div className="text-sm sm:text-base font-black text-[#263238] font-tabular mt-0.5">
                     03 May (₹15.9L)
                   </div>
                   <span className="text-[10px] text-[#666666] font-medium mt-0.5 block">
@@ -627,19 +627,19 @@ export default function OwnerDashboard() {
                   </span>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] transition hover:border-[#383838]">
+                <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] transition hover:border-[#263238]">
                   <div className="text-[10px] sm:text-[11px] text-[#666666] font-semibold">On-Time Collection Rate</div>
-                  <div className="text-sm sm:text-base font-black text-[#383838] font-tabular mt-0.5">
+                  <div className="text-sm sm:text-base font-black text-[#263238] font-tabular mt-0.5">
                     97.0% On-Time
                   </div>
-                  <span className="text-[10px] text-[#e10600] font-bold mt-0.5 block">
+                  <span className="text-[10px] text-[#163B36] font-bold mt-0.5 block">
                     ₹50,000 pending reconciliation
                   </span>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] transition hover:border-[#383838]">
+                <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] transition hover:border-[#263238]">
                   <div className="text-[10px] sm:text-[11px] text-[#666666] font-semibold">Realized Portfolio APY</div>
-                  <div className="text-sm sm:text-base font-black text-[#2a2a2a] font-tabular mt-0.5">
+                  <div className="text-sm sm:text-base font-black text-[#263238] font-tabular mt-0.5">
                     8.4% Net Yield
                   </div>
                   <span className="text-[10px] text-[#666666] font-medium mt-0.5 block">
@@ -668,7 +668,7 @@ export default function OwnerDashboard() {
                     
                     {/* Interactive Floating Popover Tooltip with Clamped Bounds */}
                     <div 
-                      className="absolute top-1 z-30 bg-[#2a2a2a] text-white rounded-2xl p-2.5 sm:p-3 shadow-xl space-y-1 text-xs w-40 sm:w-48 transition-all duration-200 border border-[#e10600] pointer-events-none"
+                      className="absolute top-1 z-30 bg-[#263238] text-white rounded-2xl p-2.5 sm:p-3 shadow-xl space-y-1 text-xs w-40 sm:w-48 transition-all duration-200 border border-[#163B36] pointer-events-none"
                       style={{
                         left: hoveredDay === '01' ? '12%' :
                               hoveredDay === '02' ? '24%' :
@@ -680,7 +680,7 @@ export default function OwnerDashboard() {
                       }}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] sm:text-xs font-black text-[#e10600]">
+                        <span className="text-[11px] sm:text-xs font-black text-[#163B36]">
                           {hoveredDay} May 2026 ({
                             hoveredDay === '01' ? 'Fri' :
                             hoveredDay === '02' ? 'Sat' :
@@ -690,15 +690,15 @@ export default function OwnerDashboard() {
                             hoveredDay === '06' ? 'Wed' : 'Thu'
                           })
                         </span>
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#383838] text-[#e10600] font-bold shrink-0">
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#263238] text-[#163B36] font-bold shrink-0">
                           {hoveredDay === '03' ? '🔥 Peak' : 'Recorded'}
                         </span>
                       </div>
                       
                       <div className="pt-1 border-t border-white/10 space-y-1">
                         <div className="flex items-center justify-between text-[11px]">
-                          <span className="flex items-center gap-1 text-[#c0c0c0]">
-                            <span className="w-1.5 h-3 rounded-full bg-[#e10600]" />
+                          <span className="flex items-center gap-1 text-[#E8F0EC]">
+                            <span className="w-1.5 h-3 rounded-full bg-[#163B36]" />
                             May Inflow:
                           </span>
                           <span className="font-black text-white font-tabular">
@@ -712,11 +712,11 @@ export default function OwnerDashboard() {
                         </div>
 
                         <div className="flex items-center justify-between text-[11px]">
-                          <span className="flex items-center gap-1 text-[#c0c0c0]/70">
-                            <span className="w-1.5 h-3 rounded-full bg-[#e10600]" />
+                          <span className="flex items-center gap-1 text-[#E8F0EC]/70">
+                            <span className="w-1.5 h-3 rounded-full bg-[#163B36]" />
                             Apr Inflow:
                           </span>
-                          <span className="font-semibold text-[#c0c0c0] font-tabular">
+                          <span className="font-semibold text-[#E8F0EC] font-tabular">
                             {hoveredDay === '01' ? '₹3.80L' :
                              hoveredDay === '02' ? '₹8.10L' :
                              hoveredDay === '03' ? '₹14.20L' :
@@ -726,7 +726,7 @@ export default function OwnerDashboard() {
                           </span>
                         </div>
 
-                        <div className="flex items-center justify-between text-[10px] text-[#e10600] pt-0.5 border-t border-white/5">
+                        <div className="flex items-center justify-between text-[10px] text-[#163B36] pt-0.5 border-t border-white/5">
                           <span>Growth vs Apr:</span>
                           <span className="font-bold">
                             {hoveredDay === '01' ? '+₹40,000' :
@@ -744,9 +744,9 @@ export default function OwnerDashboard() {
                     <svg className="w-full h-full overflow-visible" viewBox="0 0 700 180" preserveAspectRatio="none">
                       <defs>
                         <linearGradient id="forestAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#383838" stopOpacity="0.32" />
-                          <stop offset="50%" stopColor="#383838" stopOpacity="0.10" />
-                          <stop offset="100%" stopColor="#383838" stopOpacity="0.0" />
+                          <stop offset="0%" stopColor="#263238" stopOpacity="0.32" />
+                          <stop offset="50%" stopColor="#263238" stopOpacity="0.10" />
+                          <stop offset="100%" stopColor="#263238" stopOpacity="0.0" />
                         </linearGradient>
                       </defs>
 
@@ -755,7 +755,7 @@ export default function OwnerDashboard() {
                       <line x1="0" y1="50" x2="700" y2="50" stroke="#D1D5DB" strokeWidth="1" strokeDasharray="4 4" />
                       <line x1="0" y1="90" x2="700" y2="90" stroke="#D1D5DB" strokeWidth="1" strokeDasharray="4 4" />
                       <line x1="0" y1="130" x2="700" y2="130" stroke="#D1D5DB" strokeWidth="1" strokeDasharray="4 4" />
-                      <line x1="0" y1="170" x2="700" y2="170" stroke="#B5B5B5" strokeWidth="1.5" />
+                      <line x1="0" y1="170" x2="700" y2="170" stroke="#D2DDD7" strokeWidth="1.5" />
 
                       {/* Active Day Vertical Needle Line */}
                       <line 
@@ -773,7 +773,7 @@ export default function OwnerDashboard() {
                             hoveredDay === '05' ? '450' :
                             hoveredDay === '06' ? '550' : '650'}
                         y2="170" 
-                        stroke="#383838" 
+                        stroke="#263238" 
                         strokeWidth="1.5" 
                         strokeDasharray="3 3" 
                       />
@@ -797,7 +797,7 @@ export default function OwnerDashboard() {
                       <path
                         d="M 50,135 C 100,105 150,85 250,38 C 350,34 450,31 550,29 C 600,28 650,26 650,26"
                         fill="none"
-                        stroke="#383838"
+                        stroke="#263238"
                         strokeWidth="3.5"
                         strokeLinecap="round"
                       />
@@ -841,7 +841,7 @@ export default function OwnerDashboard() {
                                 cx={dot.cx} 
                                 cy={dot.cyThis} 
                                 r={10} 
-                                fill="#e10600" 
+                                fill="#163B36" 
                                 opacity={0.4}
                               />
                             )}
@@ -850,8 +850,8 @@ export default function OwnerDashboard() {
                               cx={dot.cx} 
                               cy={dot.cyThis} 
                               r={isHovered ? 6.5 : 4} 
-                              fill={isHovered ? "#e10600" : "#383838"} 
-                              stroke="#2a2a2a" 
+                              fill={isHovered ? "#163B36" : "#263238"} 
+                              stroke="#263238" 
                               strokeWidth={isHovered ? 2.5 : 1.5} 
                             />
                           </g>
@@ -880,12 +880,12 @@ export default function OwnerDashboard() {
                         onClick={() => setHoveredDay(id)}
                         className={`py-2 px-1 sm:px-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition flex flex-col items-center justify-center min-h-[44px] ${
                           isSelected
-                            ? 'bg-[#2a2a2a] text-[#e10600] shadow-sm ring-1 ring-[#383838]'
-                            : 'text-[#666666] hover:text-[#2a2a2a] hover:bg-[#f0f0f0] bg-transparent'
+                            ? 'bg-[#263238] text-[#163B36] shadow-sm ring-1 ring-[#263238]'
+                            : 'text-[#666666] hover:text-[#263238] hover:bg-[#E8F0EC] bg-transparent'
                         }`}
                       >
                         <span className="font-extrabold">{id} May</span>
-                        <span className={`text-[9px] font-medium transition ${isSelected ? 'text-[#e10600]/80' : 'text-[#666666]/70'}`}>
+                        <span className={`text-[9px] font-medium transition ${isSelected ? 'text-[#163B36]/80' : 'text-[#666666]/70'}`}>
                           {dayOfWeek}
                         </span>
                       </button>
@@ -901,20 +901,20 @@ export default function OwnerDashboard() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-extrabold text-[#2a2a2a]">Current Operational Tasks</h3>
-                  <span className="text-xs text-[#383838] font-extrabold bg-[#e10600] px-2 py-0.5 rounded-full">Done 88%</span>
+                  <h3 className="text-base font-extrabold text-[#263238]">Current Operational Tasks</h3>
+                  <span className="text-xs text-[#263238] font-extrabold bg-[#163B36] px-2 py-0.5 rounded-full">Done 88%</span>
                 </div>
 
-                <button className="flex items-center gap-1 text-xs font-bold text-[#383838] hover:text-[#2a2a2a] transition">
+                <button className="flex items-center gap-1 text-xs font-bold text-[#263238] hover:text-[#263238] transition">
                   <span>This Week</span>
-                  <ChevronDown className="h-3 w-3 text-[#e10600]" />
+                  <ChevronDown className="h-3 w-3 text-[#163B36]" />
                 </button>
               </div>
 
               {/* Task Items */}
               {tasksList.length === 0 ? (
-                <div className="p-6 rounded-2xl bg-white border border-dashed border-[#B5B5B5] text-center space-y-1">
-                  <p className="text-xs font-bold text-[#2a2a2a]">No operational tasks pending</p>
+                <div className="p-6 rounded-2xl bg-white border border-dashed border-[#D2DDD7] text-center space-y-1">
+                  <p className="text-xs font-bold text-[#263238]">No operational tasks pending</p>
                   <p className="text-[11px] text-[#666666]">Tasks will automatically generate as tenants request repairs, meters are scanned, or rent is due.</p>
                 </div>
               ) : (
@@ -922,15 +922,15 @@ export default function OwnerDashboard() {
                   {tasksList.map((task) => (
                     <div
                       key={task.id}
-                      className="p-3.5 sm:p-4 rounded-2xl bg-white border border-[#B5B5B5] hover:border-[#383838] flex items-center justify-between gap-3 text-xs shadow-2xs transition"
+                      className="p-3.5 sm:p-4 rounded-2xl bg-white border border-[#D2DDD7] hover:border-[#263238] flex items-center justify-between gap-3 text-xs shadow-2xs transition"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-9 w-9 rounded-full bg-[#f0f0f0] border border-[#B5B5B5] flex items-center justify-center text-[#2a2a2a] shrink-0">
-                          {task.icon === 'sparkles' && <Zap className="h-4 w-4 text-[#383838]" />}
-                          {task.icon === 'search' && <Search className="h-4 w-4 text-[#e10600]" />}
-                          {task.icon === 'code' && <Laptop className="h-4 w-4 text-[#383838]" />}
+                        <div className="h-9 w-9 rounded-full bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-center text-[#263238] shrink-0">
+                          {task.icon === 'sparkles' && <Zap className="h-4 w-4 text-[#263238]" />}
+                          {task.icon === 'search' && <Search className="h-4 w-4 text-[#163B36]" />}
+                          {task.icon === 'code' && <Laptop className="h-4 w-4 text-[#263238]" />}
                         </div>
-                        <span className="font-bold text-[#2a2a2a] truncate">
+                        <span className="font-bold text-[#263238] truncate">
                           {task.title}
                         </span>
                       </div>
@@ -938,7 +938,7 @@ export default function OwnerDashboard() {
                       <div className="flex items-center gap-4 sm:gap-6 shrink-0">
                         <div className="flex items-center gap-1.5">
                           <span className={`h-2.5 w-2.5 rounded-full ${task.statusColor}`} />
-                          <span className="text-xs font-bold text-[#383838] hidden sm:inline">{task.status}</span>
+                          <span className="text-xs font-bold text-[#263238] hidden sm:inline">{task.status}</span>
                         </div>
 
                         <div className="flex items-center gap-1 text-[#666666] font-bold font-tabular">
@@ -946,7 +946,7 @@ export default function OwnerDashboard() {
                           <span>{task.hours}</span>
                         </div>
 
-                        <button className="text-[#666666] hover:text-[#2a2a2a] p-1">
+                        <button className="text-[#666666] hover:text-[#263238] p-1">
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
                       </div>
@@ -964,7 +964,7 @@ export default function OwnerDashboard() {
           <div className="lg:col-span-4 space-y-5">
             
             {/* Top Profile Card */}
-            <div className="rounded-3xl bg-[#f0f0f0] border border-[#B5B5B5] p-5 text-center space-y-4">
+            <div className="rounded-3xl bg-[#E8F0EC] border border-[#D2DDD7] p-5 text-center space-y-4">
               <div className="relative inline-block mx-auto">
                 {currentUser.avatar && currentUser.avatar.startsWith('http') ? (
                   <img 
@@ -973,15 +973,15 @@ export default function OwnerDashboard() {
                     className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-xs mx-auto"
                   />
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-[#2a2a2a] text-[#e10600] font-black text-2xl flex items-center justify-center border-2 border-white shadow-xs mx-auto">
+                  <div className="w-20 h-20 rounded-full bg-[#263238] text-[#163B36] font-black text-2xl flex items-center justify-center border-2 border-white shadow-xs mx-auto">
                     {(currentUser.name || 'Owner').charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full bg-[#e10600] ring-2 ring-[#2a2a2a]" />
+                <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full bg-[#163B36] ring-2 ring-[#263238]" />
               </div>
 
               <div>
-                <h3 className="font-extrabold text-base text-[#2a2a2a]">
+                <h3 className="font-extrabold text-base text-[#263238]">
                   {currentUser.name || (isDemoAccount ? 'Vikram Singhania' : 'Property Owner')}
                 </h3>
                 <p className="text-xs text-[#666666] font-bold mt-0.5">
@@ -993,21 +993,21 @@ export default function OwnerDashboard() {
               <div className="flex items-center justify-center gap-3 pt-1">
                 <button 
                   onClick={() => alert('Call connected with tenant WhatsApp gateway')}
-                  className="h-10 w-10 rounded-full bg-white border border-[#B5B5B5] flex items-center justify-center text-white hover:bg-[#e10600] transition shadow-2xs"
+                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-white hover:bg-[#163B36] transition shadow-2xs"
                   title="Phone Call"
                 >
                   <Phone className="h-4 w-4" />
                 </button>
                 <button 
                   onClick={() => alert('Live video inspection room generated.')}
-                  className="h-10 w-10 rounded-full bg-white border border-[#B5B5B5] flex items-center justify-center text-white hover:bg-[#e10600] transition shadow-2xs"
+                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-white hover:bg-[#163B36] transition shadow-2xs"
                   title="Video Inspection"
                 >
                   <Video className="h-4 w-4" />
                 </button>
                 <button 
                   onClick={() => setActiveView('settings')}
-                  className="h-10 w-10 rounded-full bg-white border border-[#B5B5B5] flex items-center justify-center text-white hover:bg-[#e10600] transition shadow-2xs"
+                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-white hover:bg-[#163B36] transition shadow-2xs"
                   title="Settings"
                 >
                   <MoreVertical className="h-4 w-4" />
@@ -1017,11 +1017,11 @@ export default function OwnerDashboard() {
 
             {/* Activity & Chat Feed */}
             <div className="space-y-4">
-              <h3 className="text-sm font-extrabold text-[#2a2a2a] px-1">Live Tenant &amp; Team Activity</h3>
+              <h3 className="text-sm font-extrabold text-[#263238] px-1">Live Tenant &amp; Team Activity</h3>
 
               {activityFeed.length === 0 ? (
-                <div className="p-5 rounded-2xl bg-white border border-dashed border-[#B5B5B5] text-center space-y-1">
-                  <p className="text-xs font-bold text-[#2a2a2a]">No recent team activity</p>
+                <div className="p-5 rounded-2xl bg-white border border-dashed border-[#D2DDD7] text-center space-y-1">
+                  <p className="text-xs font-bold text-[#263238]">No recent team activity</p>
                   <p className="text-[11px] text-[#666666]">Team notes, tenant comments, and system updates will appear here.</p>
                 </div>
               ) : (
@@ -1033,10 +1033,10 @@ export default function OwnerDashboard() {
                           <img 
                             src={item.avatar} 
                             alt={item.name} 
-                            className="h-7 w-7 rounded-full object-cover shrink-0 border border-[#B5B5B5]" 
+                            className="h-7 w-7 rounded-full object-cover shrink-0 border border-[#D2DDD7]" 
                           />
                           <div className="truncate">
-                            <span className="font-extrabold text-[#2a2a2a] mr-1">{item.name}</span>
+                            <span className="font-extrabold text-[#263238] mr-1">{item.name}</span>
                             <span className="text-[11px] text-[#666666]">{item.action}</span>
                           </div>
                         </div>
@@ -1044,10 +1044,10 @@ export default function OwnerDashboard() {
                       </div>
 
                       {item.type === 'message' && item.text && (
-                        <div className="relative ml-9 p-3 rounded-2xl bg-[#f0f0f0] text-[#2a2a2a] text-xs font-medium leading-relaxed border border-[#B5B5B5]">
+                        <div className="relative ml-9 p-3 rounded-2xl bg-[#E8F0EC] text-[#263238] text-xs font-medium leading-relaxed border border-[#D2DDD7]">
                           <p>{item.text}</p>
                           {item.reaction && (
-                            <div className="absolute -bottom-2 right-2 h-5 w-5 rounded-full bg-[#e10600] border border-[#2a2a2a]/20 flex items-center justify-center text-[10px] shadow-2xs">
+                            <div className="absolute -bottom-2 right-2 h-5 w-5 rounded-full bg-[#163B36] border border-[#263238]/20 flex items-center justify-center text-[10px] shadow-2xs">
                               {item.reaction}
                             </div>
                           )}
@@ -1055,20 +1055,20 @@ export default function OwnerDashboard() {
                       )}
 
                       {item.type === 'file' && (
-                        <div className="ml-9 p-2.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] flex items-center justify-between gap-2 shadow-2xs">
+                        <div className="ml-9 p-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-between gap-2 shadow-2xs">
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="h-8 w-8 rounded-xl bg-[#2a2a2a] text-[#e10600] flex items-center justify-center font-bold text-[10px] shrink-0">
+                            <div className="h-8 w-8 rounded-xl bg-[#263238] text-[#163B36] flex items-center justify-center font-bold text-[10px] shrink-0">
                               PDF
                             </div>
                             <div className="truncate">
-                              <div className="font-bold text-[#2a2a2a] truncate">{item.fileName}</div>
+                              <div className="font-bold text-[#263238] truncate">{item.fileName}</div>
                               <div className="text-[10px] text-[#666666]">{item.fileSize}</div>
                             </div>
                           </div>
 
                           <button 
                             onClick={() => alert(`Downloading ${item.fileName}...`)}
-                            className="h-7 w-7 rounded-full bg-white border border-[#B5B5B5] flex items-center justify-center text-[#383838] hover:bg-[#e10600] transition shrink-0"
+                            className="h-7 w-7 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-[#263238] hover:bg-[#163B36] transition shrink-0"
                           >
                             <Download className="h-3.5 w-3.5" />
                           </button>
@@ -1082,8 +1082,8 @@ export default function OwnerDashboard() {
 
               {/* Chat Message Input Bar */}
               <form onSubmit={handleSendMessage} className="pt-2">
-                <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] text-xs shadow-2xs">
-                  <button type="button" className="text-[#e10600] hover:text-[#2a2a2a] transition">
+                <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs shadow-2xs">
+                  <button type="button" className="text-[#163B36] hover:text-[#263238] transition">
                     <Paperclip className="h-4 w-4" />
                   </button>
                   <input
@@ -1091,16 +1091,16 @@ export default function OwnerDashboard() {
                     value={chatMessage}
                     onChange={e => setChatMessage(e.target.value)}
                     placeholder="Message tenant or team..."
-                    className="flex-1 bg-transparent border-none outline-none text-[#2a2a2a] placeholder-[#666666] text-xs font-medium"
+                    className="flex-1 bg-transparent border-none outline-none text-[#263238] placeholder-[#666666] text-xs font-medium"
                   />
-                  <button type="button" className="text-[#e10600] hover:text-[#2a2a2a] transition">
+                  <button type="button" className="text-[#163B36] hover:text-[#263238] transition">
                     <Smile className="h-4 w-4" />
                   </button>
-                  <button type="button" className="text-[#e10600] hover:text-[#2a2a2a] transition">
+                  <button type="button" className="text-[#163B36] hover:text-[#263238] transition">
                     <Mic className="h-4 w-4" />
                   </button>
                   {chatMessage && (
-                    <button type="submit" className="text-[#2a2a2a] hover:text-[#383838]">
+                    <button type="submit" className="text-[#263238] hover:text-[#263238]">
                       <Send className="h-4 w-4" />
                     </button>
                   )}
@@ -1119,7 +1119,7 @@ export default function OwnerDashboard() {
       {/* ========================================================================= */}
       {activeTab === 'properties' && (
         <div className="space-y-4 animate-in fade-in duration-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#f0f0f0] p-4 rounded-2xl border border-[#B5B5B5]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold text-[#666666]">Filter Heatmap:</span>
               {(['ALL', 'HIGH_YIELD', 'STABLE', 'NEEDS_ATTENTION', 'VACANT'] as const).map(filter => (
@@ -1128,8 +1128,8 @@ export default function OwnerDashboard() {
                   onClick={() => setHeatmapFilter(filter)}
                   className={`px-3 py-1 rounded-full text-xs font-bold transition ${
                     heatmapFilter === filter 
-                      ? 'bg-[#2a2a2a] text-[#e10600]' 
-                      : 'bg-white text-[#383838] hover:text-[#2a2a2a] border border-[#B5B5B5]'
+                      ? 'bg-[#263238] text-[#163B36]' 
+                      : 'bg-white text-[#263238] hover:text-[#263238] border border-[#D2DDD7]'
                   }`}
                 >
                   {filter.replace('_', ' ')}
@@ -1139,19 +1139,19 @@ export default function OwnerDashboard() {
 
             <button
               onClick={() => setIsAddPropertyOpen(true)}
-              className="px-4 py-1.5 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white text-xs font-extrabold shadow-xs transition"
+              className="px-4 py-1.5 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold shadow-xs transition"
             >
               + Add New Property
             </button>
           </div>
 
           {filteredProperties.length === 0 ? (
-            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#B5B5B5] p-8 space-y-3">
-              <p className="text-sm font-bold text-[#2a2a2a]">No properties found in this view</p>
+            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
+              <p className="text-sm font-bold text-[#263238]">No properties found in this view</p>
               <p className="text-xs text-[#666666]">Add your first property to begin tracking units, leases, and tenant rent.</p>
               <button
                 onClick={() => setIsAddPropertyOpen(true)}
-                className="px-4 py-2 rounded-full bg-[#e10600] text-white text-xs font-bold hover:bg-[#c50500] transition shadow-xs"
+                className="px-4 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
               >
                 + Add New Property
               </button>
@@ -1161,17 +1161,17 @@ export default function OwnerDashboard() {
               {filteredProperties.map(prop => (
                 <div 
                   key={prop.id}
-                  className="rounded-2xl bg-white border border-[#B5B5B5] p-5 shadow-xs hover:border-[#383838] transition space-y-3"
+                  className="rounded-2xl bg-white border border-[#D2DDD7] p-5 shadow-xs hover:border-[#263238] transition space-y-3"
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-[#e10600] text-white border border-[#2a2a2a]/20">
+                      <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-[#163B36] text-white border border-[#263238]/20">
                         {prop.type}
                       </span>
-                      <h3 className="font-extrabold text-base text-[#2a2a2a] mt-1.5">{prop.name}</h3>
+                      <h3 className="font-extrabold text-base text-[#263238] mt-1.5">{prop.name}</h3>
                       <p className="text-xs text-[#666666]">{prop.address}</p>
                     </div>
-                    <div className="h-8 w-8 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] flex items-center justify-center text-xs font-black text-[#2a2a2a]">
+                    <div className="h-8 w-8 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-center text-xs font-black text-[#263238]">
                       {prop.healthScore}%
                     </div>
                   </div>
@@ -1179,11 +1179,11 @@ export default function OwnerDashboard() {
                   <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#D1D5DB] text-xs">
                     <div>
                       <span className="text-[10px] text-[#666666]">Units Occupancy</span>
-                      <div className="font-bold text-[#2a2a2a]">{prop.occupiedUnits} / {prop.totalUnits} Units</div>
+                      <div className="font-bold text-[#263238]">{prop.occupiedUnits} / {prop.totalUnits} Units</div>
                     </div>
                     <div>
                       <span className="text-[10px] text-[#666666]">Monthly Rent</span>
-                      <div className="font-bold text-[#2a2a2a]">₹{prop.expectedMonthlyRent.toLocaleString('en-IN')}</div>
+                      <div className="font-bold text-[#263238]">₹{prop.expectedMonthlyRent.toLocaleString('en-IN')}</div>
                     </div>
                   </div>
 
@@ -1197,7 +1197,7 @@ export default function OwnerDashboard() {
                           setPropertyToEdit(prop);
                           setIsEditPropertyModalOpen(true);
                         }}
-                        className="px-3 py-1 rounded-full bg-[#f0f0f0] hover:bg-[#e10600] text-xs font-bold text-white border border-[#B5B5B5] transition"
+                        className="px-3 py-1 rounded-full bg-[#E8F0EC] hover:bg-[#163B36] text-xs font-bold text-white border border-[#D2DDD7] transition"
                       >
                         Edit
                       </button>
@@ -1223,29 +1223,29 @@ export default function OwnerDashboard() {
       {/* ========================================================================= */}
       {activeTab === 'bank_accounts' && (
         <div className="space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between bg-[#f0f0f0] p-4 rounded-2xl border border-[#B5B5B5]">
+          <div className="flex items-center justify-between bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
             <div>
-              <h3 className="text-sm font-extrabold text-[#2a2a2a]">Direct Bank Payout Accounts</h3>
+              <h3 className="text-sm font-extrabold text-[#263238]">Direct Bank Payout Accounts</h3>
               <p className="text-xs text-[#666666]">Automated payouts routed directly to verified nodal accounts</p>
             </div>
             <button
               onClick={() => setIsAddBankModalOpen(true)}
-              className="px-4 py-2 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white text-xs font-extrabold shadow-xs transition"
+              className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold shadow-xs transition"
             >
               + Add Bank Account
             </button>
           </div>
 
           {bankAccounts.length === 0 ? (
-            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#B5B5B5] p-8 space-y-3">
-              <div className="h-12 w-12 rounded-full bg-[#f0f0f0] text-[#383838] flex items-center justify-center mx-auto">
+            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
+              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#263238] flex items-center justify-center mx-auto">
                 <Landmark className="h-6 w-6" />
               </div>
-              <p className="text-sm font-bold text-[#2a2a2a]">No bank accounts linked yet</p>
+              <p className="text-sm font-bold text-[#263238]">No bank accounts linked yet</p>
               <p className="text-xs text-[#666666]">Add your primary bank account or nodal escrow trust to receive direct tenant rent payouts.</p>
               <button
                 onClick={() => setIsAddBankModalOpen(true)}
-                className="px-4 py-2 rounded-full bg-[#e10600] text-white text-xs font-bold hover:bg-[#c50500] transition shadow-xs"
+                className="px-4 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
               >
                 + Add Bank Account
               </button>
@@ -1253,18 +1253,18 @@ export default function OwnerDashboard() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {bankAccounts.map(bank => (
-                <div key={bank.id} className="p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-xs space-y-3">
+                <div key={bank.id} className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-xs space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="h-10 w-10 rounded-xl bg-[#f0f0f0] text-[#383838] flex items-center justify-center font-bold">
+                      <div className="h-10 w-10 rounded-xl bg-[#E8F0EC] text-[#263238] flex items-center justify-center font-bold">
                         <Landmark className="h-5 w-5" />
                       </div>
                       <div>
-                        <h4 className="font-extrabold text-sm text-[#2a2a2a]">{bank.bankName}</h4>
+                        <h4 className="font-extrabold text-sm text-[#263238]">{bank.bankName}</h4>
                         <p className="text-xs text-[#666666] font-mono">{bank.accountNumber}</p>
                       </div>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full bg-[#e10600] text-white text-[10px] font-black border border-[#2a2a2a]/20">
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#163B36] text-white text-[10px] font-black border border-[#263238]/20">
                       {bank.status}
                     </span>
                   </div>
@@ -1272,11 +1272,11 @@ export default function OwnerDashboard() {
                   <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[#D1D5DB]">
                     <div>
                       <span className="text-[10px] text-[#666666]">IFSC Code:</span>
-                      <div className="font-bold text-[#2a2a2a]">{bank.ifsc}</div>
+                      <div className="font-bold text-[#263238]">{bank.ifsc}</div>
                     </div>
                     <div>
                       <span className="text-[10px] text-[#666666]">Holder:</span>
-                      <div className="font-bold text-[#2a2a2a] truncate">{bank.holderName}</div>
+                      <div className="font-bold text-[#263238] truncate">{bank.holderName}</div>
                     </div>
                   </div>
                 </div>
@@ -1291,29 +1291,29 @@ export default function OwnerDashboard() {
       {/* ========================================================================= */}
       {activeTab === 'documents' && (
         <div className="space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between bg-[#f0f0f0] p-4 rounded-2xl border border-[#B5B5B5]">
+          <div className="flex items-center justify-between bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
             <div>
-              <h3 className="text-sm font-extrabold text-[#2a2a2a]">Legal Deeds &amp; Document Vault</h3>
+              <h3 className="text-sm font-extrabold text-[#263238]">Legal Deeds &amp; Document Vault</h3>
               <p className="text-xs text-[#666666]">DigiLocker &amp; Municipal statutory registry verified documents</p>
             </div>
             <button
               onClick={() => setIsUploadDocModalOpen(true)}
-              className="px-4 py-2 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white text-xs font-extrabold shadow-xs transition"
+              className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold shadow-xs transition"
             >
               + Upload Document
             </button>
           </div>
 
           {documents.length === 0 ? (
-            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#B5B5B5] p-8 space-y-3">
-              <div className="h-12 w-12 rounded-full bg-[#f0f0f0] text-[#383838] flex items-center justify-center mx-auto">
+            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
+              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#263238] flex items-center justify-center mx-auto">
                 <FileText className="h-6 w-6" />
               </div>
-              <p className="text-sm font-bold text-[#2a2a2a]">Document vault is empty</p>
+              <p className="text-sm font-bold text-[#263238]">Document vault is empty</p>
               <p className="text-xs text-[#666666]">Upload title deeds, tax receipts, encumbrance certificates, and building insurance policies.</p>
               <button
                 onClick={() => setIsUploadDocModalOpen(true)}
-                className="px-4 py-2 rounded-full bg-[#e10600] text-white text-xs font-bold hover:bg-[#c50500] transition shadow-xs"
+                className="px-4 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
               >
                 + Upload Document
               </button>
@@ -1321,19 +1321,19 @@ export default function OwnerDashboard() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {documents.map(doc => (
-                <div key={doc.id} className="p-4 rounded-2xl bg-white border border-[#B5B5B5] shadow-xs flex items-center justify-between gap-3">
+                <div key={doc.id} className="p-4 rounded-2xl bg-white border border-[#D2DDD7] shadow-xs flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-[#f0f0f0] text-[#383838] flex items-center justify-center">
+                    <div className="h-10 w-10 rounded-xl bg-[#E8F0EC] text-[#263238] flex items-center justify-center">
                       <FileText className="h-5 w-5" />
                     </div>
                     <div>
-                      <h4 className="font-extrabold text-xs text-[#2a2a2a]">{doc.title}</h4>
+                      <h4 className="font-extrabold text-xs text-[#263238]">{doc.title}</h4>
                       <p className="text-[10px] text-[#666666]">{doc.category} • {doc.size}</p>
                     </div>
                   </div>
                   <button 
                     onClick={() => alert(`Downloading ${doc.title}...`)}
-                    className="p-2 rounded-full hover:bg-[#e10600] text-[#383838] hover:text-white transition"
+                    className="p-2 rounded-full hover:bg-[#163B36] text-[#263238] hover:text-white transition"
                   >
                     <Download className="h-4 w-4" />
                   </button>
@@ -1349,29 +1349,29 @@ export default function OwnerDashboard() {
       {/* ========================================================================= */}
       {activeTab === 'delegates' && (
         <div className="space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between bg-[#f0f0f0] p-4 rounded-2xl border border-[#B5B5B5]">
+          <div className="flex items-center justify-between bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
             <div>
-              <h3 className="text-sm font-extrabold text-[#2a2a2a]">Team &amp; Authorized Delegates</h3>
+              <h3 className="text-sm font-extrabold text-[#263238]">Team &amp; Authorized Delegates</h3>
               <p className="text-xs text-[#666666]">Access management for Accountants, Managers, and Auditors</p>
             </div>
             <button
               onClick={() => setIsAddDelegateModalOpen(true)}
-              className="px-4 py-2 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white text-xs font-extrabold shadow-xs transition"
+              className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold shadow-xs transition"
             >
               + Invite Member
             </button>
           </div>
 
           {delegates.length === 0 ? (
-            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#B5B5B5] p-8 space-y-3">
-              <div className="h-12 w-12 rounded-full bg-[#f0f0f0] text-[#383838] flex items-center justify-center mx-auto">
+            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
+              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#263238] flex items-center justify-center mx-auto">
                 <Users className="h-6 w-6" />
               </div>
-              <p className="text-sm font-bold text-[#2a2a2a]">No authorized delegates added</p>
+              <p className="text-sm font-bold text-[#263238]">No authorized delegates added</p>
               <p className="text-xs text-[#666666]">Invite your chartered accountant, tax auditor, or property manager with role-based access controls.</p>
               <button
                 onClick={() => setIsAddDelegateModalOpen(true)}
-                className="px-4 py-2 rounded-full bg-[#e10600] text-white text-xs font-bold hover:bg-[#c50500] transition shadow-xs"
+                className="px-4 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
               >
                 + Invite Member
               </button>
@@ -1379,19 +1379,19 @@ export default function OwnerDashboard() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {delegates.map(del => (
-                <div key={del.id} className="p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-xs space-y-3">
+                <div key={del.id} className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-xs space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-extrabold text-sm text-[#2a2a2a]">{del.name}</h4>
+                      <h4 className="font-extrabold text-sm text-[#263238]">{del.name}</h4>
                       <p className="text-xs text-[#666666]">{del.email} • {del.phone}</p>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full bg-[#e10600] text-white text-[10px] font-black border border-[#2a2a2a]/20">
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#163B36] text-white text-[10px] font-black border border-[#263238]/20">
                       {del.role}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[#D1D5DB]">
                     {del.permissions.map((p, idx) => (
-                      <span key={idx} className="px-2 py-0.5 rounded-md bg-[#f0f0f0] border border-[#B5B5B5] text-[10px] text-[#383838] font-semibold">
+                      <span key={idx} className="px-2 py-0.5 rounded-md bg-[#E8F0EC] border border-[#D2DDD7] text-[10px] text-[#263238] font-semibold">
                         ✓ {p}
                       </span>
                     ))}
@@ -1408,9 +1408,9 @@ export default function OwnerDashboard() {
       {/* ========================================================================= */}
       {activeTab === 'utilities' && (
         <div className="space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between bg-[#f0f0f0] p-4 rounded-2xl border border-[#B5B5B5]">
+          <div className="flex items-center justify-between bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
             <div>
-              <h3 className="text-sm font-extrabold text-[#2a2a2a]">Electricity &amp; Utility Sub-Meters</h3>
+              <h3 className="text-sm font-extrabold text-[#263238]">Electricity &amp; Utility Sub-Meters</h3>
               <p className="text-xs text-[#666666]">AI OCR extraction and automated WhatsApp bill sharing with tenants</p>
             </div>
             <button
@@ -1418,25 +1418,25 @@ export default function OwnerDashboard() {
                 setPreselectedUnitForUpload('101');
                 setIsUploadBillModalOpen(true);
               }}
-              className="px-4 py-2 rounded-full bg-[#e10600] hover:bg-[#c50500] text-white text-xs font-extrabold shadow-xs transition"
+              className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold shadow-xs transition"
             >
               + Upload Power Bill
             </button>
           </div>
 
           {electricityBills.length === 0 ? (
-            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#B5B5B5] p-8 space-y-3">
-              <div className="h-12 w-12 rounded-full bg-[#f0f0f0] text-[#383838] flex items-center justify-center mx-auto">
-                <Zap className="h-6 w-6 text-[#e10600]" />
+            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
+              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#263238] flex items-center justify-center mx-auto">
+                <Zap className="h-6 w-6 text-[#163B36]" />
               </div>
-              <p className="text-sm font-bold text-[#2a2a2a]">No utility bills uploaded yet</p>
+              <p className="text-sm font-bold text-[#263238]">No utility bills uploaded yet</p>
               <p className="text-xs text-[#666666]">Upload discom electricity bills or log sub-meter readings to automatically invoice tenants.</p>
               <button
                 onClick={() => {
                   setPreselectedUnitForUpload(null);
                   setIsUploadBillModalOpen(true);
                 }}
-                className="px-4 py-2 rounded-full bg-[#e10600] text-white text-xs font-bold hover:bg-[#c50500] transition shadow-xs"
+                className="px-4 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
               >
                 + Upload Power Bill
               </button>
@@ -1444,36 +1444,36 @@ export default function OwnerDashboard() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {electricityBills.map(bill => (
-                <div key={bill.id} className="p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-xs space-y-3">
+                <div key={bill.id} className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-xs space-y-3">
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="font-extrabold text-sm text-[#2a2a2a]">Unit {bill.unitNumber}</span>
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#e10600] text-white font-black border border-[#2a2a2a]/20">
+                        <span className="font-extrabold text-sm text-[#263238]">Unit {bill.unitNumber}</span>
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#163B36] text-white font-black border border-[#263238]/20">
                           {bill.propertyName}
                         </span>
                       </div>
                       <p className="text-xs text-[#666666] mt-0.5">{bill.tenantName || 'Occupied'}</p>
                     </div>
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                      bill.status === 'Paid' ? 'bg-[#e10600] text-white' : 'bg-amber-100 text-amber-800'
+                      bill.status === 'Paid' ? 'bg-[#163B36] text-white' : 'bg-amber-100 text-amber-800'
                     }`}>
                       {bill.status}
                     </span>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-xs space-y-1">
+                  <div className="p-3 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs space-y-1">
                     <div className="flex justify-between">
                       <span className="text-[#666666]">Provider:</span>
-                      <span className="font-bold text-[#2a2a2a]">{bill.discom}</span>
+                      <span className="font-bold text-[#263238]">{bill.discom}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-[#666666]">Consumption:</span>
-                      <span className="font-bold text-[#2a2a2a]">{bill.unitsConsumed} Units</span>
+                      <span className="font-bold text-[#263238]">{bill.unitsConsumed} Units</span>
                     </div>
-                    <div className="flex justify-between border-t border-[#B5B5B5] pt-1">
+                    <div className="flex justify-between border-t border-[#D2DDD7] pt-1">
                       <span className="text-[#666666]">Bill Amount:</span>
-                      <span className="font-black text-sm text-[#2a2a2a]">₹{bill.totalAmount.toLocaleString('en-IN')}</span>
+                      <span className="font-black text-sm text-[#263238]">₹{bill.totalAmount.toLocaleString('en-IN')}</span>
                     </div>
                   </div>
                 </div>
@@ -1488,45 +1488,45 @@ export default function OwnerDashboard() {
       {/* ========================================================================= */}
       {isAddBankModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl border border-[#B5B5B5] p-6 shadow-2xl space-y-4">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-base text-[#2a2a2a]">Add Bank Account</h3>
-              <button onClick={() => setIsAddBankModalOpen(false)} className="text-[#666666] hover:text-[#2a2a2a]">
+              <h3 className="font-extrabold text-base text-[#263238]">Add Bank Account</h3>
+              <button onClick={() => setIsAddBankModalOpen(false)} className="text-[#666666] hover:text-[#263238]">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={e => { e.preventDefault(); setIsAddBankModalOpen(false); }} className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-[#383838]">Bank Name</label>
+                <label className="text-xs font-bold text-[#263238]">Bank Name</label>
                 <input 
                   type="text" 
                   value={newBank.bankName}
                   onChange={e => setNewBank({ ...newBank, bankName: e.target.value })}
-                  className="w-full mt-1 p-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-xs font-bold text-[#2a2a2a]"
+                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238]"
                   required
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-[#383838]">Account Number</label>
+                <label className="text-xs font-bold text-[#263238]">Account Number</label>
                 <input 
                   type="password" 
                   value={newBank.accountNumber}
                   onChange={e => setNewBank({ ...newBank, accountNumber: e.target.value })}
-                  className="w-full mt-1 p-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-xs font-bold text-[#2a2a2a]"
+                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238]"
                   required
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-[#383838]">IFSC Code</label>
+                <label className="text-xs font-bold text-[#263238]">IFSC Code</label>
                 <input 
                   type="text" 
                   value={newBank.ifsc}
                   onChange={e => setNewBank({ ...newBank, ifsc: e.target.value })}
-                  className="w-full mt-1 p-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-xs font-bold text-[#2a2a2a]"
+                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238]"
                   required
                 />
               </div>
-              <button type="submit" className="w-full py-2.5 rounded-full bg-[#2a2a2a] text-[#e10600] text-xs font-black hover:bg-[#383838] transition">
+              <button type="submit" className="w-full py-2.5 rounded-full bg-[#263238] text-[#163B36] text-xs font-black hover:bg-[#263238] transition">
                 Save &amp; Verify Bank Account
               </button>
             </form>
@@ -1539,25 +1539,25 @@ export default function OwnerDashboard() {
       {/* ========================================================================= */}
       {isUploadDocModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl border border-[#B5B5B5] p-6 shadow-2xl space-y-4">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-base text-[#2a2a2a]">Upload Document</h3>
-              <button onClick={() => setIsUploadDocModalOpen(false)} className="text-[#666666] hover:text-[#2a2a2a]">
+              <h3 className="font-extrabold text-base text-[#263238]">Upload Document</h3>
+              <button onClick={() => setIsUploadDocModalOpen(false)} className="text-[#666666] hover:text-[#263238]">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={e => { e.preventDefault(); setIsUploadDocModalOpen(false); }} className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-[#383838]">Title</label>
+                <label className="text-xs font-bold text-[#263238]">Title</label>
                 <input 
                   type="text" 
                   value={newDoc.title}
                   onChange={e => setNewDoc({ ...newDoc, title: e.target.value })}
-                  className="w-full mt-1 p-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-xs font-bold text-[#2a2a2a]"
+                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238]"
                   required
                 />
               </div>
-              <button type="submit" className="w-full py-2.5 rounded-full bg-[#2a2a2a] text-[#e10600] text-xs font-black hover:bg-[#383838] transition">
+              <button type="submit" className="w-full py-2.5 rounded-full bg-[#263238] text-[#163B36] text-xs font-black hover:bg-[#263238] transition">
                 Upload to Vault
               </button>
             </form>

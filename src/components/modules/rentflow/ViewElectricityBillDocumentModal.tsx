@@ -47,11 +47,11 @@ export default function ViewElectricityBillDocumentModal({
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
     >
-      <div className="relative w-full max-w-2xl bg-white border border-[#B5B5B5] rounded-3xl shadow-2xl p-5 sm:p-8 space-y-6 my-auto font-sans max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-2xl bg-white border border-[#D2DDD7] rounded-3xl shadow-2xl p-5 sm:p-8 space-y-6 my-auto font-sans max-h-[90vh] overflow-y-auto">
         {/* Top Action Bar */}
         <div className="flex items-center justify-between pb-4 border-b border-[#E0E0E0]">
           <div className="flex items-center gap-2">
-            <span className="text-xs px-2.5 py-1 rounded-full bg-[#f0f0f0] text-[#2a2a2a] font-bold border border-[#2a2a2a]/20 flex items-center gap-1">
+            <span className="text-xs px-2.5 py-1 rounded-full bg-[#E8F0EC] text-[#263238] font-bold border border-[#263238]/20 flex items-center gap-1">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
               <span>Official Discom Sub-meter Verified</span>
             </span>
@@ -63,21 +63,21 @@ export default function ViewElectricityBillDocumentModal({
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="p-2 rounded-xl text-[#666666] hover:text-[#2a2a2a] hover:bg-[#f0f0f0] transition"
+              className="p-2 rounded-xl text-[#666666] hover:text-[#263238] hover:bg-[#E8F0EC] transition"
               title="Print Bill"
             >
               <Printer className="h-4 w-4" />
             </button>
             <button
               onClick={handleDownloadPDF}
-              className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
+              className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
             >
-              <Download className="h-3.5 w-3.5 text-[#2a2a2a]" />
+              <Download className="h-3.5 w-3.5 text-[#263238]" />
               <span>Download PDF</span>
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-full text-[#666666] hover:text-[#2a2a2a] hover:bg-[#f0f0f0] transition"
+              className="p-1.5 rounded-full text-[#666666] hover:text-[#263238] hover:bg-[#E8F0EC] transition"
             >
               <X className="h-5 w-5" />
             </button>
@@ -85,22 +85,22 @@ export default function ViewElectricityBillDocumentModal({
         </div>
 
         {/* Official Bill Document Preview Body */}
-        <div className="border-2 border-[#2a2a2a] rounded-2xl p-6 space-y-6 bg-[#ffffff] shadow-inner relative overflow-hidden">
+        <div className="border-2 border-[#263238] rounded-2xl p-6 space-y-6 bg-[#ffffff] shadow-inner relative overflow-hidden">
           {/* Subtle Watermark Stamp */}
           <div className="absolute right-6 top-20 opacity-10 pointer-events-none select-none rotate-12">
-            <div className="border-4 border-[#2a2a2a] text-[#2a2a2a] font-black text-3xl px-6 py-2 rounded-2xl uppercase tracking-widest text-center">
+            <div className="border-4 border-[#263238] text-[#263238] font-black text-3xl px-6 py-2 rounded-2xl uppercase tracking-widest text-center">
               STAYWISE VERIFIED
             </div>
           </div>
 
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b-2 border-[#2a2a2a]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b-2 border-[#263238]">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <div className="h-7 w-7 rounded-lg bg-amber-500 text-white flex items-center justify-center font-black text-xs">
                   ⚡
                 </div>
-                <h3 className="text-base sm:text-lg font-black tracking-tight text-[#2a2a2a]">
+                <h3 className="text-base sm:text-lg font-black tracking-tight text-[#263238]">
                   {bill.discom}
                 </h3>
               </div>
@@ -110,11 +110,11 @@ export default function ViewElectricityBillDocumentModal({
             </div>
 
             <div className="text-left sm:text-right space-y-0.5">
-              <div className="text-xs font-mono font-bold text-[#2a2a2a]">
+              <div className="text-xs font-mono font-bold text-[#263238]">
                 BILL ID: {bill.id.toUpperCase()}
               </div>
               <div className="text-[11px] text-[#666666]">
-                Billing Period: <b className="text-[#2a2a2a]">{bill.billingMonth}</b>
+                Billing Period: <b className="text-[#263238]">{bill.billingMonth}</b>
               </div>
               <div className="text-[11px] text-[#666666]">
                 Due Date: <b className="text-rose-600">{bill.dueDate}</b>
@@ -123,17 +123,17 @@ export default function ViewElectricityBillDocumentModal({
           </div>
 
           {/* Consumer & Property Meta */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs">
             <div className="space-y-1.5">
               <div className="text-[#666666] font-semibold">CONSUMER DETAILS:</div>
-              <div className="font-extrabold text-[#2a2a2a] text-sm">{bill.tenantName}</div>
+              <div className="font-extrabold text-[#263238] text-sm">{bill.tenantName}</div>
               <div className="text-[#666666]">Unit {bill.unitNumber}, {bill.propertyName}</div>
-              <div className="text-[#666666]">Tariff Class: <b className="text-[#2a2a2a]">LT-2A Domestic Residential</b></div>
+              <div className="text-[#666666]">Tariff Class: <b className="text-[#263238]">LT-2A Domestic Residential</b></div>
             </div>
 
             <div className="space-y-1.5 sm:text-right">
               <div className="text-[#666666] font-semibold">METER TECHNICAL SPECS:</div>
-              <div className="font-mono font-extrabold text-[#2a2a2a] text-sm">{bill.meterNumber}</div>
+              <div className="font-mono font-extrabold text-[#263238] text-sm">{bill.meterNumber}</div>
               <div className="text-[#666666]">Status: <span className="font-bold text-emerald-700">Digital Smart Sub-Meter</span></div>
               <div className="text-[#666666]">Phase: <b>Single Phase 230V • 50Hz</b></div>
             </div>
@@ -142,7 +142,7 @@ export default function ViewElectricityBillDocumentModal({
           {/* Meter Readings Table */}
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border border-[#E0E0E0]">
-              <thead className="bg-[#E0E0E0] text-[#2a2a2a] font-extrabold uppercase text-[10px] tracking-wider">
+              <thead className="bg-[#E0E0E0] text-[#263238] font-extrabold uppercase text-[10px] tracking-wider">
                 <tr>
                   <th className="py-2.5 px-3">Previous Reading (kWh)</th>
                   <th className="py-2.5 px-3">Current Reading (kWh)</th>
@@ -152,12 +152,12 @@ export default function ViewElectricityBillDocumentModal({
               </thead>
               <tbody className="divide-y divide-[#E0E0E0] bg-white font-tabular">
                 <tr>
-                  <td className="py-2.5 px-3 font-mono font-bold text-[#2a2a2a]">{bill.previousReading}</td>
-                  <td className="py-2.5 px-3 font-mono font-bold text-[#2a2a2a]">{bill.currentReading}</td>
+                  <td className="py-2.5 px-3 font-mono font-bold text-[#263238]">{bill.previousReading}</td>
+                  <td className="py-2.5 px-3 font-mono font-bold text-[#263238]">{bill.currentReading}</td>
                   <td className="py-2.5 px-3 font-mono font-black text-amber-600 text-sm">
                     {bill.unitsConsumed} Units
                   </td>
-                  <td className="py-2.5 px-3 text-right font-bold text-[#2a2a2a]">
+                  <td className="py-2.5 px-3 text-right font-bold text-[#263238]">
                     ₹{bill.ratePerUnit.toFixed(2)} / unit
                   </td>
                 </tr>
@@ -169,24 +169,24 @@ export default function ViewElectricityBillDocumentModal({
           <div className="space-y-2 text-xs">
             <div className="flex justify-between py-1 border-b border-[#E0E0E0]">
               <span className="text-[#666666]">Energy Consumption Charges ({bill.unitsConsumed} × ₹{bill.ratePerUnit}):</span>
-              <span className="font-mono font-bold text-[#2a2a2a]">₹{(bill.unitsConsumed * bill.ratePerUnit).toLocaleString('en-IN')}</span>
+              <span className="font-mono font-bold text-[#263238]">₹{(bill.unitsConsumed * bill.ratePerUnit).toLocaleString('en-IN')}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-[#E0E0E0]">
               <span className="text-[#666666]">Fixed Meter &amp; Standing Charges:</span>
-              <span className="font-mono font-bold text-[#2a2a2a]">₹{bill.fixedCharges.toLocaleString('en-IN')}</span>
+              <span className="font-mono font-bold text-[#263238]">₹{bill.fixedCharges.toLocaleString('en-IN')}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-[#E0E0E0]">
               <span className="text-[#666666]">Escrow Surcharge &amp; Common Area Factor:</span>
               <span className="font-mono font-bold text-emerald-700">₹0.00 (Included)</span>
             </div>
 
-            <div className="flex justify-between items-center pt-2 border-t-2 border-[#2a2a2a]">
+            <div className="flex justify-between items-center pt-2 border-t-2 border-[#263238]">
               <div>
-                <span className="text-base font-black text-[#2a2a2a] block">Total Amount Payable</span>
+                <span className="text-base font-black text-[#263238] block">Total Amount Payable</span>
                 <span className="text-[11px] text-[#666666]">Due by {bill.dueDate}</span>
               </div>
               <div className="text-right">
-                <span className="text-2xl font-black text-[#2a2a2a] font-tabular">
+                <span className="text-2xl font-black text-[#263238] font-tabular">
                   ₹{bill.totalAmount.toLocaleString('en-IN')}
                 </span>
                 <div className="text-[10px] font-bold">
@@ -214,7 +214,7 @@ export default function ViewElectricityBillDocumentModal({
           {/* Digital Verification Footer */}
           <div className="pt-3 border-t border-[#E0E0E0] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-[#666666]">
             <span>Digitally uploaded &amp; validated via Staywise Asset OS</span>
-            <span className="font-mono font-bold text-[#2a2a2a]">UPI: staywise.escrow@axisbank</span>
+            <span className="font-mono font-bold text-[#263238]">UPI: staywise.escrow@axisbank</span>
           </div>
         </div>
 
@@ -222,7 +222,7 @@ export default function ViewElectricityBillDocumentModal({
         <div className="flex items-center justify-between gap-3 pt-2">
           <button
             onClick={onClose}
-            className="px-4 py-2.5 rounded-2xl bg-[#f0f0f0] hover:bg-[#B5B5B5] text-[#2a2a2a] text-xs font-bold transition"
+            className="px-4 py-2.5 rounded-2xl bg-[#E8F0EC] hover:bg-[#D2DDD7] text-[#263238] text-xs font-bold transition"
           >
             Close
           </button>
@@ -231,7 +231,7 @@ export default function ViewElectricityBillDocumentModal({
             {bill.status === 'Due' && onPayUPI && (
               <button
                 onClick={() => onPayUPI(bill)}
-                className="px-5 py-2.5 rounded-2xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white text-xs font-bold shadow-md shadow-[#2a2a2a]/20 transition flex items-center gap-2"
+                className="px-5 py-2.5 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold shadow-md shadow-[#263238]/20 transition flex items-center gap-2"
               >
                 <Zap className="h-4 w-4" />
                 <span>Pay ₹{bill.totalAmount.toLocaleString('en-IN')} via Instant UPI</span>

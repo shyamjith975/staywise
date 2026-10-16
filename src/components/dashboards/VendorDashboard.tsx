@@ -36,13 +36,13 @@ export default function VendorDashboard() {
 
   return (
     <div className="space-y-6 pb-12 font-sans">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#B5B5B5]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D2DDD7]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#2a2a2a]">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#263238]">
               RapidCool Aircon Services — Vendor Dispatch
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#f0f0f0] text-[#2a2a2a] font-bold border border-[#2a2a2a]/20">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#263238] font-bold border border-[#263238]/20">
               Verified Partner
             </span>
           </div>
@@ -56,8 +56,8 @@ export default function VendorDashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <div className="organic-card p-5">
           <span className="text-xs font-semibold text-[#666666]">Today&apos;s Jobs</span>
-          <div className="text-2xl font-black text-[#2a2a2a] mt-1 font-tabular">5</div>
-          <span className="text-[11px] text-[#2a2a2a] font-bold mt-1 inline-block">3 On Schedule</span>
+          <div className="text-2xl font-black text-[#263238] mt-1 font-tabular">5</div>
+          <span className="text-[11px] text-[#263238] font-bold mt-1 inline-block">3 On Schedule</span>
         </div>
         <div className="organic-card p-5">
           <span className="text-xs font-semibold text-[#666666]">Pending Review</span>
@@ -71,17 +71,17 @@ export default function VendorDashboard() {
         </div>
         <div className="organic-card p-5">
           <span className="text-xs font-semibold text-[#666666]">Escrow Payout Pending</span>
-          <div className="text-2xl font-black text-[#2a2a2a] mt-1 font-tabular">₹18,400</div>
+          <div className="text-2xl font-black text-[#263238] mt-1 font-tabular">₹18,400</div>
           <span className="text-[11px] text-[#666666] mt-1 inline-block">Clears this Friday</span>
         </div>
       </div>
 
       {/* Active Work Order Action Card */}
       <div className="organic-card p-6 space-y-5">
-        <div className="flex items-center justify-between pb-3 border-b border-[#B5B5B5]">
+        <div className="flex items-center justify-between pb-3 border-b border-[#D2DDD7]">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-[#2a2a2a]">Active Work Order #8841</span>
-            <h3 className="text-lg font-extrabold text-[#2a2a2a] mt-0.5">Master Bedroom AC Cooling Efficiency Drop</h3>
+            <span className="text-xs font-bold uppercase tracking-wider text-[#263238]">Active Work Order #8841</span>
+            <h3 className="text-lg font-extrabold text-[#263238] mt-0.5">Master Bedroom AC Cooling Efficiency Drop</h3>
           </div>
           <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
             Scheduled for 3:00 PM
@@ -91,32 +91,32 @@ export default function VendorDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-[#666666]">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-[#2a2a2a]" />
-              <span className="text-[#2a2a2a] font-semibold">Beach Road Apartments, Apartment 302 (Floor 3)</span>
+              <MapPin className="h-4 w-4 text-[#263238]" />
+              <span className="text-[#263238] font-semibold">Beach Road Apartments, Apartment 302 (Floor 3)</span>
             </div>
             <div className="flex items-center gap-2">
-              <Phone className="h-4 w-4 text-[#2a2a2a]" />
+              <Phone className="h-4 w-4 text-[#263238]" />
               <span>Resident: Shyam Sundar (+91 98460 21980)</span>
             </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] space-y-1">
-            <span className="font-bold text-[#2a2a2a] block">Pre-Authorized Budget</span>
-            <div className="text-base font-black text-[#2a2a2a] font-tabular">₹1,500 Max Cap</div>
+          <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-1">
+            <span className="font-bold text-[#263238] block">Pre-Authorized Budget</span>
+            <div className="text-base font-black text-[#263238] font-tabular">₹1,500 Max Cap</div>
             <p className="text-[11px] text-[#666666]">Owner approved for condenser coil wash & refrigerant test.</p>
           </div>
         </div>
 
         {/* 2-Step Proof of Work Checklist */}
         <div className="pt-2 border-t border-[#E0E0E0] space-y-3">
-          <span className="text-xs font-extrabold text-[#2a2a2a] block">Proof of Work (Mandatory for Escrow Release)</span>
+          <span className="text-xs font-extrabold text-[#263238] block">Proof of Work (Mandatory for Escrow Release)</span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
             <button
               onClick={() => setUploadedBefore(true)}
               className={`p-3.5 rounded-2xl border transition flex items-center justify-between ${
                 uploadedBefore
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                  : 'bg-[#f0f0f0] text-[#2a2a2a] border-[#B5B5B5] hover:bg-white'
+                  : 'bg-[#E8F0EC] text-[#263238] border-[#D2DDD7] hover:bg-white'
               }`}
             >
               <div className="flex items-center gap-2 font-bold">
@@ -131,7 +131,7 @@ export default function VendorDashboard() {
               className={`p-3.5 rounded-2xl border transition flex items-center justify-between ${
                 uploadedAfter
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                  : 'bg-[#f0f0f0] text-[#2a2a2a] border-[#B5B5B5] hover:bg-white'
+                  : 'bg-[#E8F0EC] text-[#263238] border-[#D2DDD7] hover:bg-white'
               }`}
             >
               <div className="flex items-center gap-2 font-bold">
@@ -148,7 +148,7 @@ export default function VendorDashboard() {
           {jobInProgress !== 't-8841' ? (
             <button
               onClick={() => handleStartJob('t-8841')}
-              className="px-5 py-2.5 rounded-2xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-bold text-xs shadow-md shadow-[#2a2a2a]/20 transition"
+              className="px-5 py-2.5 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white font-bold text-xs shadow-md shadow-[#263238]/20 transition"
             >
               Check-In & Start Work
             </button>
@@ -159,7 +159,7 @@ export default function VendorDashboard() {
               className={`px-5 py-2.5 rounded-2xl font-bold text-xs transition ${
                 uploadedBefore && uploadedAfter
                   ? 'bg-emerald-700 hover:bg-emerald-800 text-white shadow-md'
-                  : 'bg-[#B5B5B5] text-[#888888] cursor-not-allowed'
+                  : 'bg-[#D2DDD7] text-[#888888] cursor-not-allowed'
               }`}
             >
               Submit for Escrow Release (₹1,500)

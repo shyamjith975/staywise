@@ -150,7 +150,9 @@ export default function FindHomeView() {
     return true;
   });
 
-  const tenantReferralCode = 'SW-SHYAM-123';
+  const isDemoTenant = currentUser?.email === 'tenant@staywise.com';
+  const tenantSlug = (currentUser?.name || 'USER').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+  const tenantReferralCode = isDemoTenant ? 'SW-SHYAM-123' : `SW-${tenantSlug || 'RESIDENT'}-890`;
 
   const handleOpenReferralModal = (item: any) => {
     setSelectedListingForReferral({
@@ -186,31 +188,31 @@ export default function FindHomeView() {
   };
 
   return (
-    <div className="space-y-6 font-sans">
+    <div className="space-y-6 font-sans bg-[#F7F8F6] text-[#263238]">
       
       {/* Hero Banner with Viral Referral Incentive */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-[#2a2a2a] via-[#2a2a2a] to-[#1f1f1f] text-white p-6 sm:p-8 rounded-[2rem] shadow-xl">
-        <div className="absolute right-0 top-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden bg-gradient-to-br from-[#163B36] via-[#163B36] to-[#0F2925] text-white p-6 sm:p-8 rounded-[2rem] shadow-xl border border-[#D2DDD7]">
+        <div className="absolute right-0 top-0 w-96 h-96 bg-[#C69A55]/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 max-w-3xl space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-400/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold">
-            <Gift className="h-3.5 w-3.5" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-[#E8F0EC] text-xs font-bold">
+            <Gift className="h-3.5 w-3.5 text-[#C69A55]" />
             <span>Staywise Tenant Referral Engine • Refer Vacant Homes &amp; Earn</span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
-            Find Your Next Home or <span className="text-amber-300">Refer Vacant Homes</span> to Earn Rent Credits
+            Find Your Next Home or <span className="text-[#C69A55]">Refer Vacant Homes</span> to Earn Rent Credits
           </h1>
-          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
             Browse verified Staywise inventory with zero broker fees. Share any vacant apartment, PG bed, or commercial suite with friends: when they register and move in, <strong>you earn up to ₹5,000 direct rent credit</strong> and they get ₹1,000 off!
           </p>
 
           {/* Quick Metrics Bar */}
           <div className="flex flex-wrap items-center gap-4 pt-2">
-            <div className="flex items-center gap-2 bg-white/10 px-3.5 py-1.5 rounded-xl border border-white/10 text-xs">
-              <span className="font-bold text-amber-300">Your Code:</span>
+            <div className="flex items-center gap-2 bg-white/10 px-3.5 py-1.5 rounded-xl border border-white/15 text-xs">
+              <span className="font-bold text-[#C69A55]">Your Code:</span>
               <span className="font-mono font-black text-white bg-white/20 px-2 py-0.5 rounded tracking-wide">{tenantReferralCode}</span>
             </div>
-            <div className="flex items-center gap-2 bg-emerald-500/20 px-3.5 py-1.5 rounded-xl border border-emerald-400/30 text-xs">
-              <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+            <div className="flex items-center gap-2 bg-white/10 px-3.5 py-1.5 rounded-xl border border-white/15 text-xs text-[#E8F0EC]">
+              <Sparkles className="h-3.5 w-3.5 text-[#C69A55]" />
               <span>Avg. Referral Reward: <strong>₹2,000 / tenant</strong></span>
             </div>
           </div>
@@ -218,16 +220,16 @@ export default function FindHomeView() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#B5B5B5] shadow-sm space-y-4">
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#D2DDD7] shadow-xs space-y-4">
         <div className="flex flex-col md:flex-row items-center gap-3">
           <div className="relative flex-1 w-full">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#666666]" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#263238]/60" />
             <input
               type="text"
               placeholder="Search by apartment name, PG locality, or area (e.g. Indiranagar, Marine Drive)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#e10600]"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#E8F0EC]/60 border border-[#D2DDD7] text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#163B36] text-[#263238]"
             />
           </div>
 
@@ -235,7 +237,7 @@ export default function FindHomeView() {
             <select
               value={searchCity}
               onChange={(e) => setSearchCity(e.target.value)}
-              className="px-3 py-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-xs font-bold text-[#2a2a2a] focus:outline-none"
+              className="px-3 py-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238] focus:outline-none"
             >
               <option value="All">All Cities</option>
               <option value="Bangalore">Bangalore</option>
@@ -247,7 +249,7 @@ export default function FindHomeView() {
             <select
               value={maxRent}
               onChange={(e) => setMaxRent(Number(e.target.value))}
-              className="px-3 py-2.5 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-xs font-bold text-[#2a2a2a] focus:outline-none"
+              className="px-3 py-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238] focus:outline-none"
             >
               <option value={15000}>Budget: Under ₹15K</option>
               <option value={25000}>Budget: Under ₹25K</option>
@@ -258,8 +260,8 @@ export default function FindHomeView() {
         </div>
 
         {/* Category Pill Switcher */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 border-t border-[#f0f0f0] pt-3 text-xs">
-          <span className="text-[#666666] font-semibold text-[11px] uppercase tracking-wider shrink-0 mr-1">Asset Category:</span>
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 border-t border-[#D2DDD7] pt-3 text-xs">
+          <span className="text-[#263238]/70 font-semibold text-[11px] uppercase tracking-wider shrink-0 mr-1">Asset Category:</span>
           {[
             { id: 'ALL', label: 'All Inventory' },
             { id: 'APARTMENT', label: 'Apartments & Flats' },
@@ -272,8 +274,8 @@ export default function FindHomeView() {
               onClick={() => setAssetFilter(cat.id as any)}
               className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition ${
                 assetFilter === cat.id
-                  ? 'bg-[#2a2a2a] text-white shadow-sm'
-                  : 'bg-[#f0f0f0] text-[#666666] hover:text-[#2a2a2a] hover:bg-[#c0c0c0]'
+                  ? 'bg-[#163B36] text-white shadow-xs'
+                  : 'bg-[#E8F0EC] text-[#263238] hover:bg-[#D2DDD7]'
               }`}
             >
               {cat.label}
@@ -286,22 +288,22 @@ export default function FindHomeView() {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="font-extrabold text-[#2a2a2a] text-base">Verified Vacant Spaces Available for Immediate Move-In</span>
+            <span className="font-extrabold text-[#263238] text-base">Verified Vacant Spaces Available for Immediate Move-In</span>
             <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-black">
               {filteredListings.length} Available
             </span>
           </div>
-          <span className="text-xs text-[#666666]">Direct Owner Listings • 100% Escrow Protected</span>
+          <span className="text-xs text-[#263238]/70">Direct Owner Listings • 100% Escrow Protected</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredListings.map((item) => (
             <div 
               key={item.id}
-              className="bg-white rounded-3xl border border-[#B5B5B5] overflow-hidden shadow-sm hover:shadow-md transition group flex flex-col justify-between"
+              className="bg-white rounded-3xl border border-[#D2DDD7] overflow-hidden shadow-xs hover:shadow-md transition group flex flex-col justify-between"
             >
               {/* Image & Badges */}
-              <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
+              <div className="relative h-44 w-full bg-[#E8F0EC] overflow-hidden">
                 <img 
                   src={item.imageUrl} 
                   alt={item.name} 
@@ -310,20 +312,20 @@ export default function FindHomeView() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
                 {/* Bounty Pill */}
-                <div className="absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 text-amber-950 font-black text-xs shadow-md">
+                <div className="absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#C69A55] text-white font-black text-xs shadow-md">
                   <Gift className="h-3.5 w-3.5" />
                   <span>Referral Bounty: ₹{item.bounty.toLocaleString('en-IN')}</span>
                 </div>
 
                 {/* Category Badge */}
-                <div className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md text-white font-bold text-[10px] uppercase tracking-wider">
+                <div className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-[#163B36]/80 backdrop-blur-md text-white font-bold text-[10px] uppercase tracking-wider">
                   {item.category === 'PG_BED' ? 'PG Bed' : item.category === 'COMMERCIAL' ? 'Commercial' : 'Apartment'}
                 </div>
 
                 {/* Bottom Overlay Info */}
                 <div className="absolute bottom-3 left-3 right-3 text-white">
-                  <div className="text-xs font-semibold text-emerald-300 flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
+                  <div className="text-xs font-semibold text-[#E8F0EC] flex items-center gap-1">
+                    <MapPin className="h-3 w-3 text-[#C69A55]" />
                     <span>{item.city}, {item.state}</span>
                   </div>
                   <h3 className="font-extrabold text-base leading-tight truncate">{item.name}</h3>
@@ -335,24 +337,24 @@ export default function FindHomeView() {
               <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
                 <div>
                   {/* Financials */}
-                  <div className="flex items-baseline justify-between pb-2.5 border-b border-[#f0f0f0]">
+                  <div className="flex items-baseline justify-between pb-2.5 border-b border-[#D2DDD7]">
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Monthly Rent</span>
-                      <span className="text-lg font-black text-[#2a2a2a]">
+                      <span className="text-[10px] uppercase font-bold text-[#263238]/60 block">Monthly Rent</span>
+                      <span className="text-lg font-black text-[#263238]">
                         ₹{item.rent.toLocaleString('en-IN')}
-                        <span className="text-xs font-medium text-slate-500">/mo</span>
+                        <span className="text-xs font-medium text-[#263238]/60">/mo</span>
                       </span>
                     </div>
                     <div className="text-right">
-                      <span className="text-[10px] uppercase font-bold text-slate-400 block">Security Deposit</span>
-                      <span className="text-xs font-bold text-slate-700">₹{item.deposit.toLocaleString('en-IN')}</span>
+                      <span className="text-[10px] uppercase font-bold text-[#263238]/60 block">Security Deposit</span>
+                      <span className="text-xs font-bold text-[#263238]">₹{item.deposit.toLocaleString('en-IN')}</span>
                     </div>
                   </div>
 
                   {/* Amenities */}
                   <div className="flex flex-wrap gap-1.5 py-2.5">
                     {item.amenities.map((am, i) => (
-                      <span key={i} className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#f0f0f0] text-slate-600 border border-[#B5B5B5]">
+                      <span key={i} className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-[#E8F0EC] text-[#263238] border border-[#D2DDD7]">
                         {am}
                       </span>
                     ))}
@@ -360,18 +362,18 @@ export default function FindHomeView() {
                 </div>
 
                 {/* Action Buttons: 1) Refer & Earn, 2) Apply / Book */}
-                <div className="pt-2 border-t border-[#f0f0f0] space-y-2">
+                <div className="pt-2 border-t border-[#D2DDD7] space-y-2">
                   <button
                     onClick={() => handleOpenReferralModal(item)}
-                    className="w-full py-2.5 px-3 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-900 font-extrabold text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-95"
+                    className="w-full py-2.5 px-3 rounded-2xl bg-[#E8F0EC] hover:bg-[#D2DDD7] border border-[#D2DDD7] text-[#163B36] font-extrabold text-xs flex items-center justify-center gap-2 shadow-2xs transition active:scale-95"
                   >
-                    <Gift className="h-4 w-4 text-amber-700" />
+                    <Gift className="h-4 w-4 text-[#C69A55]" />
                     <span>Refer This Home &amp; Earn ₹{item.bounty.toLocaleString('en-IN')}</span>
                   </button>
 
                   <button
                     onClick={() => addNotification('Visit Requested', `Owner of ${item.propertyName} has been notified. They will contact you shortly!`, 'SYSTEM')}
-                    className="w-full py-2 px-3 rounded-2xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition"
+                    className="w-full py-2 px-3 rounded-2xl bg-[#163B36] hover:bg-[#0F2925] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-xs"
                   >
                     <span>I Want to Move Here (1-Click Fast Apply)</span>
                     <ArrowRight className="h-3.5 w-3.5" />
@@ -391,59 +393,59 @@ export default function FindHomeView() {
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 border border-[#B5B5B5] shadow-2xl relative"
+            className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 border border-[#D2DDD7] shadow-2xl relative text-[#263238]"
           >
             <button
               onClick={() => setSelectedListingForReferral(null)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-slate-800 transition"
+              className="absolute top-5 right-5 text-[#263238]/60 hover:text-[#263238] transition"
             >
               <X className="h-5 w-5" />
             </button>
 
             {/* Modal Header */}
             <div className="space-y-1">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-[10px] font-black">
-                <Gift className="h-3 w-3" />
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#163B36] border border-[#D2DDD7] text-[10px] font-black">
+                <Gift className="h-3 w-3 text-[#C69A55]" />
                 <span>Vacant Listing Referral Program</span>
               </div>
-              <h2 className="text-xl font-black text-[#2a2a2a]">
+              <h2 className="text-xl font-black text-[#263238]">
                 Refer {selectedListingForReferral.name}
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-[#263238]/70">
                 {selectedListingForReferral.propertyName} • {selectedListingForReferral.city} • ₹{selectedListingForReferral.rent.toLocaleString('en-IN')}/mo
               </p>
             </div>
 
             {/* Reward Summary Card */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-emerald-50 border border-amber-200 flex items-center justify-between">
+            <div className="p-4 rounded-2xl bg-[#E8F0EC]/60 border border-[#D2DDD7] flex items-center justify-between">
               <div>
-                <span className="text-[10px] uppercase font-bold text-amber-800 block">Your Bounty on Lease</span>
-                <span className="text-2xl font-black text-[#2a2a2a]">₹{selectedListingForReferral.bounty.toLocaleString('en-IN')}</span>
-                <span className="text-[10px] text-emerald-700 block font-medium">Credited to your rent ledger</span>
+                <span className="text-[10px] uppercase font-bold text-[#163B36] block">Your Bounty on Lease</span>
+                <span className="text-2xl font-black text-[#263238]">₹{selectedListingForReferral.bounty.toLocaleString('en-IN')}</span>
+                <span className="text-[10px] text-[#163B36] block font-medium">Credited to your rent ledger</span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] uppercase font-bold text-slate-500 block">Referee Benefit</span>
-                <span className="text-sm font-black text-emerald-800">₹1,000 OFF</span>
-                <span className="text-[10px] text-slate-500 block">Deposit discount</span>
+                <span className="text-[10px] uppercase font-bold text-[#263238]/60 block">Referee Benefit</span>
+                <span className="text-sm font-black text-[#163B36]">₹1,000 OFF</span>
+                <span className="text-[10px] text-[#263238]/60 block">Deposit discount</span>
               </div>
             </div>
 
             {/* Link Box */}
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">Your Unique Referral Link</label>
-              <div className="flex items-center gap-2 p-2.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5]">
+              <label className="text-xs font-bold text-[#263238]">Your Unique Referral Link</label>
+              <div className="flex items-center gap-2 p-2.5 rounded-2xl bg-[#E8F0EC]/50 border border-[#D2DDD7]">
                 <input 
                   type="text" 
                   readOnly 
                   value={getShareLink()} 
-                  className="bg-transparent text-xs font-mono font-medium text-slate-700 flex-1 focus:outline-none truncate" 
+                  className="bg-transparent text-xs font-mono font-medium text-[#263238] flex-1 focus:outline-none truncate" 
                 />
                 <button
                   onClick={handleCopyLink}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shrink-0 ${
                     isCopied 
-                      ? 'bg-emerald-600 text-white' 
-                      : 'bg-white border border-slate-200 text-slate-800 hover:bg-slate-50'
+                      ? 'bg-[#163B36] text-white' 
+                      : 'bg-white border border-[#D2DDD7] text-[#163B36] hover:bg-[#E8F0EC]'
                   }`}
                 >
                   {isCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
@@ -456,7 +458,7 @@ export default function FindHomeView() {
             <div className="grid grid-cols-2 gap-3 pt-1">
               <button
                 onClick={handleShareWhatsApp}
-                className="py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition"
+                className="py-3 px-4 rounded-2xl bg-[#25D366] hover:bg-[#20ba59] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md transition"
               >
                 <Share2 className="h-4 w-4" />
                 <span>Share on WhatsApp</span>
@@ -464,7 +466,7 @@ export default function FindHomeView() {
 
               <button
                 onClick={handleCopyLink}
-                className="py-3 px-4 rounded-2xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white font-extrabold text-xs flex items-center justify-center gap-2 transition"
+                className="py-3 px-4 rounded-2xl bg-[#163B36] hover:bg-[#0F2925] text-white font-extrabold text-xs flex items-center justify-center gap-2 transition shadow-xs"
               >
                 <Copy className="h-4 w-4" />
                 <span>Copy Share Link</span>

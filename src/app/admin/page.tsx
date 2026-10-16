@@ -168,7 +168,7 @@ function AdminShell() {
       <div className="min-h-screen bg-[#181d24] text-white flex flex-col justify-center items-center p-4 font-sans">
         <div className="w-full max-w-md bg-[#222933] border border-gray-700/60 rounded-3xl p-7 shadow-2xl space-y-6">
           <div className="text-center space-y-2">
-            <div className="w-14 h-14 bg-[#e10600]/15 text-[#e10600] rounded-2xl flex items-center justify-center mx-auto text-2xl font-black border border-[#e10600]/30">
+            <div className="w-14 h-14 bg-[#163B36]/15 text-[#163B36] rounded-2xl flex items-center justify-center mx-auto text-2xl font-black border border-[#163B36]/30">
               🛡️
             </div>
             <h1 className="text-xl font-black tracking-tight text-white">
@@ -203,7 +203,7 @@ function AdminShell() {
                   required
                   value={adminEmail}
                   onChange={(e) => setAdminEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#e10600]"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#163B36]"
                   placeholder="admin@staywise.com"
                 />
               </div>
@@ -218,7 +218,7 @@ function AdminShell() {
                       setResetError(null);
                       setResetSuccess(null);
                     }}
-                    className="text-[11px] text-[#e10600] hover:underline font-semibold"
+                    className="text-[11px] text-[#163B36] hover:underline font-semibold"
                   >
                     Reset with Security Key?
                   </button>
@@ -228,7 +228,7 @@ function AdminShell() {
                   required
                   value={adminPassword}
                   onChange={(e) => setAdminPassword(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#e10600]"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#163B36]"
                   placeholder="Enter admin password (e.g. admin@123)"
                 />
               </div>
@@ -236,7 +236,7 @@ function AdminShell() {
               <button
                 type="submit"
                 disabled={adminLoading}
-                className="w-full py-3 rounded-xl bg-[#e10600] hover:bg-[#c50500] disabled:opacity-60 text-white font-bold text-xs tracking-wide transition shadow-lg shadow-red-900/30 flex items-center justify-center space-x-2"
+                className="w-full py-3 rounded-xl bg-[#163B36] hover:bg-[#0F2925] disabled:opacity-60 text-white font-bold text-xs tracking-wide transition shadow-lg shadow-red-900/30 flex items-center justify-center space-x-2"
               >
                 {adminLoading ? (
                   <span>Authenticating with SHA-256...</span>
@@ -267,7 +267,7 @@ function AdminShell() {
                   required
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#e10600]"
+                  className="w-full px-3.5 py-2 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#163B36]"
                   placeholder="admin@staywise.com"
                 />
               </div>
@@ -281,11 +281,11 @@ function AdminShell() {
                   required
                   value={resetSecurityKey}
                   onChange={(e) => setResetSecurityKey(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#e10600] font-mono text-xs"
+                  className="w-full px-3.5 py-2 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#163B36] font-mono text-xs"
                   placeholder="Master Recovery Key or 2FA PIN (e.g. 849201)"
                 />
                 <span className="text-[10px] text-gray-400 mt-0.5 block">
-                  Recovery Keys: <code className="text-[#e10600]">STAYWISE-ADMIN-MASTER-RECOVERY-KEY-2026</code> or PIN <code className="text-[#e10600]">849201</code>
+                  Recovery Keys: <code className="text-[#163B36]">STAYWISE-ADMIN-MASTER-RECOVERY-KEY-2026</code> or PIN <code className="text-[#163B36]">849201</code>
                 </span>
               </div>
 
@@ -296,7 +296,7 @@ function AdminShell() {
                   required
                   value={resetNewPassword}
                   onChange={(e) => setResetNewPassword(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#e10600]"
+                  className="w-full px-3.5 py-2 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#163B36]"
                   placeholder="Minimum 6 characters"
                 />
               </div>
@@ -308,7 +308,7 @@ function AdminShell() {
                   required
                   value={resetConfirmPassword}
                   onChange={(e) => setResetConfirmPassword(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#e10600]"
+                  className="w-full px-3.5 py-2 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#163B36]"
                   placeholder="Re-type new master password"
                 />
               </div>
@@ -316,7 +316,7 @@ function AdminShell() {
               <button
                 type="submit"
                 disabled={resetLoading}
-                className="w-full py-2.5 rounded-xl bg-[#e10600] hover:bg-[#c50500] disabled:opacity-60 text-white font-bold text-xs tracking-wide transition shadow-lg shadow-red-900/30 flex items-center justify-center space-x-2"
+                className="w-full py-2.5 rounded-xl bg-[#163B36] hover:bg-[#0F2925] disabled:opacity-60 text-white font-bold text-xs tracking-wide transition shadow-lg shadow-red-900/30 flex items-center justify-center space-x-2"
               >
                 {resetLoading ? (
                   <span>Verifying &amp; Re-encrypting in SHA-256...</span>
@@ -387,7 +387,7 @@ function AdminShell() {
   };
 
   return (
-    <div className="min-h-screen bg-[#c0c0c0] text-[#2a2a2a] flex font-sans selection:bg-[#e10600] selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#F7F8F6] text-[#263238] flex font-sans selection:bg-[#163B36] selection:text-white overflow-x-hidden">
       {/* Floating Vertical Navigation Rail from reference image */}
       <FloatingNavRail />
 
@@ -483,7 +483,7 @@ function AdminShell() {
                   required
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#e10600]"
+                  className="w-full px-3.5 py-2 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#163B36]"
                 />
               </div>
 
@@ -496,11 +496,11 @@ function AdminShell() {
                   required
                   value={resetSecurityKey}
                   onChange={(e) => setResetSecurityKey(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#e10600] font-mono text-xs"
+                  className="w-full px-3.5 py-2 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#163B36] font-mono text-xs"
                   placeholder="Enter Key or PIN (e.g. 849201)"
                 />
                 <span className="text-[10px] text-gray-400 mt-0.5 block">
-                  Keys: <code className="text-[#e10600]">STAYWISE-ADMIN-MASTER-RECOVERY-KEY-2026</code> or PIN <code className="text-[#e10600]">849201</code>
+                  Keys: <code className="text-[#163B36]">STAYWISE-ADMIN-MASTER-RECOVERY-KEY-2026</code> or PIN <code className="text-[#163B36]">849201</code>
                 </span>
               </div>
 
@@ -511,7 +511,7 @@ function AdminShell() {
                   required
                   value={resetNewPassword}
                   onChange={(e) => setResetNewPassword(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#e10600]"
+                  className="w-full px-3.5 py-2 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#163B36]"
                   placeholder="Minimum 6 characters"
                 />
               </div>
@@ -523,7 +523,7 @@ function AdminShell() {
                   required
                   value={resetConfirmPassword}
                   onChange={(e) => setResetConfirmPassword(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#e10600]"
+                  className="w-full px-3.5 py-2 rounded-xl bg-[#181d24] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-[#163B36]"
                   placeholder="Re-type new master password"
                 />
               </div>
@@ -539,7 +539,7 @@ function AdminShell() {
                 <button
                   type="submit"
                   disabled={resetLoading}
-                  className="px-4 py-2 rounded-xl bg-[#e10600] hover:bg-[#c50500] disabled:opacity-60 text-white font-bold text-xs transition shadow-md"
+                  className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#0F2925] disabled:opacity-60 text-white font-bold text-xs transition shadow-md"
                 >
                   {resetLoading ? 'Re-encrypting...' : 'Reset & Save Password'}
                 </button>

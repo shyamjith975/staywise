@@ -158,3 +158,28 @@ RESULTS: 10/10 TESTS PASSED
 ƒ (Dynamic)  server-rendered on demand
 Exit code: 0
 ```
+
+---
+
+## 6. User Isolation & 5-Color Design System Update (2026-10-16)
+
+### 6.1 Multi-Persona Data Isolation & Zero Mock Bleed
+- **Tenant Persona (`TenantDashboard.tsx` & `LoginView.tsx`):**
+  - Resolved root cause of "Welcome Shyam" bug when logging in as newly registered user `test@tenent.com`: Removed default pre-filling of demo email/password upon role tab selection, and separated the 1-click persona switcher from the primary credential form.
+  - Non-demo tenants display an isolated onboarding state: `Welcome, {currentUser.name}!` (e.g. "Welcome, test!") with zero rent dues, zero deposit dues, and clean unassigned lease notice.
+- **EstateOS Hospitality Operations (`EstateHospitalityDashboard.tsx`):**
+  - Scoped demo bookings (Singhania, Jenkins, TechStar, Malhotra) and housekeeping turnovers strictly to demo account (`estate@staywise.com` / `user-estate-manoj`).
+  - New estate hosts start with clean 0-state (₹0 revenue, 0.0% occupancy, 0 live stays) with intuitive empty state cards and "+ Add Booking" triggers.
+- **Ancillary Modules (`StaywiseAIPanel`, `MoveFlowRetentionView`, `FindHomeView`, `CreateTicketModal`):**
+  - Dynamic user-based AI greeting replacing hardcoded Apartment 302 rent prompts.
+  - Dynamically generated referral codes based on authenticated user's slug (`TENANT-TEST-2500`, `SW-TEST-890`) with 0 referrals and ₹0 earnings for new accounts.
+  - Maintenance ticket submission dynamically resolves the resident's actual assigned property and unit.
+
+### 6.2 5-Color Authoritative Design System
+Every page, landing section, navigation rail, modal, and dashboard has been systematically migrated to the client's 5-color palette:
+1. **Deep Forest Green** (`#163B36`): Primary brand, navigation active states, primary CTA buttons, key brand headers.
+2. **Soft Sage** (`#E8F0EC`): Secondary surfaces, supporting cards, table alternating rows, active pills, and selected states.
+3. **Warm Off-White** (`#F7F8F6`): Canvas background, body container, eliminating pure white glare.
+4. **Muted Gold** (`#C69A55`): Premium accent highlights, star ratings, crowns, referral bounties, and selected metrics.
+5. **Charcoal Slate** (`#263238`): Authoritative text, table headers, financial figures, and structural layout borders (`#D2DDD7`).
+
