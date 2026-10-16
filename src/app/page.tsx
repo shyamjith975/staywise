@@ -41,6 +41,7 @@ import CreateTicketModal from '../components/modules/maintenance/CreateTicketMod
 import LeadsCRM from '../components/modules/leasing/LeadsCRM';
 import EstateHospitalityDashboard from '../components/dashboards/EstateHospitalityDashboard';
 import EstateSettingsView from '../components/modules/estate/EstateSettingsView';
+import TenantSettingsView from '../components/modules/tenant/TenantSettingsView';
 import StaywiseAIPanel from '../components/modules/ai/StaywiseAIPanel';
 import MarketplaceNRI from '../components/modules/services/MarketplaceNRI';
 
@@ -107,6 +108,8 @@ function MainAppShell() {
         case 'moveflow':
         case 'referrals':
           return <MoveFlowRetentionView />;
+        case 'settings':
+          return <TenantSettingsView />;
         case 'dashboard':
         default:
           return <TenantDashboard />;

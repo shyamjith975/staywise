@@ -15,6 +15,10 @@ import {
   CheckCircle2, 
   Trees, 
   Calendar, 
+  Clock,
+  Zap,
+  RefreshCw,
+  DollarSign,
   ArrowUpRight, 
   Key,
   X
@@ -35,6 +39,8 @@ export default function EstateSettingsView() {
   // 5 Focused Settings Tabs for EstateOS
   const [activeTab, setActiveTab] = useState<'MEMBERSHIP' | 'SECURITY' | 'PROFILE' | 'BANKING' | 'NOTIFICATIONS'>('MEMBERSHIP');
   const [isSavedToast, setIsSavedToast] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   // Form State: Profile & Campus
   const [hostName, setHostName] = useState(currentUser.name || 'Manoj Varma');
@@ -68,10 +74,66 @@ export default function EstateSettingsView() {
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
 
-  const handleSaveSettings = () => {
-    setIsSavedToast(true);
-    addNotification('Settings Saved', 'EstateOS preferences updated successfully.', 'SYSTEM');
-    setTimeout(() => setIsSavedToast(false), 2500);
+  // Load persisted settings on mount from SQLite database
+  React.useEffect(() => {
+    async function loadSettings() {
+      try {
+        const res = await fetch(`/api/settings?userId=${encodeURIComponent(currentUser.id || '')}`);
+        const json = await res.json();
+        if (json.success && json.data) {
+          const s = json.data;
+          if (s.ownerName) setHostName(s.ownerName);
+          if (s.entityName) setCampusName(s.entityName);
+          if (s.bankAccount) setAccountNumber(s.bankAccount);
+          if (s.ifsc) setIfsc(s.ifsc);
+          if (s.bankName) setBankName(s.bankName);
+          if (s.upiId) setUpiId(s.upiId);
+        }
+      } catch (err) {
+        console.error('Failed to load estate settings:', err);
+      }
+    }
+    loadSettings();
+  }, [currentUser.id]);
+
+  const handleSaveSettings = async () => {
+    setIsSavingSettings(true);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          ownerName: hostName,
+          entityName: campusName,
+          phone,
+          bankAccount: accountNumber,
+          ifsc,
+          bankName,
+          upiId,
+          preferences: {
+            notifyWhatsAppKeys,
+            notifyBookings,
+            notifyHousekeeping,
+            notifyPayouts,
+            address
+          }
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsSavedToast(true);
+        addNotification('Settings Saved', 'EstateOS preferences saved to database successfully.', 'SYSTEM');
+        setTimeout(() => setIsSavedToast(false), 2500);
+      } else {
+        alert(data.error || 'Failed to save settings.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Network error while saving settings.');
+    } finally {
+      setIsSavingSettings(false);
+    }
   };
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
@@ -157,12 +219,14 @@ export default function EstateSettingsView() {
           </p>
         </div>
 
-        {isSavedToast && (
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-bold animate-in fade-in">
-            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            <span>Settings Saved</span>
-          </div>
-        )}
+        <button
+          disabled={isSavingSettings}
+          onClick={handleSaveSettings}
+          className="px-5 py-2.5 rounded-2xl bg-[#D32F2F] hover:bg-[#B71C1C] text-white text-xs font-bold shadow-md shadow-red-900/20 flex items-center gap-2 transition cursor-pointer self-start sm:self-auto"
+        >
+          <Save className="h-4 w-4" />
+          <span>{isSavingSettings ? 'Saving...' : 'Save Configurations'}</span>
+        </button>
       </div>
 
       {/* Tabs */}
@@ -177,6 +241,9 @@ export default function EstateSettingsView() {
         >
           <Crown className="h-4 w-4 text-[#C69A55]" />
           <span>Membership &amp; Plan</span>
+          <span className="px-2 py-0.5 rounded-full bg-[#D32F2F] text-white text-[10px] font-black">
+            Active
+          </span>
         </button>
 
         <button
@@ -232,63 +299,164 @@ export default function EstateSettingsView() {
       {/* TAB 1: MEMBERSHIP & SUBSCRIPTION                                          */}
       {/* ========================================================================= */}
       {activeTab === 'MEMBERSHIP' && (
-        <div className="rounded-3xl bg-white border border-[#D2DDD7] p-6 sm:p-8 space-y-6 shadow-xs animate-in fade-in duration-150">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#D2DDD7] pb-4">
-            <div>
-              <span className="text-[10px] font-black uppercase text-[#C69A55] tracking-widest block">
-                Active Estate License
-              </span>
-              <h2 className="text-xl font-black text-[#263238] mt-0.5 flex items-center gap-2">
-                <span>{currentPlan.name}</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
-                  Active
-                </span>
-              </h2>
-              <p className="text-xs text-[#546E7A] mt-1">
-                {currentPlan.tagline}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setIsUpgradeModalOpen(true)}
-                className="px-5 py-2.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition shadow-xs flex items-center gap-1.5 cursor-pointer"
-              >
-                <Crown className="h-3.5 w-3.5 text-[#C69A55]" />
-                <span>Change / Upgrade Tier</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-            <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-1">
-              <span className="text-[10px] text-[#546E7A] font-bold block uppercase">Billing Cycle</span>
-              <div className="text-base font-extrabold text-[#263238]">Annual Billing (Save 20%)</div>
-              <span className="text-[10px] text-emerald-800 font-bold">Auto-Renews Oct 2027</span>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-1">
-              <span className="text-[10px] text-[#546E7A] font-bold block uppercase">Campus Quota</span>
-              <div className="text-base font-extrabold text-[#263238]">Unlimited Villas &amp; Rooms</div>
-              <span className="text-[10px] text-[#546E7A]">All smart lock gates active</span>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-1">
-              <span className="text-[10px] text-[#546E7A] font-bold block uppercase">OTA Channels</span>
-              <div className="text-base font-extrabold text-[#263238]">Airbnb, Booking.com &amp; Direct</div>
-              <span className="text-[10px] text-emerald-800 font-bold">2-Way iCal Calendar Sync</span>
-            </div>
-          </div>
-
-          <div className="space-y-3 pt-2">
-            <h3 className="font-extrabold text-sm text-[#263238]">Included Membership Privileges</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs text-[#546E7A]">
-              {currentPlan.features.map((feat, idx) => (
-                <div key={idx} className="flex items-center gap-2 p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7]">
-                  <CheckCircle2 className="h-4 w-4 text-[#163B36] shrink-0" />
-                  <span className="font-medium text-[#263238]">{feat}</span>
+        <div className="space-y-6 animate-in fade-in duration-150">
+          {/* Dark Hero Plan Summary Card - Matching User Screenshot */}
+          <div className="rounded-3xl bg-[#261E1A] p-6 sm:p-8 text-white relative overflow-hidden space-y-5 border border-[#3E322D] shadow-lg">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              <div>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <span className="px-3 py-1 rounded-full bg-[#4D1F24] text-[#FFA4A4] border border-[#6E2A32] text-[11px] font-extrabold tracking-wide">
+                    {subscription?.status === 'CANCELLED' 
+                      ? 'Trial Cancelled • Autopay Revoked' 
+                      : subscription?.status === 'TRIAL' 
+                        ? 'Trial Cancelled • Autopay Revoked' 
+                        : 'Active Plan • Auto-renew Active'}
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-[#3D2C1B] text-[#FFC876] border border-[#5A4026] text-[11px] font-bold flex items-center gap-1.5">
+                    <Crown className="h-3.5 w-3.5 text-[#FFC876]" />
+                    <span>Annual Commitment (Saved 17%)</span>
+                  </span>
                 </div>
-              ))}
+                <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  {subscription?.planName || 'Growth Portfolio Pro OS'}
+                </h2>
+                <p className="text-xs sm:text-sm text-rose-300/80 mt-1 max-w-2xl leading-relaxed">
+                  Unified multi-asset property management operating system with statutory double-entry ledger, sub-meter OCR tariff splitting, automated WhatsApp dunning, and Axis Bank Escrow clearance.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+                <button
+                  onClick={() => setIsUpgradeModalOpen(true)}
+                  className="px-5 py-2.5 rounded-2xl bg-[#D32F2F] hover:bg-[#B71C1C] text-white text-xs font-black transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span>Reactivate Subscription</span>
+                </button>
+                <button
+                  onClick={async () => {
+                    setIsSyncing(true);
+                    await refreshSubscription();
+                    setIsSyncing(false);
+                  }}
+                  className="px-4 py-2.5 rounded-2xl bg-[#3D332F] hover:bg-[#4E433E] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                  <span>Sync Server Status</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-6 pt-3 border-t border-white/10 text-xs text-white/80">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-3.5 w-3.5 text-rose-300" />
+                <span>Plan Started: <b className="text-white font-tabular">{subscription?.startDate || '2026-10-04'}</b></span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="h-3.5 w-3.5 text-amber-300" />
+                <span>Next Renewal: <b className="text-white font-tabular">{subscription?.endDate || '2026-10-11'}</b></span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Zap className="h-3.5 w-3.5 text-red-400" />
+                <span>Validity Countdown: <b className="text-red-400 font-tabular">{subscription?.daysRemaining ?? 7} Days Left</b></span>
+              </div>
+            </div>
+          </div>
+
+          {/* 2-Column Plan Details & Quota Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* Card 1: Subscription Financials */}
+            <div className="organic-card p-5 space-y-3.5 border border-[#D2DDD7] bg-white rounded-3xl">
+              <div className="flex items-center justify-between pb-2 border-b border-[#D1D5DB]">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-xl bg-[#E8F0EC] text-[#263238] flex items-center justify-center">
+                    <DollarSign className="h-4 w-4" />
+                  </div>
+                  <h4 className="font-extrabold text-sm text-[#263238]">Subscription Billing</h4>
+                </div>
+                <span className="text-[11px] font-bold text-[#546E7A] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
+                  Cleared
+                </span>
+              </div>
+
+              <div className="space-y-2.5 text-xs">
+                <div className="flex justify-between items-center text-[#546E7A]">
+                  <span>Annual Invoiced Fee:</span>
+                  <span className="font-black text-[#263238] text-sm">
+                    ₹{(subscription?.amount ?? 79990).toLocaleString('en-IN')}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-[#546E7A]">
+                  <span>GST Applicable (18%):</span>
+                  <span className="font-bold text-[#263238]">Included (₹12,202)</span>
+                </div>
+                <div className="flex justify-between items-center text-[#546E7A]">
+                  <span>Active Payment Method:</span>
+                  <span className="font-bold text-[#263238]">{subscription?.paymentMethod || 'Autopay Card: Visa/Mastercard ending in •••• 9842'}</span>
+                </div>
+                <div className="flex justify-between items-center text-[#546E7A]">
+                  <span>Billing Entity GSTIN:</span>
+                  <span className="font-mono text-[#263238] font-bold">{subscription?.gstin || '29AAACS1928K1Z5'}</span>
+                </div>
+                <div className="flex justify-between items-center text-[#546E7A]">
+                  <span>Last Cleared Txn:</span>
+                  <span className="font-mono text-[11px] text-[#263238] bg-[#E8F0EC] px-2 py-0.5 rounded-full border border-[#D2DDD7] font-bold">
+                    {subscription?.lastPaymentTxnId || 'TXN-TRIAL-MANDATE-1791103833091'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Quota & Capacity Usage */}
+            <div className="organic-card p-5 space-y-3.5 border border-[#D2DDD7] bg-white rounded-3xl">
+              <div className="flex items-center justify-between pb-2 border-b border-[#D1D5DB]">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
+                    <Building2 className="h-4 w-4" />
+                  </div>
+                  <h4 className="font-extrabold text-sm text-[#263238]">Unit &amp; Asset Quota</h4>
+                </div>
+                <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                  {Math.round(((subscription?.currentUnits || 1) / (subscription?.maxUnits || 50)) * 100)}% Used
+                </span>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <div className="flex justify-between text-[#546E7A] mb-1">
+                    <span>Managed Units Allocation:</span>
+                    <span className="font-bold text-[#263238]">
+                      {subscription?.currentUnits || 1} of {subscription?.maxUnits || 50} Units
+                    </span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-[#E8F0EC] overflow-hidden">
+                    <div 
+                      className="h-full bg-[#263238] rounded-full transition-all duration-500"
+                      style={{ width: `${Math.max(2, Math.min(100, Math.round(((subscription?.currentUnits || 1) / (subscription?.maxUnits || 50)) * 100)))}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <div className="p-2.5 rounded-xl bg-[#E8F0EC]/60 border border-[#D2DDD7]">
+                    <div className="text-[10px] text-[#546E7A]">PG Co-living Beds</div>
+                    <div className="text-xs font-black text-[#263238]">18 Active Beds</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-[#E8F0EC]/60 border border-[#D2DDD7]">
+                    <div className="text-[10px] text-[#546E7A]">Commercial Area</div>
+                    <div className="text-xs font-black text-[#263238]">15,000 sq.ft</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-[#E8F0EC]/60 border border-[#D2DDD7]">
+                    <div className="text-[10px] text-[#546E7A]">WhatsApp Dunning</div>
+                    <div className="text-xs font-black text-[#263238]">Unlimited</div>
+                  </div>
+                  <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+                    <span className="font-mono text-[10px] text-emerald-800 font-bold truncate">
+                      {subscription?.lastPaymentTxnId || 'TXN-TRIAL-MANDATE-1791103833091'}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

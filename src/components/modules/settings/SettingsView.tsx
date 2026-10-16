@@ -127,16 +127,118 @@ export default function SettingsView() {
   const [upiId, setUpiId] = useState(isDemoAccount ? 'staywise.escrow@axisbank' : '');
   const [autoSweepCadence, setAutoSweepCadence] = useState('Daily at 18:00 IST');
 
-  // Save handler
-  const handleSaveSettings = () => {
-    setIsSavedToast(true);
-    addNotification('Settings Updated', 'Platform configurations and rent automation rules saved successfully.', 'SYSTEM');
-    setTimeout(() => setIsSavedToast(false), 3000);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Load persisted settings on mount from SQLite database
+  React.useEffect(() => {
+    async function loadSettings() {
+      try {
+        const res = await fetch(`/api/settings?userId=${encodeURIComponent(currentUser.id || '')}`);
+        const json = await res.json();
+        if (json.success && json.data) {
+          const s = json.data;
+          if (s.entityName) setEntityName(s.entityName);
+          if (s.ownerName) setOwnerName(s.ownerName);
+          if (s.panNumber) setPanNumber(s.panNumber);
+          if (s.gstin) setGstin(s.gstin);
+          if (s.bankAccount) setBankAccount(s.bankAccount);
+          if (s.ifsc) setIfsc(s.ifsc);
+          if (s.bankName) setBankName(s.bankName);
+          if (s.upiId) setUpiId(s.upiId);
+          if (s.autoSweepCadence) setAutoSweepCadence(s.autoSweepCadence);
+          if (s.rentDueDay) setRentDueDay(s.rentDueDay);
+          if (s.gracePeriodDays) setGracePeriodDays(s.gracePeriodDays);
+          if (s.lateFeeFixed) setLateFeeAmount(s.lateFeeFixed);
+          if (s.ksebTariffPerUnit) setDefaultRatePerUnit(s.ksebTariffPerUnit);
+          if (s.dgBackupRatePerUnit) setDefaultFixedCharges(s.dgBackupRatePerUnit);
+          if (s.meterReadingCycle) setMeterReadingCycle(s.meterReadingCycle);
+          if (s.commonAreaPowerRatio) setCommonAreaPowerRatio(s.commonAreaPowerRatio);
+        }
+      } catch (err) {
+        console.error('Failed to load platform settings:', err);
+      }
+    }
+    loadSettings();
+  }, [currentUser.id]);
+
+  // Save handler - Persists to SQLite Database via POST /api/settings
+  const handleSaveSettings = async () => {
+    setIsSavingSettings(true);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser.id,
+          entityName,
+          ownerName,
+          panNumber,
+          gstin,
+          bankAccount,
+          ifsc,
+          bankName,
+          upiId,
+          autoSweepCadence,
+          rentDueDay,
+          gracePeriodDays,
+          lateFeeFixed: lateFeeAmount,
+          lateFeeDailyRate: 50,
+          autoWhatsAppReminder: true,
+          allowPartialPayments: false,
+          ksebTariffPerUnit: defaultRatePerUnit,
+          dgBackupRatePerUnit: defaultFixedCharges,
+          meterReadingCycle,
+          commonAreaPowerRatio
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsSavedToast(true);
+        addNotification('Settings Updated', 'Platform configurations and rent automation rules saved to SQLite database successfully.', 'SYSTEM');
+        setTimeout(() => setIsSavedToast(false), 3000);
+      } else {
+        alert(data.error || 'Failed to save settings to database.');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Network error while saving settings to database.');
+    } finally {
+      setIsSavingSettings(false);
+    }
   };
 
   const handleExportBackup = () => {
     addNotification('Backup Created', 'Full portfolio records & ledger exported as encrypted JSON.', 'SYSTEM');
-    alert('Exporting complete portfolio ledger, tenant contracts, and audit trail (ZIP/JSON)...');
+    const backupData = {
+      timestamp: new Date().toISOString(),
+      user: currentUser,
+      subscription,
+      settings: {
+        entityName,
+        ownerName,
+        panNumber,
+        gstin,
+        bankAccount,
+        ifsc,
+        bankName,
+        upiId,
+        rentDueDay,
+        gracePeriodDays,
+        lateFeeAmount,
+        ksebTariffPerUnit: defaultRatePerUnit,
+        dgBackupRatePerUnit: defaultFixedCharges,
+        meterReadingCycle,
+        commonAreaPowerRatio
+      }
+    };
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `staywise-portfolio-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   // Security Password State
@@ -231,11 +333,12 @@ export default function SettingsView() {
           </button>
 
           <button
+            disabled={isSavingSettings}
             onClick={handleSaveSettings}
-            className="px-5 py-2 rounded-2xl bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-bold shadow-md shadow-[#263238]/20 flex items-center gap-2 transition"
+            className="px-5 py-2 rounded-2xl bg-[#D32F2F] hover:bg-[#B71C1C] text-white text-xs font-bold shadow-md shadow-red-900/20 flex items-center gap-2 transition cursor-pointer"
           >
             <Save className="h-4 w-4" />
-            <span>Save Configurations</span>
+            <span>{isSavingSettings ? 'Saving...' : 'Save Configurations'}</span>
           </button>
         </div>
       </div>
@@ -243,8 +346,23 @@ export default function SettingsView() {
       {/* Settings Navigation Tabs */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-[#D1D5DB] text-xs">
         <button
+          onClick={() => handleTabChange('SUBSCRIPTION')}
+          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition cursor-pointer ${
+            activeTab === 'SUBSCRIPTION'
+              ? 'bg-[#163B36] text-white shadow-xs'
+              : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
+          }`}
+        >
+          <Crown className={`h-4 w-4 ${activeTab === 'SUBSCRIPTION' ? 'text-[#C69A55]' : 'text-amber-500'}`} />
+          <span>Subscription &amp; Plans</span>
+          <span className="px-2 py-0.5 rounded-full bg-[#D32F2F] text-white text-[10px] font-black">
+            Active
+          </span>
+        </button>
+
+        <button
           onClick={() => handleTabChange('PORTFOLIO')}
-          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
+          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition cursor-pointer ${
             activeTab === 'PORTFOLIO'
               ? 'bg-[#163B36] text-white shadow-xs'
               : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
@@ -255,32 +373,8 @@ export default function SettingsView() {
         </button>
 
         <button
-          onClick={() => handleTabChange('BANKING')}
-          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
-            activeTab === 'BANKING'
-              ? 'bg-[#163B36] text-white shadow-xs'
-              : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
-          }`}
-        >
-          <CreditCard className="h-4 w-4" />
-          <span>Payout Escrow &amp; UPI</span>
-        </button>
-
-        <button
-          onClick={() => handleTabChange('DELEGATES')}
-          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
-            activeTab === 'DELEGATES'
-              ? 'bg-[#163B36] text-white shadow-xs'
-              : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
-          }`}
-        >
-          <Users className="h-4 w-4" />
-          <span>Managers &amp; Accountants</span>
-        </button>
-
-        <button
           onClick={() => handleTabChange('RENT_RULES')}
-          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
+          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition cursor-pointer ${
             activeTab === 'RENT_RULES'
               ? 'bg-[#163B36] text-white shadow-xs'
               : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
@@ -292,7 +386,7 @@ export default function SettingsView() {
 
         <button
           onClick={() => handleTabChange('UTILITIES')}
-          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
+          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition cursor-pointer ${
             activeTab === 'UTILITIES'
               ? 'bg-[#163B36] text-white shadow-xs'
               : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
@@ -303,20 +397,32 @@ export default function SettingsView() {
         </button>
 
         <button
-          onClick={() => handleTabChange('SUBSCRIPTION')}
-          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
-            activeTab === 'SUBSCRIPTION'
+          onClick={() => handleTabChange('BANKING')}
+          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition cursor-pointer ${
+            activeTab === 'BANKING'
               ? 'bg-[#163B36] text-white shadow-xs'
               : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
           }`}
         >
-          <Crown className={`h-4 w-4 ${activeTab === 'SUBSCRIPTION' ? 'text-[#C69A55]' : 'text-amber-500'}`} />
-          <span>Subscription Plan</span>
+          <CreditCard className="h-4 w-4" />
+          <span>Payout Escrow &amp; UPI</span>
+        </button>
+
+        <button
+          onClick={() => handleTabChange('DELEGATES')}
+          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition cursor-pointer ${
+            activeTab === 'DELEGATES'
+              ? 'bg-[#163B36] text-white shadow-xs'
+              : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
+          }`}
+        >
+          <Users className="h-4 w-4" />
+          <span>Managers &amp; Accountants</span>
         </button>
 
         <button
           onClick={() => handleTabChange('SECURITY')}
-          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
+          className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition cursor-pointer ${
             activeTab === 'SECURITY'
               ? 'bg-[#163B36] text-white shadow-xs'
               : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
@@ -330,66 +436,65 @@ export default function SettingsView() {
       {/* TAB: Owner Subscription Model & White-Hat Security Hardening */}
       {activeTab === 'SUBSCRIPTION' && (
         <div className="space-y-6">
-          {/* Clean Plan Summary Card */}
-          <div className="organic-card p-6 bg-white border border-[#D2DDD7] rounded-3xl space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#D2DDD7]">
+          {/* Dark Hero Plan Summary Card - Matching User Screenshot */}
+          <div className="rounded-3xl bg-[#261E1A] p-6 sm:p-8 text-white relative overflow-hidden space-y-5 border border-[#3E322D] shadow-lg">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
-                <span className="text-[10px] uppercase font-bold text-[#163B36] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
-                  {subscription?.status === 'TRIAL' ? '7-Day Free Trial' : 'Active Subscription'}
-                </span>
-                <h3 className="text-xl font-black text-[#263238] mt-1.5 flex items-center gap-2">
-                  <Crown className="h-5 w-5 text-[#C69A55]" />
-                  <span>{subscription?.planName || 'Growth Portfolio Pro OS'}</span>
-                </h3>
-                <p className="text-xs text-[#546E7A] mt-0.5">
-                  {subscription?.billingCycle === 'annual' ? 'Billed Annually (Saved 17%)' : 'Billed Monthly'} • Next Renewal: {subscription?.endDate || '01 Oct 2027'}
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <span className="px-3 py-1 rounded-full bg-[#4D1F24] text-[#FFA4A4] border border-[#6E2A32] text-[11px] font-extrabold tracking-wide">
+                    {subscription?.status === 'CANCELLED' 
+                      ? 'Trial Cancelled • Autopay Revoked' 
+                      : subscription?.status === 'TRIAL' 
+                        ? 'Trial Cancelled • Autopay Revoked' 
+                        : 'Active Plan • Auto-renew Active'}
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-[#3D2C1B] text-[#FFC876] border border-[#5A4026] text-[11px] font-bold flex items-center gap-1.5">
+                    <Crown className="h-3.5 w-3.5 text-[#FFC876]" />
+                    <span>Annual Commitment (Saved 17%)</span>
+                  </span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                  {subscription?.planName || 'Growth Portfolio Pro OS'}
+                </h2>
+                <p className="text-xs sm:text-sm text-rose-300/80 mt-1 max-w-2xl leading-relaxed">
+                  Unified multi-asset property management operating system with statutory double-entry ledger, sub-meter OCR tariff splitting, automated WhatsApp dunning, and Axis Bank Escrow clearance.
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
                 <button
                   onClick={() => setIsUpgradeModalOpen(true)}
-                  className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-bold transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
+                  className="px-5 py-2.5 rounded-2xl bg-[#D32F2F] hover:bg-[#B71C1C] text-white text-xs font-black transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
                 >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  <span>{subscription?.status === 'CANCELLED' ? 'Reactivate Plan' : 'Change Plan / Upgrade'}</span>
+                  <Sparkles className="h-4 w-4" />
+                  <span>Reactivate Subscription</span>
                 </button>
-                {subscription?.status === 'TRIAL' && (
-                  <button
-                    onClick={async () => {
-                      if (confirm("Cancel 7-Day Free Trial? Autopay mandate will be cancelled.")) {
-                        setIsCancellingTrial(true);
-                        await cancelTrial();
-                        setIsCancellingTrial(false);
-                      }
-                    }}
-                    disabled={isCancellingTrial}
-                    className="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold border border-rose-200 transition"
-                  >
-                    Cancel Trial
-                  </button>
-                )}
+                <button
+                  onClick={async () => {
+                    setIsSyncing(true);
+                    await refreshSubscription();
+                    setIsSyncing(false);
+                  }}
+                  className="px-4 py-2.5 rounded-2xl bg-[#3D332F] hover:bg-[#4E433E] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                  <span>Sync Server Status</span>
+                </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-              <div className="p-3.5 rounded-2xl bg-[#E8F0EC]/60 border border-[#D2DDD7]">
-                <span className="text-[11px] text-[#546E7A]">Unit Allocation</span>
-                <div className="text-sm font-black text-[#263238] mt-0.5 font-tabular">
-                  {subscription?.currentUnits || 24} / {subscription?.maxUnits || 50} Units
-                </div>
+            <div className="flex flex-wrap items-center gap-6 pt-3 border-t border-white/10 text-xs text-white/80">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-3.5 w-3.5 text-rose-300" />
+                <span>Plan Started: <b className="text-white font-tabular">{subscription?.startDate || '2026-10-04'}</b></span>
               </div>
-              <div className="p-3.5 rounded-2xl bg-[#E8F0EC]/60 border border-[#D2DDD7]">
-                <span className="text-[11px] text-[#546E7A]">Annual Subscription Fee</span>
-                <div className="text-sm font-black text-[#263238] mt-0.5 font-tabular">
-                  ₹{(subscription?.amount ?? (isDemoAccount ? 79990 : 0)).toLocaleString('en-IN')}
-                </div>
+              <div className="flex items-center gap-2">
+                <Clock className="h-3.5 w-3.5 text-amber-300" />
+                <span>Next Renewal: <b className="text-white font-tabular">{subscription?.endDate || '2026-10-11'}</b></span>
               </div>
-              <div className="p-3.5 rounded-2xl bg-[#E8F0EC]/60 border border-[#D2DDD7]">
-                <span className="text-[11px] text-[#546E7A]">Payment Method</span>
-                <div className="text-sm font-bold text-[#263238] mt-0.5">
-                  {subscription?.paymentMethod || 'Axis Bank Escrow Auto-Debit'}
-                </div>
+              <div className="flex items-center gap-2">
+                <Zap className="h-3.5 w-3.5 text-red-400" />
+                <span>Validity Countdown: <b className="text-red-400 font-tabular">{subscription?.daysRemaining ?? 7} Days Left</b></span>
               </div>
             </div>
           </div>
@@ -397,7 +502,7 @@ export default function SettingsView() {
           {/* 2-Column Plan Details & Quota Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Card 1: Subscription Financials */}
-            <div className="organic-card p-5 space-y-3.5 border border-[#D2DDD7] bg-white">
+            <div className="organic-card p-5 space-y-3.5 border border-[#D2DDD7] bg-white rounded-3xl">
               <div className="flex items-center justify-between pb-2 border-b border-[#D1D5DB]">
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-xl bg-[#E8F0EC] text-[#263238] flex items-center justify-center">
@@ -405,41 +510,41 @@ export default function SettingsView() {
                   </div>
                   <h4 className="font-extrabold text-sm text-[#263238]">Subscription Billing</h4>
                 </div>
-                <span className="text-[11px] font-bold text-[#263238] bg-[#E8F0EC] px-2 py-0.5 rounded-md">
+                <span className="text-[11px] font-bold text-[#546E7A] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
                   Cleared
                 </span>
               </div>
 
               <div className="space-y-2.5 text-xs">
-                <div className="flex justify-between items-center text-[#666666]">
+                <div className="flex justify-between items-center text-[#546E7A]">
                   <span>Annual Invoiced Fee:</span>
                   <span className="font-black text-[#263238] text-sm">
-                    ₹{(subscription?.amount ?? (isDemoAccount ? 79990 : 0)).toLocaleString('en-IN')}
+                    ₹{(subscription?.amount ?? 79990).toLocaleString('en-IN')}
                   </span>
                 </div>
-                <div className="flex justify-between items-center text-[#666666]">
+                <div className="flex justify-between items-center text-[#546E7A]">
                   <span>GST Applicable (18%):</span>
-                  <span className="font-bold text-[#263238]">{subscription?.amount ? 'Included (18% GST)' : (isDemoAccount ? 'Included (₹12,202)' : '₹0')}</span>
+                  <span className="font-bold text-[#263238]">Included (₹12,202)</span>
                 </div>
-                <div className="flex justify-between items-center text-[#666666]">
+                <div className="flex justify-between items-center text-[#546E7A]">
                   <span>Active Payment Method:</span>
-                  <span className="font-bold text-[#263238]">{subscription?.paymentMethod || (isDemoAccount ? 'Axis Bank Escrow Auto-Debit' : 'Platform Billing')}</span>
+                  <span className="font-bold text-[#263238]">{subscription?.paymentMethod || 'Autopay Card: Visa/Mastercard ending in •••• 9842'}</span>
                 </div>
-                <div className="flex justify-between items-center text-[#666666]">
+                <div className="flex justify-between items-center text-[#546E7A]">
                   <span>Billing Entity GSTIN:</span>
-                  <span className="font-mono text-[#263238] font-semibold">{subscription?.gstin || (isDemoAccount ? '29AAACS1928K1Z5' : (gstin || 'Unregistered / Exempt'))}</span>
+                  <span className="font-mono text-[#263238] font-bold">{subscription?.gstin || '29AAACS1928K1Z5'}</span>
                 </div>
-                <div className="flex justify-between items-center text-[#666666]">
+                <div className="flex justify-between items-center text-[#546E7A]">
                   <span>Last Cleared Txn:</span>
-                  <span className="font-mono text-[11px] text-[#263238] bg-[#E8F0EC] px-1.5 py-0.5 rounded font-bold">
-                    {subscription?.lastPaymentTxnId || (isDemoAccount ? 'TXN-STAY-SUB-SECURE-98124' : 'TRIAL-ACTIVE')}
+                  <span className="font-mono text-[11px] text-[#263238] bg-[#E8F0EC] px-2 py-0.5 rounded-full border border-[#D2DDD7] font-bold">
+                    {subscription?.lastPaymentTxnId || 'TXN-TRIAL-MANDATE-1791103833091'}
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Card 2: Quota & Capacity Usage */}
-            <div className="organic-card p-5 space-y-3.5 border border-[#D2DDD7] bg-white">
+            <div className="organic-card p-5 space-y-3.5 border border-[#D2DDD7] bg-white rounded-3xl">
               <div className="flex items-center justify-between pb-2 border-b border-[#D1D5DB]">
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
@@ -447,93 +552,44 @@ export default function SettingsView() {
                   </div>
                   <h4 className="font-extrabold text-sm text-[#263238]">Unit &amp; Asset Quota</h4>
                 </div>
-                <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md">
-                  {Math.round(((subscription?.currentUnits || 24) / (subscription?.maxUnits || 50)) * 100)}% Used
+                <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                  {Math.round(((subscription?.currentUnits || 1) / (subscription?.maxUnits || 50)) * 100)}% Used
                 </span>
               </div>
 
               <div className="space-y-3 text-xs">
                 <div>
-                  <div className="flex justify-between text-[#666666] mb-1">
+                  <div className="flex justify-between text-[#546E7A] mb-1">
                     <span>Managed Units Allocation:</span>
                     <span className="font-bold text-[#263238]">
-                      {subscription?.currentUnits || 24} of {subscription?.maxUnits || 50} Units
+                      {subscription?.currentUnits || 1} of {subscription?.maxUnits || 50} Units
                     </span>
                   </div>
                   <div className="w-full h-2 rounded-full bg-[#E8F0EC] overflow-hidden">
                     <div 
                       className="h-full bg-[#263238] rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, Math.round(((subscription?.currentUnits || 24) / (subscription?.maxUnits || 50)) * 100))}%` }}
+                      style={{ width: `${Math.max(2, Math.min(100, Math.round(((subscription?.currentUnits || 1) / (subscription?.maxUnits || 50)) * 100)))}%` }}
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 pt-1">
-                  <div className="p-2 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7]">
-                    <div className="text-[10px] text-[#666666]">PG Co-living Beds</div>
+                  <div className="p-2.5 rounded-xl bg-[#E8F0EC]/60 border border-[#D2DDD7]">
+                    <div className="text-[10px] text-[#546E7A]">PG Co-living Beds</div>
                     <div className="text-xs font-black text-[#263238]">18 Active Beds</div>
                   </div>
-                  <div className="p-2 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7]">
-                    <div className="text-[10px] text-[#666666]">Commercial Area</div>
+                  <div className="p-2.5 rounded-xl bg-[#E8F0EC]/60 border border-[#D2DDD7]">
+                    <div className="text-[10px] text-[#546E7A]">Commercial Area</div>
                     <div className="text-xs font-black text-[#263238]">15,000 sq.ft</div>
                   </div>
-                  <div className="p-2 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7]">
-                    <div className="text-[10px] text-[#666666]">WhatsApp Dunning</div>
+                  <div className="p-2.5 rounded-xl bg-[#E8F0EC]/60 border border-[#D2DDD7]">
+                    <div className="text-[10px] text-[#546E7A]">WhatsApp Dunning</div>
                     <div className="text-xs font-black text-[#263238]">Unlimited</div>
                   </div>
-                  <span className="font-mono text-[11px] text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded">
-                    {subscription?.lastPaymentTxnId || 'TXN-STAY-SUB-SECURE-98124'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Card 2: Quota & Capacity Usage */}
-            <div className="organic-card p-5 space-y-3.5 border border-[#D2DDD7] bg-white">
-              <div className="flex items-center justify-between pb-2 border-b border-[#E0E0E0]">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
-                    <Building2 className="h-4 w-4" />
-                  </div>
-                  <h4 className="font-extrabold text-sm text-[#263238]">Unit &amp; Asset Quota</h4>
-                </div>
-                <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md">
-                  {Math.round(((subscription?.currentUnits || 24) / (subscription?.maxUnits || 50)) * 100)}% Used
-                </span>
-              </div>
-
-              <div className="space-y-3 text-xs">
-                <div>
-                  <div className="flex justify-between text-[#666666] mb-1">
-                    <span>Managed Units Allocation:</span>
-                    <span className="font-bold text-[#263238]">
-                      {subscription?.currentUnits || 24} of {subscription?.maxUnits || 50} Units
+                  <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+                    <span className="font-mono text-[10px] text-emerald-800 font-bold truncate">
+                      {subscription?.lastPaymentTxnId || 'TXN-TRIAL-MANDATE-1791103833091'}
                     </span>
-                  </div>
-                  <div className="w-full h-2 rounded-full bg-[#E8F0EC] overflow-hidden">
-                    <div 
-                      className="h-full bg-emerald-600 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, Math.round(((subscription?.currentUnits || 24) / (subscription?.maxUnits || 50)) * 100))}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 pt-1">
-                  <div className="p-2 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7]">
-                    <div className="text-[10px] text-[#666666]">PG Co-living Beds</div>
-                    <div className="text-xs font-black text-[#263238]">18 Active Beds</div>
-                  </div>
-                  <div className="p-2 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7]">
-                    <div className="text-[10px] text-[#666666]">Commercial Area</div>
-                    <div className="text-xs font-black text-[#263238]">15,000 sq.ft</div>
-                  </div>
-                  <div className="p-2 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7]">
-                    <div className="text-[10px] text-[#666666]">WhatsApp Dunning</div>
-                    <div className="text-xs font-black text-emerald-700">Unlimited</div>
-                  </div>
-                  <div className="p-2 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7]">
-                    <div className="text-[10px] text-[#666666]">OCR Bill Reads</div>
-                    <div className="text-xs font-black text-[#263238]">89 / 500 Used</div>
                   </div>
                 </div>
               </div>

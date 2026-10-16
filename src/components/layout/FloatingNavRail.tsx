@@ -67,6 +67,7 @@ export default function FloatingNavRail() {
     { id: 'maintenance', label: 'Maintenance Requests', icon: <Wrench className="h-4 w-4" /> },
     { id: 'moveflow', label: 'Deposit & Rewards', icon: <Gift className="h-4 w-4 text-[#C69A55]" /> },
     { id: 'ai', label: 'Resident AI Assistant', icon: <Sparkles className="h-4 w-4 text-[#C69A55]" /> },
+    { id: 'settings', label: 'Resident Settings', icon: <Settings className="h-4 w-4" /> },
   ];
 
   const navItems = activeRole === 'tenant' 

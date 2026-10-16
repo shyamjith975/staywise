@@ -529,6 +529,31 @@ class DatabaseEngine {
         first_charge_date TEXT,
         created_at TEXT NOT NULL
       );
+
+      CREATE TABLE IF NOT EXISTS platform_settings (
+        user_id TEXT PRIMARY KEY,
+        entity_name TEXT,
+        owner_name TEXT,
+        pan_number TEXT,
+        gstin TEXT,
+        bank_account TEXT,
+        ifsc TEXT,
+        bank_name TEXT,
+        upi_id TEXT,
+        auto_sweep_cadence TEXT,
+        rent_due_day INTEGER DEFAULT 5,
+        grace_period_days INTEGER DEFAULT 3,
+        late_fee_fixed REAL DEFAULT 500,
+        late_fee_daily_rate REAL DEFAULT 50,
+        auto_whatsapp_reminder INTEGER DEFAULT 1,
+        allow_partial_payments INTEGER DEFAULT 0,
+        kseb_tariff_per_unit REAL DEFAULT 9.5,
+        dg_backup_rate_per_unit REAL DEFAULT 24.0,
+        meter_reading_cycle TEXT DEFAULT '1st to 5th of every month',
+        common_area_power_ratio REAL DEFAULT 10,
+        preferences_json TEXT DEFAULT '{}',
+        updated_at TEXT NOT NULL
+      );
     `);
 
     // Automatic non-destructive schema migrations
@@ -667,6 +692,28 @@ class DatabaseEngine {
     updatePassword: async (userId: string, newPasswordPlain: string): Promise<boolean> => {
       const passwordHash = isSha256(newPasswordPlain) ? newPasswordPlain : hashPassword(newPasswordPlain);
       const res = this.sqlite.prepare('UPDATE users SET password = ? WHERE id = ?').run(passwordHash, userId);
+      this.syncRootDb();
+      return (res as any).changes > 0;
+    },
+    updateProfile: async (userId: string, data: Partial<{ name: string; email: string; phone: string; title: string; description: string }>): Promise<boolean> => {
+      const existing = await this.users.findById(userId);
+      if (!existing) return false;
+      const res = this.sqlite.prepare(`
+        UPDATE users SET
+          name = COALESCE(?, name),
+          email = COALESCE(?, email),
+          phone = COALESCE(?, phone),
+          title = COALESCE(?, title),
+          description = COALESCE(?, description)
+        WHERE id = ?
+      `).run(
+        sb(data.name, null),
+        sb(data.email, null),
+        sb(data.phone, null),
+        sb(data.title, null),
+        sb(data.description, null),
+        userId
+      );
       this.syncRootDb();
       return (res as any).changes > 0;
     }
@@ -1187,6 +1234,36 @@ class DatabaseEngine {
         ledgerEntry,
         user
       };
+    },
+
+    update: async (id: string, updates: Partial<Tenant>): Promise<Tenant | null> => {
+      const existing = await this.tenants.findById(id);
+      if (!existing) return null;
+      const merged = { ...existing, ...updates };
+      this.sqlite.prepare(`
+        UPDATE tenants SET
+          name = ?, email = ?, phone = ?,
+          monthly_rent = ?, deposit_paid = ?,
+          lease_start = ?, lease_end = ?,
+          rent_due_date = ?, salary_date = ?,
+          autopay_active = ?, emergency_contact = ?
+        WHERE id = ?
+      `).run(
+        merged.name,
+        merged.email,
+        merged.phone,
+        merged.monthlyRent,
+        merged.depositPaid,
+        merged.leaseStart,
+        merged.leaseEnd,
+        merged.rentDueDate,
+        sb(merged.salaryDate, null),
+        merged.autopayActive ? 1 : 0,
+        merged.emergencyContact,
+        id
+      );
+      this.syncRootDb();
+      return this.tenants.findById(id);
     }
   };
 
@@ -2319,15 +2396,130 @@ class DatabaseEngine {
       return sub;
     }
   };
+
+  // ==========================================
+  // PLATFORM & USER SETTINGS REPOSITORY
+  // ==========================================
+  public settings = {
+    getForUser: async (userId: string) => {
+      const row = this.sqlite.prepare('SELECT * FROM platform_settings WHERE user_id = ? LIMIT 1').get(userId) as any;
+      if (!row) return null;
+      return {
+        userId: row.user_id,
+        entityName: row.entity_name || '',
+        ownerName: row.owner_name || '',
+        panNumber: row.pan_number || '',
+        gstin: row.gstin || '',
+        bankAccount: row.bank_account || '',
+        ifsc: row.ifsc || '',
+        bankName: row.bank_name || '',
+        upiId: row.upi_id || '',
+        autoSweepCadence: row.auto_sweep_cadence || 'Daily at 18:00 IST',
+        rentDueDay: row.rent_due_day ?? 5,
+        gracePeriodDays: row.grace_period_days ?? 3,
+        lateFeeFixed: row.late_fee_fixed ?? 500,
+        lateFeeDailyRate: row.late_fee_daily_rate ?? 50,
+        autoWhatsAppReminder: Boolean(row.auto_whatsapp_reminder),
+        allowPartialPayments: Boolean(row.allow_partial_payments),
+        ksebTariffPerUnit: row.kseb_tariff_per_unit ?? 9.5,
+        dgBackupRatePerUnit: row.dg_backup_rate_per_unit ?? 24.0,
+        meterReadingCycle: row.meter_reading_cycle || '1st to 5th of every month',
+        commonAreaPowerRatio: row.common_area_power_ratio ?? 10,
+        preferences: JSON.parse(row.preferences_json || '{}'),
+        updatedAt: row.updated_at
+      };
+    },
+    save: async (data: {
+      userId: string;
+      entityName?: string;
+      ownerName?: string;
+      panNumber?: string;
+      gstin?: string;
+      bankAccount?: string;
+      ifsc?: string;
+      bankName?: string;
+      upiId?: string;
+      autoSweepCadence?: string;
+      rentDueDay?: number;
+      gracePeriodDays?: number;
+      lateFeeFixed?: number;
+      lateFeeDailyRate?: number;
+      autoWhatsAppReminder?: boolean;
+      allowPartialPayments?: boolean;
+      ksebTariffPerUnit?: number;
+      dgBackupRatePerUnit?: number;
+      meterReadingCycle?: string;
+      commonAreaPowerRatio?: number;
+      preferences?: Record<string, any>;
+    }) => {
+      const now = new Date().toISOString();
+      const existing = await this.settings.getForUser(data.userId);
+      const merged = {
+        entityName: data.entityName ?? existing?.entityName ?? '',
+        ownerName: data.ownerName ?? existing?.ownerName ?? '',
+        panNumber: data.panNumber ?? existing?.panNumber ?? '',
+        gstin: data.gstin ?? existing?.gstin ?? '',
+        bankAccount: data.bankAccount ?? existing?.bankAccount ?? '',
+        ifsc: data.ifsc ?? existing?.ifsc ?? '',
+        bankName: data.bankName ?? existing?.bankName ?? '',
+        upiId: data.upiId ?? existing?.upiId ?? '',
+        autoSweepCadence: data.autoSweepCadence ?? existing?.autoSweepCadence ?? 'Daily at 18:00 IST',
+        rentDueDay: data.rentDueDay ?? existing?.rentDueDay ?? 5,
+        gracePeriodDays: data.gracePeriodDays ?? existing?.gracePeriodDays ?? 3,
+        lateFeeFixed: data.lateFeeFixed ?? existing?.lateFeeFixed ?? 500,
+        lateFeeDailyRate: data.lateFeeDailyRate ?? existing?.lateFeeDailyRate ?? 50,
+        autoWhatsAppReminder: data.autoWhatsAppReminder ?? existing?.autoWhatsAppReminder ?? true,
+        allowPartialPayments: data.allowPartialPayments ?? existing?.allowPartialPayments ?? false,
+        ksebTariffPerUnit: data.ksebTariffPerUnit ?? existing?.ksebTariffPerUnit ?? 9.5,
+        dgBackupRatePerUnit: data.dgBackupRatePerUnit ?? existing?.dgBackupRatePerUnit ?? 24.0,
+        meterReadingCycle: data.meterReadingCycle ?? existing?.meterReadingCycle ?? '1st to 5th of every month',
+        commonAreaPowerRatio: data.commonAreaPowerRatio ?? existing?.commonAreaPowerRatio ?? 10,
+        preferences: data.preferences ?? existing?.preferences ?? {}
+      };
+
+      this.sqlite.prepare(`
+        INSERT OR REPLACE INTO platform_settings (
+          user_id, entity_name, owner_name, pan_number, gstin,
+          bank_account, ifsc, bank_name, upi_id, auto_sweep_cadence,
+          rent_due_day, grace_period_days, late_fee_fixed, late_fee_daily_rate,
+          auto_whatsapp_reminder, allow_partial_payments,
+          kseb_tariff_per_unit, dg_backup_rate_per_unit, meter_reading_cycle,
+          common_area_power_ratio, preferences_json, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        data.userId,
+        merged.entityName,
+        merged.ownerName,
+        merged.panNumber,
+        merged.gstin,
+        merged.bankAccount,
+        merged.ifsc,
+        merged.bankName,
+        merged.upiId,
+        merged.autoSweepCadence,
+        merged.rentDueDay,
+        merged.gracePeriodDays,
+        merged.lateFeeFixed,
+        merged.lateFeeDailyRate,
+        merged.autoWhatsAppReminder ? 1 : 0,
+        merged.allowPartialPayments ? 1 : 0,
+        merged.ksebTariffPerUnit,
+        merged.dgBackupRatePerUnit,
+        merged.meterReadingCycle,
+        merged.commonAreaPowerRatio,
+        JSON.stringify(merged.preferences),
+        now
+      );
+      this.syncRootDb();
+      return this.settings.getForUser(data.userId);
+    }
+  };
 }
 
 // Global Singleton Instance across Next.js API Routes & Server Actions
 const globalForDb = global as unknown as { staywiseDbInstance?: DatabaseEngine };
 
-export const db = globalForDb.staywiseDbInstance || new DatabaseEngine();
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForDb.staywiseDbInstance = db;
-}
+export const db = new DatabaseEngine();
+globalForDb.staywiseDbInstance = db;
 
 export default db;
