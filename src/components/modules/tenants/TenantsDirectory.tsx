@@ -35,14 +35,20 @@ export default function TenantsDirectory() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'ACTIVE' | 'NOTICE'>('ALL');
 
+  const isDemoAccount = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
+
   // Role-scoped tenants: Owners only see residents in their properties, tenants only see themselves
-  const scopedTenants = (activeRole === 'owner' && currentUser.id && currentUser.id !== 'user-owner-vikram')
+  const scopedTenants = isDemoAccount
+    ? tenants
+    : (activeRole === 'owner')
     ? tenants.filter(t => {
-        const ownerPropIds = properties.filter(p => p.ownerId === currentUser.id).map(p => p.id);
-        return ownerPropIds.includes(t.propertyId) || properties.some(p => p.ownerId === currentUser.id && p.name === t.propertyName);
+        const ownerProps = properties.filter(p => p.ownerId === currentUser?.id);
+        const ownerPropIds = ownerProps.map(p => p.id);
+        const ownerPropNames = ownerProps.map(p => p.name.toLowerCase());
+        return ownerPropIds.includes(t.propertyId) || (t.propertyName && ownerPropNames.includes(t.propertyName.toLowerCase()));
       })
-    : (activeRole === 'tenant' && currentUser.id)
-    ? tenants.filter(t => t.userId === currentUser.id || t.email === currentUser.email)
+    : (activeRole === 'tenant')
+    ? tenants.filter(t => t.userId === currentUser?.id || (currentUser?.email && t.email?.toLowerCase() === currentUser.email.toLowerCase()))
     : tenants;
 
   const filteredTenants = scopedTenants.filter(tenant => {
@@ -57,7 +63,11 @@ export default function TenantsDirectory() {
   });
 
   const totalDeposits = scopedTenants.reduce((acc, t) => acc + (t.depositPaid || 0), 0);
-  const avgScore = Math.round(scopedTenants.reduce((acc, t) => acc + (t.reliabilityScore || 85), 0) / (scopedTenants.length || 1));
+  const avgScore = scopedTenants.length > 0
+    ? Math.round(scopedTenants.reduce((acc, t) => acc + (t.reliabilityScore || 90), 0) / scopedTenants.length)
+    : 0;
+  const autopayTenantsCount = scopedTenants.filter(t => t.autopayActive || t.id.includes('autopay')).length;
+  const autopayRate = scopedTenants.length > 0 ? ((autopayTenantsCount / scopedTenants.length) * 100).toFixed(1) : '0.0';
 
   const handleWhatsAppReminder = (name: string, phone: string) => {
     addNotification('WhatsApp Reminder Sent', `Direct WhatsApp rent ping with UPI payment link dispatched to ${name} (${phone}).`, 'RENT');
@@ -73,7 +83,7 @@ export default function TenantsDirectory() {
               Tenants & Digital Leases
             </h1>
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#f0f0f0] text-[#2a2a2a] font-bold border border-[#2a2a2a]/20">
-              {tenants.length} Active Leases
+              {scopedTenants.length} Active Leases
             </span>
           </div>
           <p className="text-xs text-[#666666] mt-0.5">
@@ -98,9 +108,9 @@ export default function TenantsDirectory() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="organic-card p-5">
           <span className="text-xs font-semibold text-[#666666]">Total Verified Tenants</span>
-          <div className="text-2xl font-black text-[#2a2a2a] font-tabular mt-1">{tenants.length}</div>
+          <div className="text-2xl font-black text-[#2a2a2a] font-tabular mt-1">{scopedTenants.length}</div>
           <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full mt-2 inline-block">
-            100% KYC Verified
+            {scopedTenants.length > 0 ? '100% KYC Verified' : 'Zero Active Leases'}
           </span>
         </div>
 
@@ -116,17 +126,19 @@ export default function TenantsDirectory() {
 
         <div className="organic-card p-5">
           <span className="text-xs font-semibold text-[#666666]">Autopay Penetration</span>
-          <div className="text-2xl font-black text-[#2a2a2a] font-tabular mt-1">87.5%</div>
+          <div className="text-2xl font-black text-[#2a2a2a] font-tabular mt-1">{autopayRate}%</div>
           <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full mt-2 inline-block">
-            High On-Time Rate
+            {scopedTenants.length > 0 ? 'High On-Time Rate' : 'Awaiting Mandates'}
           </span>
         </div>
 
         <div className="organic-card p-5">
           <span className="text-xs font-semibold text-[#666666]">Avg Reliability Score</span>
-          <div className="text-2xl font-black text-emerald-700 font-tabular mt-1">{avgScore} / 100</div>
+          <div className="text-2xl font-black text-emerald-700 font-tabular mt-1">
+            {avgScore > 0 ? `${avgScore} / 100` : 'N/A'}
+          </div>
           <span className="text-[11px] font-bold text-[#666666] mt-2 inline-block">
-            Based on payment timeliness
+            {avgScore > 0 ? 'Based on payment timeliness' : 'Requires settled cycles'}
           </span>
         </div>
       </div>
@@ -180,78 +192,92 @@ export default function TenantsDirectory() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E0E0E0]">
-              {filteredTenants.map((t) => (
-                <tr key={t.id} className="hover:bg-[#ffffff] transition">
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-full bg-[#f0f0f0] text-[#2a2a2a] font-black text-xs flex items-center justify-center border border-[#2a2a2a]/20 shrink-0">
-                        {t.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                      </div>
-                      <div>
-                        <div className="font-extrabold text-[#2a2a2a] flex items-center gap-1.5">
-                          <span>{t.name}</span>
-                          <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                        </div>
-                        <div className="text-[11px] text-[#666666]">{t.phone}</div>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td className="py-3.5 px-4">
-                    <div className="font-bold text-[#2a2a2a]">{t.propertyName}</div>
-                    <div className="text-[11px] text-[#666666]">Unit {t.unitNumber}</div>
-                  </td>
-
-                  <td className="py-3.5 px-4 font-tabular">
-                    <div className="font-black text-[#2a2a2a]">₹{t.monthlyRent.toLocaleString('en-IN')}</div>
-                    <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded font-bold">
-                      Autopay 5th
-                    </span>
-                  </td>
-
-                  <td className="py-3.5 px-4 font-tabular font-medium text-[#2a2a2a]">
-                    ₹{(t.depositPaid || 0).toLocaleString('en-IN')}
-                    <div className="text-[10px] text-[#666666]">Escrow locked</div>
-                  </td>
-
-                  <td className="py-3.5 px-4 text-[#666666]">
-                    <div className="font-semibold text-[#2a2a2a]">{t.leaseStart}</div>
-                    <div className="text-[10px]">until {t.leaseEnd}</div>
-                  </td>
-
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-black text-emerald-700 font-tabular">{t.reliabilityScore || 87}</span>
-                      <span className="text-[10px] text-[#666666]">/ 100</span>
-                    </div>
-                    <div className="w-16 bg-[#B5B5B5] h-1.5 rounded-full overflow-hidden mt-1">
-                      <div 
-                        className="bg-[#2a2a2a] h-full rounded-full" 
-                        style={{ width: `${t.reliabilityScore || 87}%` }}
-                      />
-                    </div>
-                  </td>
-
-                  <td className="py-3.5 px-4 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <button
-                        onClick={() => handleWhatsAppReminder(t.name, t.phone)}
-                        className="p-1.5 rounded-xl bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white text-[#2a2a2a] transition"
-                        title="Dispatch WhatsApp Payment Reminder"
-                      >
-                        <Phone className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => alert(`Digital Lease Agreement PDF generated for ${t.name}. Verified with Aadhaar eSign.`)}
-                        className="p-1.5 rounded-xl bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white text-[#2a2a2a] transition"
-                        title="Download eSigned Lease Agreement"
-                      >
-                        <FileText className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+              {filteredTenants.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center">
+                    <Users2 className="h-8 w-8 text-[#B5B5B5] mx-auto mb-2 opacity-50" />
+                    <p className="text-xs font-bold text-[#666666]">No tenants found</p>
+                    <p className="text-[11px] text-[#999999] mt-0.5">
+                      {activeRole === 'owner' 
+                        ? 'Click "Onboard Existing Tenant" above to add residents to your units.' 
+                        : 'No tenant lease records matching your profile.'}
+                    </p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredTenants.map((t) => (
+                  <tr key={t.id} className="hover:bg-[#ffffff] transition">
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-full bg-[#f0f0f0] text-[#2a2a2a] font-black text-xs flex items-center justify-center border border-[#2a2a2a]/20 shrink-0">
+                          {t.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                        </div>
+                        <div>
+                          <div className="font-extrabold text-[#2a2a2a] flex items-center gap-1.5">
+                            <span>{t.name}</span>
+                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                          </div>
+                          <div className="text-[11px] text-[#666666]">{t.phone}</div>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <div className="font-bold text-[#2a2a2a]">{t.propertyName}</div>
+                      <div className="text-[11px] text-[#666666]">Unit {t.unitNumber}</div>
+                    </td>
+
+                    <td className="py-3.5 px-4 font-tabular">
+                      <div className="font-black text-[#2a2a2a]">₹{t.monthlyRent.toLocaleString('en-IN')}</div>
+                      <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded font-bold">
+                        Autopay 5th
+                      </span>
+                    </td>
+
+                    <td className="py-3.5 px-4 font-tabular font-medium text-[#2a2a2a]">
+                      ₹{(t.depositPaid || 0).toLocaleString('en-IN')}
+                      <div className="text-[10px] text-[#666666]">Escrow locked</div>
+                    </td>
+
+                    <td className="py-3.5 px-4 text-[#666666]">
+                      <div className="font-semibold text-[#2a2a2a]">{t.leaseStart}</div>
+                      <div className="text-[10px]">until {t.leaseEnd}</div>
+                    </td>
+
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-black text-emerald-700 font-tabular">{t.reliabilityScore || 87}</span>
+                        <span className="text-[10px] text-[#666666]">/ 100</span>
+                      </div>
+                      <div className="w-16 bg-[#B5B5B5] h-1.5 rounded-full overflow-hidden mt-1">
+                        <div 
+                          className="bg-[#2a2a2a] h-full rounded-full" 
+                          style={{ width: `${t.reliabilityScore || 87}%` }}
+                        />
+                      </div>
+                    </td>
+
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => handleWhatsAppReminder(t.name, t.phone)}
+                          className="p-1.5 rounded-xl bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white text-[#2a2a2a] transition"
+                          title="Dispatch WhatsApp Payment Reminder"
+                        >
+                          <Phone className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => alert(`Digital Lease Agreement PDF generated for ${t.name}. Verified with Aadhaar eSign.`)}
+                          className="p-1.5 rounded-xl bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white text-[#2a2a2a] transition"
+                          title="Download eSigned Lease Agreement"
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

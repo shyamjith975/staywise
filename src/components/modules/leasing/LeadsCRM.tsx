@@ -78,7 +78,12 @@ export default function LeadsCRM() {
               </div>
 
               <div className="space-y-3 flex-1 overflow-y-auto pr-1">
-                {stageLeads.map((lead) => (
+                {stageLeads.length === 0 ? (
+                  <div className="py-12 text-center text-slate-400">
+                    <p className="text-[11px] font-medium text-[#888888]">No leads in this stage</p>
+                  </div>
+                ) : (
+                  stageLeads.map((lead) => (
                   <div
                     key={lead.id}
                     className="p-3.5 rounded-2xl bg-[#ffffff] border border-[#B5B5B5] hover:border-[#2a2a2a]/50 transition space-y-2 text-xs shadow-sm"
@@ -156,7 +161,7 @@ export default function LeadsCRM() {
                       )}
                     </div>
                   </div>
-                ))}
+                )))}
               </div>
             </div>
           );

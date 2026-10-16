@@ -58,10 +58,11 @@ export default function PGBedManagementView() {
   const [selectedPropertyFilter, setSelectedPropertyFilter] = useState<string | null>(null);
 
   // Check demo account vs real new onboarded owner
-  const isDemoAccount = !currentUser.id || currentUser.email === 'owner@staywise.com' || currentUser.id === 'user-owner-vikram' || activeRole === 'admin';
+  const isDemoAccount = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
 
   // For non-demo user, scope beds and rooms strictly to properties owned by currentUser
-  const userOwnedPropIds = properties.filter(p => isDemoAccount || p.ownerId === currentUser.id).map(p => p.id);
+  const userOwnedProperties = isDemoAccount ? properties : properties.filter(p => p.ownerId === currentUser?.id);
+  const userOwnedPropIds = userOwnedProperties.map(p => p.id);
   const activePgRooms = isDemoAccount ? pgRooms : pgRooms.filter(r => userOwnedPropIds.includes(r.propertyId));
   const activePgRoomIds = activePgRooms.map(r => r.id);
   const activePgRoomNumbers = activePgRooms.map(r => r.roomNumber);
@@ -298,7 +299,7 @@ export default function PGBedManagementView() {
             </button>
           </div>
 
-          {(!isDemoAccount && properties.length === 0) ? (
+          {(!isDemoAccount && userOwnedProperties.length === 0) ? (
             <div className="bg-white rounded-3xl p-10 border-2 border-dashed border-[#B5B5B5] text-center space-y-4 animate-in fade-in duration-200">
               <Building2 className="h-12 w-12 text-slate-300 mx-auto" />
               <div className="space-y-1">
@@ -318,7 +319,7 @@ export default function PGBedManagementView() {
           ) : !isDemoAccount ? (
             <div className="space-y-4 animate-in fade-in duration-200">
               <div className="flex items-center justify-between">
-                <h2 className="font-extrabold text-[#2a2a2a] text-sm">Your Registered Properties ({properties.length})</h2>
+                <h2 className="font-extrabold text-[#2a2a2a] text-sm">Your Registered Properties ({userOwnedProperties.length})</h2>
                 <button
                   onClick={() => setIsAddPropertyOpen(true)}
                   className="px-3.5 py-1.5 rounded-full bg-[#e10600] text-white text-xs font-bold hover:bg-[#c50500] transition shadow-xs"
@@ -327,7 +328,7 @@ export default function PGBedManagementView() {
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {properties.map(p => (
+                {userOwnedProperties.map(p => (
                   <div key={p.id} className="bg-white p-5 rounded-3xl border border-[#B5B5B5] shadow-sm space-y-3">
                     <div className="flex items-start justify-between">
                       <div>

@@ -6,11 +6,17 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await getAuthenticatedUser(req);
     const queryUserId = req.nextUrl.searchParams.get('userId');
-    const targetUserId = auth?.user.id || queryUserId || null;
+    const targetUserId = queryUserId || auth?.user.id || null;
 
     let userRole = auth?.user.role;
     let userEmail = auth?.user.email;
-    if (!userRole && targetUserId) {
+    if (queryUserId) {
+      const u = await db.users.findById(queryUserId);
+      if (u) {
+        userRole = u.role;
+        userEmail = u.email;
+      }
+    } else if (!userRole && targetUserId) {
       const u = await db.users.findById(targetUserId);
       if (u) {
         userRole = u.role;
@@ -19,7 +25,7 @@ export async function GET(req: NextRequest) {
     }
 
     const isSuperAdmin = userRole === 'admin';
-    const isDemoAccount = !targetUserId || userEmail === 'owner@staywise.com' || targetUserId === 'user-owner-vikram';
+    const isDemoAccount = userEmail === 'owner@staywise.com' || targetUserId === 'user-owner-vikram' || targetUserId === 'demo-owner' || (targetUserId === null && req.nextUrl.searchParams.get('demo') === 'true');
 
     const [
       allProperties,
@@ -103,19 +109,62 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    // Unauthenticated requests without demo flag receive clean empty dataset
+    if (!targetUserId) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          properties: [],
+          tenants: [],
+          invoices: [],
+          ledger: [],
+          depositDisputes: [],
+          influencerOffers: [],
+          tickets: [],
+          pgBeds: [],
+          pgRooms: [],
+          pgMeals: [],
+          commercialUnits: [],
+          camExpenses: [],
+          commercialVisitors: [],
+          estateAssets: [],
+          staff: [],
+          electricityBills: [],
+          subscription: null,
+          leads: [],
+          utilities: [],
+          aiInsights: [],
+          moveFlowChecklist: [],
+          referrals: [],
+          users: allUsers.map(({ password, ...u }) => u)
+        }
+      });
+    }
+
     // FOR NEW / REAL ONBOARDED USERS: Strict user isolation (zero mock data bleed)
     const userProperties = allProperties.filter(p => p.ownerId === targetUserId);
     const userPropIds = userProperties.map(p => p.id);
 
-    const userTenants = allTenants.filter(t => userPropIds.includes(t.propertyId) || t.userId === targetUserId);
+    const userTenants = (userRole === 'tenant')
+      ? allTenants.filter(t => t.userId === targetUserId || (userEmail && t.email.toLowerCase() === userEmail.toLowerCase()))
+      : allTenants.filter(t => userPropIds.includes(t.propertyId));
     const userTenantIds = userTenants.map(t => t.id);
 
-    const userInvoices = allInvoices.filter(i => 
-      userPropIds.includes(i.propertyId) || userTenantIds.includes(i.tenantId)
-    );
+    const userInvoices = (userRole === 'tenant')
+      ? allInvoices.filter(i => userTenantIds.includes(i.tenantId) || (userEmail && i.tenantName?.toLowerCase().includes(userEmail.toLowerCase())))
+      : allInvoices.filter(i => userPropIds.includes(i.propertyId) || userTenantIds.includes(i.tenantId));
 
-    const userTickets = allTickets.filter(t => userPropIds.includes(t.propertyId));
-    const userBills = allBills.filter(b => userPropIds.includes(b.propertyId));
+    const userTickets = (userRole === 'tenant')
+      ? allTickets.filter(t => userTenants.some(ut => ut.propertyId === t.propertyId && ut.unitNumber === t.unitNumber))
+      : allTickets.filter(t => userPropIds.includes(t.propertyId));
+
+    const userBills = (userRole === 'tenant')
+      ? allBills.filter(b => userTenants.some(ut => ut.propertyId === b.propertyId && ut.unitNumber === b.unitNumber))
+      : allBills.filter(b => userPropIds.includes(b.propertyId));
+
+    const userLedger = (userRole === 'tenant')
+      ? allLedger.filter(l => l.referenceId.includes(targetUserId) || userTenantIds.some(tid => l.referenceId.includes(tid)))
+      : allLedger.filter(l => userPropIds.some(pid => l.referenceId.includes(pid)));
 
     const userEstateNames = userProperties.map(p => p.name);
     const userEstateAssets = allEstateAssets.filter(a => userEstateNames.includes(a.estateName));
@@ -142,7 +191,7 @@ export async function GET(req: NextRequest) {
         properties: userProperties,
         tenants: userTenants,
         invoices: userInvoices,
-        ledger: allLedger.filter(l => userPropIds.some(pid => l.referenceId.includes(pid))),
+        ledger: userLedger,
         depositDisputes: userDepositDisputes,
         influencerOffers: [],
         tickets: userTickets,

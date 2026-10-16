@@ -28,7 +28,7 @@ export default function ExistingTenantWizardModal() {
     name: '',
     phone: '',
     email: '',
-    propertyId: properties[0]?.id || 'prop-beach-road',
+    propertyId: properties[0]?.id || '',
     unitNumber: '',
     monthlyRent: '' as any,
     deposit: '' as any,
@@ -102,7 +102,7 @@ export default function ExistingTenantWizardModal() {
       name: '',
       phone: '',
       email: '',
-      propertyId: properties[0]?.id || 'prop-beach-road',
+      propertyId: properties[0]?.id || '',
       unitNumber: '',
       monthlyRent: '' as any,
       deposit: '' as any,
@@ -263,9 +263,13 @@ export default function ExistingTenantWizardModal() {
                     onChange={(e) => setFormData({ ...formData, propertyId: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] text-[#2a2a2a] focus:outline-none focus:border-[#2a2a2a]"
                   >
-                    {properties.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
+                    {properties.length === 0 ? (
+                      <option value="">No properties available (add one first)</option>
+                    ) : (
+                      properties.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))
+                    )}
                   </select>
                 </div>
 

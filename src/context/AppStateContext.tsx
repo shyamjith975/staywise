@@ -124,6 +124,14 @@ export interface NotificationItem {
   type: 'RENT' | 'MAINTENANCE' | 'LEAD' | 'SYSTEM';
 }
 
+export const DEMO_NOTIFICATIONS: NotificationItem[] = [
+  { id: 'notif-1', title: 'Rent Overdue', message: 'Rahul Menon (Unit 101) is 6 days overdue.', time: '10m ago', read: false, type: 'RENT' },
+  { id: 'notif-2', title: 'Emergency Ticket #8842', message: 'Concealed plumbing leak requires owner approval (₹4,500).', time: '1h ago', read: false, type: 'MAINTENANCE' },
+  { id: 'notif-3', title: 'New Hot Lead', message: 'Kavita Nambiar booked showing for Unit 304 today at 5 PM.', time: '2h ago', read: false, type: 'LEAD' },
+  { id: 'notif-4', title: 'PG Bed Notice Given', message: 'Sanjay Krishnan (Room 103 Bed A) gave notice for 20 Oct 2026.', time: '3h ago', read: false, type: 'SYSTEM' },
+  { id: 'notif-5', title: 'CAM Adjustment Due', message: 'Infovision Tech Wing actual common power exceeded billing by 12%.', time: '5h ago', read: false, type: 'RENT' }
+];
+
 export interface DemoCredential {
   id?: string;
   role: UserRole;
@@ -505,6 +513,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Immediately reload scoped database data for this user
+    const isDemo = userToSet.email === 'owner@staywise.com' || userToSet.id === 'user-owner-vikram' || role === 'admin';
+    setNotifications(isDemo ? DEMO_NOTIFICATIONS : []);
     loadDatabaseData(userToSet);
   };
 
@@ -670,13 +680,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
   ]);
 
-  const [notifications, setNotifications] = useState<NotificationItem[]>([
-    { id: 'notif-1', title: 'Rent Overdue', message: 'Rahul Menon (Unit 101) is 6 days overdue.', time: '10m ago', read: false, type: 'RENT' },
-    { id: 'notif-2', title: 'Emergency Ticket #8842', message: 'Concealed plumbing leak requires owner approval (₹4,500).', time: '1h ago', read: false, type: 'MAINTENANCE' },
-    { id: 'notif-3', title: 'New Hot Lead', message: 'Kavita Nambiar booked showing for Unit 304 today at 5 PM.', time: '2h ago', read: false, type: 'LEAD' },
-    { id: 'notif-4', title: 'PG Bed Notice Given', message: 'Sanjay Krishnan (Room 103 Bed A) gave notice for 20 Oct 2026.', time: '3h ago', read: false, type: 'SYSTEM' },
-    { id: 'notif-5', title: 'CAM Adjustment Due', message: 'Infovision Tech Wing actual common power exceeded billing by 12%.', time: '5h ago', read: false, type: 'RENT' }
-  ]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
@@ -746,6 +750,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         if (Array.isArray(d.referrals)) setReferrals(d.referrals);
         if (Array.isArray(d.users)) setUsers(d.users);
         if (d.subscription) setSubscription(d.subscription);
+        const isDemo = activeUser?.email === 'owner@staywise.com' || activeUser?.id === 'user-owner-vikram' || activeUser?.role === 'admin';
+        setNotifications(isDemo ? DEMO_NOTIFICATIONS : []);
       }
     } catch (err) {
       console.warn('[Staywise Database] Hydrated using local store fallback:', err);

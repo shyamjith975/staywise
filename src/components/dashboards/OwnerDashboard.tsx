@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { 
   Building2, 
@@ -10,7 +10,7 @@ import {
   Wallet, 
   CheckCircle2, 
   ThumbsUp,
-  Clock,
+  Clock, 
   Activity as ActivityIcon,
   ChevronDown, 
   Plus, 
@@ -62,6 +62,143 @@ interface StoredDocument {
   status: 'Verified' | 'Valid' | 'Active';
 }
 
+const DEMO_BANK_ACCOUNTS: BankAccount[] = [
+  {
+    id: 'bnk-1',
+    bankName: 'HDFC Bank',
+    accountNumber: '•••• •••• •••• 4910',
+    ifsc: 'HDFC0001842',
+    holderName: 'Vikram Singhania',
+    isPrimary: true,
+    status: 'Verified'
+  },
+  {
+    id: 'bnk-2',
+    bankName: 'Axis Bank Escrow Trust',
+    accountNumber: '•••• •••• •••• 9104',
+    ifsc: 'UTIB0000042',
+    holderName: 'Staywise Nodal / Escrow',
+    isPrimary: false,
+    status: 'Verified'
+  }
+];
+
+const DEMO_DOCUMENTS: StoredDocument[] = [
+  {
+    id: 'doc-1',
+    title: 'Title Deed (Beach Road Property)',
+    category: 'Ownership & Sale Deed',
+    size: '2.4 MB',
+    date: 'Verified Oct 2024',
+    status: 'Verified'
+  },
+  {
+    id: 'doc-2',
+    title: 'Municipal Property Tax 2025-26',
+    category: 'Tax & Assessment',
+    size: '480 KB',
+    date: 'Paid Aug 2026',
+    status: 'Valid'
+  },
+  {
+    id: 'doc-3',
+    title: 'Nil Encumbrance Certificate (EC)',
+    category: 'Statutory Registry',
+    size: '1.2 MB',
+    date: 'Valid till 2030',
+    status: 'Verified'
+  },
+  {
+    id: 'doc-4',
+    title: 'Comprehensive Building Insurance',
+    category: 'ICICI Lombard Policy',
+    size: '890 KB',
+    date: 'Active till Jun 2027',
+    status: 'Active'
+  }
+];
+
+const DEMO_DELEGATES: AuthorizedDelegate[] = [
+  {
+    id: 'del-1',
+    name: 'CA Rajesh K. (Kulkarni & Associates)',
+    email: 'rajesh.ca@auditfirm.in',
+    phone: '+91 98450 11928',
+    role: 'Accountant',
+    permissions: ['Financial Ledger', 'Bank Statements', 'Rent Invoices', 'Tax Reports (P&L)'],
+    addedDate: '15 Aug 2026',
+    status: 'Active'
+  },
+  {
+    id: 'del-2',
+    name: 'Arjun Das',
+    email: 'arjun.ops@staywise.com',
+    phone: '+91 94470 82910',
+    role: 'Property Manager',
+    permissions: ['Maintenance Work Orders', 'CRM Leads', 'Physical Visits', 'Tenant Handover'],
+    addedDate: '01 Sep 2026',
+    status: 'Active'
+  }
+];
+
+const DEMO_TASKS_LIST = [
+  {
+    id: 'tsk-1',
+    title: 'Monthly Rent Verification & Autopay Sync',
+    status: 'In progress',
+    statusColor: 'bg-[#e10600]',
+    hours: '4h',
+    icon: 'sparkles'
+  },
+  {
+    id: 'tsk-2',
+    title: 'BESCOM Electricity Meter OCR Scan (Unit 302)',
+    status: 'On hold',
+    statusColor: 'bg-[#383838]',
+    hours: '8h',
+    icon: 'search'
+  },
+  {
+    id: 'tsk-3',
+    title: 'Digital Tenancy Agreement (Aadhaar eSign)',
+    status: 'Done',
+    statusColor: 'bg-[#e10600]',
+    hours: '32h',
+    icon: 'code'
+  }
+];
+
+const DEMO_ACTIVITY_FEED = [
+  {
+    id: 'act-1',
+    name: 'Floyd Miles',
+    time: '10:15 AM',
+    action: 'Commented on Palm Grove Villa',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
+    type: 'message' as const,
+    text: "Hi! Rent for Unit 402 has been settled via UPI autopay. All meter readings verified.",
+    reaction: '👍'
+  },
+  {
+    id: 'act-2',
+    name: 'Guy Hawkins',
+    time: '10:15 AM',
+    action: 'Uploaded BESCOM Power Bill',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
+    type: 'file' as const,
+    fileName: 'BESCOM_Unit302_Oct.pdf',
+    fileSize: '420 Kb'
+  },
+  {
+    id: 'act-3',
+    name: 'Kristin Watson',
+    time: '10:15 AM',
+    action: 'Scheduled AC Inspection for Unit 108',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop',
+    type: 'text_only' as const
+  }
+];
+
 export default function OwnerDashboard() {
   const { 
     properties, 
@@ -85,6 +222,8 @@ export default function OwnerDashboard() {
     deleteProperty
   } = useAppState();
 
+  const isDemoAccount = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
+
   // Navigation Filter Tabs
   const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'bank_accounts' | 'documents' | 'delegates' | 'utilities'>('overview');
 
@@ -94,36 +233,7 @@ export default function OwnerDashboard() {
 
   // Chat input state
   const [chatMessage, setChatMessage] = useState('');
-  const [activityFeed, setActivityFeed] = useState([
-    {
-      id: 'act-1',
-      name: 'Floyd Miles',
-      time: '10:15 AM',
-      action: 'Commented on Palm Grove Villa',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
-      type: 'message',
-      text: "Hi! Rent for Unit 402 has been settled via UPI autopay. All meter readings verified.",
-      reaction: '👍'
-    },
-    {
-      id: 'act-2',
-      name: 'Guy Hawkins',
-      time: '10:15 AM',
-      action: 'Uploaded BESCOM Power Bill',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
-      type: 'file',
-      fileName: 'BESCOM_Unit302_Oct.pdf',
-      fileSize: '420 Kb'
-    },
-    {
-      id: 'act-3',
-      name: 'Kristin Watson',
-      time: '10:15 AM',
-      action: 'Scheduled AC Inspection for Unit 108',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop',
-      type: 'text_only'
-    }
-  ]);
+  const [activityFeed, setActivityFeed] = useState(() => isDemoAccount ? DEMO_ACTIVITY_FEED : []);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,117 +253,36 @@ export default function OwnerDashboard() {
   };
 
   // Current Operations Tasks List
-  const [tasksList, setTasksList] = useState([
-    {
-      id: 'tsk-1',
-      title: 'Monthly Rent Verification & Autopay Sync',
-      status: 'In progress',
-      statusColor: 'bg-[#e10600]',
-      hours: '4h',
-      icon: 'sparkles'
-    },
-    {
-      id: 'tsk-2',
-      title: 'BESCOM Electricity Meter OCR Scan (Unit 302)',
-      status: 'On hold',
-      statusColor: 'bg-[#383838]',
-      hours: '8h',
-      icon: 'search'
-    },
-    {
-      id: 'tsk-3',
-      title: 'Digital Tenancy Agreement (Aadhaar eSign)',
-      status: 'Done',
-      statusColor: 'bg-[#e10600]',
-      hours: '32h',
-      icon: 'code'
-    }
-  ]);
+  const [tasksList, setTasksList] = useState(() => isDemoAccount ? DEMO_TASKS_LIST : []);
 
   // Heatmap & Property Filter
   const [heatmapFilter, setHeatmapFilter] = useState<'ALL' | 'HIGH_YIELD' | 'STABLE' | 'NEEDS_ATTENTION' | 'VACANT'>('ALL');
 
   // Bank Accounts State
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([
-    {
-      id: 'bnk-1',
-      bankName: 'HDFC Bank',
-      accountNumber: '•••• •••• •••• 4910',
-      ifsc: 'HDFC0001842',
-      holderName: 'Vikram Singhania',
-      isPrimary: true,
-      status: 'Verified'
-    },
-    {
-      id: 'bnk-2',
-      bankName: 'Axis Bank Escrow Trust',
-      accountNumber: '•••• •••• •••• 9104',
-      ifsc: 'UTIB0000042',
-      holderName: 'Staywise Nodal / Escrow',
-      isPrimary: false,
-      status: 'Verified'
-    }
-  ]);
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(() => isDemoAccount ? DEMO_BANK_ACCOUNTS : []);
 
   // Document Vault State
-  const [documents, setDocuments] = useState<StoredDocument[]>([
-    {
-      id: 'doc-1',
-      title: 'Title Deed (Beach Road Property)',
-      category: 'Ownership & Sale Deed',
-      size: '2.4 MB',
-      date: 'Verified Oct 2024',
-      status: 'Verified'
-    },
-    {
-      id: 'doc-2',
-      title: 'Municipal Property Tax 2025-26',
-      category: 'Tax & Assessment',
-      size: '480 KB',
-      date: 'Paid Aug 2026',
-      status: 'Valid'
-    },
-    {
-      id: 'doc-3',
-      title: 'Nil Encumbrance Certificate (EC)',
-      category: 'Statutory Registry',
-      size: '1.2 MB',
-      date: 'Valid till 2030',
-      status: 'Verified'
-    },
-    {
-      id: 'doc-4',
-      title: 'Comprehensive Building Insurance',
-      category: 'ICICI Lombard Policy',
-      size: '890 KB',
-      date: 'Active till Jun 2027',
-      status: 'Active'
-    }
-  ]);
+  const [documents, setDocuments] = useState<StoredDocument[]>(() => isDemoAccount ? DEMO_DOCUMENTS : []);
 
   // Delegates State
-  const [delegates, setDelegates] = useState<AuthorizedDelegate[]>([
-    {
-      id: 'del-1',
-      name: 'CA Rajesh K. (Kulkarni & Associates)',
-      email: 'rajesh.ca@auditfirm.in',
-      phone: '+91 98450 11928',
-      role: 'Accountant',
-      permissions: ['Financial Ledger', 'Bank Statements', 'Rent Invoices', 'Tax Reports (P&L)'],
-      addedDate: '15 Aug 2026',
-      status: 'Active'
-    },
-    {
-      id: 'del-2',
-      name: 'Arjun Das',
-      email: 'arjun.ops@staywise.com',
-      phone: '+91 94470 82910',
-      role: 'Property Manager',
-      permissions: ['Maintenance Work Orders', 'CRM Leads', 'Physical Visits', 'Tenant Handover'],
-      addedDate: '01 Sep 2026',
-      status: 'Active'
+  const [delegates, setDelegates] = useState<AuthorizedDelegate[]>(() => isDemoAccount ? DEMO_DELEGATES : []);
+
+  // Synchronize on user changes
+  useEffect(() => {
+    if (!isDemoAccount) {
+      setBankAccounts([]);
+      setDocuments([]);
+      setDelegates([]);
+      setTasksList([]);
+      setActivityFeed([]);
+    } else {
+      setBankAccounts(DEMO_BANK_ACCOUNTS);
+      setDocuments(DEMO_DOCUMENTS);
+      setDelegates(DEMO_DELEGATES);
+      setTasksList(DEMO_TASKS_LIST);
+      setActivityFeed(DEMO_ACTIVITY_FEED);
     }
-  ]);
+  }, [currentUser?.id, currentUser?.email, isDemoAccount]);
 
   // Modal States
   const [isAddBankModalOpen, setIsAddBankModalOpen] = useState(false);
@@ -286,11 +315,9 @@ export default function OwnerDashboard() {
 
   // Connect owner's user_id with properties
   // Demo accounts (owner@staywise.com / Vikram) see full catalog, but real/new users see only their owned properties
-  const isDemoAccount = !currentUser.id || currentUser.email === 'owner@staywise.com' || currentUser.id === 'user-owner-vikram' || activeRole === 'admin';
   const ownerProperties = (!isDemoAccount && activeRole === 'owner')
     ? properties.filter(p => p.ownerId === currentUser.id)
     : properties;
-
   const activeProperties = ownerProperties;
 
   const totalUnitsCount = activeProperties.reduce((acc, p) => acc + p.totalUnits, 0);
@@ -522,6 +549,7 @@ export default function OwnerDashboard() {
             </div>
 
             {/* Performance Chart Card (Human-Readable, Responsive with Clear Y-Axis & Tooltips) */}
+            {activeProperties.length > 0 && (
             <div className="rounded-3xl bg-white border border-[#B5B5B5] p-4 sm:p-5 md:p-6 shadow-xs space-y-4">
               
               {/* Header & Range Controls */}
@@ -867,6 +895,7 @@ export default function OwnerDashboard() {
 
               </div>
             </div>
+            )}
 
             {/* Current Operations Tasks List */}
             <div className="space-y-3">
@@ -883,41 +912,48 @@ export default function OwnerDashboard() {
               </div>
 
               {/* Task Items */}
-              <div className="space-y-2">
-                {tasksList.map((task) => (
-                  <div
-                    key={task.id}
-                    className="p-3.5 sm:p-4 rounded-2xl bg-white border border-[#B5B5B5] hover:border-[#383838] flex items-center justify-between gap-3 text-xs shadow-2xs transition"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="h-9 w-9 rounded-full bg-[#f0f0f0] border border-[#B5B5B5] flex items-center justify-center text-[#2a2a2a] shrink-0">
-                        {task.icon === 'sparkles' && <Zap className="h-4 w-4 text-[#383838]" />}
-                        {task.icon === 'search' && <Search className="h-4 w-4 text-[#e10600]" />}
-                        {task.icon === 'code' && <Laptop className="h-4 w-4 text-[#383838]" />}
+              {tasksList.length === 0 ? (
+                <div className="p-6 rounded-2xl bg-white border border-dashed border-[#B5B5B5] text-center space-y-1">
+                  <p className="text-xs font-bold text-[#2a2a2a]">No operational tasks pending</p>
+                  <p className="text-[11px] text-[#666666]">Tasks will automatically generate as tenants request repairs, meters are scanned, or rent is due.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {tasksList.map((task) => (
+                    <div
+                      key={task.id}
+                      className="p-3.5 sm:p-4 rounded-2xl bg-white border border-[#B5B5B5] hover:border-[#383838] flex items-center justify-between gap-3 text-xs shadow-2xs transition"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="h-9 w-9 rounded-full bg-[#f0f0f0] border border-[#B5B5B5] flex items-center justify-center text-[#2a2a2a] shrink-0">
+                          {task.icon === 'sparkles' && <Zap className="h-4 w-4 text-[#383838]" />}
+                          {task.icon === 'search' && <Search className="h-4 w-4 text-[#e10600]" />}
+                          {task.icon === 'code' && <Laptop className="h-4 w-4 text-[#383838]" />}
+                        </div>
+                        <span className="font-bold text-[#2a2a2a] truncate">
+                          {task.title}
+                        </span>
                       </div>
-                      <span className="font-bold text-[#2a2a2a] truncate">
-                        {task.title}
-                      </span>
+
+                      <div className="flex items-center gap-4 sm:gap-6 shrink-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`h-2.5 w-2.5 rounded-full ${task.statusColor}`} />
+                          <span className="text-xs font-bold text-[#383838] hidden sm:inline">{task.status}</span>
+                        </div>
+
+                        <div className="flex items-center gap-1 text-[#666666] font-bold font-tabular">
+                          <Clock className="h-3.5 w-3.5" />
+                          <span>{task.hours}</span>
+                        </div>
+
+                        <button className="text-[#666666] hover:text-[#2a2a2a] p-1">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
-
-                    <div className="flex items-center gap-4 sm:gap-6 shrink-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`h-2.5 w-2.5 rounded-full ${task.statusColor}`} />
-                        <span className="text-xs font-bold text-[#383838] hidden sm:inline">{task.status}</span>
-                      </div>
-
-                      <div className="flex items-center gap-1 text-[#666666] font-bold font-tabular">
-                        <Clock className="h-3.5 w-3.5" />
-                        <span>{task.hours}</span>
-                      </div>
-
-                      <button className="text-[#666666] hover:text-[#2a2a2a] p-1">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
           </div>
@@ -930,17 +966,23 @@ export default function OwnerDashboard() {
             {/* Top Profile Card */}
             <div className="rounded-3xl bg-[#f0f0f0] border border-[#B5B5B5] p-5 text-center space-y-4">
               <div className="relative inline-block mx-auto">
-                <img 
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop" 
-                  alt="Profile"
-                  className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-xs mx-auto"
-                />
+                {currentUser.avatar && currentUser.avatar.startsWith('http') ? (
+                  <img 
+                    src={currentUser.avatar} 
+                    alt="Profile"
+                    className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-xs mx-auto"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-[#2a2a2a] text-[#e10600] font-black text-2xl flex items-center justify-center border-2 border-white shadow-xs mx-auto">
+                    {(currentUser.name || 'Owner').charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full bg-[#e10600] ring-2 ring-[#2a2a2a]" />
               </div>
 
               <div>
                 <h3 className="font-extrabold text-base text-[#2a2a2a]">
-                  {currentUser.name || 'Vikram Singhania'}
+                  {currentUser.name || (isDemoAccount ? 'Vikram Singhania' : 'Property Owner')}
                 </h3>
                 <p className="text-xs text-[#666666] font-bold mt-0.5">
                   {currentUser.roleLabel || 'Property & Asset Host'}
@@ -977,59 +1019,66 @@ export default function OwnerDashboard() {
             <div className="space-y-4">
               <h3 className="text-sm font-extrabold text-[#2a2a2a] px-1">Live Tenant &amp; Team Activity</h3>
 
-              <div className="space-y-3.5">
-                {activityFeed.map((item) => (
-                  <div key={item.id} className="space-y-2 text-xs">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <img 
-                          src={item.avatar} 
-                          alt={item.name} 
-                          className="h-7 w-7 rounded-full object-cover shrink-0 border border-[#B5B5B5]" 
-                        />
-                        <div className="truncate">
-                          <span className="font-extrabold text-[#2a2a2a] mr-1">{item.name}</span>
-                          <span className="text-[11px] text-[#666666]">{item.action}</span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] text-[#666666] font-tabular shrink-0">{item.time}</span>
-                    </div>
-
-                    {item.type === 'message' && item.text && (
-                      <div className="relative ml-9 p-3 rounded-2xl bg-[#f0f0f0] text-[#2a2a2a] text-xs font-medium leading-relaxed border border-[#B5B5B5]">
-                        <p>{item.text}</p>
-                        {item.reaction && (
-                          <div className="absolute -bottom-2 right-2 h-5 w-5 rounded-full bg-[#e10600] border border-[#2a2a2a]/20 flex items-center justify-center text-[10px] shadow-2xs">
-                            {item.reaction}
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {item.type === 'file' && (
-                      <div className="ml-9 p-2.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] flex items-center justify-between gap-2 shadow-2xs">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="h-8 w-8 rounded-xl bg-[#2a2a2a] text-[#e10600] flex items-center justify-center font-bold text-[10px] shrink-0">
-                            PDF
-                          </div>
+              {activityFeed.length === 0 ? (
+                <div className="p-5 rounded-2xl bg-white border border-dashed border-[#B5B5B5] text-center space-y-1">
+                  <p className="text-xs font-bold text-[#2a2a2a]">No recent team activity</p>
+                  <p className="text-[11px] text-[#666666]">Team notes, tenant comments, and system updates will appear here.</p>
+                </div>
+              ) : (
+                <div className="space-y-3.5">
+                  {activityFeed.map((item) => (
+                    <div key={item.id} className="space-y-2 text-xs">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <img 
+                            src={item.avatar} 
+                            alt={item.name} 
+                            className="h-7 w-7 rounded-full object-cover shrink-0 border border-[#B5B5B5]" 
+                          />
                           <div className="truncate">
-                            <div className="font-bold text-[#2a2a2a] truncate">{item.fileName}</div>
-                            <div className="text-[10px] text-[#666666]">{item.fileSize}</div>
+                            <span className="font-extrabold text-[#2a2a2a] mr-1">{item.name}</span>
+                            <span className="text-[11px] text-[#666666]">{item.action}</span>
                           </div>
                         </div>
-
-                        <button 
-                          onClick={() => alert(`Downloading ${item.fileName}...`)}
-                          className="h-7 w-7 rounded-full bg-white border border-[#B5B5B5] flex items-center justify-center text-[#383838] hover:bg-[#e10600] transition shrink-0"
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                        </button>
+                        <span className="text-[10px] text-[#666666] font-tabular shrink-0">{item.time}</span>
                       </div>
-                    )}
 
-                  </div>
-                ))}
-              </div>
+                      {item.type === 'message' && item.text && (
+                        <div className="relative ml-9 p-3 rounded-2xl bg-[#f0f0f0] text-[#2a2a2a] text-xs font-medium leading-relaxed border border-[#B5B5B5]">
+                          <p>{item.text}</p>
+                          {item.reaction && (
+                            <div className="absolute -bottom-2 right-2 h-5 w-5 rounded-full bg-[#e10600] border border-[#2a2a2a]/20 flex items-center justify-center text-[10px] shadow-2xs">
+                              {item.reaction}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {item.type === 'file' && (
+                        <div className="ml-9 p-2.5 rounded-2xl bg-[#f0f0f0] border border-[#B5B5B5] flex items-center justify-between gap-2 shadow-2xs">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="h-8 w-8 rounded-xl bg-[#2a2a2a] text-[#e10600] flex items-center justify-center font-bold text-[10px] shrink-0">
+                              PDF
+                            </div>
+                            <div className="truncate">
+                              <div className="font-bold text-[#2a2a2a] truncate">{item.fileName}</div>
+                              <div className="text-[10px] text-[#666666]">{item.fileSize}</div>
+                            </div>
+                          </div>
+
+                          <button 
+                            onClick={() => alert(`Downloading ${item.fileName}...`)}
+                            className="h-7 w-7 rounded-full bg-white border border-[#B5B5B5] flex items-center justify-center text-[#383838] hover:bg-[#e10600] transition shrink-0"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      )}
+
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Chat Message Input Bar */}
               <form onSubmit={handleSendMessage} className="pt-2">
@@ -1187,37 +1236,53 @@ export default function OwnerDashboard() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {bankAccounts.map(bank => (
-              <div key={bank.id} className="p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-xs space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-10 w-10 rounded-xl bg-[#f0f0f0] text-[#383838] flex items-center justify-center font-bold">
-                      <Landmark className="h-5 w-5" />
+          {bankAccounts.length === 0 ? (
+            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#B5B5B5] p-8 space-y-3">
+              <div className="h-12 w-12 rounded-full bg-[#f0f0f0] text-[#383838] flex items-center justify-center mx-auto">
+                <Landmark className="h-6 w-6" />
+              </div>
+              <p className="text-sm font-bold text-[#2a2a2a]">No bank accounts linked yet</p>
+              <p className="text-xs text-[#666666]">Add your primary bank account or nodal escrow trust to receive direct tenant rent payouts.</p>
+              <button
+                onClick={() => setIsAddBankModalOpen(true)}
+                className="px-4 py-2 rounded-full bg-[#e10600] text-white text-xs font-bold hover:bg-[#c50500] transition shadow-xs"
+              >
+                + Add Bank Account
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {bankAccounts.map(bank => (
+                <div key={bank.id} className="p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-10 w-10 rounded-xl bg-[#f0f0f0] text-[#383838] flex items-center justify-center font-bold">
+                        <Landmark className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-sm text-[#2a2a2a]">{bank.bankName}</h4>
+                        <p className="text-xs text-[#666666] font-mono">{bank.accountNumber}</p>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#e10600] text-white text-[10px] font-black border border-[#2a2a2a]/20">
+                      {bank.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[#D1D5DB]">
+                    <div>
+                      <span className="text-[10px] text-[#666666]">IFSC Code:</span>
+                      <div className="font-bold text-[#2a2a2a]">{bank.ifsc}</div>
                     </div>
                     <div>
-                      <h4 className="font-extrabold text-sm text-[#2a2a2a]">{bank.bankName}</h4>
-                      <p className="text-xs text-[#666666] font-mono">{bank.accountNumber}</p>
+                      <span className="text-[10px] text-[#666666]">Holder:</span>
+                      <div className="font-bold text-[#2a2a2a] truncate">{bank.holderName}</div>
                     </div>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full bg-[#e10600] text-white text-[10px] font-black border border-[#2a2a2a]/20">
-                    {bank.status}
-                  </span>
                 </div>
-
-                <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[#D1D5DB]">
-                  <div>
-                    <span className="text-[10px] text-[#666666]">IFSC Code:</span>
-                    <div className="font-bold text-[#2a2a2a]">{bank.ifsc}</div>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-[#666666]">Holder:</span>
-                    <div className="font-bold text-[#2a2a2a] truncate">{bank.holderName}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -1239,27 +1304,43 @@ export default function OwnerDashboard() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {documents.map(doc => (
-              <div key={doc.id} className="p-4 rounded-2xl bg-white border border-[#B5B5B5] shadow-xs flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-[#f0f0f0] text-[#383838] flex items-center justify-center">
-                    <FileText className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-extrabold text-xs text-[#2a2a2a]">{doc.title}</h4>
-                    <p className="text-[10px] text-[#666666]">{doc.category} • {doc.size}</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => alert(`Downloading ${doc.title}...`)}
-                  className="p-2 rounded-full hover:bg-[#e10600] text-[#383838] hover:text-white transition"
-                >
-                  <Download className="h-4 w-4" />
-                </button>
+          {documents.length === 0 ? (
+            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#B5B5B5] p-8 space-y-3">
+              <div className="h-12 w-12 rounded-full bg-[#f0f0f0] text-[#383838] flex items-center justify-center mx-auto">
+                <FileText className="h-6 w-6" />
               </div>
-            ))}
-          </div>
+              <p className="text-sm font-bold text-[#2a2a2a]">Document vault is empty</p>
+              <p className="text-xs text-[#666666]">Upload title deeds, tax receipts, encumbrance certificates, and building insurance policies.</p>
+              <button
+                onClick={() => setIsUploadDocModalOpen(true)}
+                className="px-4 py-2 rounded-full bg-[#e10600] text-white text-xs font-bold hover:bg-[#c50500] transition shadow-xs"
+              >
+                + Upload Document
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {documents.map(doc => (
+                <div key={doc.id} className="p-4 rounded-2xl bg-white border border-[#B5B5B5] shadow-xs flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-[#f0f0f0] text-[#383838] flex items-center justify-center">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-xs text-[#2a2a2a]">{doc.title}</h4>
+                      <p className="text-[10px] text-[#666666]">{doc.category} • {doc.size}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => alert(`Downloading ${doc.title}...`)}
+                    className="p-2 rounded-full hover:bg-[#e10600] text-[#383838] hover:text-white transition"
+                  >
+                    <Download className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -1281,28 +1362,44 @@ export default function OwnerDashboard() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {delegates.map(del => (
-              <div key={del.id} className="p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-xs space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-extrabold text-sm text-[#2a2a2a]">{del.name}</h4>
-                    <p className="text-xs text-[#666666]">{del.email} • {del.phone}</p>
-                  </div>
-                  <span className="px-2.5 py-0.5 rounded-full bg-[#e10600] text-white text-[10px] font-black border border-[#2a2a2a]/20">
-                    {del.role}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[#D1D5DB]">
-                  {del.permissions.map((p, idx) => (
-                    <span key={idx} className="px-2 py-0.5 rounded-md bg-[#f0f0f0] border border-[#B5B5B5] text-[10px] text-[#383838] font-semibold">
-                      ✓ {p}
-                    </span>
-                  ))}
-                </div>
+          {delegates.length === 0 ? (
+            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#B5B5B5] p-8 space-y-3">
+              <div className="h-12 w-12 rounded-full bg-[#f0f0f0] text-[#383838] flex items-center justify-center mx-auto">
+                <Users className="h-6 w-6" />
               </div>
-            ))}
-          </div>
+              <p className="text-sm font-bold text-[#2a2a2a]">No authorized delegates added</p>
+              <p className="text-xs text-[#666666]">Invite your chartered accountant, tax auditor, or property manager with role-based access controls.</p>
+              <button
+                onClick={() => setIsAddDelegateModalOpen(true)}
+                className="px-4 py-2 rounded-full bg-[#e10600] text-white text-xs font-bold hover:bg-[#c50500] transition shadow-xs"
+              >
+                + Invite Member
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {delegates.map(del => (
+                <div key={del.id} className="p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="font-extrabold text-sm text-[#2a2a2a]">{del.name}</h4>
+                      <p className="text-xs text-[#666666]">{del.email} • {del.phone}</p>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#e10600] text-white text-[10px] font-black border border-[#2a2a2a]/20">
+                      {del.role}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[#D1D5DB]">
+                    {del.permissions.map((p, idx) => (
+                      <span key={idx} className="px-2 py-0.5 rounded-md bg-[#f0f0f0] border border-[#B5B5B5] text-[10px] text-[#383838] font-semibold">
+                        ✓ {p}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -1327,43 +1424,62 @@ export default function OwnerDashboard() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {electricityBills.map(bill => (
-              <div key={bill.id} className="p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-xs space-y-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-extrabold text-sm text-[#2a2a2a]">Unit {bill.unitNumber}</span>
-                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#e10600] text-white font-black border border-[#2a2a2a]/20">
-                        {bill.propertyName}
-                      </span>
-                    </div>
-                    <p className="text-xs text-[#666666] mt-0.5">{bill.tenantName || 'Occupied'}</p>
-                  </div>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                    bill.status === 'Paid' ? 'bg-[#e10600] text-white' : 'bg-amber-100 text-amber-800'
-                  }`}>
-                    {bill.status}
-                  </span>
-                </div>
-
-                <div className="p-3 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-xs space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-[#666666]">Provider:</span>
-                    <span className="font-bold text-[#2a2a2a]">{bill.discom}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#666666]">Consumption:</span>
-                    <span className="font-bold text-[#2a2a2a]">{bill.unitsConsumed} Units</span>
-                  </div>
-                  <div className="flex justify-between border-t border-[#B5B5B5] pt-1">
-                    <span className="text-[#666666]">Bill Amount:</span>
-                    <span className="font-black text-sm text-[#2a2a2a]">₹{bill.totalAmount.toLocaleString('en-IN')}</span>
-                  </div>
-                </div>
+          {electricityBills.length === 0 ? (
+            <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#B5B5B5] p-8 space-y-3">
+              <div className="h-12 w-12 rounded-full bg-[#f0f0f0] text-[#383838] flex items-center justify-center mx-auto">
+                <Zap className="h-6 w-6 text-[#e10600]" />
               </div>
-            ))}
-          </div>
+              <p className="text-sm font-bold text-[#2a2a2a]">No utility bills uploaded yet</p>
+              <p className="text-xs text-[#666666]">Upload discom electricity bills or log sub-meter readings to automatically invoice tenants.</p>
+              <button
+                onClick={() => {
+                  setPreselectedUnitForUpload(null);
+                  setIsUploadBillModalOpen(true);
+                }}
+                className="px-4 py-2 rounded-full bg-[#e10600] text-white text-xs font-bold hover:bg-[#c50500] transition shadow-xs"
+              >
+                + Upload Power Bill
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {electricityBills.map(bill => (
+                <div key={bill.id} className="p-5 rounded-2xl bg-white border border-[#B5B5B5] shadow-xs space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-extrabold text-sm text-[#2a2a2a]">Unit {bill.unitNumber}</span>
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#e10600] text-white font-black border border-[#2a2a2a]/20">
+                          {bill.propertyName}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#666666] mt-0.5">{bill.tenantName || 'Occupied'}</p>
+                    </div>
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                      bill.status === 'Paid' ? 'bg-[#e10600] text-white' : 'bg-amber-100 text-amber-800'
+                    }`}>
+                      {bill.status}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-[#f0f0f0] border border-[#B5B5B5] text-xs space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-[#666666]">Provider:</span>
+                      <span className="font-bold text-[#2a2a2a]">{bill.discom}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#666666]">Consumption:</span>
+                      <span className="font-bold text-[#2a2a2a]">{bill.unitsConsumed} Units</span>
+                    </div>
+                    <div className="flex justify-between border-t border-[#B5B5B5] pt-1">
+                      <span className="text-[#666666]">Bill Amount:</span>
+                      <span className="font-black text-sm text-[#2a2a2a]">₹{bill.totalAmount.toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

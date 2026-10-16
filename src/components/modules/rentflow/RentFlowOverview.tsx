@@ -56,11 +56,11 @@ export default function RentFlowOverview() {
 
   const [isGenBillModalOpen, setIsGenBillModalOpen] = useState(false);
   const [newBillForm, setNewBillForm] = useState({
-    unitNumber: '302',
-    tenantName: 'Shyam Sundar',
-    meterNumber: 'MTR-BLR-8921-A',
-    previousReading: 1630,
-    currentReading: 1850,
+    unitNumber: '101',
+    tenantName: '',
+    meterNumber: 'MTR-BLR-001',
+    previousReading: 0,
+    currentReading: 0,
     ratePerUnit: 8.5,
     fixedCharges: 150,
     discom: 'BESCOM Bangalore'
@@ -253,16 +253,19 @@ export default function RentFlowOverview() {
     }
   ];
 
+  const isDemoAccount = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
+  const isDemoTenant = currentUser?.email === 'tenant@staywise.com' || currentUser?.id === 'user-tenant-shyam';
+
   // Dynamically map real invoices from SQLite database scoped to the active role
-  const scopedInvoices = (activeRole === 'owner' && currentUser.id && currentUser.id !== 'user-owner-vikram')
-    ? invoices.filter(inv => {
+  const scopedInvoices = (activeRole === 'owner')
+    ? (isDemoAccount ? invoices : invoices.filter(inv => {
         const ownerProps = properties.filter(p => p.ownerId === currentUser.id);
         const ownerPropIds = ownerProps.map(p => p.id);
         const ownerPropNames = ownerProps.map(p => p.name.toLowerCase());
         return ownerPropIds.includes(inv.propertyId) || (inv.propertyName && ownerPropNames.includes(inv.propertyName.toLowerCase()));
-      })
-    : (activeRole === 'tenant' && currentUser.id)
-    ? invoices.filter(inv => inv.tenantId === currentUser.id || (currentUser.name && inv.tenantName?.toLowerCase().includes(currentUser.name.toLowerCase())))
+      }))
+    : (activeRole === 'tenant')
+    ? (isDemoTenant ? invoices : invoices.filter(inv => inv.tenantId === currentUser.id || (currentUser.name && inv.tenantName?.toLowerCase().includes(currentUser.name.toLowerCase()))))
     : invoices;
 
   const dynamicPaymentRows = scopedInvoices.length > 0 ? scopedInvoices.map(inv => ({
@@ -276,10 +279,32 @@ export default function RentFlowOverview() {
     status: (inv.status === 'Paid' ? 'Paid' : inv.status === 'Overdue' ? 'Overdue' : 'Pending') as 'Paid' | 'Pending' | 'Overdue',
     paymentRail: inv.paymentMethod || 'UPI Instant (GPay)',
     rawInvoice: inv
-  })) : (activeRole === 'tenant' ? tenantPaymentRows : ownerPaymentRows);
+  })) : ((activeRole === 'tenant' ? isDemoTenant : isDemoAccount) ? (activeRole === 'tenant' ? tenantPaymentRows : ownerPaymentRows) : []);
 
   const allPaymentRows = dynamicPaymentRows;
-  const displayedLedger = activeRole === 'tenant' ? tenantLedger : ledger;
+  
+  const displayedLedger = (activeRole === 'tenant')
+    ? (isDemoTenant ? tenantLedger : ledger.filter(l => (currentUser?.id && l.referenceId.includes(currentUser.id)) || (currentUser?.name && l.description.toLowerCase().includes(currentUser.name.toLowerCase()))))
+    : (isDemoAccount ? ledger : ledger.filter(l => {
+        const ownerProps = properties.filter(p => p.ownerId === currentUser?.id);
+        const propIds = ownerProps.map(p => p.id);
+        return propIds.some(pid => l.referenceId.includes(pid));
+      }));
+
+  const userElectricityBills = (activeRole === 'tenant')
+    ? (isDemoTenant
+        ? electricityBills.filter(b => b.unitNumber === '302')
+        : electricityBills.filter(b => {
+            const tenantUnits = scopedInvoices.map(i => i.unitNumber);
+            return (b as any).tenantId === currentUser?.id || (b.tenantName && currentUser?.name && b.tenantName.toLowerCase().includes(currentUser.name.toLowerCase())) || tenantUnits.includes(b.unitNumber);
+          }))
+    : (isDemoAccount
+        ? electricityBills
+        : electricityBills.filter(b => {
+            const ownerProps = properties.filter(p => p.ownerId === currentUser?.id);
+            const ownerPropIds = ownerProps.map(p => p.id);
+            return ownerPropIds.includes(b.propertyId);
+          }));
 
   const filteredRows = allPaymentRows.filter(row => {
     if (filter === 'PAID') return row.status === 'Paid';
@@ -317,8 +342,8 @@ export default function RentFlowOverview() {
           </h1>
           <div className="text-xs text-[#666666] font-semibold uppercase tracking-wider mt-0.5">
             {activeRole === 'tenant' 
-              ? 'Apartment 302 • Beach Road Luxury Apartments' 
-              : 'Real-time Escrow Inflows • Bengaluru & Kozhikode'}
+              ? (isDemoTenant ? 'Apartment 302 • Beach Road Luxury Apartments' : (scopedInvoices[0]?.propertyName ? `${scopedInvoices[0]?.propertyName} • Unit ${scopedInvoices[0]?.unitNumber}` : 'Tenant Billing & Receipts'))
+              : (isDemoAccount ? 'Real-time Escrow Inflows • Bengaluru & Kozhikode' : 'Real-time Escrow Inflows & Collections')}
           </div>
         </div>
 
@@ -363,97 +388,124 @@ export default function RentFlowOverview() {
         </div>
       </div>
 
-      {activeTab === 'OVERVIEW' && (
-        <div className="space-y-6">
-          {/* Top 3 Metrics Cards */}
-          {activeRole === 'tenant' ? (
-            // Tenant-specific 3 Cards (Zero other people's data)
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="organic-card p-5 bg-gradient-to-br from-[#ffffff] to-white border-amber-200">
-                <span className="text-xs font-bold text-amber-800">Current Rent Due (Oct 2026)</span>
-                <div className="text-2xl sm:text-3xl font-black text-[#2a2a2a] font-tabular mt-1">
-                  ₹28,700
-                </div>
-                <div className="text-[11px] text-amber-700 font-bold mt-2 flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" />
-                  <span>Due on Oct 5, 2026</span>
-                </div>
-              </div>
+      {activeTab === 'OVERVIEW' && (() => {
+        const tenantPendingInvoice = scopedInvoices.find(i => i.status === 'Due' || i.status === 'Overdue');
+        const tenantDueAmount = scopedInvoices.filter(i => i.status === 'Due' || i.status === 'Overdue').reduce((acc, i) => acc + i.totalAmount, 0);
+        const tenantDisplayDue = (isDemoTenant && scopedInvoices.length === 0) ? 28700 : tenantDueAmount;
+        const tenantDueDate = tenantPendingInvoice ? `Due on ${tenantPendingInvoice.dueDate}` : ((isDemoTenant && scopedInvoices.length === 0) ? 'Due on Oct 5, 2026' : 'No upcoming dues');
+        const tenantDepositAmount = scopedInvoices.length > 0 
+          ? (properties.find(p => p.id === scopedInvoices[0]?.propertyId)?.units?.find(u => u.unitNumber === scopedInvoices[0]?.unitNumber)?.depositAmount || 0)
+          : ((isDemoTenant && scopedInvoices.length === 0) ? 60000 : 0);
 
-              <div className="organic-card p-5 bg-gradient-to-br from-[#f5f5f5] to-white border-emerald-200">
-                <span className="text-xs font-bold text-emerald-800">Security Deposit in Escrow</span>
-                <div className="text-2xl sm:text-3xl font-black text-emerald-800 font-tabular mt-1">
-                  ₹60,000
-                </div>
-                <div className="text-[11px] text-emerald-700 font-bold mt-2 flex items-center gap-1">
-                  <ShieldCheck className="h-3.5 w-3.5" />
-                  <span>Safe in Axis Nodal Escrow</span>
-                </div>
-              </div>
+        const totalCollected = scopedInvoices.filter(i => i.status === 'Paid').reduce((acc, i) => acc + i.totalAmount, 0);
+        const totalPending = scopedInvoices.filter(i => i.status === 'Due').reduce((acc, i) => acc + i.totalAmount, 0);
+        const totalOverdue = scopedInvoices.filter(i => i.status === 'Overdue').reduce((acc, i) => acc + i.totalAmount, 0);
 
-              <div className="organic-card p-5 bg-white">
-                <span className="text-xs font-bold text-[#666666]">Bank Autopay Status</span>
-                <div className="text-xl font-black text-[#2a2a2a] mt-1">
-                  Active (Axis Bank)
-                </div>
-                <div className="text-[11px] text-[#2a2a2a] font-bold mt-2 flex items-center gap-1">
-                  <Zap className="h-3.5 w-3.5" />
-                  <span>Next auto-debit on 5th Oct</span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            // Owner / Admin 3 Metrics Cards
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="organic-card p-5 bg-gradient-to-br from-[#f5f5f5] to-white flex flex-col justify-between h-32 relative overflow-hidden border-emerald-200">
-                <div>
-                  <div className="text-2xl sm:text-3xl font-black text-emerald-800 font-tabular tracking-tight">
-                    ₹13.4L
-                  </div>
-                  <div className="text-xs font-bold text-emerald-700 mt-0.5">
-                    Collected
-                  </div>
-                </div>
-                <div>
-                  <div className="w-full bg-emerald-100 h-2 rounded-full overflow-hidden">
-                    <div className="bg-emerald-600 h-full rounded-full w-[91%] shadow-sm"></div>
-                  </div>
-                </div>
-              </div>
+        const displayCollected = (isDemoAccount && scopedInvoices.length === 0) ? 1340000 : totalCollected;
+        const displayPending = (isDemoAccount && scopedInvoices.length === 0) ? 120000 : totalPending;
+        const displayOverdue = (isDemoAccount && scopedInvoices.length === 0) ? 40000 : totalOverdue;
 
-              <div className="organic-card p-5 bg-gradient-to-br from-[#ffffff] to-white flex flex-col justify-between h-32 relative overflow-hidden border-amber-200">
-                <div>
-                  <div className="text-2xl sm:text-3xl font-black text-amber-800 font-tabular tracking-tight">
-                    ₹1.2L
-                  </div>
-                  <div className="text-xs font-bold text-amber-700 mt-0.5">
-                    Pending
-                  </div>
-                </div>
-                <div>
-                  <div className="w-full bg-amber-100 h-2 rounded-full overflow-hidden">
-                    <div className="bg-amber-600 h-full rounded-full w-[24%] shadow-sm"></div>
-                  </div>
-                </div>
-              </div>
+        const totalExpected = displayCollected + displayPending + displayOverdue;
+        const collectedWidth = totalExpected > 0 ? Math.round((displayCollected / totalExpected) * 100) : 0;
+        const pendingWidth = totalExpected > 0 ? Math.round((displayPending / totalExpected) * 100) : 0;
+        const overdueWidth = totalExpected > 0 ? Math.round((displayOverdue / totalExpected) * 100) : 0;
 
-              <div className="organic-card p-5 bg-gradient-to-br from-[#fff0f0] to-white flex flex-col justify-between h-32 relative overflow-hidden border-rose-200">
-                <div>
-                  <div className="text-2xl sm:text-3xl font-black text-rose-800 font-tabular tracking-tight">
-                    ₹0.4L
+        const formatLakhs = (val: number) => {
+          if (val >= 100000) return `₹${(val / 100000).toFixed(1)}L`;
+          return `₹${val.toLocaleString('en-IN')}`;
+        };
+
+        return (
+          <div className="space-y-6">
+            {/* Top 3 Metrics Cards */}
+            {activeRole === 'tenant' ? (
+              // Tenant-specific 3 Cards (Zero other people's data)
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="organic-card p-5 bg-gradient-to-br from-[#ffffff] to-white border-amber-200">
+                  <span className="text-xs font-bold text-amber-800">Current Rent Due</span>
+                  <div className="text-2xl sm:text-3xl font-black text-[#2a2a2a] font-tabular mt-1">
+                    ₹{tenantDisplayDue.toLocaleString('en-IN')}
                   </div>
-                  <div className="text-xs font-bold text-rose-700 mt-0.5">
-                    Overdue
+                  <div className="text-[11px] text-amber-700 font-bold mt-2 flex items-center gap-1">
+                    <Clock className="h-3.5 w-3.5" />
+                    <span>{tenantDueDate}</span>
                   </div>
                 </div>
-                <div>
-                  <div className="w-full bg-rose-100 h-2 rounded-full overflow-hidden">
-                    <div className="bg-rose-600 h-full rounded-full w-[12%] shadow-sm"></div>
+
+                <div className="organic-card p-5 bg-gradient-to-br from-[#f5f5f5] to-white border-emerald-200">
+                  <span className="text-xs font-bold text-emerald-800">Security Deposit in Escrow</span>
+                  <div className="text-2xl sm:text-3xl font-black text-emerald-800 font-tabular mt-1">
+                    ₹{tenantDepositAmount.toLocaleString('en-IN')}
+                  </div>
+                  <div className="text-[11px] text-emerald-700 font-bold mt-2 flex items-center gap-1">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    <span>{tenantDepositAmount > 0 ? 'Safe in Axis Nodal Escrow' : 'Zero deposit held'}</span>
+                  </div>
+                </div>
+
+                <div className="organic-card p-5 bg-white">
+                  <span className="text-xs font-bold text-[#666666]">Bank Autopay Status</span>
+                  <div className="text-xl font-black text-[#2a2a2a] mt-1">
+                    {isDemoTenant ? 'Active (Axis Bank)' : (scopedInvoices.length > 0 ? 'Active Mandate' : 'No Mandate Active')}
+                  </div>
+                  <div className="text-[11px] text-[#2a2a2a] font-bold mt-2 flex items-center gap-1">
+                    <Zap className="h-3.5 w-3.5" />
+                    <span>{isDemoTenant ? 'Next auto-debit on 5th Oct' : (tenantPendingInvoice ? `Due on ${tenantPendingInvoice.dueDate}` : 'Autopay ready')}</span>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            ) : (
+              // Owner / Admin 3 Metrics Cards
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="organic-card p-5 bg-gradient-to-br from-[#f5f5f5] to-white flex flex-col justify-between h-32 relative overflow-hidden border-emerald-200">
+                  <div>
+                    <div className="text-2xl sm:text-3xl font-black text-emerald-800 font-tabular tracking-tight">
+                      {formatLakhs(displayCollected)}
+                    </div>
+                    <div className="text-xs font-bold text-emerald-700 mt-0.5">
+                      Collected
+                    </div>
+                  </div>
+                  <div>
+                    <div className="w-full bg-emerald-100 h-2 rounded-full overflow-hidden">
+                      <div className="bg-emerald-600 h-full rounded-full shadow-sm" style={{ width: `${collectedWidth}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="organic-card p-5 bg-gradient-to-br from-[#ffffff] to-white flex flex-col justify-between h-32 relative overflow-hidden border-amber-200">
+                  <div>
+                    <div className="text-2xl sm:text-3xl font-black text-amber-800 font-tabular tracking-tight">
+                      {formatLakhs(displayPending)}
+                    </div>
+                    <div className="text-xs font-bold text-amber-700 mt-0.5">
+                      Pending
+                    </div>
+                  </div>
+                  <div>
+                    <div className="w-full bg-amber-100 h-2 rounded-full overflow-hidden">
+                      <div className="bg-amber-600 h-full rounded-full shadow-sm" style={{ width: `${pendingWidth}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="organic-card p-5 bg-gradient-to-br from-[#fff0f0] to-white flex flex-col justify-between h-32 relative overflow-hidden border-rose-200">
+                  <div>
+                    <div className="text-2xl sm:text-3xl font-black text-rose-800 font-tabular tracking-tight">
+                      {formatLakhs(displayOverdue)}
+                    </div>
+                    <div className="text-xs font-bold text-rose-700 mt-0.5">
+                      Overdue
+                    </div>
+                  </div>
+                  <div>
+                    <div className="w-full bg-rose-100 h-2 rounded-full overflow-hidden">
+                      <div className="bg-rose-600 h-full rounded-full shadow-sm" style={{ width: `${overdueWidth}%` }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
           {/* Filter Pills */}
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -479,108 +531,125 @@ export default function RentFlowOverview() {
           </div>
 
           {/* Payment Rows */}
-          <div className="space-y-3">
-            {filteredRows.map((row) => (
-              <div
-                key={row.id}
-                className="organic-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition hover:border-[#2a2a2a]/40"
-              >
-                {/* Left: Avatar + Tenant Name + Room & Due Date */}
-                <div className="flex items-center gap-4">
-                  <div className="h-11 w-11 rounded-2xl bg-[#f0f0f0] border border-[#2a2a2a]/20 flex items-center justify-center font-black text-[#2a2a2a] text-sm shadow-inner shrink-0">
-                    {row.initial}
-                  </div>
-
-                  <div>
-                    <h3 className="font-extrabold text-[#2a2a2a] text-sm sm:text-base">
-                      {row.name}
-                    </h3>
-                    <div className="text-xs text-[#666666] mt-0.5 flex items-center gap-1.5">
-                      <span className="font-semibold text-[#2a2a2a]">{row.unit}</span>
-                      <span>•</span>
-                      <span>{row.dueDate}</span>
-                      <span className="hidden md:inline">• {row.property}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right: Amount + Status Badge + 1-Click Actions */}
-                <div className="flex items-center justify-between sm:justify-end gap-5 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#E0E0E0]">
-                  <div className="sm:text-right">
-                    <div className="text-base sm:text-lg font-black text-[#2a2a2a] font-tabular">
-                      ₹{row.amount.toLocaleString('en-IN')}
-                    </div>
-                    <div className="text-xs font-bold mt-0.5">
-                      <span className={`capitalize ${
-                        row.status === 'Paid' 
-                          ? 'text-emerald-700' 
-                          : row.status === 'Pending' 
-                          ? 'text-amber-700' 
-                          : 'text-rose-700'
-                      }`}>
-                        {row.status}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    {row.status === 'Paid' ? (
-                      <button
-                        onClick={() => {
-                          const paidInv = invoices.find(i => i.status === 'Paid') || invoices[0];
-                          setSelectedReceiptInvoice({
-                            ...paidInv,
-                            tenantName: row.name,
-                            unitNumber: row.unit,
-                            totalAmount: row.amount
-                          });
-                        }}
-                        className="px-3.5 py-2 rounded-xl bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white text-[#2a2a2a] text-xs font-bold border border-[#B5B5B5] flex items-center gap-1.5 transition shadow-sm"
-                      >
-                        <Download className="h-3.5 w-3.5" />
-                        <span>Download Receipt</span>
-                      </button>
-                    ) : (
-                      <>
-                        {activeRole !== 'tenant' ? (
-                          <>
-                            <button
-                              onClick={() => handleSendReminder(row.name)}
-                              className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold border border-amber-200 flex items-center gap-1.5 transition"
-                              title="Send polite WhatsApp alert"
-                            >
-                              <Send className="h-3.5 w-3.5" />
-                              <span className="hidden sm:inline">WhatsApp</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                addNotification('Payment Recorded', `Marked ₹${row.amount.toLocaleString('en-IN')} as collected offline for ${row.name}.`, 'RENT');
-                                alert(`Recorded offline payment of ₹${row.amount.toLocaleString('en-IN')} for ${row.name}.`);
-                              }}
-                              className="px-3.5 py-1.5 rounded-xl bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white text-[#2a2a2a] text-xs font-bold border border-[#B5B5B5] flex items-center gap-1 transition"
-                              title="Record cash or direct bank transfer"
-                            >
-                              <span>Record Offline</span>
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={() => handlePayNowSim(row)}
-                            className="px-4 py-2 rounded-xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white text-xs font-bold shadow-md shadow-[#2a2a2a]/20 transition"
-                          >
-                            Pay Rent Now
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
+          {filteredRows.length === 0 ? (
+            <div className="py-12 text-center bg-white rounded-3xl border border-dashed border-[#B5B5B5] p-8 space-y-3">
+              <div className="h-12 w-12 rounded-full bg-[#f0f0f0] text-[#383838] flex items-center justify-center mx-auto">
+                <Receipt className="h-6 w-6 text-[#2a2a2a]" />
               </div>
-            ))}
-          </div>
+              <h3 className="text-base font-extrabold text-[#2a2a2a]">
+                {activeRole === 'tenant' ? 'No rent invoices found' : 'No rent collections recorded yet'}
+              </h3>
+              <p className="text-xs text-[#666666] max-w-md mx-auto">
+                {activeRole === 'tenant'
+                  ? 'You have no current or pending rent invoices. Invoices generated by your landlord or property manager will appear here.'
+                  : 'Once you add properties and onboard tenants, automated monthly rent schedules, UPI payment links, and reconciliation receipts will appear here.'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredRows.map((row) => (
+                <div
+                  key={row.id}
+                  className="organic-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition hover:border-[#2a2a2a]/40"
+                >
+                  {/* Left: Avatar + Tenant Name + Room & Due Date */}
+                  <div className="flex items-center gap-4">
+                    <div className="h-11 w-11 rounded-2xl bg-[#f0f0f0] border border-[#2a2a2a]/20 flex items-center justify-center font-black text-[#2a2a2a] text-sm shadow-inner shrink-0">
+                      {row.initial}
+                    </div>
+
+                    <div>
+                      <h3 className="font-extrabold text-[#2a2a2a] text-sm sm:text-base">
+                        {row.name}
+                      </h3>
+                      <div className="text-xs text-[#666666] mt-0.5 flex items-center gap-1.5">
+                        <span className="font-semibold text-[#2a2a2a]">{row.unit}</span>
+                        <span>•</span>
+                        <span>{row.dueDate}</span>
+                        <span className="hidden md:inline">• {row.property}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: Amount + Status Badge + 1-Click Actions */}
+                  <div className="flex items-center justify-between sm:justify-end gap-5 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#E0E0E0]">
+                    <div className="sm:text-right">
+                      <div className="text-base sm:text-lg font-black text-[#2a2a2a] font-tabular">
+                        ₹{row.amount.toLocaleString('en-IN')}
+                      </div>
+                      <div className="text-xs font-bold mt-0.5">
+                        <span className={`capitalize ${
+                          row.status === 'Paid' 
+                            ? 'text-emerald-700' 
+                            : row.status === 'Pending' 
+                            ? 'text-amber-700' 
+                            : 'text-rose-700'
+                        }`}>
+                          {row.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2">
+                      {row.status === 'Paid' ? (
+                        <button
+                          onClick={() => {
+                            const paidInv = invoices.find(i => i.status === 'Paid') || invoices[0];
+                            setSelectedReceiptInvoice({
+                              ...paidInv,
+                              tenantName: row.name,
+                              unitNumber: row.unit,
+                              totalAmount: row.amount
+                            });
+                          }}
+                          className="px-3.5 py-2 rounded-xl bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white text-[#2a2a2a] text-xs font-bold border border-[#B5B5B5] flex items-center gap-1.5 transition shadow-sm"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          <span>Download Receipt</span>
+                        </button>
+                      ) : (
+                        <>
+                          {activeRole !== 'tenant' ? (
+                            <>
+                              <button
+                                onClick={() => handleSendReminder(row.name)}
+                                className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 text-xs font-bold border border-amber-200 flex items-center gap-1.5 transition"
+                                title="Send polite WhatsApp alert"
+                              >
+                                <Send className="h-3.5 w-3.5" />
+                                <span className="hidden sm:inline">WhatsApp</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  addNotification('Payment Recorded', `Marked ₹${row.amount.toLocaleString('en-IN')} as collected offline for ${row.name}.`, 'RENT');
+                                  alert(`Recorded offline payment of ₹${row.amount.toLocaleString('en-IN')} for ${row.name}.`);
+                                }}
+                                className="px-3.5 py-1.5 rounded-xl bg-[#f0f0f0] hover:bg-[#2a2a2a] hover:text-white text-[#2a2a2a] text-xs font-bold border border-[#B5B5B5] flex items-center gap-1 transition"
+                                title="Record cash or direct bank transfer"
+                              >
+                                <span>Record Offline</span>
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => handlePayNowSim(row)}
+                              className="px-4 py-2 rounded-xl bg-[#2a2a2a] hover:bg-[#2a2a2a] text-white text-xs font-bold shadow-md shadow-[#2a2a2a]/20 transition"
+                            >
+                              Pay Rent Now
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+        );
+      })()}
 
       {/* TAB 2: Immutable Double-Entry Ledger */}
       {activeTab === 'LEDGER' && (
@@ -593,7 +662,7 @@ export default function RentFlowOverview() {
               </h3>
               <p className="text-[11px] text-[#666666]">
                 {activeRole === 'tenant' 
-                  ? 'All rent transfers, security deposit receipts, and utility payments for Unit 302'
+                  ? (isDemoTenant ? 'All rent transfers, security deposit receipts, and utility payments for Unit 302' : 'All your personal rent transfers, security deposit receipts, and utility payments')
                   : 'Balance is never the single source of truth. Every transaction logs an immutable debit/credit trail.'}
               </p>
             </div>
@@ -616,30 +685,40 @@ export default function RentFlowOverview() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E0E0E0] text-[#2a2a2a]">
-                {displayedLedger.map(entry => (
-                  <tr key={entry.id} className="hover:bg-[#ffffff]">
-                    <td className="py-2.5 px-3 font-mono text-[11px] text-[#666666]">{entry.id}</td>
-                    <td className="py-2.5 px-3 text-[#666666] whitespace-nowrap">{entry.timestamp}</td>
-                    <td className="py-2.5 px-3 font-bold">{entry.description}</td>
-                    <td className="py-2.5 px-3 text-[#666666] text-[11px]">{entry.account}</td>
-                    <td className="py-2.5 px-3">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        entry.type === 'CREDIT' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {entry.type}
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3 text-right font-black font-tabular">
-                      ₹{entry.amount.toLocaleString('en-IN')}
-                    </td>
-                    <td className="py-2.5 px-3 text-center">
-                      <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-bold">
-                        <CheckCircle2 className="h-3 w-3" />
-                        {entry.settlementStatus}
-                      </span>
+                {displayedLedger.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center">
+                      <Database className="h-8 w-8 text-[#B5B5B5] mx-auto mb-2 opacity-50" />
+                      <p className="text-xs font-bold text-[#666666]">No ledger transactions recorded yet</p>
+                      <p className="text-[11px] text-[#999999] mt-0.5">Transactions will appear automatically as rent and deposit entries are settled.</p>
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  displayedLedger.map(entry => (
+                    <tr key={entry.id} className="hover:bg-[#ffffff]">
+                      <td className="py-2.5 px-3 font-mono text-[11px] text-[#666666]">{entry.id}</td>
+                      <td className="py-2.5 px-3 text-[#666666] whitespace-nowrap">{entry.timestamp}</td>
+                      <td className="py-2.5 px-3 font-bold">{entry.description}</td>
+                      <td className="py-2.5 px-3 text-[#666666] text-[11px]">{entry.account}</td>
+                      <td className="py-2.5 px-3">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          entry.type === 'CREDIT' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {entry.type}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-black font-tabular">
+                        ₹{entry.amount.toLocaleString('en-IN')}
+                      </td>
+                      <td className="py-2.5 px-3 text-center">
+                        <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-bold">
+                          <CheckCircle2 className="h-3 w-3" />
+                          {entry.settlementStatus}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -714,11 +793,11 @@ export default function RentFlowOverview() {
             <div>
               <h3 className="text-base font-extrabold text-[#2a2a2a] flex items-center gap-2">
                 <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
-                <span>{activeRole === 'tenant' ? 'My Apartment 302 Electricity Bill' : 'Electricity & Sub-Meter Utility Billing'}</span>
+                <span>{activeRole === 'tenant' ? (isDemoTenant ? 'My Apartment 302 Electricity Bill' : 'My Electricity & Power Bills') : 'Electricity & Sub-Meter Utility Billing'}</span>
               </h3>
               <p className="text-xs text-[#666666] mt-0.5">
                 {activeRole === 'tenant'
-                  ? 'Official BESCOM power readings, tariff breakdown, and direct WhatsApp sharing'
+                  ? 'Official utility power readings, tariff breakdown, and direct WhatsApp sharing'
                   : 'Track individual unit sub-meters, compute power bills, and dispatch WhatsApp payment links'}
               </p>
             </div>
@@ -748,54 +827,72 @@ export default function RentFlowOverview() {
           </div>
 
           {/* 3 Metric Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="organic-card p-5">
-              <span className="text-xs font-semibold text-[#666666]">Units Consumed (This Month)</span>
-              <div className="text-2xl font-black text-[#2a2a2a] font-tabular mt-1">
-                {activeRole === 'tenant' ? '210 kWh' : '710 kWh'}
-              </div>
-              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full mt-2 inline-block">
-                Sub-meters Calibrated
-              </span>
-            </div>
+          {(() => {
+            const totalUnitsConsumed = userElectricityBills.reduce((acc, b) => acc + (b.unitsConsumed || 0), 0);
+            const totalPowerDues = userElectricityBills.filter(b => b.status === 'Due').reduce((acc, b) => acc + b.totalAmount, 0);
+            const earliestDueBill = userElectricityBills.find(b => b.status === 'Due');
 
-            <div className="organic-card p-5">
-              <span className="text-xs font-semibold text-[#666666]">Tariff Rate / Unit</span>
-              <div className="text-2xl font-black text-[#2a2a2a] font-tabular mt-1">
-                ₹8.50 <span className="text-xs font-normal text-[#666666]">/ kWh</span>
-              </div>
-              <span className="text-[11px] font-bold text-[#2a2a2a] bg-[#f0f0f0] px-2 py-0.5 rounded-full mt-2 inline-block">
-                Govt Regulated Discom Rate
-              </span>
-            </div>
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="organic-card p-5">
+                  <span className="text-xs font-semibold text-[#666666]">Units Consumed (This Month)</span>
+                  <div className="text-2xl font-black text-[#2a2a2a] font-tabular mt-1">
+                    {totalUnitsConsumed} kWh
+                  </div>
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full mt-2 inline-block">
+                    {userElectricityBills.length > 0 ? 'Sub-meters Calibrated' : 'Zero Active Meters'}
+                  </span>
+                </div>
 
-            <div className="organic-card p-5">
-              <span className="text-xs font-semibold text-[#666666]">
-                {activeRole === 'tenant' ? 'Your Outstanding Bill' : 'Total Power Dues'}
-              </span>
-              <div className="text-2xl font-black text-amber-700 font-tabular mt-1">
-                {activeRole === 'tenant' ? '₹1,935' : '₹3,445'}
+                <div className="organic-card p-5">
+                  <span className="text-xs font-semibold text-[#666666]">Tariff Rate / Unit</span>
+                  <div className="text-2xl font-black text-[#2a2a2a] font-tabular mt-1">
+                    ₹8.50 <span className="text-xs font-normal text-[#666666]">/ kWh</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-[#2a2a2a] bg-[#f0f0f0] px-2 py-0.5 rounded-full mt-2 inline-block">
+                    Govt Regulated Discom Rate
+                  </span>
+                </div>
+
+                <div className="organic-card p-5">
+                  <span className="text-xs font-semibold text-[#666666]">
+                    {activeRole === 'tenant' ? 'Your Outstanding Bill' : 'Total Power Dues'}
+                  </span>
+                  <div className="text-2xl font-black text-amber-700 font-tabular mt-1">
+                    ₹{totalPowerDues.toLocaleString('en-IN')}
+                  </div>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full mt-2 inline-block ${
+                    earliestDueBill ? 'text-amber-800 bg-amber-50' : 'text-emerald-800 bg-emerald-50'
+                  }`}>
+                    {earliestDueBill ? `Due: ${earliestDueBill.dueDate}` : 'All dues cleared'}
+                  </span>
+                </div>
               </div>
-              <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full mt-2 inline-block">
-                Due: 15 Oct 2026
-              </span>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* Electricity Bills List */}
           <div className="organic-card overflow-hidden">
             <div className="p-4 border-b border-[#E0E0E0] bg-[#ffffff] flex items-center justify-between">
               <span className="font-extrabold text-xs text-[#2a2a2a]">
-                {activeRole === 'tenant' ? 'Apartment 302 Billing History' : 'All Unit Power Meters'}
+                {activeRole === 'tenant' ? (isDemoTenant ? 'Apartment 302 Billing History' : 'My Unit Billing History') : 'All Unit Power Meters'}
               </span>
               <span className="text-[11px] text-[#666666]">BESCOM Discom Provider</span>
             </div>
 
             <div className="divide-y divide-[#E0E0E0]">
-              {(activeRole === 'tenant' 
-                ? electricityBills.filter(b => b.unitNumber === '302') 
-                : electricityBills
-              ).map((bill) => (
+              {userElectricityBills.length === 0 ? (
+                <div className="p-12 text-center">
+                  <Zap className="h-8 w-8 text-[#B5B5B5] mx-auto mb-2 opacity-50" />
+                  <p className="text-xs font-bold text-[#666666]">No electricity or utility bills found</p>
+                  <p className="text-[11px] text-[#999999] mt-0.5">
+                    {activeRole === 'tenant'
+                      ? 'Utility bills uploaded by your property manager will appear here.'
+                      : 'Generate or upload sub-meter bills for your units above.'}
+                  </p>
+                </div>
+              ) : (
+                userElectricityBills.map((bill) => (
                 <div key={bill.id} className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-[#ffffff] transition">
                   <div className="flex items-center gap-3.5">
                     <div className="h-11 w-11 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center shrink-0">
@@ -894,7 +991,7 @@ export default function RentFlowOverview() {
                     </div>
                   </div>
                 </div>
-              ))}
+              )))}
             </div>
           </div>
         </div>
