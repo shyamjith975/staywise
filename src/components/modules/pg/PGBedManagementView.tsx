@@ -41,6 +41,9 @@ export default function PGBedManagementView() {
     pgBeds, 
     pgRooms, 
     pgMeals, 
+    addPgMeal,
+    updatePgMeal,
+    deletePgMeal,
     properties,
     updatePGBedStatus, 
     addNotification,
@@ -57,8 +60,49 @@ export default function PGBedManagementView() {
   const [selectedRoomFilter, setSelectedRoomFilter] = useState<string | null>(null);
   const [selectedPropertyFilter, setSelectedPropertyFilter] = useState<string | null>(null);
 
+  // Meal Modal State
+  const [isMealModalOpen, setIsMealModalOpen] = useState(false);
+  const [editingMealId, setEditingMealId] = useState<string | null>(null);
+  const [mealForm, setMealForm] = useState<{
+    mealType: 'Breakfast' | 'Lunch' | 'Dinner';
+    menu: string;
+    vendor: string;
+    costPerMeal: number;
+    optedInCount: number;
+  }>({
+    mealType: 'Breakfast',
+    menu: '',
+    vendor: 'Annapoorna Kitchens',
+    costPerMeal: 60,
+    optedInCount: 45
+  });
+
   // Check demo account vs real new onboarded owner
   const isDemoAccount = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
+
+  // Demo vs dynamic guardian & visitor states
+  const [guardianContacts, setGuardianContacts] = useState(isDemoAccount ? [
+    { id: 'g-1', studentName: 'Aditya Verma (Bed 101-A)', guardianName: 'Rajesh Verma (Father)', phone: '+91 98410 88219', status: 'Verified' },
+    { id: 'g-2', studentName: 'Varun Nair (Bed 101-B)', guardianName: 'S. Nair (Mother)', phone: '+91 94470 33100', status: 'Verified' }
+  ] : []);
+  const [isAddGuardianModalOpen, setIsAddGuardianModalOpen] = useState(false);
+  const [guardianForm, setGuardianForm] = useState({
+    studentName: '',
+    guardianName: '',
+    relationship: 'Father',
+    phone: ''
+  });
+
+  const [hostelVisitors, setHostelVisitors] = useState(isDemoAccount ? [
+    { id: 'v-1', name: 'Meenakshi Verma', purpose: 'Visiting Aditya (Room 101) • 4:00 PM - 6:30 PM', status: 'Checked Out' },
+    { id: 'v-2', name: 'Praveen K. (Laptop Repair)', purpose: 'Authorized Tech Vendor • In Common Room', status: 'Inside Campus' }
+  ] : []);
+  const [isLogVisitorModalOpen, setIsLogVisitorModalOpen] = useState(false);
+  const [visitorForm, setVisitorForm] = useState({
+    name: '',
+    purpose: '',
+    status: 'Inside Campus' as 'Inside Campus' | 'Checked Out'
+  });
 
   // For non-demo user, scope beds and rooms strictly to properties owned by currentUser
   const userOwnedProperties = isDemoAccount ? properties : properties.filter(p => p.ownerId === currentUser?.id);
@@ -149,8 +193,8 @@ export default function PGBedManagementView() {
             onClick={() => setActiveTab('LISTINGS')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'LISTINGS'
-                ? 'bg-[#263238] text-white shadow-sm'
-                : 'text-[#666666] hover:text-[#263238]'
+                ? 'bg-[#163B36] text-white shadow-xs'
+                : 'text-[#546E7A] hover:text-[#263238]'
             }`}
           >
             <Building2 className="h-3.5 w-3.5" />
@@ -160,8 +204,8 @@ export default function PGBedManagementView() {
             onClick={() => setActiveTab('BEDS')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'BEDS'
-                ? 'bg-[#263238] text-white shadow-sm'
-                : 'text-[#666666] hover:text-[#263238]'
+                ? 'bg-[#163B36] text-white shadow-xs'
+                : 'text-[#546E7A] hover:text-[#263238]'
             }`}
           >
             <BedDouble className="h-3.5 w-3.5" />
@@ -171,8 +215,8 @@ export default function PGBedManagementView() {
             onClick={() => setActiveTab('ELECTRICITY')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'ELECTRICITY'
-                ? 'bg-[#263238] text-white shadow-sm'
-                : 'text-[#666666] hover:text-[#263238]'
+                ? 'bg-[#163B36] text-white shadow-xs'
+                : 'text-[#546E7A] hover:text-[#263238]'
             }`}
           >
             <Zap className="h-3.5 w-3.5" />
@@ -182,8 +226,8 @@ export default function PGBedManagementView() {
             onClick={() => setActiveTab('MEALS')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'MEALS'
-                ? 'bg-[#263238] text-white shadow-sm'
-                : 'text-[#666666] hover:text-[#263238]'
+                ? 'bg-[#163B36] text-white shadow-xs'
+                : 'text-[#546E7A] hover:text-[#263238]'
             }`}
           >
             <Utensils className="h-3.5 w-3.5" />
@@ -193,8 +237,8 @@ export default function PGBedManagementView() {
             onClick={() => setActiveTab('HOSTEL')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'HOSTEL'
-                ? 'bg-[#263238] text-white shadow-sm'
-                : 'text-[#666666] hover:text-[#263238]'
+                ? 'bg-[#163B36] text-white shadow-xs'
+                : 'text-[#546E7A] hover:text-[#263238]'
             }`}
           >
             <Users className="h-3.5 w-3.5" />
@@ -1206,45 +1250,112 @@ export default function PGBedManagementView() {
       {activeTab === 'MEALS' && (
         <div className="space-y-4">
           <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] space-y-4">
-            <div>
-              <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider bg-emerald-50 px-2.5 py-0.5 rounded-full">
-                Mess &amp; Meal Operations
-              </span>
-              <h2 className="text-base font-extrabold text-slate-900 mt-1">PG &amp; Hostel Mess Management</h2>
-              <p className="text-xs text-slate-500">
-                Track daily meal attendance (Breakfast, Lunch, Dinner), meal subscriptions, and vendor billing.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider bg-emerald-50 px-2.5 py-0.5 rounded-full">
+                  Mess &amp; Meal Operations
+                </span>
+                <h2 className="text-base font-extrabold text-[#263238] mt-1">PG &amp; Hostel Mess Management</h2>
+                <p className="text-xs text-[#546E7A]">
+                  Track daily meal attendance (Breakfast, Lunch, Dinner), meal subscriptions, and vendor billing.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setEditingMealId(null);
+                  setMealForm({
+                    mealType: 'Breakfast',
+                    menu: '',
+                    vendor: 'Annapoorna Kitchens',
+                    costPerMeal: 60,
+                    optedInCount: 40
+                  });
+                  setIsMealModalOpen(true);
+                }}
+                className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition self-start sm:self-auto cursor-pointer"
+              >
+                <Plus className="h-4 w-4 text-[#C69A55]" />
+                <span>+ Add Meal Plan</span>
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {pgMeals.map((meal) => (
-                <div key={meal.id} className="p-4 rounded-2xl border border-slate-200 bg-[#ffffff] space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black text-slate-900">{meal.mealType}</span>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                      {meal.optedInCount} Students Opted-in
-                    </span>
+            {pgMeals.length === 0 ? (
+              <div className="py-10 text-center border border-dashed border-[#D2DDD7] rounded-2xl p-6">
+                <Utensils className="h-8 w-8 text-[#D2DDD7] mx-auto mb-2 opacity-50" />
+                <h4 className="text-xs font-bold text-[#263238]">No Meal Plans Configured</h4>
+                <p className="text-[11px] text-[#546E7A] mt-0.5">Click &ldquo;+ Add Meal Plan&rdquo; above to setup daily breakfast, lunch, or dinner menus.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {pgMeals.map((meal) => (
+                  <div key={meal.id} className="p-4 rounded-2xl border border-[#D2DDD7] bg-[#ffffff] space-y-3 flex flex-col justify-between hover:shadow-sm transition">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-[#263238]">{meal.mealType}</span>
+                        <span className="text-[10px] font-bold text-emerald-800 bg-[#E8F0EC] px-2 py-0.5 rounded-md border border-[#D2DDD7]">
+                          {meal.optedInCount} Students Opted-in
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#263238] leading-relaxed bg-[#F7F8F6] p-3 rounded-xl border border-[#D2DDD7]">
+                        {meal.menu}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 border-t border-[#D2DDD7] space-y-2">
+                      <div className="flex items-center justify-between text-[11px] text-[#546E7A]">
+                        <div>Vendor: <span className="font-semibold text-[#263238]">{meal.vendor}</span></div>
+                        <div className="font-bold text-[#163B36]">₹{meal.costPerMeal}/plate</div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2 pt-1">
+                        <button
+                          onClick={() => {
+                            setEditingMealId(meal.id);
+                            setMealForm({
+                              mealType: meal.mealType,
+                              menu: meal.menu,
+                              vendor: meal.vendor,
+                              costPerMeal: meal.costPerMeal,
+                              optedInCount: meal.optedInCount
+                            });
+                            setIsMealModalOpen(true);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-[#E8F0EC] hover:bg-[#DCE8E1] text-[#163B36] text-[11px] font-bold transition"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Remove the ${meal.mealType} meal plan?`)) {
+                              deletePgMeal(meal.id);
+                            }
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[11px] font-bold transition"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-600 leading-relaxed bg-white p-3 rounded-xl border border-slate-100">
-                    {meal.menu}
-                  </p>
-                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
-                    <div>Vendor: <span className="font-semibold text-slate-800">{meal.vendor}</span></div>
-                    <div className="font-bold text-slate-900">₹{meal.costPerMeal}/plate</div>
+                ))}
+              </div>
+            )}
+
+            {/* Monthly vendor payout dynamic estimate */}
+            {pgMeals.length > 0 && (
+              <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <div className="text-xs font-bold text-[#163B36]">Monthly Mess Vendor Payout Estimate</div>
+                  <div className="text-xs text-[#546E7A] mt-0.5">
+                    {pgMeals.map(m => `${m.optedInCount} ${m.mealType.toLowerCase()}`).join(' • ')} (Calculated over 30 days)
                   </div>
                 </div>
-              ))}
-            </div>
-
-            <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 flex items-center justify-between">
-              <div>
-                <div className="text-xs font-bold text-indigo-900">Monthly Mess Vendor Payout Estimate</div>
-                <div className="text-xs text-indigo-700 mt-0.5">Annapoorna Kitchens • 88 Average daily breakfast, 64 lunch, 92 dinner</div>
+                <div className="text-base font-black text-[#163B36] font-tabular">
+                  ₹{pgMeals.reduce((acc, m) => acc + (m.optedInCount * m.costPerMeal * 30), 0).toLocaleString('en-IN')} / month
+                </div>
               </div>
-              <div className="text-base font-black text-indigo-950">
-                ₹1,84,200 / month
-              </div>
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -1254,73 +1365,367 @@ export default function PGBedManagementView() {
         <div className="space-y-4">
           <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] space-y-4">
             <div>
-              <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider bg-indigo-50 px-2.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-bold text-[#163B36] uppercase tracking-wider bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
                 Hostel Operations &amp; Safety Protocol
               </span>
-              <h2 className="text-base font-extrabold text-slate-900 mt-1">Hostel Guardians &amp; Resident Log</h2>
-              <p className="text-xs text-slate-500">
+              <h2 className="text-base font-extrabold text-[#263238] mt-1">Hostel Guardians &amp; Resident Log</h2>
+              <p className="text-xs text-[#546E7A]">
                 Student guardian records, curfews, emergency contacts, visitor records, and community amenities.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-3">
-                <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
-                  <ShieldAlert className="h-4 w-4 text-indigo-600" />
-                  <span>Student Guardian Emergency Contacts</span>
-                </div>
-                <div className="space-y-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex justify-between">
-                    <div>
-                      <div className="font-bold text-slate-800">Aditya Verma (Bed 101-A)</div>
-                      <div className="text-[10px] text-slate-500">Guardian: Rajesh Verma (Father)</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-mono text-slate-700">+91 98410 88219</div>
-                      <div className="text-[10px] text-emerald-600 font-semibold">Verified</div>
-                    </div>
+              {/* Emergency Contacts Card */}
+              <div className="p-4 rounded-2xl border border-[#D2DDD7] bg-[#F7F8F6] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="font-bold text-xs text-[#263238] flex items-center gap-1.5">
+                    <ShieldAlert className="h-4 w-4 text-[#163B36]" />
+                    <span>Student Guardian Emergency Contacts</span>
                   </div>
+                  <button
+                    onClick={() => setIsAddGuardianModalOpen(true)}
+                    className="px-2.5 py-1 rounded-lg bg-white border border-[#D2DDD7] text-[#163B36] text-[11px] font-bold hover:bg-[#E8F0EC] transition"
+                  >
+                    + Add Contact
+                  </button>
+                </div>
 
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex justify-between">
-                    <div>
-                      <div className="font-bold text-slate-800">Varun Nair (Bed 101-B)</div>
-                      <div className="text-[10px] text-slate-500">Guardian: S. Nair (Mother)</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-mono text-slate-700">+91 94470 33100</div>
-                      <div className="text-[10px] text-emerald-600 font-semibold">Verified</div>
-                    </div>
+                {guardianContacts.length === 0 ? (
+                  <div className="p-6 text-center border border-dashed border-[#D2DDD7] rounded-xl bg-white">
+                    <p className="text-xs font-semibold text-[#546E7A]">No emergency guardian contacts logged</p>
+                    <p className="text-[10px] text-[#78909C] mt-0.5">Click &ldquo;+ Add Contact&rdquo; to store parent/guardian contact numbers.</p>
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-2 text-xs">
+                    {guardianContacts.map(g => (
+                      <div key={g.id} className="p-2.5 rounded-xl bg-white border border-[#D2DDD7] flex justify-between items-center">
+                        <div>
+                          <div className="font-bold text-[#263238]">{g.studentName}</div>
+                          <div className="text-[10px] text-[#546E7A]">Guardian: {g.guardianName}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-mono text-[#263238] font-bold">{g.phone}</div>
+                          <div className="text-[10px] text-emerald-800 font-semibold">{g.status}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-3">
-                <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
-                  <Users className="h-4 w-4 text-emerald-600" />
-                  <span>Hostel Visitor Log (Biometric Entry)</span>
-                </div>
-                <div className="space-y-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-slate-800">Meenakshi Verma</div>
-                      <div className="text-[10px] text-slate-500">Visiting Aditya (Room 101) • 4:00 PM - 6:30 PM</div>
-                    </div>
-                    <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">
-                      Checked Out
-                    </span>
+              {/* Visitor Log Card */}
+              <div className="p-4 rounded-2xl border border-[#D2DDD7] bg-[#F7F8F6] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="font-bold text-xs text-[#263238] flex items-center gap-1.5">
+                    <Users className="h-4 w-4 text-[#163B36]" />
+                    <span>Hostel Visitor Log (Biometric Entry)</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-slate-800">Praveen K. (Laptop Repair)</div>
-                      <div className="text-[10px] text-slate-500">Authorized Tech Vendor • In Common Room</div>
-                    </div>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                      Inside Campus
-                    </span>
-                  </div>
+                  <button
+                    onClick={() => setIsLogVisitorModalOpen(true)}
+                    className="px-2.5 py-1 rounded-lg bg-white border border-[#D2DDD7] text-[#163B36] text-[11px] font-bold hover:bg-[#E8F0EC] transition"
+                  >
+                    + Log Visitor
+                  </button>
                 </div>
+
+                {hostelVisitors.length === 0 ? (
+                  <div className="p-6 text-center border border-dashed border-[#D2DDD7] rounded-xl bg-white">
+                    <p className="text-xs font-semibold text-[#546E7A]">No visitor entries logged today</p>
+                    <p className="text-[10px] text-[#78909C] mt-0.5">Click &ldquo;+ Log Visitor&rdquo; to record biometric guest check-ins.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 text-xs">
+                    {hostelVisitors.map(v => (
+                      <div key={v.id} className="p-2.5 rounded-xl bg-white border border-[#D2DDD7] flex justify-between items-center">
+                        <div>
+                          <div className="font-bold text-[#263238]">{v.name}</div>
+                          <div className="text-[10px] text-[#546E7A]">{v.purpose}</div>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                          v.status === 'Inside Campus' 
+                            ? 'bg-[#E8F0EC] text-[#163B36] border border-[#D2DDD7]' 
+                            : 'bg-slate-100 text-[#546E7A]'
+                        }`}>
+                          {v.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Add/Edit Meal Plan */}
+      {isMealModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-[#D2DDD7] p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+              <h3 className="font-extrabold text-base text-[#263238]">
+                {editingMealId ? 'Edit Meal Plan' : 'Add New Meal Plan'}
+              </h3>
+              <button onClick={() => setIsMealModalOpen(false)} className="text-[#546E7A] hover:text-[#263238]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (editingMealId) {
+                  updatePgMeal(editingMealId, mealForm);
+                } else {
+                  addPgMeal({
+                    mealType: mealForm.mealType,
+                    menu: mealForm.menu,
+                    vendor: mealForm.vendor,
+                    costPerMeal: Number(mealForm.costPerMeal),
+                    optedInCount: Number(mealForm.optedInCount),
+                    date: new Date().toISOString().split('T')[0]
+                  });
+                }
+                setIsMealModalOpen(false);
+              }}
+              className="space-y-3 text-xs"
+            >
+              <div>
+                <label className="block text-[#546E7A] font-semibold mb-1">Meal Timing / Type</label>
+                <select
+                  value={mealForm.mealType}
+                  onChange={(e) => setMealForm({ ...mealForm, mealType: e.target.value as any })}
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                >
+                  <option value="Breakfast">Breakfast (Morning 7:30 - 9:30 AM)</option>
+                  <option value="Lunch">Lunch (Afternoon 12:30 - 2:30 PM)</option>
+                  <option value="Dinner">Dinner (Night 7:30 - 9:30 PM)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[#546E7A] font-semibold mb-1">Menu Description</label>
+                <textarea
+                  required
+                  rows={3}
+                  value={mealForm.menu}
+                  onChange={(e) => setMealForm({ ...mealForm, menu: e.target.value })}
+                  placeholder="e.g. South Indian Idli, Vada, Sambar, Chutney &amp; Filter Coffee"
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-medium focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#546E7A] font-semibold mb-1">Cost Per Plate (₹)</label>
+                  <input
+                    type="number"
+                    required
+                    min={1}
+                    value={mealForm.costPerMeal}
+                    onChange={(e) => setMealForm({ ...mealForm, costPerMeal: Number(e.target.value) })}
+                    className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#546E7A] font-semibold mb-1">Students Opted-In</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={mealForm.optedInCount}
+                    onChange={(e) => setMealForm({ ...mealForm, optedInCount: Number(e.target.value) })}
+                    className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[#546E7A] font-semibold mb-1">Catering / Kitchen Vendor</label>
+                <input
+                  type="text"
+                  required
+                  value={mealForm.vendor}
+                  onChange={(e) => setMealForm({ ...mealForm, vendor: e.target.value })}
+                  placeholder="e.g. Annapoorna Kitchens"
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer"
+              >
+                {editingMealId ? 'Save Changes' : 'Create Meal Plan'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Add Guardian Contact */}
+      {isAddGuardianModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-[#D2DDD7] p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+              <h3 className="font-extrabold text-base text-[#263238]">Add Emergency Guardian Contact</h3>
+              <button onClick={() => setIsAddGuardianModalOpen(false)} className="text-[#546E7A] hover:text-[#263238]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setGuardianContacts(prev => [
+                  ...prev,
+                  {
+                    id: `g-${Date.now()}`,
+                    studentName: guardianForm.studentName,
+                    guardianName: `${guardianForm.guardianName} (${guardianForm.relationship})`,
+                    phone: guardianForm.phone,
+                    status: 'Verified'
+                  }
+                ]);
+                addNotification('Guardian Contact Added', `Emergency record saved for ${guardianForm.studentName}.`, 'SYSTEM');
+                setIsAddGuardianModalOpen(false);
+                setGuardianForm({ studentName: '', guardianName: '', relationship: 'Father', phone: '' });
+              }}
+              className="space-y-3 text-xs"
+            >
+              <div>
+                <label className="block text-[#546E7A] font-semibold mb-1">Student &amp; Bed/Room</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Rahul Sharma (Bed 204-A)"
+                  value={guardianForm.studentName}
+                  onChange={(e) => setGuardianForm({ ...guardianForm, studentName: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#546E7A] font-semibold mb-1">Guardian Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Manoj Sharma"
+                  value={guardianForm.guardianName}
+                  onChange={(e) => setGuardianForm({ ...guardianForm, guardianName: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#546E7A] font-semibold mb-1">Relationship</label>
+                  <select
+                    value={guardianForm.relationship}
+                    onChange={(e) => setGuardianForm({ ...guardianForm, relationship: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                  >
+                    <option value="Father">Father</option>
+                    <option value="Mother">Mother</option>
+                    <option value="Local Guardian">Local Guardian</option>
+                    <option value="Sibling">Sibling</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[#546E7A] font-semibold mb-1">Emergency Phone</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+91 98765 43210"
+                    value={guardianForm.phone}
+                    onChange={(e) => setGuardianForm({ ...guardianForm, phone: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer"
+              >
+                Save Emergency Contact
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Log Visitor */}
+      {isLogVisitorModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-[#D2DDD7] p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+              <h3 className="font-extrabold text-base text-[#263238]">Log Campus Visitor</h3>
+              <button onClick={() => setIsLogVisitorModalOpen(false)} className="text-[#546E7A] hover:text-[#263238]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setHostelVisitors(prev => [
+                  {
+                    id: `v-${Date.now()}`,
+                    name: visitorForm.name,
+                    purpose: visitorForm.purpose,
+                    status: visitorForm.status
+                  },
+                  ...prev
+                ]);
+                addNotification('Visitor Pass Generated', `Visitor entry logged for ${visitorForm.name}.`, 'SYSTEM');
+                setIsLogVisitorModalOpen(false);
+                setVisitorForm({ name: '', purpose: '', status: 'Inside Campus' });
+              }}
+              className="space-y-3 text-xs"
+            >
+              <div>
+                <label className="block text-[#546E7A] font-semibold mb-1">Visitor Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Sunita Devi"
+                  value={visitorForm.name}
+                  onChange={(e) => setVisitorForm({ ...visitorForm, name: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#546E7A] font-semibold mb-1">Purpose / Student Visited</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Visiting Ananya (Room 202) • 3:00 PM - 5:30 PM"
+                  value={visitorForm.purpose}
+                  onChange={(e) => setVisitorForm({ ...visitorForm, purpose: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-medium text-[#263238] focus:bg-white focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#546E7A] font-semibold mb-1">Current Gate Status</label>
+                <select
+                  value={visitorForm.status}
+                  onChange={(e) => setVisitorForm({ ...visitorForm, status: e.target.value as any })}
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] font-bold text-[#263238] focus:bg-white focus:outline-none"
+                >
+                  <option value="Inside Campus">Inside Campus (Biometric Pass Active)</option>
+                  <option value="Checked Out">Checked Out</option>
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer"
+              >
+                Log Visitor Pass
+              </button>
+            </form>
           </div>
         </div>
       )}

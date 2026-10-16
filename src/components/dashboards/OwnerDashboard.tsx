@@ -586,8 +586,8 @@ export default function OwnerDashboard() {
                         onClick={() => setSelectedChartRange(range)}
                         className={`px-3 py-1 rounded-full text-[11px] font-bold transition ${
                           selectedChartRange === range
-                            ? 'bg-[#263238] text-[#163B36] shadow-2xs'
-                            : 'text-[#666666] hover:text-[#263238]'
+                            ? 'bg-[#163B36] text-white shadow-2xs'
+                            : 'text-[#263238]/70 hover:text-[#263238]'
                         }`}
                       >
                         {range}
@@ -680,7 +680,7 @@ export default function OwnerDashboard() {
                       }}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] sm:text-xs font-black text-[#163B36]">
+                        <span className="text-[11px] sm:text-xs font-black text-[#C69A55]">
                           {hoveredDay} May 2026 ({
                             hoveredDay === '01' ? 'Fri' :
                             hoveredDay === '02' ? 'Sat' :
@@ -690,7 +690,7 @@ export default function OwnerDashboard() {
                             hoveredDay === '06' ? 'Wed' : 'Thu'
                           })
                         </span>
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#263238] text-[#163B36] font-bold shrink-0">
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#163B36] text-white font-bold shrink-0">
                           {hoveredDay === '03' ? '🔥 Peak' : 'Recorded'}
                         </span>
                       </div>
@@ -880,12 +880,12 @@ export default function OwnerDashboard() {
                         onClick={() => setHoveredDay(id)}
                         className={`py-2 px-1 sm:px-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition flex flex-col items-center justify-center min-h-[44px] ${
                           isSelected
-                            ? 'bg-[#263238] text-[#163B36] shadow-sm ring-1 ring-[#263238]'
-                            : 'text-[#666666] hover:text-[#263238] hover:bg-[#E8F0EC] bg-transparent'
+                            ? 'bg-[#163B36] text-white shadow-sm ring-1 ring-[#163B36]'
+                            : 'text-[#263238]/70 hover:text-[#263238] hover:bg-[#E8F0EC] bg-transparent'
                         }`}
                       >
                         <span className="font-extrabold">{id} May</span>
-                        <span className={`text-[9px] font-medium transition ${isSelected ? 'text-[#163B36]/80' : 'text-[#666666]/70'}`}>
+                        <span className={`text-[9px] font-medium transition ${isSelected ? 'text-white/80' : 'text-[#263238]/60'}`}>
                           {dayOfWeek}
                         </span>
                       </button>
@@ -902,10 +902,10 @@ export default function OwnerDashboard() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-extrabold text-[#263238]">Current Operational Tasks</h3>
-                  <span className="text-xs text-[#263238] font-extrabold bg-[#163B36] px-2 py-0.5 rounded-full">Done 88%</span>
+                  <span className="text-xs text-white font-extrabold bg-[#163B36] px-2.5 py-0.5 rounded-full">Done 88%</span>
                 </div>
 
-                <button className="flex items-center gap-1 text-xs font-bold text-[#263238] hover:text-[#263238] transition">
+                <button className="flex items-center gap-1 text-xs font-bold text-[#263238] hover:text-[#163B36] transition">
                   <span>This Week</span>
                   <ChevronDown className="h-3 w-3 text-[#163B36]" />
                 </button>
@@ -973,18 +973,18 @@ export default function OwnerDashboard() {
                     className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-xs mx-auto"
                   />
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-[#263238] text-[#163B36] font-black text-2xl flex items-center justify-center border-2 border-white shadow-xs mx-auto">
+                  <div className="w-20 h-20 rounded-full bg-[#163B36] text-white font-black text-2xl flex items-center justify-center border-2 border-white shadow-xs mx-auto">
                     {(currentUser.name || 'Owner').charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full bg-[#163B36] ring-2 ring-[#263238]" />
+                <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full bg-[#C69A55] ring-2 ring-white" />
               </div>
 
               <div>
                 <h3 className="font-extrabold text-base text-[#263238]">
                   {currentUser.name || (isDemoAccount ? 'Vikram Singhania' : 'Property Owner')}
                 </h3>
-                <p className="text-xs text-[#666666] font-bold mt-0.5">
+                <p className="text-xs text-[#263238]/70 font-bold mt-0.5">
                   {currentUser.roleLabel || 'Property & Asset Host'}
                 </p>
               </div>
@@ -993,21 +993,21 @@ export default function OwnerDashboard() {
               <div className="flex items-center justify-center gap-3 pt-1">
                 <button 
                   onClick={() => alert('Call connected with tenant WhatsApp gateway')}
-                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-white hover:bg-[#163B36] transition shadow-2xs"
+                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-[#163B36] hover:bg-[#163B36] hover:text-white transition shadow-2xs"
                   title="Phone Call"
                 >
                   <Phone className="h-4 w-4" />
                 </button>
                 <button 
                   onClick={() => alert('Live video inspection room generated.')}
-                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-white hover:bg-[#163B36] transition shadow-2xs"
+                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-[#163B36] hover:bg-[#163B36] hover:text-white transition shadow-2xs"
                   title="Video Inspection"
                 >
                   <Video className="h-4 w-4" />
                 </button>
                 <button 
                   onClick={() => setActiveView('settings')}
-                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-white hover:bg-[#163B36] transition shadow-2xs"
+                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-[#163B36] hover:bg-[#163B36] hover:text-white transition shadow-2xs"
                   title="Settings"
                 >
                   <MoreVertical className="h-4 w-4" />
@@ -1057,7 +1057,7 @@ export default function OwnerDashboard() {
                       {item.type === 'file' && (
                         <div className="ml-9 p-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-between gap-2 shadow-2xs">
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="h-8 w-8 rounded-xl bg-[#263238] text-[#163B36] flex items-center justify-center font-bold text-[10px] shrink-0">
+                            <div className="h-8 w-8 rounded-xl bg-[#163B36] text-white flex items-center justify-center font-bold text-[10px] shrink-0">
                               PDF
                             </div>
                             <div className="truncate">
@@ -1128,8 +1128,8 @@ export default function OwnerDashboard() {
                   onClick={() => setHeatmapFilter(filter)}
                   className={`px-3 py-1 rounded-full text-xs font-bold transition ${
                     heatmapFilter === filter 
-                      ? 'bg-[#263238] text-[#163B36]' 
-                      : 'bg-white text-[#263238] hover:text-[#263238] border border-[#D2DDD7]'
+                      ? 'bg-[#163B36] text-white shadow-xs' 
+                      : 'bg-white text-[#263238] hover:bg-[#E8F0EC] border border-[#D2DDD7]'
                   }`}
                 >
                   {filter.replace('_', ' ')}
@@ -1526,7 +1526,7 @@ export default function OwnerDashboard() {
                   required
                 />
               </div>
-              <button type="submit" className="w-full py-2.5 rounded-full bg-[#263238] text-[#163B36] text-xs font-black hover:bg-[#263238] transition">
+              <button type="submit" className="w-full py-2.5 rounded-full bg-[#163B36] text-white text-xs font-black hover:bg-[#0F2925] transition shadow-xs">
                 Save &amp; Verify Bank Account
               </button>
             </form>
@@ -1542,7 +1542,7 @@ export default function OwnerDashboard() {
           <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-extrabold text-base text-[#263238]">Upload Document</h3>
-              <button onClick={() => setIsUploadDocModalOpen(false)} className="text-[#666666] hover:text-[#263238]">
+              <button onClick={() => setIsUploadDocModalOpen(false)} className="text-[#263238]/70 hover:text-[#263238]">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -1557,7 +1557,7 @@ export default function OwnerDashboard() {
                   required
                 />
               </div>
-              <button type="submit" className="w-full py-2.5 rounded-full bg-[#263238] text-[#163B36] text-xs font-black hover:bg-[#263238] transition">
+              <button type="submit" className="w-full py-2.5 rounded-full bg-[#163B36] text-white text-xs font-black hover:bg-[#0F2925] transition shadow-xs">
                 Upload to Vault
               </button>
             </form>

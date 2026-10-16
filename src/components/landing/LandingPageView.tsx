@@ -312,7 +312,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             onClick={(e) => handleNavClick(e, '#overview')}
             className="flex items-center gap-2 sm:gap-2.5 group cursor-pointer"
           >
-            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-[#263238] text-[#163B36] flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-150 shrink-0 font-black">
+            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-[#163B36] text-[#C69A55] flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-150 shrink-0 font-black">
               <span className="text-sm font-black">✦</span>
             </div>
             <div className="flex flex-col text-left">

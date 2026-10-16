@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, email, password, phone, role, portfolioName, city, propertyId, unitNumber } = validation.sanitizedData!;
+    const { name, email, password, phone, role, portfolioName, city, propertyId, unitNumber, subscriptionPlan, billingCycle } = validation.sanitizedData!;
 
     // 2. Check if user already exists
     const existingUser = await db.users.findByEmail(email);
@@ -96,8 +96,8 @@ export async function POST(req: NextRequest) {
           userId: user.id,
           ownerName: user.name,
           entityName: `${user.name} Asset Holdings`,
-          planId: 'growth_pro',
-          billingCycle: 'annual',
+          planId: subscriptionPlan || 'starter',
+          billingCycle: billingCycle || 'monthly',
           autopayMethod: 'CARD',
           autopayMaskedDetails: '•••• 4242'
         });

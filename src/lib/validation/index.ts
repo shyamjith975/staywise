@@ -138,6 +138,8 @@ export interface SignupPayload {
   city?: string;
   propertyId?: string;
   unitNumber?: string;
+  subscriptionPlan?: 'starter' | 'growth_pro' | 'enterprise';
+  billingCycle?: 'monthly' | 'annual';
 }
 
 export function validateSignupPayload(body: any): ValidationResult<SignupPayload> {
@@ -179,6 +181,9 @@ export function validateSignupPayload(body: any): ValidationResult<SignupPayload
 
   const portfolioName = sanitizeString(body.portfolioName || `${name}'s Portfolio`);
   const city = sanitizeString(body.city || 'Bangalore');
+  const validPlans = ['starter', 'growth_pro', 'enterprise'];
+  const subscriptionPlan = validPlans.includes(body.subscriptionPlan) ? body.subscriptionPlan : 'starter';
+  const billingCycle = body.billingCycle === 'annual' ? 'annual' : 'monthly';
 
   return {
     isValid: errors.length === 0,
@@ -189,7 +194,9 @@ export function validateSignupPayload(body: any): ValidationResult<SignupPayload
       phone: body.phone ? sanitizeString(body.phone) : undefined,
       role: body.role,
       portfolioName,
-      city
+      city,
+      subscriptionPlan,
+      billingCycle
     },
     errors
   };

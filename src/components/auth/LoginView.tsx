@@ -44,6 +44,8 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPhone, setSignupPhone] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
+  const [signupPlan, setSignupPlan] = useState<'starter' | 'growth_pro' | 'enterprise'>('growth_pro');
+  const [signupCycle, setSignupCycle] = useState<'monthly' | 'annual'>('annual');
   const [signupLoading, setSignupLoading] = useState(false);
   const [signupError, setSignupError] = useState<string | null>(null);
 
@@ -174,7 +176,9 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
       phone: signupPhone,
       role: signupRole,
       portfolioName: `${signupName}'s Portfolio`,
-      city: 'Bangalore'
+      city: 'Bangalore',
+      subscriptionPlan: signupPlan,
+      billingCycle: signupCycle
     });
 
     setSignupLoading(false);
@@ -627,6 +631,105 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                   className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#163B36]"
                 />
               </div>
+
+              {/* Subscription Plan Picker for Owners & Property Managers */}
+              {(signupRole === 'owner' || signupRole === 'estate_manager' || signupRole === 'manager') && (
+                <div className="pt-2 border-t border-[#D2DDD7] space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-[#263238] font-bold text-xs">
+                      Choose Subscription Plan
+                    </label>
+                    <div className="flex items-center p-0.5 rounded-full bg-[#E8F0EC] border border-[#D2DDD7] text-[10px]">
+                      <button
+                        type="button"
+                        onClick={() => setSignupCycle('monthly')}
+                        className={`px-2 py-0.5 rounded-full font-bold transition ${
+                          signupCycle === 'monthly' ? 'bg-[#163B36] text-white' : 'text-[#546E7A]'
+                        }`}
+                      >
+                        Monthly
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSignupCycle('annual')}
+                        className={`px-2 py-0.5 rounded-full font-bold transition flex items-center gap-1 ${
+                          signupCycle === 'annual' ? 'bg-[#163B36] text-white' : 'text-[#546E7A]'
+                        }`}
+                      >
+                        <span>Annual</span>
+                        <span className="text-[8px] bg-[#C69A55] text-white px-1 rounded-full font-black">
+                          -17%
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      {
+                        id: 'starter' as const,
+                        name: 'Starter',
+                        price: signupCycle === 'annual' ? '₹0' : '₹0',
+                        period: 'forever',
+                        units: 'Up to 5 units',
+                        desc: 'Free tier for small landlords'
+                      },
+                      {
+                        id: 'growth_pro' as const,
+                        name: 'Growth Pro',
+                        price: signupCycle === 'annual' ? '₹28,990' : '₹2,999',
+                        period: signupCycle === 'annual' ? '/yr' : '/mo',
+                        units: 'Up to 50 units',
+                        popular: true,
+                        desc: 'Full WhatsApp AI & OCR'
+                      },
+                      {
+                        id: 'enterprise' as const,
+                        name: 'Enterprise',
+                        price: signupCycle === 'annual' ? '₹99,990' : '₹9,999',
+                        period: signupCycle === 'annual' ? '/yr' : '/mo',
+                        units: 'Unlimited units',
+                        desc: 'Escrow, SLA & EstateOS'
+                      }
+                    ].map(plan => {
+                      const isSelected = signupPlan === plan.id;
+                      return (
+                        <div
+                          key={plan.id}
+                          onClick={() => setSignupPlan(plan.id)}
+                          className={`p-2.5 rounded-xl border text-left cursor-pointer transition relative flex flex-col justify-between ${
+                            isSelected
+                              ? 'border-[#163B36] bg-[#E8F0EC] ring-1 ring-[#163B36]'
+                              : 'border-[#D2DDD7] bg-white hover:border-[#163B36]/50'
+                          }`}
+                        >
+                          {plan.popular && (
+                            <span className="absolute -top-2 right-2 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.2 bg-[#C69A55] text-white rounded-full">
+                              Popular
+                            </span>
+                          )}
+                          <div>
+                            <div className="font-extrabold text-[11px] text-[#263238] flex items-center justify-between">
+                              <span>{plan.name}</span>
+                              <span className={`h-3 w-3 rounded-full border flex items-center justify-center ${
+                                isSelected ? 'border-[#163B36] bg-[#163B36]' : 'border-[#D2DDD7]'
+                              }`}>
+                                {isSelected && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
+                              </span>
+                            </div>
+                            <div className="text-[12px] font-black text-[#163B36] mt-0.5">
+                              {plan.price}<span className="text-[9px] font-normal text-[#546E7A]">{plan.period}</span>
+                            </div>
+                          </div>
+                          <div className="text-[9px] text-[#546E7A] mt-1 pt-1 border-t border-[#D2DDD7]">
+                            {plan.units}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               <button
                 type="submit"

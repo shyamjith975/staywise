@@ -29,7 +29,8 @@ import {
   Sparkles,
   Building,
   Home,
-  AlertCircle
+  AlertCircle,
+  Utensils
 } from 'lucide-react';
 import { Roommate } from '../../types';
 import ViewElectricityBillDocumentModal from '../modules/rentflow/ViewElectricityBillDocumentModal';
@@ -80,6 +81,7 @@ export default function TenantDashboard() {
     setActiveView,
     electricityBills,
     updateElectricityBill,
+    pgMeals,
     addNotification
   } = useAppState();
 
@@ -136,6 +138,56 @@ export default function TenantDashboard() {
       setPanNumber('');
     }
   }, [isDemoTenant]);
+
+  // Tenant Mess & Food Plan State
+  const [isMealCustomizerOpen, setIsMealCustomizerOpen] = useState(false);
+  const [isViewMenuModalOpen, setIsViewMenuModalOpen] = useState(false);
+  const [foodOptedOut, setFoodOptedOut] = useState(false);
+  const [subscribedMeals, setSubscribedMeals] = useState<{ breakfast: boolean; lunch: boolean; dinner: boolean }>({
+    breakfast: true,
+    lunch: true,
+    dinner: true
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && currentTenant?.id) {
+      const optOutSaved = localStorage.getItem(`staywise_food_optout_${currentTenant.id}`);
+      if (optOutSaved !== null) setFoodOptedOut(optOutSaved === 'true');
+      const mealsSaved = localStorage.getItem(`staywise_meals_${currentTenant.id}`);
+      if (mealsSaved) {
+        try { setSubscribedMeals(JSON.parse(mealsSaved)); } catch (e) {}
+      }
+    }
+  }, [currentTenant?.id]);
+
+  const toggleMealOption = (mealKey: 'breakfast' | 'lunch' | 'dinner') => {
+    const next = { ...subscribedMeals, [mealKey]: !subscribedMeals[mealKey] };
+    setSubscribedMeals(next);
+    if (typeof window !== 'undefined' && currentTenant?.id) {
+      localStorage.setItem(`staywise_meals_${currentTenant.id}`, JSON.stringify(next));
+    }
+  };
+
+  const toggleFoodPlanStatus = () => {
+    const nextOptOut = !foodOptedOut;
+    setFoodOptedOut(nextOptOut);
+    if (typeof window !== 'undefined' && currentTenant?.id) {
+      localStorage.setItem(`staywise_food_optout_${currentTenant.id}`, String(nextOptOut));
+    }
+    if (nextOptOut) {
+      addNotification(
+        'Food Plan Removed',
+        'Mess subscription removed from your resident plan. ₹3,600/mo meal dues subtracted.',
+        'RENT'
+      );
+    } else {
+      addNotification(
+        'Food Plan Re-activated',
+        'Mess subscription active. Daily breakfast, lunch, and dinner pass restored.',
+        'RENT'
+      );
+    }
+  };
 
   const unitBill = isDemoTenant
     ? electricityBills.find(b => b.unitNumber === '302')
@@ -516,6 +568,126 @@ export default function TenantDashboard() {
             </div>
           </div>
 
+          {/* Mess & Dining Subscription Management Card (P1 Requirement) */}
+          <div className="rounded-3xl bg-white border border-[#D2DDD7] p-5 sm:p-6 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D1D5DB] pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center font-bold">
+                  <Utensils className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-[#263238]">Mess &amp; Dining Subscription</h3>
+                  <p className="text-xs text-[#546E7A]">
+                    {foodOptedOut
+                      ? 'You have opted out of the mess plan (₹3,600 deducted from monthly dues)'
+                      : `Active Plan: ${[subscribedMeals.breakfast && 'Breakfast', subscribedMeals.lunch && 'Lunch', subscribedMeals.dinner && 'Dinner'].filter(Boolean).join(', ') || 'No meals selected'}`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  onClick={() => setIsViewMenuModalOpen(true)}
+                  className="px-3 py-1.5 rounded-full bg-[#E8F0EC] hover:bg-[#DCE8E1] text-[#163B36] text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  <span>View Menu</span>
+                </button>
+                <button
+                  onClick={() => setIsMealCustomizerOpen(true)}
+                  className="px-3.5 py-1.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer"
+                >
+                  <Utensils className="h-3.5 w-3.5 text-[#C69A55]" />
+                  <span>Customize Meals</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Plan Details & Cost Strip */}
+            <div className="p-4 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
+                    foodOptedOut
+                      ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                      : 'bg-[#E8F0EC] text-[#163B36] border border-[#D2DDD7]'
+                  }`}>
+                    {foodOptedOut ? 'Opted Out / No Food' : 'Active Resident Plan'}
+                  </span>
+                  <span className="text-xs font-bold text-[#546E7A]">
+                    Vendor: Annapoorna Kitchens
+                  </span>
+                </div>
+                <p className="text-xs text-[#263238] mt-1 font-medium">
+                  {foodOptedOut
+                    ? 'No meal charges will be billed to your account. You can opt back in anytime.'
+                    : 'Unlimited mess dining pass during scheduled serving hours.'}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 self-end sm:self-auto">
+                <div className="text-right">
+                  <div className="text-[10px] text-[#546E7A] font-semibold">Monthly Mess Fee</div>
+                  <div className="text-base font-black text-[#163B36] font-tabular">
+                    {foodOptedOut ? '₹0' : '₹3,600 / mo'}
+                  </div>
+                </div>
+
+                <button
+                  onClick={toggleFoodPlanStatus}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition border cursor-pointer ${
+                    foodOptedOut
+                      ? 'bg-[#163B36] text-white hover:bg-[#102B27] border-[#163B36]'
+                      : 'bg-white text-rose-700 hover:bg-rose-50 border-rose-200'
+                  }`}
+                >
+                  {foodOptedOut ? 'Opt Back In' : 'Remove Food Plan'}
+                </button>
+              </div>
+            </div>
+
+            {/* Included Daily Meals Pills */}
+            {!foodOptedOut && (
+              <div className="grid grid-cols-3 gap-2.5 text-xs">
+                <div className={`p-3 rounded-2xl border transition ${
+                  subscribedMeals.breakfast 
+                    ? 'bg-[#E8F0EC] border-[#163B36]/30 text-[#163B36]' 
+                    : 'bg-white border-[#D2DDD7] text-[#546E7A] opacity-60'
+                }`}>
+                  <div className="font-extrabold text-[11px] flex items-center justify-between">
+                    <span>Breakfast</span>
+                    <span>{subscribedMeals.breakfast ? '✓ Included' : 'Paused'}</span>
+                  </div>
+                  <div className="text-[10px] text-[#546E7A] mt-0.5">7:30 - 9:30 AM</div>
+                </div>
+
+                <div className={`p-3 rounded-2xl border transition ${
+                  subscribedMeals.lunch 
+                    ? 'bg-[#E8F0EC] border-[#163B36]/30 text-[#163B36]' 
+                    : 'bg-white border-[#D2DDD7] text-[#546E7A] opacity-60'
+                }`}>
+                  <div className="font-extrabold text-[11px] flex items-center justify-between">
+                    <span>Lunch</span>
+                    <span>{subscribedMeals.lunch ? '✓ Included' : 'Paused'}</span>
+                  </div>
+                  <div className="text-[10px] text-[#546E7A] mt-0.5">12:30 - 2:30 PM</div>
+                </div>
+
+                <div className={`p-3 rounded-2xl border transition ${
+                  subscribedMeals.dinner 
+                    ? 'bg-[#E8F0EC] border-[#163B36]/30 text-[#163B36]' 
+                    : 'bg-white border-[#D2DDD7] text-[#546E7A] opacity-60'
+                }`}>
+                  <div className="font-extrabold text-[11px] flex items-center justify-between">
+                    <span>Dinner</span>
+                    <span>{subscribedMeals.dinner ? '✓ Included' : 'Paused'}</span>
+                  </div>
+                  <div className="text-[10px] text-[#546E7A] mt-0.5">7:30 - 9:30 PM</div>
+                </div>
+              </div>
+            )}
+          </div>
+
         </div>
 
         {/* Right Span 4: Power Bill & Service Requests */}
@@ -728,6 +900,124 @@ export default function TenantDashboard() {
                 Verify &amp; Save KYC
               </button>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Modal: Customize Meals */}
+      {isMealCustomizerOpen && (
+        <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-[#D2DDD7] p-6 max-w-md w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+              <div>
+                <h3 className="font-extrabold text-base text-[#263238]">Customize Daily Meal Plan</h3>
+                <p className="text-xs text-[#546E7A]">Select which meals you want included in your monthly rent</p>
+              </div>
+              <button onClick={() => setIsMealCustomizerOpen(false)} className="text-[#546E7A] hover:text-[#263238]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              {[
+                { key: 'breakfast' as const, label: 'Breakfast', timing: '7:30 - 9:30 AM', price: '₹1,200/mo', defaultMenu: 'Idli, Dosa, Poha, Coffee/Tea' },
+                { key: 'lunch' as const, label: 'Lunch', timing: '12:30 - 2:30 PM', price: '₹1,400/mo', defaultMenu: 'Rice, Dal, 2 Sabzi, Curd, Salad' },
+                { key: 'dinner' as const, label: 'Dinner', timing: '7:30 - 9:30 PM', price: '₹1,400/mo', defaultMenu: 'Roti, Paneer/Egg/Chicken, Rice, Kheer' }
+              ].map(meal => (
+                <div
+                  key={meal.key}
+                  onClick={() => toggleMealOption(meal.key)}
+                  className={`p-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+                    subscribedMeals[meal.key] && !foodOptedOut
+                      ? 'bg-[#E8F0EC] border-[#163B36] text-[#263238]'
+                      : 'bg-[#F7F8F6] border-[#D2DDD7] text-[#546E7A]'
+                  }`}
+                >
+                  <div className="space-y-0.5">
+                    <div className="font-extrabold text-sm text-[#263238] flex items-center gap-2">
+                      <span>{meal.label}</span>
+                      <span className="text-[10px] text-[#546E7A] font-normal">({meal.timing})</span>
+                    </div>
+                    <div className="text-[11px] text-[#546E7A]">{meal.defaultMenu}</div>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="font-bold text-xs text-[#163B36] block">{meal.price}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 inline-block ${
+                      subscribedMeals[meal.key] && !foodOptedOut ? 'bg-[#163B36] text-white' : 'bg-slate-200 text-[#546E7A]'
+                    }`}>
+                      {subscribedMeals[meal.key] && !foodOptedOut ? 'Included' : 'Paused'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs text-[#263238]">
+              <b>Flexible Policy:</b> Any meal plan updates take effect immediately on your digital rent ledger.
+            </div>
+
+            <button
+              onClick={() => {
+                setIsMealCustomizerOpen(false);
+                addNotification('Meal Plan Updated', 'Your customized daily dining preferences have been saved.', 'RENT');
+              }}
+              className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer"
+            >
+              Save Meal Preferences
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: View Food Menu */}
+      {isViewMenuModalOpen && (
+        <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl border border-[#D2DDD7] p-6 max-w-lg w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
+              <div>
+                <h3 className="font-extrabold text-base text-[#263238]">Weekly Hostel &amp; Mess Menu</h3>
+                <p className="text-xs text-[#546E7A]">Catered by Annapoorna Kitchens • Quality Audited Weekly</p>
+              </div>
+              <button onClick={() => setIsViewMenuModalOpen(false)} className="text-[#546E7A] hover:text-[#263238]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              {(pgMeals.length > 0 ? pgMeals : [
+                { id: '1', mealType: 'Breakfast', menu: 'Idli, Medu Vada, Coconut Chutney, Tomato Chutney, Piping Sambar & Coffee', costPerMeal: 60, vendor: 'Annapoorna Kitchens' },
+                { id: '2', mealType: 'Lunch', menu: 'Steamed Basmati Rice, Chapati, Dal Tadka, Seasonal Mix Veg, Curd & Salad', costPerMeal: 80, vendor: 'Annapoorna Kitchens' },
+                { id: '3', mealType: 'Dinner', menu: 'Wheat Phulkas, Paneer Butter Masala (Veg) / Egg Curry, Jeera Rice, Sweet Gulab Jamun', costPerMeal: 90, vendor: 'Annapoorna Kitchens' }
+              ]).map((m, idx) => (
+                <div key={idx} className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7] space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-[#263238] text-sm">{m.mealType}</span>
+                    <span className="text-[10px] font-bold text-[#163B36] bg-[#E8F0EC] px-2 py-0.5 rounded-md border border-[#D2DDD7]">
+                      ₹{m.costPerMeal}/plate
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#546E7A] leading-relaxed">{m.menu}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <button
+                onClick={() => {
+                  setIsViewMenuModalOpen(false);
+                  setIsMealCustomizerOpen(true);
+                }}
+                className="px-4 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#102B27] transition shadow-xs cursor-pointer"
+              >
+                Customize My Plan
+              </button>
+              <button
+                onClick={() => setIsViewMenuModalOpen(false)}
+                className="px-4 py-2 rounded-full bg-[#E8F0EC] text-[#263238] text-xs font-bold hover:bg-[#DCE8E1] transition cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

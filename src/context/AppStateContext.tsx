@@ -227,6 +227,8 @@ interface AppStateContextType {
     city?: string;
     propertyId?: string;
     unitNumber?: string;
+    subscriptionPlan?: 'starter' | 'growth_pro' | 'enterprise';
+    billingCycle?: 'monthly' | 'annual';
   }) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   activeRole: UserRole;
@@ -256,6 +258,9 @@ interface AppStateContextType {
   pgBeds: PGBed[];
   pgRooms: PGRoom[];
   pgMeals: PGMealPlan[];
+  addPgMeal: (meal: Omit<PGMealPlan, 'id'>) => void;
+  updatePgMeal: (id: string, meal: Partial<PGMealPlan>) => void;
+  deletePgMeal: (id: string) => void;
   commercialUnits: CommercialUnit[];
   camExpenses: CAMExpenseItem[];
   commercialVisitors: CommercialVisitor[];
@@ -528,6 +533,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     city?: string;
     propertyId?: string;
     unitNumber?: string;
+    subscriptionPlan?: 'starter' | 'growth_pro' | 'enterprise';
+    billingCycle?: 'monthly' | 'annual';
   }): Promise<{ success: boolean; error?: string }> => {
     try {
       const res = await fetch('/api/auth/signup', {
@@ -1352,6 +1359,25 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const addPgMeal = (mealData: Omit<PGMealPlan, 'id'>) => {
+    const newMeal: PGMealPlan = {
+      ...mealData,
+      id: `meal-${Date.now()}`
+    };
+    setPgMeals(prev => [newMeal, ...prev]);
+    addNotification('Meal Plan Created', `${newMeal.mealType} meal plan (${newMeal.vendor}) added successfully.`, 'SYSTEM');
+  };
+
+  const updatePgMeal = (id: string, mealData: Partial<PGMealPlan>) => {
+    setPgMeals(prev => prev.map(m => m.id === id ? { ...m, ...mealData } : m));
+    addNotification('Meal Plan Updated', `Meal plan details updated.`, 'SYSTEM');
+  };
+
+  const deletePgMeal = (id: string) => {
+    setPgMeals(prev => prev.filter(m => m.id !== id));
+    addNotification('Meal Plan Deleted', `Meal plan removed from mess operations.`, 'SYSTEM');
+  };
+
   const refreshSubscription = async () => {
     try {
       const res = await fetch('/api/subscription');
@@ -1523,6 +1549,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       pgBeds,
       pgRooms,
       pgMeals,
+      addPgMeal,
+      updatePgMeal,
+      deletePgMeal,
       commercialUnits,
       camExpenses,
       commercialVisitors,

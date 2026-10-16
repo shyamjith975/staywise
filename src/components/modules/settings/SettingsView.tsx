@@ -68,14 +68,16 @@ export default function SettingsView() {
     } catch (e) {}
   };
 
+  const isDemoAccount = currentUser.email === 'vikram@staywise.in' || currentUser.email === 'owner@staywise.com' || currentUser.id === 'user-owner-vikram';
+
   // Form State: Portfolio & Entity
-  const [entityName, setEntityName] = useState('Singhania Asset Holdings LLP');
-  const [ownerName, setOwnerName] = useState('Vikram Singhania');
-  const [panNumber, setPanNumber] = useState('AAACS1928K');
-  const [gstin, setGstin] = useState('29AAACS1928K1Z5');
-  const [supportPhone, setSupportPhone] = useState('+91 98450 11928');
-  const [supportEmail, setSupportEmail] = useState('vikram.singhania@staywise.com');
-  const [registeredAddress, setRegisteredAddress] = useState('Level 8, Prestige Trade Tower, Palace Road, Bengaluru 560001');
+  const [entityName, setEntityName] = useState(isDemoAccount ? 'Singhania Asset Holdings LLP' : (currentUser.name ? `${currentUser.name} Properties` : ''));
+  const [ownerName, setOwnerName] = useState(isDemoAccount ? 'Vikram Singhania' : (currentUser.name || ''));
+  const [panNumber, setPanNumber] = useState(isDemoAccount ? 'AAACS1928K' : '');
+  const [gstin, setGstin] = useState(isDemoAccount ? '29AAACS1928K1Z5' : '');
+  const [supportPhone, setSupportPhone] = useState(isDemoAccount ? '+91 98450 11928' : ((currentUser as any).phone || ''));
+  const [supportEmail, setSupportEmail] = useState(isDemoAccount ? 'vikram.singhania@staywise.com' : (currentUser.email || ''));
+  const [registeredAddress, setRegisteredAddress] = useState(isDemoAccount ? 'Level 8, Prestige Trade Tower, Palace Road, Bengaluru 560001' : '');
 
   // Form State: Rent Automation Rules
   const [rentDueDay, setRentDueDay] = useState(1);
@@ -96,10 +98,10 @@ export default function SettingsView() {
   const [commonAreaPowerRatio, setCommonAreaPowerRatio] = useState(10);
 
   // Form State: Banking & UPI
-  const [bankAccount, setBankAccount] = useState('918020048192842');
-  const [ifsc, setIfsc] = useState('UTIB0000042');
-  const [bankName, setBankName] = useState('Axis Bank (Escrow Banking Division)');
-  const [upiId, setUpiId] = useState('staywise.escrow@axisbank');
+  const [bankAccount, setBankAccount] = useState(isDemoAccount ? '918020048192842' : '');
+  const [ifsc, setIfsc] = useState(isDemoAccount ? 'UTIB0000042' : '');
+  const [bankName, setBankName] = useState(isDemoAccount ? 'Axis Bank (Escrow Banking Division)' : '');
+  const [upiId, setUpiId] = useState(isDemoAccount ? 'staywise.escrow@axisbank' : '');
   const [autoSweepCadence, setAutoSweepCadence] = useState('Daily at 18:00 IST');
 
   // Save handler
@@ -221,13 +223,17 @@ export default function SettingsView() {
           onClick={() => handleTabChange('SUBSCRIPTION')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'SUBSCRIPTION'
-              ? 'bg-[#263238] text-[#163B36] shadow-sm'
-              : 'text-[#666666] hover:text-[#263238] hover:bg-white'
+              ? 'bg-[#163B36] text-white shadow-xs'
+              : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
           }`}
         >
-          <Crown className="h-4 w-4 text-amber-400" />
+          <Crown className={`h-4 w-4 ${activeTab === 'SUBSCRIPTION' ? 'text-[#C69A55]' : 'text-amber-500'}`} />
           <span>Subscription &amp; Plans</span>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#163B36]/30 text-[#163B36] font-extrabold border border-[#163B36]/40">
+          <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold border ${
+            activeTab === 'SUBSCRIPTION'
+              ? 'bg-white/20 text-white border-white/30'
+              : 'bg-[#E8F0EC] text-[#163B36] border-[#D2DDD7]'
+          }`}>
             Active
           </span>
         </button>
@@ -236,8 +242,8 @@ export default function SettingsView() {
           onClick={() => handleTabChange('PORTFOLIO')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'PORTFOLIO'
-              ? 'bg-[#263238] text-[#163B36] shadow-sm'
-              : 'text-[#666666] hover:text-[#263238] hover:bg-white'
+              ? 'bg-[#163B36] text-white shadow-xs'
+              : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
           }`}
         >
           <Building2 className="h-4 w-4" />
@@ -248,8 +254,8 @@ export default function SettingsView() {
           onClick={() => handleTabChange('RENT_RULES')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'RENT_RULES'
-              ? 'bg-[#263238] text-[#163B36] shadow-sm'
-              : 'text-[#666666] hover:text-[#263238] hover:bg-white'
+              ? 'bg-[#163B36] text-white shadow-xs'
+              : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
           }`}
         >
           <Sliders className="h-4 w-4" />
@@ -260,11 +266,11 @@ export default function SettingsView() {
           onClick={() => handleTabChange('UTILITIES')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'UTILITIES'
-              ? 'bg-[#263238] text-[#163B36] shadow-sm'
-              : 'text-[#666666] hover:text-[#263238] hover:bg-white'
+              ? 'bg-[#163B36] text-white shadow-xs'
+              : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
           }`}
         >
-          <Zap className="h-4 w-4 text-amber-500" />
+          <Zap className={`h-4 w-4 ${activeTab === 'UTILITIES' ? 'text-[#C69A55]' : 'text-amber-500'}`} />
           <span>Electricity &amp; Utilities</span>
         </button>
 
@@ -272,8 +278,8 @@ export default function SettingsView() {
           onClick={() => handleTabChange('BANKING')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'BANKING'
-              ? 'bg-[#263238] text-[#163B36] shadow-sm'
-              : 'text-[#666666] hover:text-[#263238] hover:bg-white'
+              ? 'bg-[#163B36] text-white shadow-xs'
+              : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
           }`}
         >
           <CreditCard className="h-4 w-4" />
@@ -284,8 +290,8 @@ export default function SettingsView() {
           onClick={() => handleTabChange('DELEGATES')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'DELEGATES'
-              ? 'bg-[#263238] text-[#163B36] shadow-sm'
-              : 'text-[#666666] hover:text-[#263238] hover:bg-white'
+              ? 'bg-[#163B36] text-white shadow-xs'
+              : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
           }`}
         >
           <Users className="h-4 w-4" />
@@ -296,8 +302,8 @@ export default function SettingsView() {
           onClick={() => handleTabChange('SECURITY')}
           className={`px-4 py-2.5 rounded-2xl font-bold flex items-center gap-2 whitespace-nowrap transition ${
             activeTab === 'SECURITY'
-              ? 'bg-[#263238] text-[#163B36] shadow-sm'
-              : 'text-[#666666] hover:text-[#263238] hover:bg-white'
+              ? 'bg-[#163B36] text-white shadow-xs'
+              : 'text-[#263238]/70 hover:text-[#263238] hover:bg-white'
           }`}
         >
           <ShieldCheck className="h-4 w-4" />
@@ -424,25 +430,25 @@ export default function SettingsView() {
                 <div className="flex justify-between items-center text-[#666666]">
                   <span>Annual Invoiced Fee:</span>
                   <span className="font-black text-[#263238] text-sm">
-                    ₹{(subscription?.amount || 79990).toLocaleString('en-IN')}
+                    ₹{(subscription?.amount ?? (isDemoAccount ? 79990 : 0)).toLocaleString('en-IN')}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-[#666666]">
                   <span>GST Applicable (18%):</span>
-                  <span className="font-bold text-[#263238]">Included (₹12,202)</span>
+                  <span className="font-bold text-[#263238]">{subscription?.amount ? 'Included (18% GST)' : (isDemoAccount ? 'Included (₹12,202)' : '₹0')}</span>
                 </div>
                 <div className="flex justify-between items-center text-[#666666]">
                   <span>Active Payment Method:</span>
-                  <span className="font-bold text-[#263238]">{subscription?.paymentMethod || 'Axis Bank Escrow Auto-Debit'}</span>
+                  <span className="font-bold text-[#263238]">{subscription?.paymentMethod || (isDemoAccount ? 'Axis Bank Escrow Auto-Debit' : 'Platform Billing')}</span>
                 </div>
                 <div className="flex justify-between items-center text-[#666666]">
                   <span>Billing Entity GSTIN:</span>
-                  <span className="font-mono text-[#263238] font-semibold">{subscription?.gstin || '29AAACS1928K1Z5'}</span>
+                  <span className="font-mono text-[#263238] font-semibold">{subscription?.gstin || (isDemoAccount ? '29AAACS1928K1Z5' : (gstin || 'Unregistered / Exempt'))}</span>
                 </div>
                 <div className="flex justify-between items-center text-[#666666]">
                   <span>Last Cleared Txn:</span>
                   <span className="font-mono text-[11px] text-[#263238] bg-[#E8F0EC] px-1.5 py-0.5 rounded font-bold">
-                    {subscription?.lastPaymentTxnId || 'TXN-STAY-SUB-SECURE-98124'}
+                    {subscription?.lastPaymentTxnId || (isDemoAccount ? 'TXN-STAY-SUB-SECURE-98124' : 'TRIAL-ACTIVE')}
                   </span>
                 </div>
               </div>
@@ -585,20 +591,23 @@ export default function SettingsView() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E0E0E0]">
-                  {(subscription?.history && subscription.history.length > 0 ? subscription.history : [
-                    {
-                      invoiceId: 'INV-STAY-SUB-2026-001',
-                      date: '01 Oct 2026',
-                      amount: 79990,
-                      currency: 'INR',
-                      planId: 'growth_pro',
-                      planName: 'Growth Portfolio Pro OS (Annual)',
-                      billingCycle: 'annual',
-                      txnId: 'TXN-STAY-SUB-SECURE-98124',
-                      paymentMethod: 'Axis Bank Escrow Auto-Debit',
-                      status: 'PAID'
-                    }
-                  ]).map((item, idx) => (
+                  {((subscription?.history && subscription.history.length > 0)
+                    ? subscription.history 
+                    : (isDemoAccount ? [
+                      {
+                        invoiceId: 'INV-STAY-SUB-2026-001',
+                        date: '01 Oct 2026',
+                        amount: 79990,
+                        currency: 'INR',
+                        planId: 'growth_pro',
+                        planName: 'Growth Portfolio Pro OS (Annual)',
+                        billingCycle: 'annual',
+                        txnId: 'TXN-STAY-SUB-SECURE-98124',
+                        paymentMethod: 'Axis Bank Escrow Auto-Debit',
+                        status: 'PAID'
+                      }
+                    ] : [])
+                  ).map((item, idx) => (
                     <tr key={idx} className="hover:bg-[#ffffff]">
                       <td className="py-3 font-mono font-bold text-[#263238]">{item.invoiceId}</td>
                       <td className="py-3 text-[#666666]">{item.date}</td>
@@ -622,6 +631,14 @@ export default function SettingsView() {
                       </td>
                     </tr>
                   ))}
+                  {(!subscription?.history || subscription.history.length === 0) && !isDemoAccount && (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-[#546E7A]">
+                        <p className="font-bold text-xs">No subscription invoices generated yet.</p>
+                        <p className="text-[11px] text-[#78909C] mt-0.5">Your official GST tax invoices and receipts will appear here after plan renewals or payments.</p>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1325,7 +1342,7 @@ export default function SettingsView() {
                   <button
                     onClick={() => setSelectedCycle('monthly')}
                     className={`px-4 py-1.5 rounded-xl text-xs font-bold transition ${
-                      selectedCycle === 'monthly' ? 'bg-[#263238] text-[#163B36] shadow-sm' : 'text-[#666666] hover:text-[#263238]'
+                      selectedCycle === 'monthly' ? 'bg-[#163B36] text-white shadow-xs' : 'text-[#546E7A] hover:text-[#263238]'
                     }`}
                   >
                     Monthly Billing
@@ -1333,11 +1350,11 @@ export default function SettingsView() {
                   <button
                     onClick={() => setSelectedCycle('annual')}
                     className={`px-4 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-                      selectedCycle === 'annual' ? 'bg-[#263238] text-[#163B36] shadow-sm' : 'text-[#666666] hover:text-[#263238]'
+                      selectedCycle === 'annual' ? 'bg-[#163B36] text-white shadow-xs' : 'text-[#546E7A] hover:text-[#263238]'
                     }`}
                   >
                     <span>Annual Billing</span>
-                    <span className="px-1.5 py-0.2 rounded-full bg-[#163B36] text-white font-black text-[9px]">
+                    <span className="px-1.5 py-0.2 rounded-full bg-[#C69A55] text-white font-black text-[9px]">
                       SAVE 17%
                     </span>
                   </button>
@@ -1419,10 +1436,10 @@ export default function SettingsView() {
                           onClick={() => handleUpgradeTier(tierId)}
                           className={`w-full py-2.5 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 ${
                             isCurrent
-                              ? 'bg-white border border-[#263238] text-[#263238] hover:bg-[#E8F0EC]'
+                              ? 'bg-white border border-[#163B36] text-[#163B36] hover:bg-[#E8F0EC]'
                               : plan.popular
-                                ? 'bg-[#263238] text-[#163B36] hover:bg-[#263238] shadow-sm'
-                                : 'bg-[#263238] text-white hover:bg-[#263238] shadow-sm'
+                                ? 'bg-[#163B36] text-white hover:bg-[#102B27] shadow-xs'
+                                : 'bg-[#263238] text-white hover:bg-[#102B27] shadow-xs'
                           }`}
                         >
                           {isUpgrading ? (
@@ -1456,8 +1473,8 @@ export default function SettingsView() {
 
       {/* Floating Save Toast feedback */}
       {isSavedToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#263238] text-[#163B36] px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-[#163B36] animate-bounce">
-          <CheckCircle2 className="h-5 w-5 text-[#163B36]" />
+        <div className="fixed bottom-6 right-6 z-50 bg-[#163B36] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-[#C69A55] animate-bounce">
+          <CheckCircle2 className="h-5 w-5 text-[#C69A55]" />
           <span className="text-xs font-bold">Settings and automation rules saved!</span>
         </div>
       )}
