@@ -104,6 +104,18 @@ export type PropertyType =
   | 'Business Park' 
   | 'Logistics Park';
 
+export type TenancyType = 
+  | 'PG' 
+  | 'Flat' 
+  | 'Residential' 
+  | 'Warehouse' 
+  | 'Industrial' 
+  | 'Office' 
+  | 'Commercial' 
+  | 'Villa' 
+  | 'Estate'
+  | PropertyType;
+
 export interface PropertyUnit {
   id: string;
   propertyId: string;
@@ -166,7 +178,7 @@ export interface Tenant {
   rewardsBalance: number;
   emergencyContact: string;
   status?: 'Active' | 'Pending' | 'Moved Out' | 'Notice';
-  tenancyType?: 'PG' | 'Residential' | 'Commercial';
+  tenancyType?: TenancyType;
   hasFood?: boolean;
   roomSharing?: 'Single' | '2_Sharing' | '3_Sharing';
   coTenantId?: string;
@@ -706,7 +718,7 @@ export interface TenantConnectionRequest {
   moveOutReason?: string;
   inspectionNotes?: string;
   depositSettledAmount?: number;
-  tenancyType?: 'PG' | 'Residential' | 'Commercial';
+  tenancyType?: TenancyType;
   includeFoodPlan?: boolean;
   hasFood?: boolean;
   aadhaarNumber?: string;
@@ -735,6 +747,199 @@ export interface FoodMenuItem {
   availableTimings?: string;
   description?: string;
 }
+
+// ----------------------------------------------------
+// STAYWISE REWARDS (WISEPOINTS) — SECTIONS 51-54
+// ----------------------------------------------------
+export type RewardTier = 'SILVER' | 'GOLD' | 'PLATINUM';
+
+export interface RewardsAccount {
+  userId: string;
+  userName?: string;
+  userRole?: UserRole;
+  totalEarned: number;
+  totalRedeemed: number;
+  currentBalance: number;
+  pendingPoints: number;
+  currentStreak: number;
+  tier: RewardTier;
+  updatedAt: string;
+}
+
+export type RewardActionType = 
+  | 'RENT_PAID_ON_TIME'
+  | 'MOVE_IN_INSPECTION_COMPLETED'
+  | 'LEASE_RENEWAL'
+  | 'REFERRAL_COMPLETED'
+  | 'ANNUAL_STREAK_BONUS'
+  | 'MERCHANT_PURCHASE'
+  | 'DEPOSIT_PROTECT_BONUS'
+  | 'REDEMPTION_RENT_CREDIT'
+  | 'REDEMPTION_HOME_SERVICE'
+  | 'REDEMPTION_MERCHANT_VOUCHER'
+  | 'REDEMPTION_DEPOSIT_PROTECT_FEE'
+  | 'POINTS_REVERSED'
+  | 'POINTS_EXPIRED';
+
+export interface RewardsLedgerEntry {
+  id: string;
+  userId: string;
+  actionType: RewardActionType;
+  points: number; // Positive for earned, negative for redeemed
+  pointsType: 'EARNED' | 'REDEEMED' | 'REVERSED' | 'PENDING';
+  referenceId?: string; // invoiceId, contractId, referralId, etc.
+  referenceType?: 'INVOICE' | 'INSPECTION' | 'LEASE' | 'REFERRAL' | 'VOUCHER' | 'CLAIM';
+  description: string;
+  financialCost: number; // Cost in INR to platform/merchant
+  createdAt: string;
+}
+
+export interface RewardRule {
+  id: string;
+  ruleCode: string;
+  name: string;
+  description: string;
+  pointsAwarded: number;
+  isActive: boolean;
+  category: 'RENT' | 'TENANCY' | 'COMMUNITY' | 'MERCHANT' | 'LOYALTY';
+  monthlyCap: number;
+  partnerFunded: boolean;
+}
+
+export interface MerchantOffer {
+  id: string;
+  partnerName: string;
+  category: 'Dining' | 'Fitness' | 'Home Services' | 'Groceries' | 'Furnishing' | 'Lifestyle';
+  offerTitle: string;
+  discountDescription: string;
+  pointsRequired: number;
+  voucherCode: string;
+  imageUrl?: string;
+  terms: string;
+  isActive: boolean;
+  expiryDate?: string;
+}
+
+// ----------------------------------------------------
+// STAYWISE DEPOSIT PROTECT (ZERO-DEPOSIT) — SECTIONS 55-60
+// ----------------------------------------------------
+export type ProtectionApplicationStatus = 
+  | 'PENDING_ASSESSMENT' 
+  | 'APPROVED' 
+  | 'REJECTED' 
+  | 'CONSENTED' 
+  | 'ACTIVE';
+
+export type ProtectionContractStatus = 
+  | 'PENDING_CONSENT'
+  | 'ACTIVE'
+  | 'EXPIRED'
+  | 'CLAIM_PENDING'
+  | 'SETTLED'
+  | 'CANCELLED';
+
+export interface DepositProtectionApplication {
+  id: string;
+  tenantId: string;
+  tenantName: string;
+  tenantEmail?: string;
+  tenantPhone?: string;
+  ownerId: string;
+  ownerName?: string;
+  propertyId: string;
+  propertyName: string;
+  unitNumber: string;
+  monthlyRent: number;
+  traditionalDepositAmount: number; // e.g. ₹60,000
+  monthlyFee: number; // e.g. ₹750/mo
+  coverageLimit: number; // e.g. ₹1,00,000
+  riskScore: number; // 0-100 (e.g. 88)
+  eligibilityStatus: 'ELIGIBLE' | 'REQUIRES_CO_SIGNER' | 'INELIGIBLE';
+  status: ProtectionApplicationStatus;
+  disclosuresAccepted: boolean;
+  partnerProvider: string; // e.g. 'Staywise Partner Guarantee / Institutional Underwriter'
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProtectionContract {
+  id: string;
+  applicationId: string;
+  policyNumber: string;
+  tenantId: string;
+  tenantName: string;
+  ownerId: string;
+  ownerName: string;
+  propertyId: string;
+  propertyName: string;
+  unitNumber: string;
+  coverageLimit: number; // e.g. ₹1,00,000
+  monthlyFee: number; // e.g. ₹750/mo
+  startDate: string;
+  endDate: string;
+  status: ProtectionContractStatus;
+  partnerName: string;
+  certificateUrl?: string;
+  coveredRisks: string[];
+  exclusions: string[];
+  createdAt: string;
+}
+
+export interface ConditionReportItem {
+  id: string;
+  area: string; // 'Living Room', 'Kitchen', 'Master Bedroom', 'Bathroom', 'Balcony'
+  item: string; // 'Walls & Paint', 'Fixtures & Switches', 'Flooring & Tiles', 'Air Conditioner', 'Windows & Glass'
+  condition: 'EXCELLENT' | 'GOOD' | 'FAIR' | 'DAMAGED';
+  notes: string;
+  photoUrl?: string;
+}
+
+export interface PropertyConditionReport {
+  id: string;
+  contractId?: string;
+  propertyId: string;
+  propertyName: string;
+  unitNumber: string;
+  tenantId: string;
+  tenantName: string;
+  reportType: 'MOVE_IN' | 'MOVE_OUT';
+  inspectionDate: string;
+  overallCondition: 'Pristine' | 'Satisfactory' | 'Needs Attention' | 'Severe Damage';
+  items: ConditionReportItem[];
+  photos: string[];
+  notes: string;
+  verifiedBy: string;
+  status: 'SUBMITTED' | 'VERIFIED' | 'DISPUTED';
+  createdAt: string;
+}
+
+export type ClaimType = 'UNPAID_RENT' | 'TENANT_DAMAGE' | 'PAINTING_CLEANING' | 'COMBINED';
+export type ClaimStatus = 'FILED' | 'UNDER_REVIEW' | 'TENANT_REVIEW' | 'APPROVED' | 'DISPUTED' | 'SETTLED' | 'REJECTED';
+
+export interface ProtectionClaim {
+  id: string;
+  contractId: string;
+  policyNumber: string;
+  propertyId: string;
+  propertyName: string;
+  unitNumber: string;
+  ownerId: string;
+  ownerName: string;
+  tenantId: string;
+  tenantName: string;
+  claimType: ClaimType;
+  claimedAmount: number;
+  approvedAmount?: number;
+  deductible: number;
+  description: string;
+  evidenceUrls: string[];
+  status: ClaimStatus;
+  disputeReason?: string;
+  settlementDate?: string;
+  settlementTxnId?: string;
+  createdAt: string;
+}
+
 
 
 

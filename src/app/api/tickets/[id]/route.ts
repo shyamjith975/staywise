@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../../lib/db';
+import { invalidateBootstrapCache } from '../../../../lib/cache/apiCache';
 
 export async function PATCH(
   req: NextRequest,
@@ -12,6 +13,7 @@ export async function PATCH(
     if (!updated) {
       return NextResponse.json({ success: false, error: 'Ticket not found' }, { status: 404 });
     }
+    invalidateBootstrapCache();
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     console.error('[API /api/tickets/[id]] PATCH Error:', error);

@@ -65,7 +65,17 @@ import {
   TrialSignupPayload,
   TenantConnectionRequest,
   AuthorizedDelegate,
-  FoodMenuItem
+  FoodMenuItem,
+  TenancyType,
+  RewardsAccount,
+  RewardsLedgerEntry,
+  RewardRule,
+  MerchantOffer,
+  RewardActionType,
+  DepositProtectionApplication,
+  ProtectionContract,
+  PropertyConditionReport,
+  ProtectionClaim
 } from '../types';
 // Standalone typed defaults (Zero mockData dependency)
 const DEFAULT_PROPERTY_PASSPORT: PropertyPassportData = {
@@ -325,7 +335,7 @@ interface AppStateContextType {
     leaseStart: string;
     leaseEnd: string;
     rentDueDate: number;
-    tenancyType?: 'PG' | 'Residential' | 'Commercial';
+    tenancyType?: TenancyType;
     hasFood?: boolean;
     roomSharing?: 'Single' | '2_Sharing' | '3_Sharing';
     coTenant?: {
@@ -381,6 +391,23 @@ interface AppStateContextType {
   deleteEstateAsset: (id: string) => void;
   addStaffMember: (member: Omit<StaffMember, 'id'>) => void;
   deleteStaffMember: (id: string) => void;
+
+  // Staywise Rewards (WisePoints) & Deposit Protect
+  rewardsAccount: RewardsAccount | null;
+  rewardsLedger: RewardsLedgerEntry[];
+  rewardRules: RewardRule[];
+  merchantOffers: MerchantOffer[];
+  depositApplications: DepositProtectionApplication[];
+  protectionContracts: ProtectionContract[];
+  conditionReports: PropertyConditionReport[];
+  protectionClaims: ProtectionClaim[];
+  earnWisePoints: (actionType: RewardActionType, points: number, referenceId?: string, description?: string) => Promise<boolean>;
+  redeemWisePoints: (actionType: RewardActionType, points: number, referenceId?: string, description?: string) => Promise<{ success: boolean; voucherCode?: string; error?: string }>;
+  applyForDepositProtect: (appData: Partial<DepositProtectionApplication>) => Promise<boolean>;
+  submitConditionReport: (reportData: Partial<PropertyConditionReport>) => Promise<boolean>;
+  submitProtectionClaim: (claimData: Partial<ProtectionClaim>) => Promise<boolean>;
+  settleProtectionClaim: (claimId: string, approvedAmount?: number) => Promise<boolean>;
+  disputeProtectionClaim: (claimId: string, reason?: string) => Promise<boolean>;
 }
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
@@ -628,13 +655,17 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       sessionStorage.removeItem('staywise_active_portfolio');
       sessionStorage.removeItem('staywise_current_user');
       sessionStorage.setItem('staywise_is_authenticated', 'false');
+      sessionStorage.setItem('staywise_unauth_screen', 'login');
 
       // Purge cross-tab local storage
       localStorage.removeItem('staywise_active_view');
       localStorage.removeItem('staywise_active_role');
       localStorage.removeItem('staywise_active_portfolio');
       localStorage.removeItem('staywise_current_user');
+      localStorage.removeItem('staywise_tenant_connections');
+      sessionStorage.removeItem('staywise_tenant_connections');
       localStorage.setItem('staywise_is_authenticated', 'false');
+      localStorage.setItem('staywise_unauth_screen', 'login');
 
       // Clear client-side cookie references as secondary defense
       document.cookie = 'staywise_token=; Max-Age=0; path=/;';
@@ -652,6 +683,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setCommercialUnits([]);
     setLeads([]);
     setEstateAssets([]);
+    setTenantConnectionRequests([]);
+
+    // Directly show login page after logout
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
   };
   
   const [properties, setProperties] = useState<Property[]>([]);
@@ -683,16 +720,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [propertyPassport] = useState<PropertyPassportData>(DEFAULT_PROPERTY_PASSPORT);
   const [tenantPassport] = useState<TenantPassportData>(DEFAULT_TENANT_PASSPORT);
 
-  // Tenant Connections & Lifecycle
-  const [tenantConnectionRequests, setTenantConnectionRequests] = useState<TenantConnectionRequest[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const saved = localStorage.getItem('staywise_tenant_connections');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  // Tenant Connections & Lifecycle (Starts clean; authoritatively hydrated from SQLite database)
+  const [tenantConnectionRequests, setTenantConnectionRequests] = useState<TenantConnectionRequest[]>([]);
 
   // Authorized Delegates (CAs & Managers)
   const [delegates, setDelegates] = useState<AuthorizedDelegate[]>(() => {
@@ -787,6 +816,16 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   const [users, setUsers] = useState<UserAccount[]>([]);
 
+  // Staywise Rewards (WisePoints) & Deposit Protect State
+  const [rewardsAccount, setRewardsAccount] = useState<RewardsAccount | null>(null);
+  const [rewardsLedger, setRewardsLedger] = useState<RewardsLedgerEntry[]>([]);
+  const [rewardRules, setRewardRules] = useState<RewardRule[]>([]);
+  const [merchantOffers, setMerchantOffers] = useState<MerchantOffer[]>([]);
+  const [depositApplications, setDepositApplications] = useState<DepositProtectionApplication[]>([]);
+  const [protectionContracts, setProtectionContracts] = useState<ProtectionContract[]>([]);
+  const [conditionReports, setConditionReports] = useState<PropertyConditionReport[]>([]);
+  const [protectionClaims, setProtectionClaims] = useState<ProtectionClaim[]>([]);
+
   // Cross-tab real-time event broadcasting helper
   const broadcastSync = (action: string, payload?: any) => {
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
@@ -798,81 +837,147 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Module-scoped deduplication & ETag cache
+  const inFlightPromiseRef = React.useRef<Promise<void> | null>(null);
+  const lastEtagRef = React.useRef<string>('');
+  const lastLoadTimeRef = React.useRef<number>(0);
+
   // Authoritative data loading function directly from persistent SQLite via /api/bootstrap
-  const loadDatabaseData = async (userParam?: DemoCredential) => {
-    try {
-      const activeUser = userParam || currentUser;
-      const url = activeUser?.id ? `/api/bootstrap?userId=${encodeURIComponent(activeUser.id)}` : '/api/bootstrap';
-      const res = await fetch(url);
-      const json = await res.json();
-      if (json.success && json.data) {
-        const d = json.data;
-        if (Array.isArray(d.properties)) setProperties(d.properties);
-        if (Array.isArray(d.tenants)) setTenants(d.tenants);
-        if (Array.isArray(d.invoices)) setInvoices(d.invoices);
-        if (Array.isArray(d.ledger)) setLedger(d.ledger);
-        if (Array.isArray(d.depositDisputes)) setDepositDisputes(d.depositDisputes);
-        if (Array.isArray(d.influencerOffers)) setInfluencerOffers(d.influencerOffers);
-        if (Array.isArray(d.tickets)) setTickets(d.tickets);
-        if (Array.isArray(d.electricityBills)) setElectricityBills(d.electricityBills);
-        if (Array.isArray(d.leads)) setLeads(d.leads);
-        if (Array.isArray(d.estateAssets)) setEstateAssets(d.estateAssets);
-        if (Array.isArray(d.staff)) setStaff(d.staff);
-        if (Array.isArray(d.utilities)) setUtilities(d.utilities);
-        if (Array.isArray(d.aiInsights)) setAiInsights(d.aiInsights);
-        if (Array.isArray(d.pgBeds)) setPgBeds(d.pgBeds);
-        if (Array.isArray(d.pgRooms)) setPgRooms(d.pgRooms);
-        if (Array.isArray(d.pgMeals)) setPgMeals(d.pgMeals);
-        if (Array.isArray(d.commercialUnits)) setCommercialUnits(d.commercialUnits);
-        if (Array.isArray(d.camExpenses)) setCamExpenses(d.camExpenses);
-        if (Array.isArray(d.commercialVisitors)) setCommercialVisitors(d.commercialVisitors);
-        if (Array.isArray(d.moveFlowChecklist)) setMoveFlowChecklist(d.moveFlowChecklist);
-        if (Array.isArray(d.referrals)) setReferrals(d.referrals);
-        if (Array.isArray(d.users)) setUsers(d.users);
-        if (Array.isArray(d.tenantConnectionRequests)) setTenantConnectionRequests(d.tenantConnectionRequests);
-        if (d.subscription) setSubscription(d.subscription);
-        const isDemo = activeUser?.email === 'owner@staywise.com' || activeUser?.id === 'user-owner-vikram' || activeUser?.role === 'admin';
-        setNotifications(isDemo ? DEMO_NOTIFICATIONS : []);
-      }
-    } catch (err) {
-      console.warn('[Staywise Database] Hydrated using local store fallback:', err);
+  const loadDatabaseData = async (userParam?: DemoCredential, force = false): Promise<void> => {
+    // 0. Optimization: Do NOT fire unauthenticated bootstrap queries on landing page
+    if (!isAuthenticated && !userParam && !force) {
+      return;
     }
+
+    // 1. In-flight request deduplication: Reuse ongoing request rather than firing duplicate fetches
+    if (inFlightPromiseRef.current) {
+      return inFlightPromiseRef.current;
+    }
+
+    // 2. Micro-debounce: Skip if requested less than 5s ago unless explicitly forced by a mutation
+    if (!force && Date.now() - lastLoadTimeRef.current < 5000) {
+      return;
+    }
+
+    inFlightPromiseRef.current = (async () => {
+      try {
+        let activeUser = userParam;
+        if (!activeUser && typeof window !== 'undefined') {
+          const savedUserStr = sessionStorage.getItem('staywise_current_user') || localStorage.getItem('staywise_current_user');
+          if (savedUserStr) {
+            try { activeUser = JSON.parse(savedUserStr); } catch {}
+          }
+        }
+        if (!activeUser) activeUser = currentUser;
+
+        const url = activeUser?.id ? `/api/bootstrap?userId=${encodeURIComponent(activeUser.id)}` : '/api/bootstrap';
+        const headers: HeadersInit = {};
+        if (lastEtagRef.current && !force) {
+          headers['If-None-Match'] = lastEtagRef.current;
+        }
+
+        const res = await fetch(url, { headers });
+        lastLoadTimeRef.current = Date.now();
+
+        // HTTP 304 Not Modified: Data is identical, retain existing state with ZERO re-render overhead!
+        if (res.status === 304) {
+          return;
+        }
+
+        const etag = res.headers.get('ETag');
+        if (etag) lastEtagRef.current = etag;
+
+        const json = await res.json();
+        if (json.success && json.data) {
+          const d = json.data;
+          if (Array.isArray(d.properties)) setProperties(d.properties);
+          if (Array.isArray(d.tenants)) setTenants(d.tenants);
+          if (Array.isArray(d.invoices)) setInvoices(d.invoices);
+          if (Array.isArray(d.ledger)) setLedger(d.ledger);
+          if (Array.isArray(d.depositDisputes)) setDepositDisputes(d.depositDisputes);
+          if (Array.isArray(d.influencerOffers)) setInfluencerOffers(d.influencerOffers);
+          if (Array.isArray(d.tickets)) setTickets(d.tickets);
+          if (Array.isArray(d.electricityBills)) setElectricityBills(d.electricityBills);
+          if (Array.isArray(d.leads)) setLeads(d.leads);
+          if (Array.isArray(d.estateAssets)) setEstateAssets(d.estateAssets);
+          if (Array.isArray(d.staff)) setStaff(d.staff);
+          if (Array.isArray(d.utilities)) setUtilities(d.utilities);
+          if (Array.isArray(d.aiInsights)) setAiInsights(d.aiInsights);
+          if (Array.isArray(d.pgBeds)) setPgBeds(d.pgBeds);
+          if (Array.isArray(d.pgRooms)) setPgRooms(d.pgRooms);
+          if (Array.isArray(d.pgMeals)) setPgMeals(d.pgMeals);
+          if (Array.isArray(d.commercialUnits)) setCommercialUnits(d.commercialUnits);
+          if (Array.isArray(d.camExpenses)) setCamExpenses(d.camExpenses);
+          if (Array.isArray(d.commercialVisitors)) setCommercialVisitors(d.commercialVisitors);
+          if (Array.isArray(d.moveFlowChecklist)) setMoveFlowChecklist(d.moveFlowChecklist);
+          if (Array.isArray(d.referrals)) setReferrals(d.referrals);
+          if (Array.isArray(d.users)) setUsers(d.users);
+          if (Array.isArray(d.tenantConnectionRequests)) setTenantConnectionRequests(d.tenantConnectionRequests);
+          if (d.subscription) setSubscription(d.subscription);
+          if (d.rewardsAccount) setRewardsAccount(d.rewardsAccount);
+          if (Array.isArray(d.rewardsLedger)) setRewardsLedger(d.rewardsLedger);
+          if (Array.isArray(d.rewardRules)) setRewardRules(d.rewardRules);
+          if (Array.isArray(d.merchantOffers)) setMerchantOffers(d.merchantOffers);
+          if (Array.isArray(d.depositApplications)) setDepositApplications(d.depositApplications);
+          if (Array.isArray(d.protectionContracts)) setProtectionContracts(d.protectionContracts);
+          if (Array.isArray(d.conditionReports)) setConditionReports(d.conditionReports);
+          if (Array.isArray(d.protectionClaims)) setProtectionClaims(d.protectionClaims);
+          const isDemo = activeUser?.email === 'owner@staywise.com' || activeUser?.id === 'user-owner-vikram' || activeUser?.role === 'admin';
+          setNotifications(isDemo ? DEMO_NOTIFICATIONS : []);
+        }
+      } catch (err) {
+        console.warn('[Staywise Database] Hydrated using local store fallback:', err);
+      } finally {
+        inFlightPromiseRef.current = null;
+      }
+    })();
+
+    return inFlightPromiseRef.current;
   };
 
-  // Multi-tab real-time sync engine
+  // Multi-tab real-time sync engine with adaptive background throttling
   useEffect(() => {
-    loadDatabaseData();
+    // Only load database data when authenticated
+    if (isAuthenticated) {
+      loadDatabaseData();
+    }
 
-    // 1. BroadcastChannel: instant (<50ms) reaction across open tabs
+    // 1. BroadcastChannel: instant (<50ms) reaction across open tabs without network roundtrips
     let channel: BroadcastChannel | null = null;
     try {
       if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
         channel = new BroadcastChannel('staywise_db_sync');
         channel.onmessage = (event) => {
-          if (event.data && event.data.type === 'DATA_UPDATED') {
+          if (event.data && event.data.type === 'DATA_UPDATED' && isAuthenticated) {
             loadDatabaseData();
           }
         };
       }
     } catch (e) {}
 
-    // 2. Window focus listener: immediately pulls latest data when user clicks between tabs
-    const handleFocus = () => {
-      loadDatabaseData();
+    // 2. Window focus & visibility listener: pulls latest data when user returns to tab
+    const handleFocusOrVisible = () => {
+      if (typeof document !== 'undefined' && !document.hidden && isAuthenticated) {
+        loadDatabaseData();
+      }
     };
-    window.addEventListener('focus', handleFocus);
+    window.addEventListener('focus', handleFocusOrVisible);
+    document.addEventListener('visibilitychange', handleFocusOrVisible);
 
-    // 3. Fallback polling every 4 seconds to guarantee consistency across roles
+    // 3. Adaptive polling (60s): Pauses completely if tab is minimized/hidden or user is unauthenticated
     const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.hidden) return; // Tab in background: 0 requests
+      if (!isAuthenticated) return; // Unauthenticated visitors: 0 requests
       loadDatabaseData();
-    }, 4000);
+    }, 60000);
 
     return () => {
       if (channel) channel.close();
-      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('focus', handleFocusOrVisible);
+      document.removeEventListener('visibilitychange', handleFocusOrVisible);
       clearInterval(interval);
     };
-  }, []);
+  }, [isAuthenticated]);
 
   const addNotification = (title: string, message: string, type: NotificationItem['type']) => {
     const newNotif: NotificationItem = {
@@ -922,7 +1027,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     // CRITICAL: Reset activePortfolio to 'all' so new property is immediately visible in owner view
     setActivePortfolio('all');
     addNotification('Property Submitted for Verification', `${newProp.name} has been added. Pending Admin document audit and approval.`, 'SYSTEM');
-    broadcastSync('PROPERTY_ADDED', newProp);
 
     // Persist to database via API
     try {
@@ -941,7 +1045,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     // Optimistic UI update
     setProperties(prev => prev.map(p => p.id === propertyId ? { ...p, verificationStatus: 'APPROVED', status: 'ACTIVE' } : p));
     addNotification('Property Verified & Approved', `Property documents approved. Active across Staywise platform.`, 'SYSTEM');
-    broadcastSync('PROPERTY_APPROVED', { propertyId });
 
     // Persist to database via API
     try {
@@ -960,7 +1063,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     // Optimistic UI update
     setProperties(prev => prev.map(p => p.id === propertyId ? { ...p, ...updates } : p));
     addNotification('Property Updated', `Property details updated successfully.`, 'SYSTEM');
-    broadcastSync('PROPERTY_UPDATED', { propertyId, updates });
 
     // Persist to database via API
     try {
@@ -979,7 +1081,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     // Optimistic UI update
     setProperties(prev => prev.filter(p => p.id !== propertyId));
     addNotification('Property Removed', `Property was removed from portfolio.`, 'SYSTEM');
-    broadcastSync('PROPERTY_DELETED', { propertyId });
 
     // Persist to database via API
     try {
@@ -1046,7 +1147,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     leaseStart: string;
     leaseEnd: string;
     rentDueDate: number;
-    tenancyType?: 'PG' | 'Residential' | 'Commercial';
+    tenancyType?: TenancyType;
     hasFood?: boolean;
     roomSharing?: 'Single' | '2_Sharing' | '3_Sharing';
     coTenant?: {
@@ -1240,13 +1341,16 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       ? `${data.name} and ${data.coTenant.name} have been onboarded as shared roommates in Unit ${data.unitNumber}.`
       : `${data.name} has accepted the digital onboarding invite for Unit ${data.unitNumber}.`;
     addNotification('Tenant Connected', notifyMsg, 'RENT');
-    broadcastSync('TENANT_ONBOARDED', { tenantId });
 
     // Authoritative API call to persist to SQLite database
     try {
       const res = await fetch('/api/tenants', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-api-key': 'staywise_live_key_sec_99482',
+          'X-Staywise-Client-Key': 'staywise-client-v1'
+        },
         body: JSON.stringify(data)
       });
       const resJson = await res.json();
@@ -1328,7 +1432,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       }));
 
       addNotification('Payment Cleared', `₹${targetInv.totalAmount.toLocaleString('en-IN')} received via ${method} for Unit ${targetInv.unitNumber}. Receipt generated.`, 'RENT');
-      broadcastSync('INVOICE_PAID', { invoiceId, method });
     }
 
     // Persist payment to database via API
@@ -1358,7 +1461,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return t;
     }));
     addNotification('Ticket Approved', `Maintenance Quote for ticket #${ticketId} was approved. Vendor dispatched.`, 'MAINTENANCE');
-    broadcastSync('TICKET_APPROVED', { ticketId });
     
     // Also remove or resolve the corresponding AI insight
     setAiInsights(prev => prev.filter(ins => !ins.actionPayload?.includes(ticketId)));
@@ -1400,7 +1502,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     };
     setTickets(prev => [newTkt, ...prev]);
     addNotification('Ticket Raised', `${newTkt.category} ticket #${newTkt.ticketNumber} logged for Unit ${newTkt.unitNumber}.`, 'MAINTENANCE');
-    broadcastSync('TICKET_CREATED', newTkt);
 
     try {
       await fetch('/api/tickets', {
@@ -1600,15 +1701,64 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const req = tenantConnectionRequests.find(r => r.id === id);
     if (!req) return;
 
-    const targetProp = properties.find(p => p.id === req.propertyId) || properties[0];
+    const isDemo = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
+    const ownerProps = isDemo 
+      ? properties 
+      : properties.filter(p => p.ownerId === currentUser.id);
+
+    let targetProp = ownerProps.find(p => p.id === req.propertyId) || 
+                     ownerProps.find(p => p.name?.toLowerCase() === req.propertyName?.toLowerCase()) || 
+                     ownerProps[0];
+
+    // If this newly created owner hasn't created any property yet, auto-create an owned property for them
+    if (!targetProp) {
+      const autoPropId = req.propertyId || `prop-${Date.now()}`;
+      const autoPropName = req.propertyName || (currentUser.name ? `${currentUser.name}'s Residence` : 'Main Property');
+      const autoProp: Property = {
+        id: autoPropId,
+        ownerId: currentUser.id,
+        name: autoPropName,
+        type: (req.tenancyType === 'PG' ? 'PG' : req.tenancyType === 'Commercial' ? 'Commercial' : 'Apartment') as any,
+        portfolio: `${currentUser.name || 'Owner'}'s Portfolio`,
+        address: 'Main Boulevard',
+        city: 'Kozhikode',
+        state: 'Kerala',
+        pincode: '673001',
+        totalUnits: 10,
+        occupiedUnits: 1,
+        expectedMonthlyRent: req.monthlyRent || 25000,
+        collectedRent: 0,
+        pendingRent: 0,
+        imageUrl: '/images/properties/beach-road.jpg',
+        status: 'ACTIVE',
+        healthScore: 95,
+        verificationStatus: 'APPROVED',
+        amenities: ['Power Backup', 'Security', 'Water Supply'],
+        units: []
+      };
+
+      setProperties(prev => [autoProp, ...prev]);
+      targetProp = autoProp;
+
+      try {
+        await fetch('/api/properties', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(autoProp)
+        });
+      } catch (err) {
+        console.warn('Auto property persist warning:', err);
+      }
+    }
+
     const newTenant: Tenant = {
       id: `tenant-${Date.now()}`,
       userId: req.tenantUserId,
       name: req.tenantName,
       email: req.tenantEmail,
       phone: req.tenantPhone,
-      propertyId: targetProp?.id || 'prop-default',
-      propertyName: targetProp?.name || req.propertyName || 'Apartments',
+      propertyId: targetProp.id,
+      propertyName: targetProp.name,
       unitNumber: req.unitNumber,
       monthlyRent: req.monthlyRent,
       depositPaid: req.depositAmount,
@@ -1670,6 +1820,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           phone: newTenant.phone,
           email: newTenant.email,
           propertyId: newTenant.propertyId,
+          propertyName: newTenant.propertyName,
           unitNumber: newTenant.unitNumber,
           monthlyRent: newTenant.monthlyRent,
           deposit: newTenant.depositPaid,
@@ -1683,6 +1834,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           documents: newTenant.documents
         })
       });
+      broadcastSync('TENANT_APPROVED', { tenantId: newTenant.id, propertyId: targetProp.id });
+      await loadDatabaseData(currentUser);
     } catch (e) {
       console.warn('[TenantConnection] Approval sync error:', e);
     }
@@ -1989,6 +2142,217 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // ==========================================
+  // STAYWISE REWARDS & DEPOSIT PROTECT ACTIONS
+  // ==========================================
+  const earnWisePoints = async (
+    actionType: RewardActionType,
+    points: number,
+    referenceId?: string,
+    description?: string
+  ): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/rewards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser?.id,
+          actionType,
+          points,
+          referenceId,
+          description
+        })
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        setRewardsAccount(prev => prev ? {
+          ...prev,
+          currentBalance: json.data.newBalance,
+          totalEarned: prev.totalEarned + points,
+          currentStreak: actionType === 'RENT_PAID_ON_TIME' ? prev.currentStreak + 1 : prev.currentStreak
+        } : null);
+        setRewardsLedger(prev => [json.data.entry, ...prev]);
+        addNotification('WisePoints Earned! ✦', `+${points} WisePoints credited: ${description || actionType.replace(/_/g, ' ')}`, 'RENT');
+        broadcastSync('WISEPOINTS_EARNED', { points, actionType });
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('[earnWisePoints] Error:', err);
+      return false;
+    }
+  };
+
+  const redeemWisePoints = async (
+    actionType: RewardActionType,
+    points: number,
+    referenceId?: string,
+    description?: string
+  ): Promise<{ success: boolean; voucherCode?: string; error?: string }> => {
+    try {
+      const res = await fetch('/api/rewards/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser?.id,
+          actionType,
+          points,
+          referenceId,
+          description
+        })
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        setRewardsAccount(prev => prev ? {
+          ...prev,
+          currentBalance: json.data.newBalance,
+          totalRedeemed: prev.totalRedeemed + points
+        } : null);
+        if (json.data.ledgerEntry) {
+          setRewardsLedger(prev => [json.data.ledgerEntry, ...prev]);
+        }
+        addNotification('WisePoints Redeemed! ✦', `Redeemed ${points} WisePoints. Voucher: ${json.data.voucherCode}`, 'RENT');
+        broadcastSync('WISEPOINTS_REDEEMED', { points, actionType });
+        return { success: true, voucherCode: json.data.voucherCode };
+      }
+      return { success: false, error: json.error || 'Redemption failed' };
+    } catch (err: any) {
+      console.error('[redeemWisePoints] Error:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  const applyForDepositProtect = async (appData: Partial<DepositProtectionApplication>): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/deposit-protect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenantId: currentUser?.id,
+          tenantName: currentUser?.name,
+          tenantEmail: currentUser?.email,
+          ...appData
+        })
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        if (json.data.application) {
+          setDepositApplications(prev => [json.data.application, ...prev]);
+        }
+        if (json.data.contract) {
+          setProtectionContracts(prev => [json.data.contract, ...prev]);
+        }
+        addNotification('Deposit Protect Active! 🛡️', `Zero-Deposit Guarantee Policy #${json.data.contract?.policyNumber || 'ACTIVE'} generated!`, 'SYSTEM');
+        loadDatabaseData(undefined, true);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('[applyForDepositProtect] Error:', err);
+      return false;
+    }
+  };
+
+  const submitConditionReport = async (reportData: Partial<PropertyConditionReport>): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/deposit-protect/condition-reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenantId: currentUser?.id,
+          tenantName: currentUser?.name,
+          ...reportData
+        })
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        setConditionReports(prev => [json.data, ...prev]);
+        addNotification('Condition Report Verified! 📸', `Inspection report saved. +100 WisePoints rewarded!`, 'RENT');
+        loadDatabaseData(undefined, true);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('[submitConditionReport] Error:', err);
+      return false;
+    }
+  };
+
+  const submitProtectionClaim = async (claimData: Partial<ProtectionClaim>): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/deposit-protect/claims', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ownerId: currentUser?.id,
+          ownerName: currentUser?.name,
+          ...claimData
+        })
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        setProtectionClaims(prev => [json.data, ...prev]);
+        addNotification('Protection Claim Filed! ⚖️', `Claim for ₹${claimData.claimedAmount?.toLocaleString('en-IN')} submitted to underwriter risk pool.`, 'MAINTENANCE');
+        loadDatabaseData(undefined, true);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('[submitProtectionClaim] Error:', err);
+      return false;
+    }
+  };
+
+  const settleProtectionClaim = async (claimId: string, approvedAmount?: number): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/deposit-protect/claims', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'SETTLE_CLAIM',
+          claimId,
+          approvedAmount
+        })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setProtectionClaims(prev => prev.map(c => c.id === claimId ? { ...c, status: 'SETTLED', approvedAmount, settlementDate: new Date().toISOString() } : c));
+        addNotification('Claim Settled! 💰', `Payout cleared via Institutional Underwriter Guarantee!`, 'RENT');
+        loadDatabaseData(undefined, true);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('[settleProtectionClaim] Error:', err);
+      return false;
+    }
+  };
+
+  const disputeProtectionClaim = async (claimId: string, reason?: string): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/deposit-protect/claims', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'DISPUTE_CLAIM',
+          claimId,
+          disputeReason: reason
+        })
+      });
+      const json = await res.json();
+      if (json.success) {
+        setProtectionClaims(prev => prev.map(c => c.id === claimId ? { ...c, status: 'DISPUTED', disputeReason: reason } : c));
+        addNotification('Claim Disputed! 🛡️', `Referred to Staywise Arbitration & Review desk.`, 'SYSTEM');
+        loadDatabaseData(undefined, true);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('[disputeProtectionClaim] Error:', err);
+      return false;
+    }
+  };
+
   return (
     <AppStateContext.Provider value={{
       isAuthenticated,
@@ -2099,12 +2463,28 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       addEstateAsset,
       deleteEstateAsset,
       addStaffMember,
-      deleteStaffMember
+      deleteStaffMember,
+      rewardsAccount,
+      rewardsLedger,
+      rewardRules,
+      merchantOffers,
+      depositApplications,
+      protectionContracts,
+      conditionReports,
+      protectionClaims,
+      earnWisePoints,
+      redeemWisePoints,
+      applyForDepositProtect,
+      submitConditionReport,
+      submitProtectionClaim,
+      settleProtectionClaim,
+      disputeProtectionClaim
     }}>
       {children}
     </AppStateContext.Provider>
   );
 }
+
 
 export function useAppState() {
   const context = useContext(AppStateContext);

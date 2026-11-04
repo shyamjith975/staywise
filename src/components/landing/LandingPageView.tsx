@@ -40,6 +40,7 @@ import {
   Scale,
   Headphones
 } from 'lucide-react';
+import { color } from '../../lib/colors';
 
 interface LandingPageViewProps {
   onNavigateToLogin?: () => void;
@@ -299,7 +300,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F8F6] text-[#263238] selection:bg-[#163B36] selection:text-white font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-[#F7F8F6] text-[#171717] selection:bg-[#06110c] selection:text-white font-sans antialiased overflow-x-hidden">
       
       {/* ---------------------------------------------------- */}
       {/* 1. TOP RESPONSIVE HEADER BAR                         */}
@@ -312,11 +313,11 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             onClick={(e) => handleNavClick(e, '#overview')}
             className="flex items-center gap-2 sm:gap-2.5 group cursor-pointer"
           >
-            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-[#163B36] text-[#C69A55] flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-150 shrink-0 font-black">
+            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-[#06110c] text-[#a31c1b] flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform duration-150 shrink-0 font-black">
               <span className="text-sm font-black">✦</span>
             </div>
             <div className="flex flex-col text-left">
-              <span className="font-black text-sm sm:text-base tracking-tight text-[#263238] leading-none">
+              <span className="font-black text-sm sm:text-base tracking-tight text-[#171717] leading-none">
                 STAYWISE
               </span>
               <span className="text-[9px] text-[#666666] font-bold tracking-wider uppercase mt-0.5 hidden xs:inline">
@@ -331,76 +332,76 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           <a 
             href="#overview" 
             onClick={(e) => handleNavClick(e, '#overview')}
-            className="hover:text-[#263238] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#171717] transition-colors duration-100 cursor-pointer"
           >
             Home
           </a>
           <a 
             href="#pain-points" 
             onClick={(e) => handleNavClick(e, '#pain-points')}
-            className="hover:text-[#263238] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#171717] transition-colors duration-100 cursor-pointer"
           >
             Common Problems
           </a>
           <a 
             href="#interactive-building" 
             onClick={(e) => handleNavClick(e, '#interactive-building')}
-            className="hover:text-[#263238] transition-colors duration-100 flex items-center gap-1 font-bold text-[#263238] cursor-pointer"
+            className="hover:text-[#171717] transition-colors duration-100 flex items-center gap-1 font-bold text-[#171717] cursor-pointer"
           >
             <span>Property Types</span>
-            <span className="h-1.5 w-1.5 rounded-full bg-[#163B36] animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[#06110c] animate-pulse" />
           </a>
           <a 
             href="#everything-inside" 
             onClick={(e) => handleNavClick(e, '#everything-inside')}
-            className="hover:text-[#263238] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#171717] transition-colors duration-100 cursor-pointer"
           >
             Features
           </a>
           <a 
             href="#how-it-works" 
             onClick={(e) => handleNavClick(e, '#how-it-works')}
-            className="hover:text-[#263238] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#171717] transition-colors duration-100 cursor-pointer"
           >
             How It Works
           </a>
           <a 
             href="#pricing" 
             onClick={(e) => handleNavClick(e, '#pricing')}
-            className="hover:text-[#263238] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#171717] transition-colors duration-100 cursor-pointer"
           >
             Pricing
           </a>
           <a 
             href="#faq" 
             onClick={(e) => handleNavClick(e, '#faq')}
-            className="hover:text-[#263238] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#171717] transition-colors duration-100 cursor-pointer"
           >
             FAQ
           </a>
           <a 
             href="#resources" 
             onClick={(e) => handleNavClick(e, '#resources')}
-            className="hover:text-[#263238] transition-colors duration-100 cursor-pointer"
+            className="hover:text-[#171717] transition-colors duration-100 cursor-pointer"
           >
             Resources
           </a>
         </nav>
 
-        {/* Right Actions: Outlined Sign in + CTA + Hamburger Toggle */}
+        {/* Right Actions: Prominent Sign in First + Red CTA + Hamburger Toggle */}
         <div className="flex items-center gap-2 sm:gap-3">
           <a
             href="/login"
             onClick={handleSignInClick}
-            className="px-3.5 sm:px-4 py-1.5 rounded-full border border-[#D2DDD7] text-[11px] sm:text-xs font-bold text-[#263238] hover:bg-[#E8F0EC] transition-all duration-150 shadow-2xs cursor-pointer inline-flex items-center justify-center gap-1.5 group shrink-0"
+            className="px-4 py-1.5 rounded-full bg-[#171717] hover:bg-[#06110c] text-white text-[11px] sm:text-xs font-bold transition-all duration-150 shadow-xs cursor-pointer inline-flex items-center justify-center gap-1.5 group shrink-0 border border-[#171717]"
           >
             <span>Sign in</span>
-            <ArrowUpRight className="h-3 w-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-150 text-[#263238]" />
+            <ArrowUpRight className="h-3 w-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-150 text-white" />
           </a>
 
           <button
             onClick={() => handleOpenTrial('growth_pro')}
-            className="hidden sm:inline-flex px-4 py-1.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-black shadow-xs transition duration-150 cursor-pointer border border-[#263238]/20"
+            className="hidden sm:inline-flex px-4 py-1.5 rounded-full bg-[#a31c1b] hover:bg-[#8e1817] text-white text-xs font-black shadow-xs transition duration-150 cursor-pointer border border-[#a31c1b]"
           >
             Get Started →
           </button>
@@ -410,7 +411,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle navigation menu"
-            className="lg:hidden p-1.5 rounded-xl text-[#263238] hover:bg-[#E8F0EC] transition-colors cursor-pointer"
+            className="lg:hidden p-1.5 rounded-xl text-[#171717] hover:bg-[#E8F0EC] transition-colors cursor-pointer"
           >
             {isMobileMenuOpen ? (
               <X className="h-5 w-5" />
@@ -424,6 +425,21 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       {/* Mobile Navigation Drawer */}
       {isMobileMenuOpen && (
         <div className="lg:hidden fixed top-[53px] sm:top-[57px] left-0 right-0 bg-white/98 backdrop-blur-lg border-b border-[#E0E0E0] shadow-xl z-40 px-5 py-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-150">
+          {/* Sign in - Prominent First Option in Mobile Menu */}
+          <div className="pb-2.5 border-b border-[#E0E0E0]">
+            <a
+              href="/login"
+              onClick={(e) => {
+                setIsMobileMenuOpen(false);
+                handleSignInClick(e);
+              }}
+              className="w-full py-2.5 rounded-full bg-[#171717] hover:bg-[#06110c] text-white font-bold text-xs shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span>Sign in to Your Account</span>
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </a>
+          </div>
+
           <nav className="flex flex-col space-y-2.5 text-xs font-semibold text-[#333333]">
             <a 
               href="#overview" 
@@ -431,7 +447,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 handleNavClick(e, '#overview');
                 setIsMobileMenuOpen(false);
               }}
-              className="py-1 hover:text-[#263238] transition-colors"
+              className="py-1 hover:text-[#171717] transition-colors"
             >
               Home
             </a>
@@ -441,7 +457,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 handleNavClick(e, '#pain-points');
                 setIsMobileMenuOpen(false);
               }}
-              className="py-1 hover:text-[#263238] transition-colors"
+              className="py-1 hover:text-[#171717] transition-colors"
             >
               Common Problems
             </a>
@@ -451,7 +467,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 handleNavClick(e, '#interactive-building');
                 setIsMobileMenuOpen(false);
               }}
-              className="py-1 flex items-center justify-between text-[#263238] font-bold"
+              className="py-1 flex items-center justify-between text-[#171717] font-bold"
             >
               <span>Property Types</span>
               <span className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
@@ -462,7 +478,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 handleNavClick(e, '#everything-inside');
                 setIsMobileMenuOpen(false);
               }}
-              className="py-1 hover:text-[#263238] transition-colors"
+              className="py-1 hover:text-[#171717] transition-colors"
             >
               Features
             </a>
@@ -472,7 +488,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 handleNavClick(e, '#how-it-works');
                 setIsMobileMenuOpen(false);
               }}
-              className="py-1 hover:text-[#263238] transition-colors"
+              className="py-1 hover:text-[#171717] transition-colors"
             >
               How It Works
             </a>
@@ -482,7 +498,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 handleNavClick(e, '#pricing');
                 setIsMobileMenuOpen(false);
               }}
-              className="py-1 hover:text-[#263238] transition-colors"
+              className="py-1 hover:text-[#171717] transition-colors"
             >
               Pricing
             </a>
@@ -492,7 +508,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 handleNavClick(e, '#faq');
                 setIsMobileMenuOpen(false);
               }}
-              className="py-1 hover:text-[#263238] transition-colors"
+              className="py-1 hover:text-[#171717] transition-colors"
             >
               FAQ
             </a>
@@ -502,7 +518,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 handleNavClick(e, '#resources');
                 setIsMobileMenuOpen(false);
               }}
-              className="py-1 hover:text-[#263238] transition-colors"
+              className="py-1 hover:text-[#171717] transition-colors"
             >
               Resources &amp; Cities
             </a>
@@ -514,7 +530,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 setIsMobileMenuOpen(false);
                 handleOpenTrial('growth_pro');
               }}
-              className="w-full py-2.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs shadow-md transition text-center cursor-pointer"
+              className="w-full py-2.5 rounded-full bg-[#a31c1b] hover:bg-[#8e1817] text-white font-bold text-xs shadow-md shadow-[#a31c1b]/20 transition text-center cursor-pointer"
             >
               Get Started (7-Day Free Trial)
             </button>
@@ -543,7 +559,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
         {/* Floating Pill Announcement */}
         <div className="relative z-10 mb-4 sm:mb-6 animate-in fade-in slide-in-from-top-3 duration-500 w-full flex justify-center px-2">
-          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-white/95 border border-[#D2DDD7] text-[#263238] text-[10px] sm:text-xs font-bold shadow-xs hover:bg-white transition-colors max-w-full text-center">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-1.5 rounded-full bg-white/95 border border-[#D2DDD7] text-[#171717] text-[10px] sm:text-xs font-bold shadow-xs hover:bg-white transition-colors max-w-full text-center">
             <span className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse shrink-0" />
             <span>Staywise • Your Property. Your Control. One Platform.</span>
           </div>
@@ -551,7 +567,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
         {/* Distinctive Editorial Serif Headline */}
         <div ref={heroContentRef} className="relative z-10 max-w-4xl mx-auto space-y-4 sm:space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-600 will-change-transform transform-gpu px-2 sm:px-0">
-          <h1 className="font-editorial text-3xl xs:text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-[#263238] leading-[1.15]">
+          <h1 className="font-editorial text-3xl xs:text-4xl sm:text-6xl lg:text-7xl font-semibold tracking-tight text-[#171717] leading-[1.15]">
             All Your Properties. <br className="hidden sm:inline" />
             One Simple Place to Manage Them.
           </h1>
@@ -566,7 +582,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             <button
               type="button"
               onClick={() => handleOpenTrial('growth_pro')}
-              className="w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white font-bold text-xs sm:text-base shadow-lg shadow-[#163B36]/30 transition-all duration-150 transform hover:-translate-y-0.5 flex items-center justify-center gap-2.5 group cursor-pointer"
+              className="w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 rounded-full bg-[#a31c1b] hover:bg-[#8e1817] text-white font-bold text-xs sm:text-base shadow-lg shadow-[#a31c1b]/30 transition-all duration-150 transform hover:-translate-y-0.5 flex items-center justify-center gap-2.5 group cursor-pointer"
             >
               <span>Get Started (7-Day Free Trial)</span>
               <span className="text-base sm:text-lg group-hover:translate-x-1.5 transition-transform duration-150">→</span>
@@ -575,14 +591,14 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             <a
               href="#everything-inside"
               onClick={(e) => handleNavClick(e, '#everything-inside')}
-              className="w-full sm:w-auto px-6 py-3.5 sm:py-4 rounded-full bg-white/95 border border-[#D2DDD7] text-[#263238] font-bold text-xs sm:text-sm hover:bg-[#E8F0EC] transition-colors shadow-xs cursor-pointer"
+              className="w-full sm:w-auto px-6 py-3.5 sm:py-4 rounded-full bg-white/95 border border-[#D2DDD7] text-[#171717] font-bold text-xs sm:text-sm hover:bg-[#E8F0EC] transition-colors shadow-xs cursor-pointer"
             >
               Explore Features
             </a>
           </div>
 
           {/* 7-Day Free Trial & Autopay Guarantee */}
-          <div className="pt-1 text-[11px] sm:text-xs font-semibold text-[#263238] flex items-center justify-center gap-2 flex-wrap px-2">
+          <div className="pt-1 text-[11px] sm:text-xs font-semibold text-[#171717] flex items-center justify-center gap-2 flex-wrap px-2">
             <span className="flex items-center gap-1">
               <Check className="h-3.5 w-3.5 text-emerald-700" />
               <span>₹0 charged today</span>
@@ -608,7 +624,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center justify-center gap-4 sm:gap-8 lg:gap-10 text-xs sm:text-sm font-black text-[#404040]/85 tracking-tight">
             <span className="flex items-center justify-center gap-1.5">
-              <Home className="h-4 w-4 text-[#163B36]" />
+              <Home className="h-4 w-4 text-[#06110c]" />
               <span>Residential Homes</span>
             </span>
             <span className="flex items-center justify-center gap-1.5">
@@ -624,7 +640,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <span>Apartment Buildings</span>
             </span>
             <span className="flex items-center justify-center gap-1.5">
-              <Landmark className="h-4 w-4 text-[#C69A55]" />
+              <Landmark className="h-4 w-4 text-[#a31c1b]" />
               <span>Villas &amp; Estates</span>
             </span>
           </div>
@@ -639,12 +655,12 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       {/* ---------------------------------------------------- */}
       <section className="py-12 sm:py-16 px-4 sm:px-6 lg:px-12 bg-white border-y border-[#E0E0E0]">
         <div className="max-w-4xl mx-auto text-center space-y-5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E8F0EC] border border-[#D2DDD7] text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#163B36]">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E8F0EC] border border-[#D2DDD7] text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#06110c]">
             <span>WHAT IS STAYWISE</span>
-            <span className="text-[#263238]">• IN SIMPLE WORDS</span>
+            <span className="text-[#171717]">• IN SIMPLE WORDS</span>
           </div>
 
-          <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#263238] leading-snug">
+          <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#171717] leading-snug">
             Manage all your properties, tenants, and rent from one easy place.
           </h2>
 
@@ -654,9 +670,9 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 max-w-2xl mx-auto text-left">
             <div className="p-3.5 rounded-2xl bg-[#f5f5f5] border border-[#D2DDD7] flex items-center gap-3">
-              <Clock className="h-5 w-5 text-[#163B36] shrink-0" />
+              <Clock className="h-5 w-5 text-[#06110c] shrink-0" />
               <div>
-                <div className="font-bold text-xs text-[#263238]">Ready in 15 Minutes</div>
+                <div className="font-bold text-xs text-[#171717]">Ready in 15 Minutes</div>
                 <div className="text-[10px] text-[#666666]">No technical skills needed</div>
               </div>
             </div>
@@ -664,15 +680,15 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             <div className="p-3.5 rounded-2xl bg-[#f5f5f5] border border-[#D2DDD7] flex items-center gap-3">
               <Bot className="h-5 w-5 text-emerald-700 shrink-0" />
               <div>
-                <div className="font-bold text-xs text-[#263238]">Automated WhatsApp</div>
+                <div className="font-bold text-xs text-[#171717]">Automated WhatsApp</div>
                 <div className="text-[10px] text-[#666666]">Polite reminders &amp; receipts</div>
               </div>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-[#f5f5f5] border border-[#D2DDD7] flex items-center gap-3">
-              <ShieldCheck className="h-5 w-5 text-[#C69A55] shrink-0" />
+              <ShieldCheck className="h-5 w-5 text-[#a31c1b] shrink-0" />
               <div>
-                <div className="font-bold text-xs text-[#263238]">7-Day Free Trial</div>
+                <div className="font-bold text-xs text-[#171717]">7-Day Free Trial</div>
                 <div className="text-[10px] text-[#666666]">₹0 due today • Cancel anytime</div>
               </div>
             </div>
@@ -690,10 +706,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       >
         <ScrollReveal>
           <div className="text-center max-w-3xl mx-auto space-y-2.5 px-2 sm:px-0">
-            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#163B36]">
+            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#06110c]">
               Everyday Landlord Problems
             </span>
-            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#263238]">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#171717]">
               The 5 Common Headaches That Drain Your Time
             </h2>
             <p className="text-xs sm:text-sm text-[#666666] max-w-xl mx-auto leading-relaxed">
@@ -717,7 +733,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-rose-50 text-rose-700">
                 Problem #1 • Following Up for Rent
               </span>
-              <h3 className="font-editorial text-lg font-bold text-[#263238]">
+              <h3 className="font-editorial text-lg font-bold text-[#171717]">
                 &ldquo;When will you transfer the rent?&rdquo;
               </h3>
               <p className="text-xs text-[#666666] leading-relaxed">
@@ -725,7 +741,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               </p>
             </div>
 
-            <div className="pt-3 border-t border-[#E0E0E0] text-xs text-[#263238]">
+            <div className="pt-3 border-t border-[#E0E0E0] text-xs text-[#171717]">
               <span className="font-bold text-emerald-800">Staywise Benefit: </span>
               <span>Friendly, automated WhatsApp reminders before and on the due date with instant UPI links. Most tenants pay on time with zero awkward calls.</span>
             </div>
@@ -743,7 +759,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-800">
                 Problem #2 • Missing Inquiries
               </span>
-              <h3 className="font-editorial text-lg font-bold text-[#263238]">
+              <h3 className="font-editorial text-lg font-bold text-[#171717]">
                 Missed calls and lost prospective tenants
               </h3>
               <p className="text-xs text-[#666666] leading-relaxed">
@@ -751,7 +767,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               </p>
             </div>
 
-            <div className="pt-3 border-t border-[#E0E0E0] text-xs text-[#263238]">
+            <div className="pt-3 border-t border-[#E0E0E0] text-xs text-[#171717]">
               <span className="font-bold text-emerald-800">Staywise Benefit: </span>
               <span>Keep all tenant inquiries in one place, share property details immediately, and schedule property visits with clear confirmations.</span>
             </div>
@@ -769,7 +785,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-teal-50 text-teal-800">
                 Problem #3 • Vacancy Guesswork
               </span>
-              <h3 className="font-editorial text-lg font-bold text-[#263238]">
+              <h3 className="font-editorial text-lg font-bold text-[#171717]">
                 &ldquo;Is that room or flat currently empty?&rdquo;
               </h3>
               <p className="text-xs text-[#666666] leading-relaxed">
@@ -777,7 +793,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               </p>
             </div>
 
-            <div className="pt-3 border-t border-[#E0E0E0] text-xs text-[#263238]">
+            <div className="pt-3 border-t border-[#E0E0E0] text-xs text-[#171717]">
               <span className="font-bold text-emerald-800">Staywise Benefit: </span>
               <span>A clear visual view on your phone showing exactly which room, bed, flat, or shop is occupied, vacant, or coming up for lease renewal.</span>
             </div>
@@ -796,13 +812,13 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <span className="text-[10px] font-black uppercase text-indigo-700">
                 Problem #4 • Power Bill Disputes
               </span>
-              <h4 className="font-bold text-sm text-[#263238]">
+              <h4 className="font-bold text-sm text-[#171717]">
                 Tenants arguing over electricity meter readings
               </h4>
               <p className="text-[#666666] leading-relaxed">
                 Splitting an electricity bill between tenants often triggers arguments about who used the AC more or how fixed tariff charges were divided.
               </p>
-              <div className="text-[#263238] pt-1">
+              <div className="text-[#171717] pt-1">
                 <b>Staywise Benefit: </b>Take a photo of your electricity bill. Staywise divides the units and charges fairly, sharing an itemized split directly with each tenant.
               </div>
             </div>
@@ -817,13 +833,13 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               <span className="text-[10px] font-black uppercase text-emerald-800">
                 Problem #5 • Deposit Arguments
               </span>
-              <h4 className="font-bold text-sm text-[#263238]">
+              <h4 className="font-bold text-sm text-[#171717]">
                 Tenant moves out and disputes damage deductions
               </h4>
               <p className="text-[#666666] leading-relaxed">
                 When a tenant leaves, disagreements arise over damaged tiles or paint because neither party has clear photos or records of the room condition at move-in.
               </p>
-              <div className="text-[#263238] pt-1">
+              <div className="text-[#171717] pt-1">
                 <b>Staywise Benefit: </b>Take move-in condition photos and keep a signed digital checklist so checkout and deposit refunds are clear, fair, and documented.
               </div>
             </div>
@@ -843,11 +859,11 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           
           <ScrollReveal>
             <div className="text-center max-w-3xl mx-auto space-y-2 sm:space-y-2.5 px-2 sm:px-0">
-              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 rounded-full bg-[#E8F0EC] text-[#163B36] text-[10px] sm:text-xs font-black tracking-wider uppercase shadow-xs">
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-1 rounded-full bg-[#E8F0EC] text-[#06110c] text-[10px] sm:text-xs font-black tracking-wider uppercase shadow-xs">
                 <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-emerald-600 animate-pulse" />
                 <span>Designed for Real-World Properties</span>
               </div>
-              <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#263238]">
+              <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#171717]">
                 Manage Real Properties with Complete Simplicity
               </h2>
               <p className="text-xs sm:text-sm text-[#666666] max-w-xl mx-auto leading-relaxed">
@@ -874,15 +890,15 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 {/* Live Telemetry Floating Pill on Building */}
                 <div 
                   ref={buildingBadgeRef}
-                  className="absolute top-3 sm:top-5 left-3 sm:left-5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-white/95 border border-[#D2DDD7] text-[10px] sm:text-xs font-bold text-[#263238] shadow-md flex items-center gap-1.5 sm:gap-2 will-change-transform transform-gpu max-w-[85%] truncate"
+                  className="absolute top-3 sm:top-5 left-3 sm:left-5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-white/95 border border-[#D2DDD7] text-[10px] sm:text-xs font-bold text-[#171717] shadow-md flex items-center gap-1.5 sm:gap-2 will-change-transform transform-gpu max-w-[85%] truncate"
                 >
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                   <span className="truncate">Sai Krishna Residences • All Units &amp; Rooms Tracked</span>
                 </div>
 
                 {/* Floating Scan Marker */}
-                <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-5 px-2.5 sm:px-3.5 py-1 rounded-full bg-[#163B36]/90 text-white text-[10px] sm:text-[11px] font-semibold flex items-center gap-1.5 shadow-sm">
-                  <Sparkles className="h-3 w-3 text-[#C69A55] shrink-0" />
+                <div className="absolute bottom-3 sm:bottom-4 right-3 sm:right-5 px-2.5 sm:px-3.5 py-1 rounded-full bg-[#06110c]/90 text-white text-[10px] sm:text-[11px] font-semibold flex items-center gap-1.5 shadow-sm">
+                  <Sparkles className="h-3 w-3 text-[#a31c1b] shrink-0" />
                   <span>Verified Condition Record</span>
                 </div>
               </div>
@@ -897,7 +913,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                     <Zap className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-xs text-[#263238]">Automatic Rent Collection</h4>
+                    <h4 className="font-bold text-xs text-[#171717]">Automatic Rent Collection</h4>
                     <span className="text-[10px] text-emerald-700 font-extrabold">Instant UPI &amp; Bank Transfer</span>
                   </div>
                 </div>
@@ -913,7 +929,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                     <FileText className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-xs text-[#263238]">Electricity Bill Splitting</h4>
+                    <h4 className="font-bold text-xs text-[#171717]">Electricity Bill Splitting</h4>
                     <span className="text-[10px] text-amber-700 font-extrabold">Fair Sub-Meter Division</span>
                   </div>
                 </div>
@@ -932,7 +948,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                     <ShieldCheck className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-xs text-[#263238]">Move-In &amp; Move-Out Checklists</h4>
+                    <h4 className="font-bold text-xs text-[#171717]">Move-In &amp; Move-Out Checklists</h4>
                     <span className="text-[10px] text-teal-700 font-extrabold">Dispute-Free Deposits</span>
                   </div>
                 </div>
@@ -948,7 +964,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                     <Landmark className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-xs text-[#263238]">Income &amp; Expense Records</h4>
+                    <h4 className="font-bold text-xs text-[#171717]">Income &amp; Expense Records</h4>
                     <span className="text-[10px] text-indigo-700 font-extrabold">Clear Financial Tracking</span>
                   </div>
                 </div>
@@ -973,10 +989,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       >
         <ScrollReveal>
           <div className="text-center max-w-3xl mx-auto space-y-2 sm:space-y-2.5 px-2 sm:px-0">
-            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#163B36]">
+            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-[#06110c]">
               Everything Inside Staywise
             </span>
-            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#263238]">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#171717]">
               Everything You Need in One Simple Place
             </h2>
             <p className="text-xs sm:text-sm text-[#666666] max-w-xl mx-auto leading-relaxed">
@@ -994,8 +1010,8 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 onClick={() => setActiveTab('RENT')}
                 className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   activeTab === 'RENT'
-                    ? 'bg-[#163B36] text-white shadow-xs'
-                    : 'text-[#666666] hover:text-[#263238]'
+                    ? 'bg-[#06110c] text-white shadow-xs'
+                    : 'text-[#666666] hover:text-[#171717]'
                 }`}
               >
                 <Zap className="h-3.5 w-3.5" />
@@ -1007,8 +1023,8 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 onClick={() => setActiveTab('BEDS')}
                 className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   activeTab === 'BEDS'
-                    ? 'bg-[#163B36] text-white shadow-xs'
-                    : 'text-[#666666] hover:text-[#263238]'
+                    ? 'bg-[#06110c] text-white shadow-xs'
+                    : 'text-[#666666] hover:text-[#171717]'
                 }`}
               >
                 <Home className="h-3.5 w-3.5" />
@@ -1020,8 +1036,8 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 onClick={() => setActiveTab('WHATSAPP')}
                 className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   activeTab === 'WHATSAPP'
-                    ? 'bg-[#163B36] text-white shadow-xs'
-                    : 'text-[#666666] hover:text-[#263238]'
+                    ? 'bg-[#06110c] text-white shadow-xs'
+                    : 'text-[#666666] hover:text-[#171717]'
                 }`}
               >
                 <Bot className="h-3.5 w-3.5" />
@@ -1033,8 +1049,8 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 onClick={() => setActiveTab('OCR')}
                 className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   activeTab === 'OCR'
-                    ? 'bg-[#163B36] text-white shadow-xs'
-                    : 'text-[#666666] hover:text-[#263238]'
+                    ? 'bg-[#06110c] text-white shadow-xs'
+                    : 'text-[#666666] hover:text-[#171717]'
                 }`}
               >
                 <FileText className="h-3.5 w-3.5" />
@@ -1046,8 +1062,8 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 onClick={() => setActiveTab('CRM')}
                 className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   activeTab === 'CRM'
-                    ? 'bg-[#163B36] text-white shadow-xs'
-                    : 'text-[#666666] hover:text-[#263238]'
+                    ? 'bg-[#06110c] text-white shadow-xs'
+                    : 'text-[#666666] hover:text-[#171717]'
                 }`}
               >
                 <Users className="h-3.5 w-3.5" />
@@ -1059,8 +1075,8 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 onClick={() => setActiveTab('MOVEFLOW')}
                 className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
                   activeTab === 'MOVEFLOW'
-                    ? 'bg-[#163B36] text-white shadow-xs'
-                    : 'text-[#666666] hover:text-[#263238]'
+                    ? 'bg-[#06110c] text-white shadow-xs'
+                    : 'text-[#666666] hover:text-[#171717]'
                 }`}
               >
                 <ShieldCheck className="h-3.5 w-3.5" />
@@ -1079,10 +1095,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             {activeTab === 'RENT' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
-                  <span className="text-[10px] font-black uppercase text-[#163B36] bg-[#E8F0EC] px-3 py-1 rounded-full">
+                  <span className="text-[10px] font-black uppercase text-[#06110c] bg-[#E8F0EC] px-3 py-1 rounded-full">
                     Rent Collection on Autopilot
                   </span>
-                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#263238]">
+                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#171717]">
                     Collect rent on time without the awkward phone calls.
                   </h3>
                   <p className="text-xs sm:text-sm text-[#666666] leading-relaxed">
@@ -1090,22 +1106,22 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   </p>
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#163B36]" />
+                      <Check className="h-4 w-4 text-[#06110c]" />
                       <span><b>Friendly WhatsApp Reminders:</b> Sent 3 days before due date, on the due date, and if delayed.</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#163B36]" />
+                      <Check className="h-4 w-4 text-[#06110c]" />
                       <span><b>Direct Bank Settlement:</b> Rent money transfers straight to your bank account.</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#163B36]" />
+                      <Check className="h-4 w-4 text-[#06110c]" />
                       <span><b>Instant Digital Receipts:</b> Shared automatically on WhatsApp as soon as payment is confirmed.</span>
                     </div>
                   </div>
                   <div className="pt-2">
                     <button
                       onClick={() => handleOpenTrial('starter')}
-                      className="px-6 py-2.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition duration-150 cursor-pointer"
+                      className="px-6 py-2.5 rounded-full bg-[#a31c1b] hover:bg-[#8e1817] text-white font-bold text-xs shadow-md shadow-[#a31c1b]/20 transition duration-150 cursor-pointer"
                     >
                       Start Free Trial →
                     </button>
@@ -1117,14 +1133,14 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   <div className="flex justify-between items-center pb-2 border-b border-[#E0E0E0]">
                     <div className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="font-bold text-[#263238]">Monthly Rent Collection</span>
+                      <span className="font-bold text-[#171717]">Monthly Rent Collection</span>
                     </div>
                     <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">98% Collected</span>
                   </div>
                   <div className="space-y-2.5">
                     <div className="p-2.5 rounded-xl bg-[#f5f5f5] border border-[#D2DDD7] flex justify-between items-center">
                       <div>
-                        <div className="font-bold text-[#263238]">Priya Sharma (Flat 204)</div>
+                        <div className="font-bold text-[#171717]">Priya Sharma (Flat 204)</div>
                         <div className="text-[10px] text-[#666666]">Monthly Rent · ₹14,500</div>
                       </div>
                       <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">Paid via UPI</span>
@@ -1132,7 +1148,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                     <div className="p-2.5 rounded-xl bg-[#f5f5f5] border border-[#D2DDD7] flex justify-between items-center">
                       <div>
-                        <div className="font-bold text-[#263238]">Arjun Mehta (Bed 102-B)</div>
+                        <div className="font-bold text-[#171717]">Arjun Mehta (Bed 102-B)</div>
                         <div className="text-[10px] text-[#666666]">WhatsApp Reminder Sent · ₹8,500</div>
                       </div>
                       <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Reminder Sent</span>
@@ -1140,10 +1156,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                     <div className="p-2.5 rounded-xl bg-[#f5f5f5] border border-[#D2DDD7] flex justify-between items-center">
                       <div>
-                        <div className="font-bold text-[#263238]">Karan Singh (Unit 301)</div>
+                        <div className="font-bold text-[#171717]">Karan Singh (Unit 301)</div>
                         <div className="text-[10px] text-[#666666]">Commercial Rent · ₹25,000</div>
                       </div>
-                      <span className="text-[10px] font-bold text-[#163B36] bg-[#E8F0EC] px-2 py-0.5 rounded-full">Scheduled Autopay</span>
+                      <span className="text-[10px] font-bold text-[#06110c] bg-[#E8F0EC] px-2 py-0.5 rounded-full">Scheduled Autopay</span>
                     </div>
                   </div>
                 </div>
@@ -1153,10 +1169,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             {activeTab === 'BEDS' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
-                  <span className="text-[10px] font-black uppercase text-[#163B36] bg-[#E8F0EC] px-3 py-1 rounded-full">
+                  <span className="text-[10px] font-black uppercase text-[#06110c] bg-[#E8F0EC] px-3 py-1 rounded-full">
                     Room &amp; Unit Tracking
                   </span>
-                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#263238]">
+                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#171717]">
                     Know what is occupied and what is empty at a glance.
                   </h3>
                   <p className="text-xs sm:text-sm text-[#666666] leading-relaxed">
@@ -1164,18 +1180,18 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   </p>
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#163B36]" />
+                      <Check className="h-4 w-4 text-[#06110c]" />
                       <span><b>Complete Unit Tracking:</b> Track single rooms, shared PG beds, flats, or commercial shops.</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#163B36]" />
+                      <Check className="h-4 w-4 text-[#06110c]" />
                       <span><b>Advance Vacancy Alerts:</b> Get notified before leases end so you can arrange new tenants quickly.</span>
                     </div>
                   </div>
                   <div className="pt-2">
                     <button
                       onClick={() => handleOpenTrial('growth_pro')}
-                      className="px-6 py-2.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition duration-150 cursor-pointer"
+                      className="px-6 py-2.5 rounded-full bg-[#a31c1b] hover:bg-[#8e1817] text-white font-bold text-xs shadow-md shadow-[#a31c1b]/20 transition duration-150 cursor-pointer"
                     >
                       Start Free Trial →
                     </button>
@@ -1184,7 +1200,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                 <div className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm space-y-3.5 text-xs font-mono">
                   <div className="flex justify-between items-center pb-2 border-b border-[#E0E0E0]">
-                    <span className="font-bold text-[#263238]">Floor 1 &amp; 2 Occupancy Status</span>
+                    <span className="font-bold text-[#171717]">Floor 1 &amp; 2 Occupancy Status</span>
                     <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">94% Occupied</span>
                   </div>
                   <div className="grid grid-cols-4 gap-2 pt-1">
@@ -1211,10 +1227,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             {activeTab === 'WHATSAPP' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
-                  <span className="text-[10px] font-black uppercase text-[#163B36] bg-[#E8F0EC] px-3 py-1 rounded-full">
+                  <span className="text-[10px] font-black uppercase text-[#06110c] bg-[#E8F0EC] px-3 py-1 rounded-full">
                     WhatsApp Updates &amp; Assistant
                   </span>
-                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#263238]">
+                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#171717]">
                     Run routine property tasks directly through WhatsApp.
                   </h3>
                   <p className="text-xs sm:text-sm text-[#666666] leading-relaxed">
@@ -1222,18 +1238,18 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   </p>
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#163B36]" />
+                      <Check className="h-4 w-4 text-[#06110c]" />
                       <span><b>Instant Status Checks:</b> Check total monthly collection, pending dues, or tenant phone numbers.</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#163B36]" />
+                      <Check className="h-4 w-4 text-[#06110c]" />
                       <span><b>Polite Reminder Nudges:</b> Send UPI payment links to unpaid tenants with one tap.</span>
                     </div>
                   </div>
                   <div className="pt-2">
                     <button
                       onClick={() => handleOpenTrial('growth_pro')}
-                      className="px-6 py-2.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition duration-150 cursor-pointer"
+                      className="px-6 py-2.5 rounded-full bg-[#06110c] hover:bg-[#171717] text-white font-bold text-xs transition duration-150 cursor-pointer"
                     >
                       Try on WhatsApp →
                     </button>
@@ -1242,14 +1258,14 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                 <div className="p-4 rounded-2xl bg-[#f5f5f5] border border-[#D2DDD7] shadow-sm space-y-3 text-xs">
                   <div className="flex items-center gap-2 pb-2 border-b border-[#D2DDD7]">
-                    <Bot className="h-4 w-4 text-[#163B36]" />
-                    <span className="font-bold text-[#263238]">Staywise WhatsApp Assistant</span>
+                    <Bot className="h-4 w-4 text-[#06110c]" />
+                    <span className="font-bold text-[#171717]">Staywise WhatsApp Assistant</span>
                   </div>
                   <div className="space-y-2">
-                    <div className="p-2.5 rounded-2xl rounded-tr-none bg-white text-[#263238] max-w-[85%] ml-auto shadow-xs">
+                    <div className="p-2.5 rounded-2xl rounded-tr-none bg-white text-[#171717] max-w-[85%] ml-auto shadow-xs">
                       What is today's rent collection? Are there any pending dues?
                     </div>
-                    <div className="p-2.5 rounded-2xl rounded-tl-none bg-[#E8F0EC] text-[#263238] max-w-[85%] shadow-xs">
+                    <div className="p-2.5 rounded-2xl rounded-tl-none bg-[#E8F0EC] text-[#171717] max-w-[85%] shadow-xs">
                       <b>Good evening!</b><br />
                       • Collected this month: ₹1,42,000 (8 tenants)<br />
                       • Pending: ₹16,000 (2 tenants)<br />
@@ -1263,10 +1279,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             {activeTab === 'OCR' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
-                  <span className="text-[10px] font-black uppercase text-[#163B36] bg-[#E8F0EC] px-3 py-1 rounded-full">
+                  <span className="text-[10px] font-black uppercase text-[#06110c] bg-[#E8F0EC] px-3 py-1 rounded-full">
                     Electricity &amp; Utility Splitting
                   </span>
-                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#263238]">
+                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#171717]">
                     Split electricity bills fairly with zero arguments.
                   </h3>
                   <p className="text-xs sm:text-sm text-[#666666] leading-relaxed">
@@ -1274,18 +1290,18 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   </p>
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#163B36]" />
+                      <Check className="h-4 w-4 text-[#06110c]" />
                       <span><b>Accurate Tariff Calculations:</b> Handles fixed charges and tiered rate slabs automatically.</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#163B36]" />
+                      <Check className="h-4 w-4 text-[#06110c]" />
                       <span><b>Transparent Itemized Amounts:</b> Added clearly to the tenant's monthly rent invoice.</span>
                     </div>
                   </div>
                   <div className="pt-2">
                     <button
                       onClick={() => handleOpenTrial('growth_pro')}
-                      className="px-6 py-2.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition duration-150 cursor-pointer"
+                      className="px-6 py-2.5 rounded-full bg-[#a31c1b] hover:bg-[#8e1817] text-white font-bold text-xs shadow-md shadow-[#a31c1b]/20 transition duration-150 cursor-pointer"
                     >
                       Start Free Trial →
                     </button>
@@ -1294,17 +1310,17 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                 <div className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm space-y-3 text-xs font-mono">
                   <div className="flex justify-between items-center pb-2 border-b border-[#E0E0E0]">
-                    <span className="font-bold text-[#263238]">Monthly Electricity Bill Split</span>
+                    <span className="font-bold text-[#171717]">Monthly Electricity Bill Split</span>
                     <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">Calculated</span>
                   </div>
                   <div className="space-y-1.5 text-[#666666]">
                     <div className="flex justify-between">
                       <span>Total Electricity Bill:</span>
-                      <span className="font-bold text-[#263238]">₹8,450 (1,120 units)</span>
+                      <span className="font-bold text-[#171717]">₹8,450 (1,120 units)</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Common Area Share (4 units):</span>
-                      <span className="font-bold text-[#263238]">₹420 / flat</span>
+                      <span className="font-bold text-[#171717]">₹420 / flat</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Room 102 Sub-Meter (240 units):</span>
@@ -1318,10 +1334,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             {activeTab === 'CRM' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
-                  <span className="text-[10px] font-black uppercase text-[#163B36] bg-[#E8F0EC] px-3 py-1 rounded-full">
+                  <span className="text-[10px] font-black uppercase text-[#06110c] bg-[#E8F0EC] px-3 py-1 rounded-full">
                     Tenant Inquiries &amp; Visits
                   </span>
-                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#263238]">
+                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#171717]">
                     Never lose track of interested prospective tenants.
                   </h3>
                   <p className="text-xs sm:text-sm text-[#666666] leading-relaxed">
@@ -1329,18 +1345,18 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   </p>
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#163B36]" />
+                      <Check className="h-4 w-4 text-[#06110c]" />
                       <span><b>Centralized Inquiries:</b> All prospect names, phone numbers, and preferred move-in dates in one place.</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#163B36]" />
+                      <Check className="h-4 w-4 text-[#06110c]" />
                       <span><b>Scheduled Property Visits:</b> Share location directions and visit times with automatic reminders.</span>
                     </div>
                   </div>
                   <div className="pt-2">
                     <button
                       onClick={() => handleOpenTrial('growth_pro')}
-                      className="px-6 py-2.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition duration-150 cursor-pointer"
+                      className="px-6 py-2.5 rounded-full bg-[#a31c1b] hover:bg-[#8e1817] text-white font-bold text-xs shadow-md shadow-[#a31c1b]/20 transition duration-150 cursor-pointer"
                     >
                       Start Free Trial →
                     </button>
@@ -1349,21 +1365,21 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                 <div className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm space-y-3 text-xs font-mono">
                   <div className="flex justify-between items-center pb-2 border-b border-[#E0E0E0]">
-                    <span className="font-bold text-[#263238]">Tenant Inquiries Pipeline</span>
-                    <span className="text-[10px] font-bold text-[#163B36] bg-[#E8F0EC] px-2 py-0.5 rounded">Active Inquiries</span>
+                    <span className="font-bold text-[#171717]">Tenant Inquiries Pipeline</span>
+                    <span className="text-[10px] font-bold text-[#06110c] bg-[#E8F0EC] px-2 py-0.5 rounded">Active Inquiries</span>
                   </div>
                   <div className="space-y-2">
                     <div className="p-2 rounded-xl bg-[#f5f5f5] border border-[#D2DDD7] flex justify-between items-center">
                       <div>
-                        <div className="font-bold text-[#263238]">Rahul Verma</div>
+                        <div className="font-bold text-[#171717]">Rahul Verma</div>
                         <div className="text-[10px] text-[#666666]">Interested in 2-Sharing Room • Move-in Oct 10</div>
                       </div>
-                      <span className="text-[10px] font-bold text-[#163B36] bg-[#E8F0EC] px-2 py-0.5 rounded">Visit Scheduled</span>
+                      <span className="text-[10px] font-bold text-[#06110c] bg-[#E8F0EC] px-2 py-0.5 rounded">Visit Scheduled</span>
                     </div>
 
                     <div className="p-2 rounded-xl bg-[#f5f5f5] border border-[#D2DDD7] flex justify-between items-center">
                       <div>
-                        <div className="font-bold text-[#263238]">Anjali Iyer</div>
+                        <div className="font-bold text-[#171717]">Anjali Iyer</div>
                         <div className="text-[10px] text-[#666666]">1 BHK Independent Apartment</div>
                       </div>
                       <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">Details Sent</span>
@@ -1376,10 +1392,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             {activeTab === 'MOVEFLOW' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-4">
-                  <span className="text-[10px] font-black uppercase text-[#163B36] bg-[#E8F0EC] px-3 py-1 rounded-full">
+                  <span className="text-[10px] font-black uppercase text-[#06110c] bg-[#E8F0EC] px-3 py-1 rounded-full">
                     Digital Leases &amp; Move-In Records
                   </span>
-                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#263238]">
+                  <h3 className="font-editorial text-2xl sm:text-3xl font-semibold text-[#171717]">
                     Verify tenant identity and sign agreements without paperwork.
                   </h3>
                   <p className="text-xs sm:text-sm text-[#666666] leading-relaxed">
@@ -1387,18 +1403,18 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   </p>
                   <div className="space-y-2 text-xs">
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#163B36]" />
+                      <Check className="h-4 w-4 text-[#06110c]" />
                       <span><b>Fast Online Verification:</b> Keep your property secure with verified tenant identity records.</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-[#163B36]" />
+                      <Check className="h-4 w-4 text-[#06110c]" />
                       <span><b>Condition Photo Checklist:</b> Timestamped photos of the room protect both owner and tenant deposits.</span>
                     </div>
                   </div>
                   <div className="pt-2">
                     <button
                       onClick={() => handleOpenTrial('growth_pro')}
-                      className="px-6 py-2.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition duration-150 cursor-pointer"
+                      className="px-6 py-2.5 rounded-full bg-[#a31c1b] hover:bg-[#8e1817] text-white font-bold text-xs shadow-md shadow-[#a31c1b]/20 transition duration-150 cursor-pointer"
                     >
                       Start Free Trial →
                     </button>
@@ -1407,7 +1423,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                 <div className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-sm space-y-3 text-xs font-mono">
                   <div className="flex justify-between items-center pb-2 border-b border-[#E0E0E0]">
-                    <span className="font-bold text-[#263238]">Tenant Onboarding Records</span>
+                    <span className="font-bold text-[#171717]">Tenant Onboarding Records</span>
                     <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">Verified</span>
                   </div>
                   <div className="space-y-2">
@@ -1440,10 +1456,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       >
         <ScrollReveal>
           <div className="text-center max-w-3xl mx-auto space-y-2 px-2 sm:px-0">
-            <span className="text-[10px] sm:text-xs font-black uppercase text-[#163B36]">
+            <span className="text-[10px] sm:text-xs font-black uppercase text-[#06110c]">
               Simple 3-Step Setup
             </span>
-            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#263238]">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#171717]">
               Get Started in 15 Minutes
             </h2>
             <p className="text-xs sm:text-sm text-[#666666] max-w-xl mx-auto leading-relaxed">
@@ -1455,10 +1471,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto items-stretch">
           {/* STEP 1 */}
           <div className="p-6 rounded-3xl bg-white border border-[#D2DDD7] space-y-4 shadow-xs">
-            <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center font-bold text-sm">
+            <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#06110c] flex items-center justify-center font-bold text-sm">
               01
             </div>
-            <h3 className="font-bold text-base text-[#263238]">Create your account in 2 minutes</h3>
+            <h3 className="font-bold text-base text-[#171717]">Create your account in 2 minutes</h3>
             <p className="text-xs text-[#666666] leading-relaxed">
               Sign up with your mobile number and name. Choose your property category—residential flat, PG hostel, or commercial space.
             </p>
@@ -1466,10 +1482,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
           {/* STEP 2 */}
           <div className="p-6 rounded-3xl bg-white border border-[#D2DDD7] space-y-4 shadow-xs">
-            <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center font-bold text-sm">
+            <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#06110c] flex items-center justify-center font-bold text-sm">
               02
             </div>
-            <h3 className="font-bold text-base text-[#263238]">Add properties and tenants</h3>
+            <h3 className="font-bold text-base text-[#171717]">Add properties and tenants</h3>
             <p className="text-xs text-[#666666] leading-relaxed">
               Enter your property name, room or flat numbers, and monthly rent amount. Add your current tenants with their phone numbers.
             </p>
@@ -1477,10 +1493,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
           {/* STEP 3 */}
           <div className="p-6 rounded-3xl bg-white border border-[#D2DDD7] space-y-4 shadow-xs">
-            <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center font-bold text-sm">
+            <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#06110c] flex items-center justify-center font-bold text-sm">
               03
             </div>
-            <h3 className="font-bold text-base text-[#263238]">Stay organized and in control</h3>
+            <h3 className="font-bold text-base text-[#171717]">Stay organized and in control</h3>
             <p className="text-xs text-[#666666] leading-relaxed">
               Staywise handles friendly rent reminders, receipts, power bill splits, and repair requests smoothly every month.
             </p>
@@ -1498,10 +1514,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       >
         <ScrollReveal>
           <div className="text-center max-w-2xl mx-auto space-y-2 px-2 sm:px-0">
-            <span className="text-[10px] sm:text-xs font-black uppercase text-[#163B36]">
+            <span className="text-[10px] sm:text-xs font-black uppercase text-[#06110c]">
               Real-World Management
             </span>
-            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl font-semibold text-[#263238]">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl font-semibold text-[#171717]">
               Designed for How You Actually Work
             </h2>
             <p className="text-xs sm:text-sm text-[#666666] max-w-xl mx-auto leading-relaxed">
@@ -1516,12 +1532,12 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               ref={statsBox1Ref} 
               className="p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#f5f5f5] border border-[#D2DDD7] space-y-0.5 sm:space-y-1 will-change-transform transform-gpu shadow-xs"
             >
-              <div className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#263238]">All Types</div>
+              <div className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#171717]">All Types</div>
               <div className="text-[10px] sm:text-xs text-[#666666] font-semibold mt-1">PGs, Flats, &amp; Commercial</div>
             </div>
 
             <div className="p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#f5f5f5] border border-[#D2DDD7] space-y-0.5 sm:space-y-1 shadow-xs">
-              <div className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#263238]">Zero Delays</div>
+              <div className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#171717]">Zero Delays</div>
               <div className="text-[10px] sm:text-xs text-[#666666] font-semibold mt-1">Direct WhatsApp Rent Reminders</div>
             </div>
 
@@ -1534,7 +1550,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
               ref={statsBox4Ref} 
               className="p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#f5f5f5] border border-[#D2DDD7] space-y-0.5 sm:space-y-1 will-change-transform transform-gpu shadow-xs"
             >
-              <div className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#163B36]">Paperless</div>
+              <div className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#06110c]">Paperless</div>
               <div className="text-[10px] sm:text-xs text-[#666666] font-semibold mt-1">Digital Receipts &amp; Leases</div>
             </div>
           </div>
@@ -1543,30 +1559,30 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
         {/* Practical owner workflows */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto pt-4">
           <div className="p-6 rounded-2xl bg-[#f5f5f5] border border-[#D2DDD7] space-y-3 shadow-xs">
-            <span className="text-[10px] font-black uppercase text-[#163B36] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full">
+            <span className="text-[10px] font-black uppercase text-[#06110c] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full">
               PG &amp; Co-Living
             </span>
-            <h3 className="font-bold text-base text-[#263238]">Bed-by-Bed Management</h3>
+            <h3 className="font-bold text-base text-[#171717]">Bed-by-Bed Management</h3>
             <p className="text-xs text-[#666666] leading-relaxed">
               Track room sharing, bed occupancy, and monthly food &amp; mess plans. Calculate electricity sub-meters per room to avoid arguments.
             </p>
           </div>
 
           <div className="p-6 rounded-2xl bg-[#f5f5f5] border border-[#D2DDD7] space-y-3 shadow-xs">
-            <span className="text-[10px] font-black uppercase text-[#163B36] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full">
+            <span className="text-[10px] font-black uppercase text-[#06110c] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full">
               Flats &amp; Homes
             </span>
-            <h3 className="font-bold text-base text-[#263238]">Peace of Mind for Landlords</h3>
+            <h3 className="font-bold text-base text-[#171717]">Peace of Mind for Landlords</h3>
             <p className="text-xs text-[#666666] leading-relaxed">
               Send rent reminders on WhatsApp, collect payments via UPI, verify tenant identity documents, and record move-in photos for deposit protection.
             </p>
           </div>
 
           <div className="p-6 rounded-2xl bg-[#f5f5f5] border border-[#D2DDD7] space-y-3 shadow-xs">
-            <span className="text-[10px] font-black uppercase text-[#163B36] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full">
+            <span className="text-[10px] font-black uppercase text-[#06110c] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full">
               Commercial &amp; Portfolios
             </span>
-            <h3 className="font-bold text-base text-[#263238]">Clear Business Control</h3>
+            <h3 className="font-bold text-base text-[#171717]">Clear Business Control</h3>
             <p className="text-xs text-[#666666] leading-relaxed">
               Track multi-unit commercial leases, GST billing, maintenance fees, and delegate caretaker tasks while keeping complete financial control.
             </p>
@@ -1584,12 +1600,12 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       >
         <ScrollReveal>
           <div className="text-center max-w-3xl mx-auto space-y-2 sm:space-y-3 px-2 sm:px-0">
-            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1 rounded-full bg-[#E8F0EC] text-[#263238] text-[10px] sm:text-xs font-bold">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1 rounded-full bg-[#E8F0EC] text-[#171717] text-[10px] sm:text-xs font-bold">
               <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-700" />
               <span>7-Day Risk-Free Trial On Every Plan</span>
             </div>
 
-            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#263238] tracking-tight">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#171717] tracking-tight">
               Simple, Honest Pricing. Try Free for 7 Days.
             </h2>
 
@@ -1605,8 +1621,8 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   onClick={() => setBillingCycle('monthly')}
                   className={`px-2.5 xs:px-3.5 sm:px-4.5 py-1.5 rounded-full text-[10px] xs:text-[11px] sm:text-xs font-bold transition-all duration-100 cursor-pointer whitespace-nowrap ${
                     billingCycle === 'monthly'
-                      ? 'bg-[#263238] text-white shadow-xs'
-                      : 'text-[#666666] hover:text-[#263238]'
+                      ? 'bg-[#171717] text-white shadow-xs'
+                      : 'text-[#666666] hover:text-[#171717]'
                   }`}
                 >
                   <span>Monthly Plan</span>
@@ -1617,8 +1633,8 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   onClick={() => setBillingCycle('annual')}
                   className={`px-2.5 xs:px-3.5 sm:px-4.5 py-1.5 rounded-full text-[10px] xs:text-[11px] sm:text-xs font-bold transition-all duration-100 flex items-center gap-1 sm:gap-1.5 cursor-pointer whitespace-nowrap ${
                     billingCycle === 'annual'
-                      ? 'bg-[#263238] text-white shadow-xs'
-                      : 'text-[#666666] hover:text-[#263238]'
+                      ? 'bg-[#171717] text-white shadow-xs'
+                      : 'text-[#666666] hover:text-[#171717]'
                   }`}
                 >
                   <span>Annual Plan</span>
@@ -1642,7 +1658,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#666666]">
                     1 Property
                   </span>
-                  <h3 className="font-editorial text-lg sm:text-xl font-bold text-[#263238] mt-2">Starter (1 Property)</h3>
+                  <h3 className="font-editorial text-lg sm:text-xl font-bold text-[#171717] mt-2">Starter (1 Property)</h3>
                   <p className="text-xs text-[#666666] mt-0.5 leading-relaxed">
                     Ideal for single-flat landlords and independent rental houses.
                   </p>
@@ -1650,7 +1666,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                 <div className="pt-2 pb-3.5 sm:pb-4 border-b border-[#E0E0E0]">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl xs:text-3xl sm:text-4xl font-black text-[#263238] tracking-tight">
+                    <span className="text-2xl xs:text-3xl sm:text-4xl font-black text-[#171717] tracking-tight">
                       ₹{billingCycle === 'annual' ? (599).toLocaleString('en-IN') : (59).toLocaleString('en-IN')}
                     </span>
                     <span className="text-xs text-[#666666]">/{billingCycle === 'annual' ? 'year' : 'month'}</span>
@@ -1662,19 +1678,19 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                 <div className="space-y-2 text-xs text-[#666666]">
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#263238] shrink-0" />
+                    <Check className="h-4 w-4 text-[#171717] shrink-0" />
                     <span><b>1 Property (PG, Flat, House, or Commercial)</b></span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#263238] shrink-0" />
+                    <Check className="h-4 w-4 text-[#171717] shrink-0" />
                     <span>Automatic invoices &amp; PDF receipts</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#263238] shrink-0" />
+                    <Check className="h-4 w-4 text-[#171717] shrink-0" />
                     <span>WhatsApp payment reminders to tenants</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#263238] shrink-0" />
+                    <Check className="h-4 w-4 text-[#171717] shrink-0" />
                     <span>Direct UPI QR code rent collection</span>
                   </div>
                 </div>
@@ -1684,7 +1700,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 <button
                   type="button"
                   onClick={() => handleOpenTrial('starter')}
-                  className="w-full py-2.5 sm:py-3 rounded-full bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] font-bold text-xs transition-colors duration-150 cursor-pointer shadow-xs"
+                  className="w-full py-2.5 sm:py-3 rounded-full bg-[#a31c1b] hover:bg-[#8e1817] text-white font-bold text-xs transition-colors duration-150 cursor-pointer shadow-md shadow-[#a31c1b]/20"
                 >
                   Start 7-Day Free Trial
                 </button>
@@ -1699,18 +1715,18 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           <ScrollReveal delay={80} className="flex w-full md:col-span-2 lg:col-span-1">
             <div 
               ref={pricingFeaturedCardRef}
-              className="w-full rounded-2xl sm:rounded-3xl bg-white border-2 border-[#163B36] p-4.5 xs:p-5 sm:p-7 flex flex-col justify-between space-y-4 sm:space-y-5 shadow-lg relative mt-3 sm:mt-0 transform lg:-translate-y-2 will-change-transform transform-gpu"
+              className="w-full rounded-2xl sm:rounded-3xl bg-white border-2 border-[#06110c] p-4.5 xs:p-5 sm:p-7 flex flex-col justify-between space-y-4 sm:space-y-5 shadow-lg relative mt-3 sm:mt-0 transform lg:-translate-y-2 will-change-transform transform-gpu"
             >
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 sm:px-3.5 py-0.5 sm:py-1 rounded-full bg-[#163B36] text-white text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-xs whitespace-nowrap">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 sm:px-3.5 py-0.5 sm:py-1 rounded-full bg-[#06110c] text-white text-[10px] sm:text-xs font-black uppercase tracking-wider shadow-xs whitespace-nowrap">
                 Most Popular
               </span>
 
               <div className="space-y-3.5 sm:space-y-4 pt-1">
                 <div>
-                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#263238]">
+                  <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#171717]">
                     Up to 10 Properties
                   </span>
-                  <h3 className="font-editorial text-xl sm:text-2xl font-bold text-[#263238] mt-2">Growth Pro (10 Properties)</h3>
+                  <h3 className="font-editorial text-xl sm:text-2xl font-bold text-[#171717] mt-2">Growth Pro (10 Properties)</h3>
                   <p className="text-xs text-[#666666] mt-0.5 leading-relaxed">
                     Ideal for PG operators and owners managing multiple rental units.
                   </p>
@@ -1718,35 +1734,35 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                 <div className="pt-2 pb-3.5 sm:pb-4 border-b border-[#E0E0E0]">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-black text-[#263238] tracking-tight">
+                    <span className="text-2xl xs:text-3xl sm:text-4xl lg:text-5xl font-black text-[#171717] tracking-tight">
                       ₹{billingCycle === 'annual' ? (1499).toLocaleString('en-IN') : (149).toLocaleString('en-IN')}
                     </span>
                     <span className="text-xs text-[#666666]">/{billingCycle === 'annual' ? 'year' : 'month'}</span>
                   </div>
-                  <div className="text-[11px] text-[#263238] font-semibold mt-0.5">
+                  <div className="text-[11px] text-[#171717] font-semibold mt-0.5">
                     {billingCycle === 'annual' ? '₹1,499/year (Equivalent to ~₹125/month)' : '₹149 billed monthly'}
                   </div>
                 </div>
 
-                <div className="space-y-2 text-xs text-[#263238]">
+                <div className="space-y-2 text-xs text-[#171717]">
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#163B36] shrink-0" />
+                    <Check className="h-4 w-4 text-[#06110c] shrink-0" />
                     <span><b>Up to 10 Properties &amp; PG Co-Living Buildings</b></span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#163B36] shrink-0" />
+                    <Check className="h-4 w-4 text-[#06110c] shrink-0" />
                     <span><b>Sub-meter electricity bill splitting</b></span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#163B36] shrink-0" />
+                    <Check className="h-4 w-4 text-[#06110c] shrink-0" />
                     <span><b>Move-in photo checklists to protect security deposits</b></span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#163B36] shrink-0" />
+                    <Check className="h-4 w-4 text-[#06110c] shrink-0" />
                     <span><b>Income &amp; expense records with monthly summaries</b></span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#163B36] shrink-0" />
+                    <Check className="h-4 w-4 text-[#06110c] shrink-0" />
                     <span><b>See how much empty space costs you &amp; spot missed income</b></span>
                   </div>
                 </div>
@@ -1756,11 +1772,11 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 <button
                   type="button"
                   onClick={() => handleOpenTrial('growth_pro')}
-                  className="w-full py-2.5 sm:py-3.5 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white font-bold text-xs sm:text-sm shadow-md shadow-[#163B36]/20 transition duration-150 cursor-pointer"
+                  className="w-full py-2.5 sm:py-3.5 rounded-full bg-[#a31c1b] hover:bg-[#8e1817] text-white font-bold text-xs sm:text-sm shadow-lg shadow-[#a31c1b]/30 transition duration-150 cursor-pointer"
                 >
                   Start 7-Day Free Trial (₹0 Today)
                 </button>
-                <div className="text-center text-[10px] text-[#263238] font-semibold leading-tight">
+                <div className="text-center text-[10px] text-[#171717] font-semibold leading-tight">
                   ₹0 due today • Cancel before 7 days in 1 click
                 </div>
               </div>
@@ -1775,7 +1791,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#666666]">
                     Unlimited Properties
                   </span>
-                  <h3 className="font-editorial text-lg sm:text-xl font-bold text-[#263238] mt-2">Enterprise (Unlimited Properties)</h3>
+                  <h3 className="font-editorial text-lg sm:text-xl font-bold text-[#171717] mt-2">Enterprise (Unlimited Properties)</h3>
                   <p className="text-xs text-[#666666] mt-0.5 leading-relaxed">
                     For owners managing large portfolios, commercial complexes, and multiple buildings.
                   </p>
@@ -1783,7 +1799,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                 <div className="pt-2 pb-3.5 sm:pb-4 border-b border-[#E0E0E0]">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl xs:text-3xl sm:text-4xl font-black text-[#263238] tracking-tight">
+                    <span className="text-2xl xs:text-3xl sm:text-4xl font-black text-[#171717] tracking-tight">
                       ₹{billingCycle === 'annual' ? (2999).toLocaleString('en-IN') : (299).toLocaleString('en-IN')}
                     </span>
                     <span className="text-xs text-[#666666]">/{billingCycle === 'annual' ? 'year' : 'month'}</span>
@@ -1795,19 +1811,19 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
                 <div className="space-y-2 text-xs text-[#666666]">
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#263238] shrink-0" />
+                    <Check className="h-4 w-4 text-[#171717] shrink-0" />
                     <span><b>Unlimited properties, buildings &amp; portfolios</b></span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#263238] shrink-0" />
+                    <Check className="h-4 w-4 text-[#171717] shrink-0" />
                     <span>Give managers access while you stay in control</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#263238] shrink-0" />
+                    <Check className="h-4 w-4 text-[#171717] shrink-0" />
                     <span>Commercial maintenance (CAM) &amp; GST invoices</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-[#263238] shrink-0" />
+                    <Check className="h-4 w-4 text-[#171717] shrink-0" />
                     <span>Direct bank settlements &amp; priority phone support</span>
                   </div>
                 </div>
@@ -1817,7 +1833,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                 <button
                   type="button"
                   onClick={() => handleOpenTrial('enterprise')}
-                  className="w-full py-2.5 sm:py-3 rounded-full bg-[#E8F0EC] hover:bg-[#263238] hover:text-white text-[#263238] font-bold text-xs transition-colors duration-150 cursor-pointer shadow-xs"
+                  className="w-full py-2.5 sm:py-3 rounded-full bg-[#a31c1b] hover:bg-[#8e1817] text-white font-bold text-xs transition-colors duration-150 cursor-pointer shadow-md shadow-[#a31c1b]/20"
                 >
                   Start 7-Day Free Trial
                 </button>
@@ -1837,10 +1853,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
             className="max-w-4xl mx-auto p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-[#E8F0EC] border border-[#D2DDD7] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 will-change-transform transform-gpu shadow-xs"
           >
             <div className="flex items-start sm:items-center gap-3 sm:gap-3.5">
-              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-[#263238] text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5 sm:mt-0">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-[#171717] text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5 sm:mt-0">
                 <ShieldCheck className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </div>
-              <div className="text-[11px] sm:text-xs text-[#263238] leading-relaxed">
+              <div className="text-[11px] sm:text-xs text-[#171717] leading-relaxed">
                 <span className="font-extrabold">How does the 7-day free trial work? </span>
                 <span className="text-[#333333]">
                   ₹0.00 is charged today. You can test all features on your own properties for 7 full days. If Staywise makes your work easier, your plan activates after day 7. You can cancel anytime from Settings with 1 click to pay nothing.
@@ -1850,7 +1866,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
 
             <button
               onClick={() => handleOpenTrial('growth_pro')}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-[#263238] hover:bg-[#1f1f1f] text-white font-bold text-xs shrink-0 transition-colors shadow-xs cursor-pointer text-center"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-full bg-[#a31c1b] hover:bg-[#8e1817] text-white font-bold text-xs shrink-0 transition-colors shadow-sm shadow-[#a31c1b]/20 cursor-pointer text-center"
             >
               Start Free Trial →
             </button>
@@ -1870,10 +1886,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
         
         <ScrollReveal>
           <div className="text-center max-w-2xl mx-auto space-y-2 px-2 sm:px-0">
-            <span className="text-[10px] sm:text-xs font-black uppercase text-[#263238]">
+            <span className="text-[10px] sm:text-xs font-black uppercase text-[#171717]">
               Questions &amp; Answers
             </span>
-            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl font-semibold text-[#263238]">
+            <h2 className="font-editorial text-2xl xs:text-3xl sm:text-4xl font-semibold text-[#171717]">
               Frequently Asked Questions
             </h2>
             <p className="text-xs sm:text-sm text-[#666666]">
@@ -1922,7 +1938,7 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
                   <button
                     type="button"
                     onClick={() => toggleFaq(idx)}
-                    className="w-full p-3.5 sm:p-5 text-left flex items-center justify-between gap-3 font-bold text-xs sm:text-sm text-[#263238] hover:text-[#263238] transition-colors cursor-pointer"
+                    className="w-full p-3.5 sm:p-5 text-left flex items-center justify-between gap-3 font-bold text-xs sm:text-sm text-[#171717] hover:text-[#171717] transition-colors cursor-pointer"
                   >
                     <span className="leading-snug">{faq.q}</span>
                     <ChevronDown className={`h-4 w-4 text-[#666666] shrink-0 transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`} />
@@ -1949,10 +1965,10 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       >
         <div className="max-w-6xl mx-auto space-y-6">
           <div className="space-y-1 text-center md:text-left">
-            <span className="text-[10px] sm:text-xs font-black uppercase text-[#263238]">
+            <span className="text-[10px] sm:text-xs font-black uppercase text-[#171717]">
               Staywise Resources
             </span>
-            <h3 className="font-editorial text-xl sm:text-2xl font-bold text-[#263238]">
+            <h3 className="font-editorial text-xl sm:text-2xl font-bold text-[#171717]">
               Property Management Guides &amp; Resources
             </h3>
             <p className="text-xs text-[#666666]">
@@ -1963,46 +1979,46 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
           <div className="rounded-2xl border border-[#D2DDD7] bg-white divide-y divide-[#E0E0E0] overflow-hidden text-xs">
             {/* By City */}
             <div className="p-5 sm:p-6 space-y-3">
-              <h4 className="font-bold text-sm text-[#263238]">Operations by City</h4>
+              <h4 className="font-bold text-sm text-[#171717]">Operations by City</h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[#666666]">
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Bangalore Property Management</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Hyderabad PG Operations</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Delhi NCR Hostel Software</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Pune Rental Management</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Chennai Co-Living Systems</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Gurgaon Apartment Rentals</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Noida Commercial Flats</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Mumbai Rental Management</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Bangalore Property Management</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Hyderabad PG Operations</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Delhi NCR Hostel Software</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Pune Rental Management</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Chennai Co-Living Systems</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Gurgaon Apartment Rentals</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Noida Commercial Flats</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Mumbai Rental Management</span>
               </div>
             </div>
 
             {/* Practical Upgrades */}
             <div className="p-5 sm:p-6 space-y-3">
-              <h4 className="font-bold text-sm text-[#263238]">Helpful Landlord Guides</h4>
+              <h4 className="font-bold text-sm text-[#171717]">Helpful Landlord Guides</h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[#666666]">
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Replacing Paper Registers</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Automating WhatsApp Rent Reminders</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Managing PG Room &amp; Bed Sharing</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Fair Electricity Sub-Meter Splitting</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Tenant Identity Verification Online</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Protecting Security Deposits with Photos</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Tracking Rental Income &amp; Expenses</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Commercial Common Area Maintenance (CAM)</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Replacing Paper Registers</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Automating WhatsApp Rent Reminders</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Managing PG Room &amp; Bed Sharing</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Fair Electricity Sub-Meter Splitting</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Tenant Identity Verification Online</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Protecting Security Deposits with Photos</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Tracking Rental Income &amp; Expenses</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Commercial Common Area Maintenance (CAM)</span>
               </div>
             </div>
 
             {/* Connected Services */}
             <div className="p-5 sm:p-6 space-y-3">
-              <h4 className="font-bold text-sm text-[#263238]">Connected Services &amp; Tools</h4>
+              <h4 className="font-bold text-sm text-[#171717]">Connected Services &amp; Tools</h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[#666666]">
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">WhatsApp Payment Reminders</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Instant UPI QR Code Collection</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Automated PDF Rent Receipts</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Aadhaar Online KYC Verification</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Digital Rental Agreement Records</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Move-In Condition Photo Checklist</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Caretaker &amp; Manager Delegated Access</span>
-                <span className="hover:text-[#263238] transition-colors cursor-pointer">Electricity Sub-Meter Calculator</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">WhatsApp Payment Reminders</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Instant UPI QR Code Collection</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Automated PDF Rent Receipts</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Aadhaar Online KYC Verification</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Digital Rental Agreement Records</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Move-In Condition Photo Checklist</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Caretaker &amp; Manager Delegated Access</span>
+                <span className="hover:text-[#171717] transition-colors cursor-pointer">Electricity Sub-Meter Calculator</span>
               </div>
             </div>
           </div>
@@ -2012,11 +2028,11 @@ export default function LandingPageView({ onNavigateToLogin }: LandingPageViewPr
       {/* ---------------------------------------------------- */}
       {/* 12. CLEAN MINIMALIST FOOTER                          */}
       {/* ---------------------------------------------------- */}
-      <footer className="bg-[#263238] text-white/80 py-10 sm:py-12 px-4 sm:px-6 lg:px-12 text-xs relative overflow-hidden">
+      <footer className="bg-[#171717] text-white/80 py-10 sm:py-12 px-4 sm:px-6 lg:px-12 text-xs relative overflow-hidden">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 relative z-10 text-center md:text-left">
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-2.5">
-              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white text-[#263238] flex items-center justify-center font-bold text-xs shrink-0">
+              <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white text-[#171717] flex items-center justify-center font-bold text-xs shrink-0">
                 SW
               </div>
               <span className="font-extrabold text-white text-sm tracking-tight">STAYWISE</span>

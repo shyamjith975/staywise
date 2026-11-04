@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../../lib/db';
 import { getAuthenticatedUser, enforceTenantIsolation } from '../../../../lib/security/authorization';
+import { invalidateBootstrapCache } from '../../../../lib/cache/apiCache';
 
 export async function GET(
   req: NextRequest,
@@ -55,6 +56,8 @@ export async function PUT(
       return NextResponse.json({ success: false, error: 'Property not found' }, { status: 404 });
     }
 
+    invalidateBootstrapCache();
+
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     console.error('[API /api/properties/[id]] PUT Error:', error);
@@ -86,6 +89,9 @@ export async function DELETE(
     if (!deleted) {
       return NextResponse.json({ success: false, error: 'Property not found' }, { status: 404 });
     }
+
+    invalidateBootstrapCache();
+
     return NextResponse.json({ success: true, message: 'Property deleted successfully' });
   } catch (error) {
     console.error('[API /api/properties/[id]] DELETE Error:', error);

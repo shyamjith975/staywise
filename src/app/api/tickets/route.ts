@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
+import { invalidateBootstrapCache } from '../../../lib/cache/apiCache';
 
 export async function GET() {
   try {
@@ -20,6 +21,8 @@ export async function POST(req: NextRequest) {
       ticketNumber: body.ticketNumber || `TKT-${Math.floor(1000 + Math.random() * 9000)}`,
       createdAt: body.createdAt || new Date().toISOString()
     });
+
+    invalidateBootstrapCache();
 
     return NextResponse.json({ success: true, data: newTicket }, { status: 201 });
   } catch (error) {

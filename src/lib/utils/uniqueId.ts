@@ -100,3 +100,29 @@ export function generateVisitorId(): string {
 export function generateReferralId(): string {
   return generateUniqueId('ref');
 }
+
+export function generateRewardEntryId(): string {
+  return generateUniqueId('rew');
+}
+
+export function generateProtectionAppId(): string {
+  return generateUniqueId('dp-app');
+}
+
+export function generateProtectionContractId(): string {
+  return generateUniqueId('dp-ct');
+}
+
+export function generatePolicyNumber(): string {
+  const ts = Date.now().toString(36).toUpperCase();
+  const rand = getRandomEntropy(4).toUpperCase();
+  return `SW-DP-${ts}-${rand}`;
+}
+
+export function generateConditionReportId(): string {
+  return generateUniqueId('cr');
+}
+
+export function generateClaimId(): string {
+  return generateUniqueId('clm');
+}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../../../lib/db';
 import { requireRole } from '../../../../../lib/security/authorization';
+import { invalidateBootstrapCache } from '../../../../../lib/cache/apiCache';
 
 export async function POST(
   req: NextRequest,
@@ -32,6 +33,8 @@ export async function POST(
       referenceId: verifiedProperty.id,
       settlementStatus: 'CLEARED'
     });
+
+    invalidateBootstrapCache();
 
     return NextResponse.json({
       success: true,

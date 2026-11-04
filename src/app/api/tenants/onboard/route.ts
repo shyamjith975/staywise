@@ -3,6 +3,11 @@ import { db } from '../../../../lib/db';
 
 export async function POST(req: NextRequest) {
   try {
+    const apiKey = 
+      req.headers.get('x-api-key') || 
+      req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ||
+      req.headers.get('x-staywise-client-key');
+
     const body = await req.json();
     if (!body.name || !body.email || !body.propertyId || !body.unitNumber) {
       return NextResponse.json(
@@ -25,14 +30,26 @@ export async function POST(req: NextRequest) {
       leaseStart: body.leaseStart || new Date().toISOString().split('T')[0],
       leaseEnd: body.leaseEnd || '2027-09-30',
       rentDueDate: Number(body.rentDueDate) || 5,
-      password: body.password || 'Tenant@123'
+      password: body.password || 'Tenant@123',
+      tenancyType: body.tenancyType || 'Residential',
+      hasFood: body.hasFood ?? false,
+      roomSharing: body.roomSharing || 'Single',
+      coTenant: body.coTenant,
+      aadhaarNumber: body.aadhaarNumber,
+      panNumber: body.panNumber,
+      documents: body.documents
     });
 
     return NextResponse.json({
       success: true,
       message: `Tenant ${body.name} successfully onboarded into SQLite database.`,
       data: onboardResult
-    }, { status: 201 });
+    }, { 
+      status: 201,
+      headers: {
+        'x-api-authenticated': apiKey ? 'true' : 'false'
+      }
+    });
   } catch (error) {
     console.error('[API /api/tenants/onboard] Error:', error);
     return NextResponse.json(

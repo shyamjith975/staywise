@@ -1,58 +1,86 @@
 @import "tailwindcss";
 
+@theme {
+  --color-charcoal: #171717;
+  --color-obsidian: #06110c;
+  --color-crimson: #a31c1b;
+  --color-brand-primary: #06110c;
+  --color-brand-accent: #a31c1b;
+  --color-brand-charcoal: #171717;
+}
+
 @layer base {
   :root {
     /* ==========================================================================
-       STAYWISE CURATED 5-COLOR BRAND PALETTE
+       SAVED / PREVIOUS CURATED 5-COLOR BRAND PALETTE (ARCHIVED 2026-10-25)
+       --------------------------------------------------------------------------
+       --color-saved-forest: #163B36;
+       --color-saved-forest-hover: #102B27;
+       --color-saved-sage: #E8F0EC;
+       --color-saved-canvas: #F7F8F6;
+       --color-saved-gold: #C69A55;
+       --color-saved-gold-hover: #B58B47;
+       --color-saved-charcoal: #263238;
+       --color-saved-border: #D2DDD7;
+       ========================================================================== */
+
+    /* ==========================================================================
+       ACTIVE 3-COLOR BRAND MASTER PALETTE
+       1. #171717 — Charcoal Slate
+       2. #06110c — Midnight Obsidian Pine
+       3. #a31c1b — Crimson Ruby Accent
        ========================================================================== */
     
-    /* 1. Deep Forest Green — Primary Brand (#163B36) */
-    --color-primary-brand: #163B36;
-    --color-primary-hover: #102B27;
-    --color-primary-active: #0B1E1B;
+    /* 1. Midnight Obsidian Pine — Primary Brand (#06110c) */
+    --color-primary-brand: #06110c;
+    --color-primary-hover: #171717;
+    --color-primary-active: #030806;
 
-    /* 2. Soft Sage — Secondary Surfaces (#E8F0EC) */
+    /* 2. Soft Sage & Tinted Secondary Surfaces (#E8F0EC) */
     --color-surface-sage: #E8F0EC;
     --color-surface-sage-hover: #DCE8E1;
     --color-surface-sage-active: #D0E0D6;
 
-    /* 3. Warm Off-White — Main Background (#F7F8F6) */
+    /* 3. Warm Off-White Canvas (#F7F8F6) */
     --color-bg-canvas: #F7F8F6;
     --color-bg-white: #FFFFFF;
 
-    /* 4. Muted Gold — Accent (#C69A55) */
-    --color-accent-gold: #C69A55;
-    --color-accent-gold-hover: #B58B47;
-    --color-accent-gold-subtle: #FAF5EB;
+    /* 4. Crimson Ruby — Accent (#a31c1b) */
+    --color-accent-gold: #a31c1b;
+    --color-accent-crimson: #a31c1b;
+    --color-accent-crimson-hover: #8e1817;
+    --color-accent-crimson-subtle: #fbebeb;
+    --color-accent-gold-hover: #8e1817;
+    --color-accent-gold-subtle: #fbebeb;
 
-    /* 5. Charcoal Slate — Text & Structure (#263238) */
-    --color-text-charcoal: #263238;
-    --color-text-body: #37474F;
-    --color-text-muted: #546E7A;
-    --color-text-subtle: #78909C;
+    /* 5. Charcoal Slate — Text & Structure (#171717) */
+    --color-text-charcoal: #171717;
+    --color-text-body: #262626;
+    --color-text-muted: #525252;
+    --color-text-subtle: #737373;
 
     /* Borders & Dividers */
     --color-border: #D2DDD7;
     --color-border-subtle: #E2EAE6;
 
-    /* Legacy mapping aliases */
-    --color-pine-dark: #163B36;
-    --color-forest: #1F4D46;
+    /* Semantic & Legacy mapping aliases */
+    --color-pine-dark: #06110c;
+    --color-forest: #06110c;
     --color-moss: #E8F0EC;
-    --color-lime-glow: #C69A55;
+    --color-lime-glow: #a31c1b;
     --color-background-canvas: #F7F8F6;
     --color-background: #F7F8F6;
     --color-surface: #FFFFFF;
     --color-surface-subtle: #E8F0EC;
     --color-surface-hover: #DCE8E1;
-    --color-text-primary: #263238;
-    --color-text-secondary: #37474F;
+    --color-text-primary: #171717;
+    --color-text-secondary: #262626;
   }
 }
 
 body {
   background-color: #F7F8F6;
-  color: #263238;
+  color: #171717;
   font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Plus Jakarta Sans", "Inter", -apple-system, Roboto, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -63,14 +91,14 @@ body {
 .logip-card {
   background-color: #FFFFFF;
   border-radius: 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(22, 59, 54, 0.05), 0 1px 2px -1px rgba(22, 59, 54, 0.03);
+  box-shadow: 0 1px 3px 0 rgba(6, 17, 12, 0.05), 0 1px 2px -1px rgba(6, 17, 12, 0.03);
   border: 1px solid #D2DDD7;
   transition: all 0.2s ease-in-out;
 }
 
 .organic-card:hover,
 .logip-card:hover {
-  box-shadow: 0 8px 20px -3px rgba(22, 59, 54, 0.08);
+  box-shadow: 0 8px 20px -3px rgba(6, 17, 12, 0.08);
 }
 
 /* Secondary Surface Cards — Soft Sage */
@@ -81,45 +109,48 @@ body {
   border: 1px solid #D2DDD7;
 }
 
-/* Primary Dark Cards — Deep Forest Green */
+/* Primary Dark Cards — Midnight Obsidian Pine */
 .organic-card-dark {
-  background-color: #163B36;
+  background-color: #06110c;
   color: #F7F8F6;
   border-radius: 1.5rem;
-  border: 1px solid #1F4D46;
+  border: 1px solid #171717;
 }
 
 /* Accent Badges & Buttons */
-.badge-gold {
-  background-color: #FAF5EB;
-  color: #8C6B2E;
-  border: 1px solid #ECCFA4;
+.badge-gold,
+.badge-crimson {
+  background-color: #fbebeb;
+  color: #a31c1b;
+  border: 1px solid #f5c2c2;
 }
 
 .badge-sage {
   background-color: #E8F0EC;
-  color: #163B36;
+  color: #06110c;
   border: 1px solid #D2DDD7;
 }
 
 .btn-primary-brand {
-  background-color: #163B36;
+  background-color: #06110c;
   color: #FFFFFF;
-  border: 1px solid #163B36;
+  border: 1px solid #06110c;
   transition: all 0.15s ease-in-out;
 }
 .btn-primary-brand:hover {
-  background-color: #102B27;
+  background-color: #171717;
 }
 
-.btn-accent-gold {
-  background-color: #C69A55;
+.btn-accent-gold,
+.btn-accent-crimson {
+  background-color: #a31c1b;
   color: #FFFFFF;
-  border: 1px solid #C69A55;
+  border: 1px solid #a31c1b;
   transition: all 0.15s ease-in-out;
 }
-.btn-accent-gold:hover {
-  background-color: #B58B47;
+.btn-accent-gold:hover,
+.btn-accent-crimson:hover {
+  background-color: #8e1817;
 }
 
 /* Custom Sleek Scrollbar */
@@ -138,7 +169,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #163B36;
+  background: #06110c;
 }
 
 .font-tabular {

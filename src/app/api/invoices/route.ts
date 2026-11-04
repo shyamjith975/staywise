@@ -8,7 +8,12 @@ export async function GET(req: NextRequest) {
     const tenantId = searchParams.get('tenantId') || undefined;
     const propertyId = searchParams.get('propertyId') || undefined;
 
-    let invoices = await db.invoices.findMany({ tenantId, propertyId });
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50', 10)));
+    const offset = (page - 1) * limit;
+    const status = searchParams.get('status') || undefined;
+
+    let invoices = await db.invoices.findMany({ tenantId, propertyId, status, limit, offset });
 
     // Multi-tenant isolation (P0.3): Owners only see invoices for their properties
     const auth = await getAuthenticatedUser(req);
@@ -18,7 +23,17 @@ export async function GET(req: NextRequest) {
       invoices = invoices.filter(inv => myPropIds.has(inv.propertyId));
     }
 
-    return NextResponse.json({ success: true, count: invoices.length, data: invoices });
+    return NextResponse.json({ 
+      success: true, 
+      count: invoices.length, 
+      page,
+      limit,
+      data: invoices 
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=10, stale-while-revalidate=30'
+      }
+    });
   } catch (error) {
     console.error('[API /api/invoices] GET Error:', error);
     return NextResponse.json({ success: false, error: 'Failed to fetch invoices' }, { status: 500 });

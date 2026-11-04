@@ -102,7 +102,7 @@ export default function CommercialCAMView() {
             </span>
             <span className="text-xs text-slate-500 font-medium">B2B Leases • Common Area Maintenance • Fit-out Tracker</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-[#263238]">
+          <h1 className="text-xl sm:text-2xl font-black text-[#171717]">
             Commercial Asset & CAM Command Center
           </h1>
           <p className="text-xs text-[#666666]">
@@ -120,8 +120,8 @@ export default function CommercialCAMView() {
             onClick={() => setActiveTab('UNITS')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'UNITS'
-                ? 'bg-[#263238] text-white shadow-sm'
-                : 'text-[#666666] hover:text-[#263238]'
+                ? 'bg-[#171717] text-white shadow-sm'
+                : 'text-[#666666] hover:text-[#171717]'
             }`}
           >
             <Briefcase className="h-3.5 w-3.5" />
@@ -131,8 +131,8 @@ export default function CommercialCAMView() {
             onClick={() => setActiveTab('CAM_POOL')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'CAM_POOL'
-                ? 'bg-[#263238] text-white shadow-sm'
-                : 'text-[#666666] hover:text-[#263238]'
+                ? 'bg-[#171717] text-white shadow-sm'
+                : 'text-[#666666] hover:text-[#171717]'
             }`}
           >
             <Layers className="h-3.5 w-3.5" />
@@ -142,8 +142,8 @@ export default function CommercialCAMView() {
             onClick={() => setActiveTab('FITOUT')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'FITOUT'
-                ? 'bg-[#263238] text-white shadow-sm'
-                : 'text-[#666666] hover:text-[#263238]'
+                ? 'bg-[#171717] text-white shadow-sm'
+                : 'text-[#666666] hover:text-[#171717]'
             }`}
           >
             <Wrench className="h-3.5 w-3.5" />
@@ -153,8 +153,8 @@ export default function CommercialCAMView() {
             onClick={() => setActiveTab('VISITORS')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'VISITORS'
-                ? 'bg-[#263238] text-white shadow-sm'
-                : 'text-[#666666] hover:text-[#263238]'
+                ? 'bg-[#171717] text-white shadow-sm'
+                : 'text-[#666666] hover:text-[#171717]'
             }`}
           >
             <QrCode className="h-3.5 w-3.5" />
@@ -164,8 +164,8 @@ export default function CommercialCAMView() {
             onClick={() => setActiveTab('PARKING')}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
               activeTab === 'PARKING'
-                ? 'bg-[#263238] text-white shadow-sm'
-                : 'text-[#666666] hover:text-[#263238]'
+                ? 'bg-[#171717] text-white shadow-sm'
+                : 'text-[#666666] hover:text-[#171717]'
             }`}
           >
             <Car className="h-3.5 w-3.5" />
@@ -207,7 +207,7 @@ export default function CommercialCAMView() {
           {activeCommercialUnits.length === 0 ? (
             <div className="bg-white rounded-3xl border border-[#D2DDD7] p-12 text-center shadow-sm">
               <Briefcase className="h-10 w-10 text-[#D2DDD7] mx-auto mb-3 opacity-50" />
-              <h3 className="text-sm font-bold text-[#263238]">No commercial units or B2B leases found</h3>
+              <h3 className="text-sm font-bold text-[#171717]">No commercial units or B2B leases found</h3>
               <p className="text-xs text-[#666666] max-w-sm mx-auto mt-1">
                 Commercial office spaces, tech suites, and retail lease agreements registered in your properties will appear here.
               </p>
@@ -217,12 +217,12 @@ export default function CommercialCAMView() {
               {activeCommercialUnits.map((unit) => (
                 <div 
                   key={unit.id}
-                  className="bg-white rounded-3xl border border-[#D2DDD7] p-5 shadow-sm hover:border-[#263238] hover:shadow-md transition space-y-4"
+                  className="bg-white rounded-3xl border border-[#D2DDD7] p-5 shadow-sm hover:border-[#171717] hover:shadow-md transition space-y-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-extrabold text-[#263238]">{unit.unitNumber}</span>
+                        <span className="text-xs font-extrabold text-[#171717]">{unit.unitNumber}</span>
                         <span className="text-[10px] text-slate-500 font-medium">Floor {unit.floor}</span>
                       </div>
                       <h3 className="text-base font-black text-slate-900 mt-1">{unit.businessName}</h3>
@@ -293,7 +293,7 @@ export default function CommercialCAMView() {
             </div>
 
             {/* Formula allocation explanation */}
-            <div className="p-4 rounded-2xl bg-[#263238] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="p-4 rounded-2xl bg-[#171717] text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <span className="text-[10px] uppercase font-bold text-teal-400">Allocation Formula</span>
                 <div className="text-sm font-black">
@@ -378,7 +378,7 @@ export default function CommercialCAMView() {
           {!isDemoAccount && activeCommercialUnits.length === 0 ? (
             <div className="p-12 text-center border border-dashed border-[#D2DDD7] rounded-2xl">
               <Wrench className="h-10 w-10 text-[#D2DDD7] mx-auto mb-3 opacity-50" />
-              <h3 className="text-sm font-bold text-[#263238]">No ongoing fit-outs</h3>
+              <h3 className="text-sm font-bold text-[#171717]">No ongoing fit-outs</h3>
               <p className="text-xs text-[#666666] max-w-sm mx-auto mt-1">
                 Commercial tenant interior architectural approvals and electrical fit-out milestones will track here.
               </p>
@@ -439,7 +439,7 @@ export default function CommercialCAMView() {
             </div>
             <button
               onClick={() => setIsVisitorModalOpen(true)}
-              className="px-4 py-2 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold transition flex items-center gap-1.5 self-start sm:self-auto"
+              className="px-4 py-2 rounded-2xl bg-[#171717] hover:bg-[#171717] text-white text-xs font-bold transition flex items-center gap-1.5 self-start sm:self-auto"
             >
               <Plus className="h-4 w-4" />
               <span>Generate Visitor Pass</span>
@@ -566,7 +566,7 @@ export default function CommercialCAMView() {
 
                   <button
                     type="submit"
-                    className="w-full py-3 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white font-bold transition flex items-center justify-center gap-1.5"
+                    className="w-full py-3 rounded-2xl bg-[#171717] hover:bg-[#171717] text-white font-bold transition flex items-center justify-center gap-1.5"
                   >
                     <Printer className="h-4 w-4" />
                     <span>Issue Instant QR Gate Pass</span>
@@ -592,7 +592,7 @@ export default function CommercialCAMView() {
           {!isDemoAccount && activeCommercialUnits.length === 0 ? (
             <div className="p-12 text-center border border-dashed border-[#D2DDD7] rounded-2xl">
               <Car className="h-10 w-10 text-[#D2DDD7] mx-auto mb-3 opacity-50" />
-              <h3 className="text-sm font-bold text-[#263238]">No commercial parking slots allocated</h3>
+              <h3 className="text-sm font-bold text-[#171717]">No commercial parking slots allocated</h3>
               <p className="text-xs text-[#666666] max-w-sm mx-auto mt-1">
                 Reserved parking bays, EV charging submeters, and warehouse loading docks will display once commercial units are assigned.
               </p>

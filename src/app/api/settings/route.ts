@@ -14,10 +14,26 @@ import { db } from '../../../lib/db';
  * ============================================================================
  */
 
+import {
+  getSettingsCache,
+  setSettingsCache,
+  invalidateSettingsCache,
+  invalidateBootstrapCache
+} from '../../../lib/cache/apiCache';
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId') || 'user-owner-vikram';
+
+    const cached = getSettingsCache(userId);
+    const ifNoneMatch = req.headers.get('if-none-match');
+    if (cached) {
+      if (ifNoneMatch && ifNoneMatch === cached.etag) {
+        return new NextResponse(null, { status: 304, headers: { 'ETag': cached.etag } });
+      }
+      return NextResponse.json({ success: true, data: cached.data }, { headers: { 'ETag': cached.etag } });
+    }
 
     let settings = await db.settings.getForUser(userId);
 
@@ -54,10 +70,13 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    const etag = `W/"${Buffer.from(JSON.stringify(settings)).toString('base64').slice(0, 16)}"`;
+    setSettingsCache(userId, settings, etag);
+
     return NextResponse.json({
       success: true,
       data: settings
-    });
+    }, { headers: { 'ETag': etag } });
   } catch (error) {
     console.error('[API /api/settings] GET Error:', error);
     return NextResponse.json(
@@ -114,6 +133,10 @@ export async function POST(req: NextRequest) {
       referenceId: userId,
       settlementStatus: 'CLEARED'
     });
+
+    // Invalidate RAM cache so subsequent GETs fetch fresh settings and bootstrap state immediately
+    invalidateSettingsCache(userId);
+    invalidateBootstrapCache();
 
     return NextResponse.json({
       success: true,

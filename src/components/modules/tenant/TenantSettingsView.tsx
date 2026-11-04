@@ -171,10 +171,10 @@ export default function TenantSettingsView() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-[#D2DDD7]">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#263238]">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#171717]">
               Resident Settings &amp; Security
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#163B36] font-bold border border-[#D2DDD7]">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#06110c] font-bold border border-[#D2DDD7]">
               Resident Portal
             </span>
           </div>
@@ -186,7 +186,7 @@ export default function TenantSettingsView() {
         <button
           disabled={isSaving}
           onClick={handleSaveSettings}
-          className="px-5 py-2.5 rounded-2xl bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold shadow-md flex items-center gap-2 transition cursor-pointer self-start sm:self-auto"
+          className="px-5 py-2.5 rounded-2xl bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold shadow-md flex items-center gap-2 transition cursor-pointer self-start sm:self-auto"
         >
           <Save className="h-4 w-4" />
           <span>{isSaving ? 'Saving...' : 'Save Settings'}</span>
@@ -199,8 +199,8 @@ export default function TenantSettingsView() {
           onClick={() => setActiveTab('PROFILE')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition cursor-pointer ${
             activeTab === 'PROFILE'
-              ? 'bg-[#163B36] text-white shadow-xs'
-              : 'text-[#546E7A] hover:text-[#263238] hover:bg-[#E8F0EC]'
+              ? 'bg-[#06110c] text-white shadow-xs'
+              : 'text-[#546E7A] hover:text-[#171717] hover:bg-[#E8F0EC]'
           }`}
         >
           <User className="h-4 w-4" />
@@ -211,8 +211,8 @@ export default function TenantSettingsView() {
           onClick={() => setActiveTab('SECURITY')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition cursor-pointer ${
             activeTab === 'SECURITY'
-              ? 'bg-[#163B36] text-white shadow-xs'
-              : 'text-[#546E7A] hover:text-[#263238] hover:bg-[#E8F0EC]'
+              ? 'bg-[#06110c] text-white shadow-xs'
+              : 'text-[#546E7A] hover:text-[#171717] hover:bg-[#E8F0EC]'
           }`}
         >
           <Lock className="h-4 w-4" />
@@ -223,8 +223,8 @@ export default function TenantSettingsView() {
           onClick={() => setActiveTab('BANKING')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition cursor-pointer ${
             activeTab === 'BANKING'
-              ? 'bg-[#163B36] text-white shadow-xs'
-              : 'text-[#546E7A] hover:text-[#263238] hover:bg-[#E8F0EC]'
+              ? 'bg-[#06110c] text-white shadow-xs'
+              : 'text-[#546E7A] hover:text-[#171717] hover:bg-[#E8F0EC]'
           }`}
         >
           <CreditCard className="h-4 w-4" />
@@ -235,8 +235,8 @@ export default function TenantSettingsView() {
           onClick={() => setActiveTab('NOTIFICATIONS')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition cursor-pointer ${
             activeTab === 'NOTIFICATIONS'
-              ? 'bg-[#163B36] text-white shadow-xs'
-              : 'text-[#546E7A] hover:text-[#263238] hover:bg-[#E8F0EC]'
+              ? 'bg-[#06110c] text-white shadow-xs'
+              : 'text-[#546E7A] hover:text-[#171717] hover:bg-[#E8F0EC]'
           }`}
         >
           <Bell className="h-4 w-4" />
@@ -253,11 +253,11 @@ export default function TenantSettingsView() {
           <div className="rounded-3xl bg-white border border-[#D2DDD7] p-6 space-y-4 shadow-xs">
             <div className="flex items-center justify-between pb-3 border-b border-[#D2DDD7]">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center font-bold">
+                <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#06110c] flex items-center justify-center font-bold">
                   <Building2 className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-base text-[#263238]">
+                  <h3 className="font-extrabold text-base text-[#171717]">
                     {tenantRecord?.propertyName || 'Beach Road Residences'}
                   </h3>
                   <p className="text-xs text-[#546E7A]">
@@ -273,25 +273,25 @@ export default function TenantSettingsView() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
               <div className="p-3 rounded-2xl bg-[#E8F0EC]/50 border border-[#D2DDD7]">
                 <span className="text-[11px] text-[#546E7A] block">Monthly Rent</span>
-                <span className="text-sm font-black text-[#163B36] font-tabular">
+                <span className="text-sm font-black text-[#06110c] font-tabular">
                   ₹{(tenantRecord?.monthlyRent || 25000).toLocaleString('en-IN')}
                 </span>
               </div>
               <div className="p-3 rounded-2xl bg-[#E8F0EC]/50 border border-[#D2DDD7]">
                 <span className="text-[11px] text-[#546E7A] block">Security Deposit</span>
-                <span className="text-sm font-black text-[#263238] font-tabular">
+                <span className="text-sm font-black text-[#171717] font-tabular">
                   ₹{(tenantRecord?.depositPaid || 50000).toLocaleString('en-IN')}
                 </span>
               </div>
               <div className="p-3 rounded-2xl bg-[#E8F0EC]/50 border border-[#D2DDD7]">
                 <span className="text-[11px] text-[#546E7A] block">Rent Due Day</span>
-                <span className="text-sm font-black text-[#263238]">
+                <span className="text-sm font-black text-[#171717]">
                   {tenantRecord?.rentDueDate || 5}th of every month
                 </span>
               </div>
               <div className="p-3 rounded-2xl bg-[#E8F0EC]/50 border border-[#D2DDD7]">
                 <span className="text-[11px] text-[#546E7A] block">Lease End Date</span>
-                <span className="text-sm font-black text-[#263238]">
+                <span className="text-sm font-black text-[#171717]">
                   {tenantRecord?.leaseEnd || '30 Sep 2027'}
                 </span>
               </div>
@@ -300,7 +300,7 @@ export default function TenantSettingsView() {
 
           {/* Personal Information Form */}
           <div className="rounded-3xl bg-white border border-[#D2DDD7] p-6 space-y-4 shadow-xs">
-            <h3 className="font-extrabold text-sm text-[#263238] pb-2 border-b border-[#D2DDD7]">
+            <h3 className="font-extrabold text-sm text-[#171717] pb-2 border-b border-[#D2DDD7]">
               Personal Contact Details
             </h3>
 
@@ -311,7 +311,7 @@ export default function TenantSettingsView() {
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#263238] font-bold focus:bg-white focus:outline-hidden focus:border-[#163B36]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#171717] font-bold focus:bg-white focus:outline-hidden focus:border-[#06110c]"
                 />
               </div>
 
@@ -333,7 +333,7 @@ export default function TenantSettingsView() {
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   placeholder="+91 98000 00000"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#263238] font-bold focus:bg-white focus:outline-hidden focus:border-[#163B36]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#171717] font-bold focus:bg-white focus:outline-hidden focus:border-[#06110c]"
                 />
               </div>
 
@@ -344,7 +344,7 @@ export default function TenantSettingsView() {
                   value={emergencyContact}
                   onChange={e => setEmergencyContact(e.target.value)}
                   placeholder="e.g. Ramesh Menon (+91 98765 00000)"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#263238] font-bold focus:bg-white focus:outline-hidden focus:border-[#163B36]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#171717] font-bold focus:bg-white focus:outline-hidden focus:border-[#06110c]"
                 />
               </div>
             </div>
@@ -359,7 +359,7 @@ export default function TenantSettingsView() {
         <div className="space-y-6 animate-in fade-in duration-150">
           <div className="rounded-3xl bg-white border border-[#D2DDD7] p-6 space-y-5 shadow-xs">
             <div>
-              <h3 className="font-extrabold text-base text-[#263238]">Change Password</h3>
+              <h3 className="font-extrabold text-base text-[#171717]">Change Password</h3>
               <p className="text-xs text-[#546E7A] mt-0.5">
                 Passwords are automatically encrypted in SHA-256 format for maximum security.
               </p>
@@ -389,7 +389,7 @@ export default function TenantSettingsView() {
                   value={currentPassword}
                   onChange={e => setCurrentPassword(e.target.value)}
                   placeholder="Enter current password"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#263238] font-bold focus:bg-white focus:outline-hidden focus:border-[#163B36]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#171717] font-bold focus:bg-white focus:outline-hidden focus:border-[#06110c]"
                 />
               </div>
 
@@ -401,7 +401,7 @@ export default function TenantSettingsView() {
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
                   placeholder="Enter new strong password"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#263238] font-bold focus:bg-white focus:outline-hidden focus:border-[#163B36]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#171717] font-bold focus:bg-white focus:outline-hidden focus:border-[#06110c]"
                 />
               </div>
 
@@ -413,14 +413,14 @@ export default function TenantSettingsView() {
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
                   placeholder="Re-enter new password"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#263238] font-bold focus:bg-white focus:outline-hidden focus:border-[#163B36]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#171717] font-bold focus:bg-white focus:outline-hidden focus:border-[#06110c]"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={passwordLoading}
-                className="w-full py-2.5 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Key className="h-4 w-4" />
                 <span>{passwordLoading ? 'Verifying & Encrypting...' : 'Update Password (SHA-256)'}</span>
@@ -430,14 +430,14 @@ export default function TenantSettingsView() {
 
           {/* Active Session & Device Card */}
           <div className="rounded-3xl bg-white border border-[#D2DDD7] p-6 space-y-3 shadow-xs">
-            <h3 className="font-extrabold text-sm text-[#263238]">Active Login Sessions</h3>
+            <h3 className="font-extrabold text-sm text-[#171717]">Active Login Sessions</h3>
             <div className="p-3.5 rounded-2xl bg-[#E8F0EC]/50 border border-[#D2DDD7] flex items-center justify-between text-xs">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-xl bg-white flex items-center justify-center text-[#163B36] border border-[#D2DDD7]">
+                <div className="h-8 w-8 rounded-xl bg-white flex items-center justify-center text-[#06110c] border border-[#D2DDD7]">
                   <Smartphone className="h-4 w-4" />
                 </div>
                 <div>
-                  <div className="font-bold text-[#263238]">Current Browser Session (Windows / Chrome)</div>
+                  <div className="font-bold text-[#171717]">Current Browser Session (Windows / Chrome)</div>
                   <div className="text-[11px] text-[#546E7A]">Active now • Authorized via HMAC-SHA256 Token</div>
                 </div>
               </div>
@@ -456,7 +456,7 @@ export default function TenantSettingsView() {
         <div className="space-y-6 animate-in fade-in duration-150">
           <div className="rounded-3xl bg-white border border-[#D2DDD7] p-6 space-y-4 shadow-xs">
             <div>
-              <h3 className="font-extrabold text-base text-[#263238]">
+              <h3 className="font-extrabold text-base text-[#171717]">
                 Security Deposit Refund Account
               </h3>
               <p className="text-xs text-[#546E7A] mt-0.5">
@@ -479,7 +479,7 @@ export default function TenantSettingsView() {
                   value={name}
                   onChange={e => setName(e.target.value)}
                   placeholder="As per bank passbook"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#263238] font-bold focus:bg-white focus:outline-hidden focus:border-[#163B36]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#171717] font-bold focus:bg-white focus:outline-hidden focus:border-[#06110c]"
                 />
               </div>
 
@@ -490,7 +490,7 @@ export default function TenantSettingsView() {
                   value={upiId}
                   onChange={e => setUpiId(e.target.value)}
                   placeholder="e.g. resident@okhdfcbank"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#263238] font-bold focus:bg-white focus:outline-hidden focus:border-[#163B36]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#171717] font-bold focus:bg-white focus:outline-hidden focus:border-[#06110c]"
                 />
               </div>
 
@@ -501,7 +501,7 @@ export default function TenantSettingsView() {
                   value={bankName}
                   onChange={e => setBankName(e.target.value)}
                   placeholder="e.g. State Bank of India, HDFC"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#263238] font-bold focus:bg-white focus:outline-hidden focus:border-[#163B36]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#171717] font-bold focus:bg-white focus:outline-hidden focus:border-[#06110c]"
                 />
               </div>
 
@@ -512,7 +512,7 @@ export default function TenantSettingsView() {
                   value={bankAccount}
                   onChange={e => setBankAccount(e.target.value)}
                   placeholder="Savings / Current Account"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#263238] font-mono font-bold focus:bg-white focus:outline-hidden focus:border-[#163B36]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#171717] font-mono font-bold focus:bg-white focus:outline-hidden focus:border-[#06110c]"
                 />
               </div>
 
@@ -523,7 +523,7 @@ export default function TenantSettingsView() {
                   value={ifsc}
                   onChange={e => setIfsc(e.target.value.toUpperCase())}
                   placeholder="e.g. SBIN0001234"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#263238] font-mono font-bold focus:bg-white focus:outline-hidden focus:border-[#163B36]"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#E8F0EC]/30 text-[#171717] font-mono font-bold focus:bg-white focus:outline-hidden focus:border-[#06110c]"
                 />
               </div>
             </div>
@@ -537,7 +537,7 @@ export default function TenantSettingsView() {
       {activeTab === 'NOTIFICATIONS' && (
         <div className="space-y-6 animate-in fade-in duration-150">
           <div className="rounded-3xl bg-white border border-[#D2DDD7] p-6 space-y-4 shadow-xs">
-            <h3 className="font-extrabold text-base text-[#263238]">Notification Channels</h3>
+            <h3 className="font-extrabold text-base text-[#171717]">Notification Channels</h3>
             <p className="text-xs text-[#546E7A]">
               Choose how you want to receive rent receipts, payment reminders, and society maintenance alerts.
             </p>
@@ -548,10 +548,10 @@ export default function TenantSettingsView() {
                   type="checkbox"
                   checked={whatsappAlerts}
                   onChange={e => setWhatsappAlerts(e.target.checked)}
-                  className="mt-0.5 rounded text-[#163B36]"
+                  className="mt-0.5 rounded text-[#06110c]"
                 />
                 <div>
-                  <div className="font-bold text-[#263238]">WhatsApp Rent Invoices &amp; Receipts</div>
+                  <div className="font-bold text-[#171717]">WhatsApp Rent Invoices &amp; Receipts</div>
                   <div className="text-[11px] text-[#546E7A]">
                     Receive monthly rent invoices with 1-click UPI payment link and GST receipts directly on WhatsApp.
                   </div>
@@ -563,10 +563,10 @@ export default function TenantSettingsView() {
                   type="checkbox"
                   checked={smsAlerts}
                   onChange={e => setSmsAlerts(e.target.checked)}
-                  className="mt-0.5 rounded text-[#163B36]"
+                  className="mt-0.5 rounded text-[#06110c]"
                 />
                 <div>
-                  <div className="font-bold text-[#263238]">SMS Maintenance Work Order Updates</div>
+                  <div className="font-bold text-[#171717]">SMS Maintenance Work Order Updates</div>
                   <div className="text-[11px] text-[#546E7A]">
                     Get instant SMS alerts when an electrician, plumber, or AMC technician is assigned to your ticket.
                   </div>
@@ -578,10 +578,10 @@ export default function TenantSettingsView() {
                   type="checkbox"
                   checked={societyAnnouncements}
                   onChange={e => setSocietyAnnouncements(e.target.checked)}
-                  className="mt-0.5 rounded text-[#163B36]"
+                  className="mt-0.5 rounded text-[#06110c]"
                 />
                 <div>
-                  <div className="font-bold text-[#263238]">Building &amp; Community Notices</div>
+                  <div className="font-bold text-[#171717]">Building &amp; Community Notices</div>
                   <div className="text-[11px] text-[#546E7A]">
                     Notices for scheduled water tank cleanings, power maintenance, and elevator servicing.
                   </div>
@@ -594,8 +594,8 @@ export default function TenantSettingsView() {
 
       {/* Floating Save Toast feedback */}
       {isSavedToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#163B36] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-[#C69A55] animate-bounce">
-          <CheckCircle2 className="h-5 w-5 text-[#C69A55]" />
+        <div className="fixed bottom-6 right-6 z-50 bg-[#06110c] text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-[#a31c1b] animate-bounce">
+          <CheckCircle2 className="h-5 w-5 text-[#a31c1b]" />
           <span className="text-xs font-bold">Resident profile and refund preferences saved!</span>
         </div>
       )}

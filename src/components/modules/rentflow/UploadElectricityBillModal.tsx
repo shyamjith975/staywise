@@ -172,7 +172,7 @@ export default function UploadElectricityBillModal({
               <Zap className="h-5 w-5 fill-current" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-black tracking-tight text-[#263238]">
+              <h2 className="text-base sm:text-lg font-black tracking-tight text-[#171717]">
                 Upload Electricity Bill for Tenant
               </h2>
               <p className="text-xs text-[#666666]">
@@ -182,7 +182,7 @@ export default function UploadElectricityBillModal({
           </div>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-full text-[#666666] hover:text-[#263238] hover:bg-[#E8F0EC] transition"
+            className="p-1.5 rounded-full text-[#666666] hover:text-[#171717] hover:bg-[#E8F0EC] transition"
           >
             <X className="h-5 w-5" />
           </button>
@@ -190,14 +190,14 @@ export default function UploadElectricityBillModal({
 
         {/* Step 1: Select Specific Tenant / Unit */}
         <div className="space-y-2">
-          <label className="block text-xs font-bold text-[#263238] uppercase tracking-wider">
+          <label className="block text-xs font-bold text-[#171717] uppercase tracking-wider">
             1. Select Specific Tenant &amp; Unit
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <select
               value={selectedUnit}
               onChange={(e) => handleUnitChange(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#ffffff] text-xs font-bold text-[#263238] focus:outline-none focus:ring-2 focus:ring-[#163B36]"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-[#ffffff] text-xs font-bold text-[#171717] focus:outline-none focus:ring-2 focus:ring-[#06110c]"
             >
               {unitOptions.map((opt) => (
                 <option key={opt.unit} value={opt.unit}>
@@ -206,24 +206,24 @@ export default function UploadElectricityBillModal({
               ))}
             </select>
 
-            <div className="px-3.5 py-2.5 rounded-xl bg-[#E8F0EC] border border-[#263238]/20 flex items-center justify-between text-xs">
+            <div className="px-3.5 py-2.5 rounded-xl bg-[#E8F0EC] border border-[#171717]/20 flex items-center justify-between text-xs">
               <span className="text-[#666666]">Meter Serial:</span>
-              <span className="font-mono font-bold text-[#263238]">{selectedTenantInfo.meter}</span>
+              <span className="font-mono font-bold text-[#171717]">{selectedTenantInfo.meter}</span>
             </div>
           </div>
 
           <div className="text-[11px] text-[#666666] flex items-center gap-1.5 px-1">
-            <Building2 className="h-3 w-3 text-[#263238]" />
+            <Building2 className="h-3 w-3 text-[#171717]" />
             <span>Property: <b>{selectedTenantInfo.property}</b></span>
             <span>•</span>
-            <User className="h-3 w-3 text-[#263238]" />
+            <User className="h-3 w-3 text-[#171717]" />
             <span>Assigned Tenant: <b>{selectedTenantInfo.tenant}</b></span>
           </div>
         </div>
 
         {/* Step 2: Upload Bill Document (PDF / Image) */}
         <div className="space-y-2">
-          <label className="block text-xs font-bold text-[#263238] uppercase tracking-wider">
+          <label className="block text-xs font-bold text-[#171717] uppercase tracking-wider">
             2. Attach Official Discom Bill Document (PDF / Image)
           </label>
 
@@ -239,7 +239,7 @@ export default function UploadElectricityBillModal({
               }
             }}
             className={`relative border-2 border-dashed rounded-2xl p-4 sm:p-5 text-center transition ${
-              isDragging ? 'border-[#263238] bg-[#E8F0EC]/50' : 'border-[#D2DDD7] bg-[#ffffff] hover:bg-white'
+              isDragging ? 'border-[#171717] bg-[#E8F0EC]/50' : 'border-[#D2DDD7] bg-[#ffffff] hover:bg-white'
             }`}
           >
             <input 
@@ -256,7 +256,7 @@ export default function UploadElectricityBillModal({
                     <FileText className="h-4 w-4" />
                   </div>
                   <div className="text-left">
-                    <div className="text-xs font-extrabold text-[#263238] truncate max-w-[200px] sm:max-w-xs">
+                    <div className="text-xs font-extrabold text-[#171717] truncate max-w-[200px] sm:max-w-xs">
                       {uploadedFile.name}
                     </div>
                     <div className="text-[10px] text-[#666666]">{uploadedFile.size} • Verified &amp; Attached</div>
@@ -270,9 +270,9 @@ export default function UploadElectricityBillModal({
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center space-y-1.5 py-2">
-                <UploadCloud className="h-8 w-8 text-[#263238]" />
-                <div className="text-xs font-bold text-[#263238]">
-                  Drop Discom bill PDF or image here, or <span className="text-[#263238] underline">browse</span>
+                <UploadCloud className="h-8 w-8 text-[#171717]" />
+                <div className="text-xs font-bold text-[#171717]">
+                  Drop Discom bill PDF or image here, or <span className="text-[#171717] underline">browse</span>
                 </div>
                 <div className="text-[10px] text-[#666666]">Supports PDF, PNG, JPG (Max 10 MB)</div>
               </div>
@@ -282,7 +282,7 @@ export default function UploadElectricityBillModal({
 
         {/* Step 3: Meter Readings & Computation */}
         <div className="space-y-2">
-          <label className="block text-xs font-bold text-[#263238] uppercase tracking-wider">
+          <label className="block text-xs font-bold text-[#171717] uppercase tracking-wider">
             3. Readings &amp; Consumption Breakdown
           </label>
 
@@ -292,7 +292,7 @@ export default function UploadElectricityBillModal({
               <select
                 value={discom}
                 onChange={(e) => setDiscom(e.target.value)}
-                className="w-full px-2.5 py-2 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#263238]"
+                className="w-full px-2.5 py-2 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#171717]"
               >
                 <option value="BESCOM Bangalore">BESCOM</option>
                 <option value="KSEB Kerala">KSEB Kerala</option>
@@ -308,7 +308,7 @@ export default function UploadElectricityBillModal({
                 type="text"
                 value={billingMonth}
                 onChange={(e) => setBillingMonth(e.target.value)}
-                className="w-full px-2.5 py-2 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#263238]"
+                className="w-full px-2.5 py-2 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#171717]"
               />
             </div>
 
@@ -318,7 +318,7 @@ export default function UploadElectricityBillModal({
                 type="number"
                 value={previousReading}
                 onChange={(e) => setPreviousReading(Number(e.target.value))}
-                className="w-full px-2.5 py-2 rounded-xl border border-[#D2DDD7] bg-white font-mono font-bold text-[#263238]"
+                className="w-full px-2.5 py-2 rounded-xl border border-[#D2DDD7] bg-white font-mono font-bold text-[#171717]"
               />
             </div>
 
@@ -328,7 +328,7 @@ export default function UploadElectricityBillModal({
                 type="number"
                 value={currentReading}
                 onChange={(e) => setCurrentReading(Number(e.target.value))}
-                className="w-full px-2.5 py-2 rounded-xl border border-[#D2DDD7] bg-white font-mono font-bold text-[#263238]"
+                className="w-full px-2.5 py-2 rounded-xl border border-[#D2DDD7] bg-white font-mono font-bold text-[#171717]"
               />
             </div>
           </div>
@@ -341,7 +341,7 @@ export default function UploadElectricityBillModal({
                 step="0.1"
                 value={ratePerUnit}
                 onChange={(e) => setRatePerUnit(Number(e.target.value))}
-                className="w-full px-2.5 py-2 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#263238]"
+                className="w-full px-2.5 py-2 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#171717]"
               />
             </div>
 
@@ -351,7 +351,7 @@ export default function UploadElectricityBillModal({
                 type="number"
                 value={fixedCharges}
                 onChange={(e) => setFixedCharges(Number(e.target.value))}
-                className="w-full px-2.5 py-2 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#263238]"
+                className="w-full px-2.5 py-2 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#171717]"
               />
             </div>
 
@@ -361,7 +361,7 @@ export default function UploadElectricityBillModal({
                 type="text"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-2.5 py-2 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#263238]"
+                className="w-full px-2.5 py-2 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#171717]"
               />
             </div>
           </div>
@@ -370,7 +370,7 @@ export default function UploadElectricityBillModal({
           <div className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-between text-xs">
             <div>
               <span className="text-[#666666] block">Net Sub-meter Units:</span>
-              <span className="font-extrabold text-[#263238] text-sm font-tabular">
+              <span className="font-extrabold text-[#171717] text-sm font-tabular">
                 {unitsConsumed} kWh
               </span>
               <span className="text-[11px] text-[#666666]"> ({unitsConsumed} × ₹{ratePerUnit} + ₹{fixedCharges})</span>
@@ -378,7 +378,7 @@ export default function UploadElectricityBillModal({
 
             <div className="text-right">
               <span className="text-[#666666] block text-[11px]">Total Tenant Due:</span>
-              <span className="text-xl font-black text-[#263238] font-tabular">
+              <span className="text-xl font-black text-[#171717] font-tabular">
                 ₹{totalAmount.toLocaleString('en-IN')}
               </span>
             </div>
@@ -392,7 +392,7 @@ export default function UploadElectricityBillModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="e.g. Sub-meter kWh reading verified with caretaker"
-              className="w-full px-3 py-1.5 rounded-xl border border-[#D2DDD7] bg-white text-xs text-[#263238]"
+              className="w-full px-3 py-1.5 rounded-xl border border-[#D2DDD7] bg-white text-xs text-[#171717]"
             />
           </div>
         </div>
@@ -402,7 +402,7 @@ export default function UploadElectricityBillModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-[#E8F0EC] hover:bg-[#D2DDD7] text-[#263238] text-xs font-bold transition"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-[#E8F0EC] hover:bg-[#D2DDD7] text-[#171717] text-xs font-bold transition"
           >
             Cancel
           </button>
@@ -410,16 +410,16 @@ export default function UploadElectricityBillModal({
           <button
             type="button"
             onClick={() => handleSubmit(false)}
-            className="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#263238] text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-sm"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-2xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#171717] text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-sm"
           >
-            <FileText className="h-4 w-4 text-[#263238]" />
+            <FileText className="h-4 w-4 text-[#171717]" />
             <span>Save to Tenant Portal</span>
           </button>
 
           <button
             type="button"
             onClick={() => handleSubmit(true)}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-[#263238] hover:bg-[#263238] text-white text-xs font-bold shadow-md shadow-[#263238]/20 flex items-center justify-center gap-2 transition"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-[#171717] hover:bg-[#171717] text-white text-xs font-bold shadow-md shadow-[#171717]/20 flex items-center justify-center gap-2 transition"
           >
             <Send className="h-3.5 w-3.5" />
             <span>Upload &amp; WhatsApp Tenant</span>

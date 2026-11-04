@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
 import { validatePropertyPayload } from '../../../lib/validation';
 import { getAuthenticatedUser } from '../../../lib/security/authorization';
+import { invalidateBootstrapCache } from '../../../lib/cache/apiCache';
 
 export async function GET(req: NextRequest) {
   try {
@@ -29,8 +30,32 @@ export async function GET(req: NextRequest) {
       effectiveOwnerId = auth.user.id;
     }
 
-    const properties = await db.properties.findMany({ portfolio, verificationStatus, ownerId: effectiveOwnerId });
-    return NextResponse.json({ success: true, count: properties.length, data: properties });
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50', 10)));
+    const offset = (page - 1) * limit;
+
+    const properties = await db.properties.findMany({ 
+      portfolio, 
+      verificationStatus, 
+      ownerId: effectiveOwnerId,
+      limit,
+      offset
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      count: properties.length, 
+      pagination: {
+        page,
+        limit,
+        count: properties.length
+      },
+      data: properties 
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=15, stale-while-revalidate=60'
+      }
+    });
   } catch (error) {
     console.error('[API /api/properties] GET Error:', error);
     return NextResponse.json({ success: false, error: 'Failed to fetch properties' }, { status: 500 });
@@ -83,6 +108,8 @@ export async function POST(req: NextRequest) {
       referenceId: newProperty.id,
       settlementStatus: 'CLEARED'
     });
+
+    invalidateBootstrapCache();
 
     return NextResponse.json({ success: true, data: newProperty }, { status: 201 });
   } catch (error) {

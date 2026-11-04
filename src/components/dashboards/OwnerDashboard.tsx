@@ -42,6 +42,7 @@ import {
   Crown,
   UserPlus
 } from 'lucide-react';
+import { color } from '../../lib/colors';
 import { AuthorizedDelegate } from '../../types';
 
 interface BankAccount {
@@ -147,7 +148,7 @@ const DEMO_TASKS_LIST = [
     id: 'tsk-1',
     title: 'Monthly Rent Verification & Autopay Sync',
     status: 'In progress',
-    statusColor: 'bg-[#163B36]',
+    statusColor: 'bg-[#06110c]',
     hours: '4h',
     icon: 'sparkles'
   },
@@ -155,7 +156,7 @@ const DEMO_TASKS_LIST = [
     id: 'tsk-2',
     title: 'BESCOM Electricity Meter OCR Scan (Unit 302)',
     status: 'On hold',
-    statusColor: 'bg-[#263238]',
+    statusColor: 'bg-[#171717]',
     hours: '8h',
     icon: 'search'
   },
@@ -163,7 +164,7 @@ const DEMO_TASKS_LIST = [
     id: 'tsk-3',
     title: 'Digital Tenancy Agreement (Aadhaar eSign)',
     status: 'Done',
-    statusColor: 'bg-[#163B36]',
+    statusColor: 'bg-[#06110c]',
     hours: '32h',
     icon: 'code'
   }
@@ -227,7 +228,9 @@ export default function OwnerDashboard() {
     approveTenantConnectionRequest,
     rejectTenantConnectionRequest,
     addDelegate,
-    revokeDelegate
+    revokeDelegate,
+    protectionContracts,
+    protectionClaims
   } = useAppState();
 
   const isDemoAccount = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
@@ -287,6 +290,32 @@ export default function OwnerDashboard() {
     }
   }, [currentUser?.id, currentUser?.email, isDemoAccount]);
 
+  // Calculate real percentage of completed operational tasks (Done / Total)
+  const totalTasksCount = tasksList.length;
+  const completedTasksCount = tasksList.filter(t => 
+    t.status.toLowerCase() === 'done' || 
+    t.status.toLowerCase() === 'completed' || 
+    t.status.toLowerCase() === 'resolved'
+  ).length;
+  const realTaskPercentage = totalTasksCount > 0 
+    ? Math.round((completedTasksCount / totalTasksCount) * 100) 
+    : 100;
+
+  const toggleTaskStatus = (taskId: string) => {
+    setTasksList(prev => prev.map(t => {
+      if (t.id === taskId) {
+        const isDone = t.status.toLowerCase() === 'done' || t.status.toLowerCase() === 'completed';
+        const newStatus = isDone ? 'In progress' : 'Done';
+        return {
+          ...t,
+          status: newStatus,
+          statusColor: newStatus === 'Done' ? 'bg-emerald-600' : 'bg-[#06110c]'
+        };
+      }
+      return t;
+    }));
+  };
+
   // Modal States
   const [isAddBankModalOpen, setIsAddBankModalOpen] = useState(false);
   const [isUploadDocModalOpen, setIsUploadDocModalOpen] = useState(false);
@@ -340,16 +369,26 @@ export default function OwnerDashboard() {
   const activeElectricityBills = isDemoAccount
     ? electricityBills
     : electricityBills.filter(b => activeProperties.some(p => p.id === b.propertyId));
-
-  const pendingConnectionRequests = tenantConnectionRequests.filter(r => r.status === 'PENDING_APPROVAL');
+  const ownerPropIds = activeProperties.map(p => p.id);
+  const ownerPropNames = activeProperties.map(p => p.name.toLowerCase());
+  const pendingConnectionRequests = isDemoAccount
+    ? tenantConnectionRequests.filter(r => r.status === 'PENDING_APPROVAL')
+    : tenantConnectionRequests.filter(r => 
+        r.status === 'PENDING_APPROVAL' && (
+          r.ownerId === currentUser.id ||
+          (currentUser.email && r.ownerEmail?.toLowerCase() === currentUser.email?.toLowerCase()) ||
+          (r.propertyId && ownerPropIds.includes(r.propertyId)) ||
+          (r.propertyName && ownerPropNames.includes(r.propertyName.toLowerCase()))
+        )
+      );
 
   // If logged in as Manager without owner authorization, show dedicated waiting screen (zero mock data bleed)
   if (isManagerRole && !isManagerAuthorized) {
     return (
-      <div className="space-y-6 pb-12 font-sans text-[#263238]">
+      <div className="space-y-6 pb-12 font-sans text-[#171717]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D2DDD7]">
           <div>
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#263238]">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#171717]">
               Property Manager Portal
             </h1>
             <p className="text-xs text-[#546E7A] mt-0.5">
@@ -362,18 +401,18 @@ export default function OwnerDashboard() {
         </div>
 
         <div className="rounded-3xl bg-white border border-[#D2DDD7] p-8 shadow-sm max-w-2xl space-y-4">
-          <div className="h-12 w-12 rounded-2xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center font-bold">
+          <div className="h-12 w-12 rounded-2xl bg-[#E8F0EC] text-[#06110c] flex items-center justify-center font-bold">
             <Users className="h-6 w-6" />
           </div>
           <div>
-            <h2 className="text-lg font-black text-[#263238]">No Connected Property Owner Yet</h2>
+            <h2 className="text-lg font-black text-[#171717]">No Connected Property Owner Yet</h2>
             <p className="text-xs text-[#546E7A] mt-1.5 leading-relaxed">
               You are signed in as a Property Manager (<b>{currentUser.email}</b>). To access property units, maintenance tickets, and rent ledgers, a Property Owner must grant you delegate access in their Settings → Delegates section.
             </p>
           </div>
 
           <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-2 text-xs">
-            <div className="font-extrabold text-[#263238]">Important Security &amp; Compliance Rule:</div>
+            <div className="font-extrabold text-[#171717]">Important Security &amp; Compliance Rule:</div>
             <p className="text-[#546E7A] leading-relaxed text-[11px]">
               Property Managers receive scoped operational access to tenant communications and repair work orders. <b>Money withdrawal and escrow disbursements are strictly restricted to property owners only.</b>
             </p>
@@ -385,7 +424,7 @@ export default function OwnerDashboard() {
                 addNotification('Authorization Checked', 'Checked with platform registry for newly granted owner permissions.', 'SYSTEM');
                 alert('Checked for owner authorization. When a landlord adds your email in Settings, their portfolio will appear here.');
               }}
-              className="px-5 py-2.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+              className="px-5 py-2.5 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs cursor-pointer"
             >
               Check for Pending Authorizations
             </button>
@@ -413,14 +452,14 @@ export default function OwnerDashboard() {
   });
 
   return (
-    <div className="space-y-6 pb-12 font-sans text-[#263238]">
+    <div className="space-y-6 pb-12 font-sans text-[#171717]">
       {/* Top Banner: Pending Tenant Connections */}
       {pendingConnectionRequests.length > 0 && (
-        <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#163B36]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+        <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#06110c]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-2.5">
             <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse"></span>
             <div>
-              <span className="font-extrabold text-xs text-[#263238]">
+              <span className="font-extrabold text-xs text-[#171717]">
                 {pendingConnectionRequests.length} Tenant Connection Request(s) Pending Approval
               </span>
               <p className="text-[11px] text-[#546E7A]">
@@ -430,7 +469,7 @@ export default function OwnerDashboard() {
           </div>
           <button
             onClick={() => setActiveView('tenants')}
-            className="px-4 py-1.5 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition shadow-xs cursor-pointer self-start sm:self-auto"
+            className="px-4 py-1.5 rounded-xl bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs cursor-pointer self-start sm:self-auto"
           >
             Review &amp; Approve in Tenants Directory →
           </button>
@@ -441,63 +480,63 @@ export default function OwnerDashboard() {
       {/* 1. SUB-NAVIGATION TABS (Overview, Properties, Banks, Vault, Team, Power)  */}
       {/* ========================================================================= */}
       <div className="flex items-center justify-between gap-3 border-b border-[#D1D5DB] pb-3 overflow-x-auto no-scrollbar">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition shrink-0 whitespace-nowrap ${
               activeTab === 'overview'
-                ? 'bg-[#163B36] text-white shadow-2xs'
-                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
+                ? 'bg-[#06110c] text-white shadow-2xs'
+                : 'text-[#171717] hover:text-[#171717] hover:bg-[#E8F0EC]'
             }`}
           >
             Universal Overview
           </button>
           <button
             onClick={() => setActiveTab('properties')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition shrink-0 whitespace-nowrap ${
               activeTab === 'properties'
-                ? 'bg-[#163B36] text-white shadow-2xs'
-                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
+                ? 'bg-[#06110c] text-white shadow-2xs'
+                : 'text-[#171717] hover:text-[#171717] hover:bg-[#E8F0EC]'
             }`}
           >
             Properties &amp; Units ({activeProperties.length})
           </button>
           <button
             onClick={() => setActiveTab('bank_accounts')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition shrink-0 whitespace-nowrap ${
               activeTab === 'bank_accounts'
-                ? 'bg-[#163B36] text-white shadow-2xs'
-                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
+                ? 'bg-[#06110c] text-white shadow-2xs'
+                : 'text-[#171717] hover:text-[#171717] hover:bg-[#E8F0EC]'
             }`}
           >
             Bank Accounts ({bankAccounts.length})
           </button>
           <button
             onClick={() => setActiveTab('documents')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition shrink-0 whitespace-nowrap ${
               activeTab === 'documents'
-                ? 'bg-[#163B36] text-white shadow-2xs'
-                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
+                ? 'bg-[#06110c] text-white shadow-2xs'
+                : 'text-[#171717] hover:text-[#171717] hover:bg-[#E8F0EC]'
             }`}
           >
             Documents &amp; Records ({documents.length})
           </button>
           <button
             onClick={() => setActiveTab('delegates')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition shrink-0 whitespace-nowrap ${
               activeTab === 'delegates'
-                ? 'bg-[#163B36] text-white shadow-2xs'
-                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
+                ? 'bg-[#06110c] text-white shadow-2xs'
+                : 'text-[#171717] hover:text-[#171717] hover:bg-[#E8F0EC]'
             }`}
           >
             Team Access ({activeDelegates.length})
           </button>
           <button
             onClick={() => setActiveTab('utilities')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition shrink-0 whitespace-nowrap ${
               activeTab === 'utilities'
-                ? 'bg-[#163B36] text-white shadow-2xs'
-                : 'text-[#263238] hover:text-[#263238] hover:bg-[#E8F0EC]'
+                ? 'bg-[#06110c] text-white shadow-2xs'
+                : 'text-[#171717] hover:text-[#171717] hover:bg-[#E8F0EC]'
             }`}
           >
             Electricity Bills ({activeElectricityBills.length})
@@ -517,42 +556,68 @@ export default function OwnerDashboard() {
           <div className="lg:col-span-8 space-y-6">
             
             {/* Header: Greeting + Date */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-[#263238] tracking-tight">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#D2DDD7]">
+              <div className="space-y-0.5">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#171717] tracking-tight">
                   Hello, {currentUser.name.split(' ')[0] || 'Vikram'}
                 </h1>
-                <p className="text-xs text-[#666666] mt-1 font-medium">
+                <p className="text-xs text-[#666666] font-medium">
                   Track property performance, collections, and team tasks. You almost reach your revenue goal!
                 </p>
               </div>
 
               {/* Date Pill & Quick Action */}
-              <div className="flex items-center gap-2 self-start sm:self-auto">
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
                 <button 
                   onClick={() => setActiveView('reports')}
-                  className="px-3 py-1.5 rounded-full bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238] transition shadow-2xs flex items-center gap-1"
+                  className="px-3 py-1.5 rounded-full bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717] transition shadow-2xs flex items-center gap-1 shrink-0"
                 >
                   <span>P&amp;L Statement</span>
                   <ArrowUpRight className="h-3 w-3" />
                 </button>
-                <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238] shadow-2xs">
+                <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717] shadow-2xs shrink-0">
                   <span>16 May, 2026</span>
-                  <CalendarIcon className="h-3.5 w-3.5 text-[#163B36]" />
+                  <CalendarIcon className="h-3.5 w-3.5 text-[#06110c]" />
                 </div>
               </div>
             </div>
 
             {/* Clean Slate Onboarding State for New Users */}
             {activeProperties.length === 0 && (
-              <div className="bg-white rounded-3xl p-6 border-2 border-dashed border-[#D2DDD7] text-center space-y-3 animate-in fade-in duration-200">
-                <div className="w-12 h-12 rounded-full bg-[#E8F0EC] flex items-center justify-center mx-auto text-[#163B36]">
-                  <Plus className="h-6 w-6" />
+              <div className="bg-white rounded-3xl p-6 sm:p-8 border-2 border-dashed border-[#D2DDD7] text-center space-y-4 animate-in fade-in duration-200">
+                <button
+                  type="button"
+                  onClick={() => setIsAddPropertyOpen(true)}
+                  className="w-14 h-14 rounded-full bg-[#E8F0EC] hover:bg-[#DCE8E1] border border-[#D2DDD7] hover:border-[#171717] flex items-center justify-center mx-auto text-[#06110c] hover:scale-105 transition-all shadow-xs cursor-pointer group"
+                  title="Add Property"
+                  aria-label="Add Property"
+                >
+                  <Plus className="h-7 w-7 group-hover:rotate-90 transition-transform duration-200" />
+                </button>
+                <div className="space-y-1">
+                  <h3 className="text-lg sm:text-xl font-bold text-[#171717]">Welcome to Staywise! No properties added yet.</h3>
+                  <p className="text-xs text-[#666666] max-w-md mx-auto">
+                    Your workspace starts with a clean slate. Click the + button above to register your first building, PG, flat, or commercial asset.
+                  </p>
                 </div>
-                <h3 className="text-lg font-bold text-[#263238]">Welcome to Staywise! No properties added yet.</h3>
-                <p className="text-xs text-[#666666] max-w-md mx-auto">
-                  Your workspace starts with a clean slate. Use the + Add Property and + Onboard Tenant buttons in the top header to manage units and tenants.
-                </p>
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddPropertyOpen(true)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#a31c1b] hover:bg-[#8e1817] text-white text-xs font-extrabold shadow-sm hover:shadow-md transition cursor-pointer"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>+ Add Property</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsExistingTenantWizardOpen(true)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#171717] hover:bg-[#06110c] text-white text-xs font-bold shadow-xs hover:shadow-md transition cursor-pointer"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    <span>+ Onboard Tenant</span>
+                  </button>
+                </div>
               </div>
             )}
 
@@ -565,11 +630,11 @@ export default function OwnerDashboard() {
               <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-[#666666]">Hospitality &amp; Rent Inflow</span>
-                  <span className="text-[10px] font-bold text-[#263238] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#263238]/10">
+                  <span className="text-[10px] font-bold text-[#171717] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#171717]/10">
                     {activeProperties.length > 0 ? '+24% YoY' : '0%'}
                   </span>
                 </div>
-                <div className="text-2xl sm:text-3xl font-black text-[#263238] font-tabular mt-2 tracking-tight">
+                <div className="text-2xl sm:text-3xl font-black text-[#171717] font-tabular mt-2 tracking-tight">
                   ₹{totalCollectedRent.toLocaleString('en-IN')}
                 </div>
                 <span className="text-[11px] text-[#666666] mt-1 block">
@@ -584,11 +649,11 @@ export default function OwnerDashboard() {
               <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-[#666666]">Portfolio Unit Occupancy</span>
-                  <span className="text-[10px] font-bold text-[#263238] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#263238]/10">
+                  <span className="text-[10px] font-bold text-[#171717] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#171717]/10">
                     {activeProperties.length > 0 ? 'Active' : 'No Units'}
                   </span>
                 </div>
-                <div className="text-2xl sm:text-3xl font-black text-[#263238] font-tabular mt-2 tracking-tight">
+                <div className="text-2xl sm:text-3xl font-black text-[#171717] font-tabular mt-2 tracking-tight">
                   {occupancyPercentage}%
                 </div>
                 <span className="text-[11px] text-[#666666] mt-1 block">
@@ -600,11 +665,11 @@ export default function OwnerDashboard() {
               <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-[#666666]">Active Stays &amp; Leases</span>
-                  <span className="text-[10px] font-bold text-[#263238] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#263238]/10">
+                  <span className="text-[10px] font-bold text-[#171717] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#171717]/10">
                     {occupiedUnitsCount} Leases
                   </span>
                 </div>
-                <div className="text-2xl sm:text-3xl font-black text-[#263238] font-tabular mt-2 tracking-tight">
+                <div className="text-2xl sm:text-3xl font-black text-[#171717] font-tabular mt-2 tracking-tight">
                   {occupiedUnitsCount} Stays Live
                 </div>
                 <span className="text-[11px] text-[#666666] mt-1 block">
@@ -616,11 +681,11 @@ export default function OwnerDashboard() {
               <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-[#666666]">Net Operating Cashflow</span>
-                  <span className="text-[10px] font-bold text-[#263238] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#263238]/10">
+                  <span className="text-[10px] font-bold text-[#171717] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#171717]/10">
                     {activeProperties.length > 0 ? 'Net Surplus' : 'No Inflow'}
                   </span>
                 </div>
-                <div className="text-2xl sm:text-3xl font-black text-[#263238] font-tabular mt-2 tracking-tight">
+                <div className="text-2xl sm:text-3xl font-black text-[#171717] font-tabular mt-2 tracking-tight">
                   +₹{Math.round(totalCollectedRent * 0.844).toLocaleString('en-IN')}
                 </div>
                 <span className="text-[11px] text-[#666666] mt-1 block">
@@ -628,6 +693,41 @@ export default function OwnerDashboard() {
                 </span>
               </div>
 
+            </div>
+
+            {/* Staywise Deposit Protect Institutional Guarantee Banner for Owners */}
+            <div 
+              onClick={() => setActiveView('deposit_protect')}
+              className="rounded-3xl bg-[#06110c] text-white p-5 sm:p-6 border border-[#171717] hover:border-emerald-600/50 transition cursor-pointer group shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            >
+              <div className="space-y-2 max-w-xl">
+                <div className="flex items-center gap-2">
+                  <div className="h-9 w-9 rounded-xl bg-emerald-950 text-emerald-400 border border-emerald-800/60 flex items-center justify-center font-bold">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-black text-white">Deposit Protect Guarantee</div>
+                    <div className="text-[11px] text-[#A0AEC0]">Institutional Arrears &amp; Damage Shield for Landlords</div>
+                  </div>
+                  <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-900/60 text-emerald-300 border border-emerald-700/60 ml-2">
+                    {protectionContracts.length > 0 ? `${protectionContracts.length} Active Policies` : 'Active Coverage'}
+                  </span>
+                </div>
+                <p className="text-xs text-[#CBD5E0] leading-relaxed">
+                  Eliminate deposit disputes and cash escrow lockups. Receive up to <b className="text-white">₹1,00,000 / lease</b> in guaranteed coverage for unpaid rent and tenant damage with 14-day direct settlement.
+                </p>
+              </div>
+
+              <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10">
+                <div className="text-left sm:text-right">
+                  <div className="text-xl font-black text-white font-tabular">₹1,00,000</div>
+                  <div className="text-[10px] text-[#A0AEC0]">Max Guarantee / Unit</div>
+                </div>
+                <div className="flex items-center gap-1 text-xs font-bold text-emerald-400 group-hover:text-emerald-300 transition">
+                  <span>Open Claims &amp; Policies</span>
+                  <span>→</span>
+                </div>
+              </div>
             </div>
 
             {/* Performance Chart Card (Human-Readable, Responsive with Clear Y-Axis & Tooltips) */}
@@ -638,8 +738,8 @@ export default function OwnerDashboard() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#D1D5DB]">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-base sm:text-lg font-black text-[#263238] tracking-tight">Collection &amp; Yield Performance</h3>
-                    <span className="text-[10px] sm:text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-[#163B36] text-white border border-[#263238]/20 shrink-0">
+                    <h3 className="text-base sm:text-lg font-black text-[#171717] tracking-tight">Collection &amp; Yield Performance</h3>
+                    <span className="text-[10px] sm:text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-[#06110c] text-white border border-[#171717]/20 shrink-0">
                       +12% vs Last Month
                     </span>
                   </div>
@@ -651,12 +751,12 @@ export default function OwnerDashboard() {
                 {/* Legend & Cycle Toggle */}
                 <div className="flex items-center gap-2 flex-wrap text-xs self-start sm:self-auto">
                   <div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-[#E8F0EC] border border-[#D2DDD7]">
-                    <span className="flex items-center gap-1.5 text-xs font-bold text-[#263238]">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#263238] shrink-0" />
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-[#171717]">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#171717] shrink-0" />
                       <span>May 2026 (Active)</span>
                     </span>
                     <span className="flex items-center gap-1.5 text-xs font-semibold text-[#666666]">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#163B36]/40 border border-[#163B36] shrink-0" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#06110c]/40 border border-[#06110c] shrink-0" />
                       <span>Apr 2026</span>
                     </span>
                   </div>
@@ -668,8 +768,8 @@ export default function OwnerDashboard() {
                         onClick={() => setSelectedChartRange(range)}
                         className={`px-3 py-1 rounded-full text-[11px] font-bold transition ${
                           selectedChartRange === range
-                            ? 'bg-[#163B36] text-white shadow-2xs'
-                            : 'text-[#263238]/70 hover:text-[#263238]'
+                            ? 'bg-[#06110c] text-white shadow-2xs'
+                            : 'text-[#171717]/70 hover:text-[#171717]'
                         }`}
                       >
                         {range}
@@ -681,9 +781,9 @@ export default function OwnerDashboard() {
 
               {/* Summary Stats Row */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 text-xs">
-                <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] transition hover:border-[#263238]">
+                <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] transition hover:border-[#171717]">
                   <div className="text-[10px] sm:text-[11px] text-[#666666] font-semibold">Selected Day Collection</div>
-                  <div className="text-sm sm:text-base font-black text-[#263238] font-tabular mt-0.5">
+                  <div className="text-sm sm:text-base font-black text-[#171717] font-tabular mt-0.5">
                     {hoveredDay === '01' ? '₹4.20 Lakhs' :
                      hoveredDay === '02' ? '₹9.50 Lakhs' :
                      hoveredDay === '03' ? '₹15.90 Lakhs' :
@@ -691,7 +791,7 @@ export default function OwnerDashboard() {
                      hoveredDay === '05' ? '₹16.25 Lakhs' :
                      hoveredDay === '06' ? '₹16.35 Lakhs' : '₹16.40 Lakhs'}
                   </div>
-                  <span className="text-[10px] text-[#263238] font-bold mt-0.5 block">
+                  <span className="text-[10px] text-[#171717] font-bold mt-0.5 block">
                     {hoveredDay === '03' ? '🔥 Peak Inflow (97% Met)' :
                      hoveredDay === '01' ? 'Cycle start • 25.6% Met' :
                      hoveredDay === '02' ? 'UPI Autopay • 57.9% Met' :
@@ -699,9 +799,9 @@ export default function OwnerDashboard() {
                   </span>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] transition hover:border-[#263238]">
+                <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] transition hover:border-[#171717]">
                   <div className="text-[10px] sm:text-[11px] text-[#666666] font-semibold">Monthly Peak Day</div>
-                  <div className="text-sm sm:text-base font-black text-[#263238] font-tabular mt-0.5">
+                  <div className="text-sm sm:text-base font-black text-[#171717] font-tabular mt-0.5">
                     03 May (₹15.9L)
                   </div>
                   <span className="text-[10px] text-[#666666] font-medium mt-0.5 block">
@@ -709,19 +809,19 @@ export default function OwnerDashboard() {
                   </span>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] transition hover:border-[#263238]">
+                <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] transition hover:border-[#171717]">
                   <div className="text-[10px] sm:text-[11px] text-[#666666] font-semibold">On-Time Collection Rate</div>
-                  <div className="text-sm sm:text-base font-black text-[#263238] font-tabular mt-0.5">
+                  <div className="text-sm sm:text-base font-black text-[#171717] font-tabular mt-0.5">
                     97.0% On-Time
                   </div>
-                  <span className="text-[10px] text-[#163B36] font-bold mt-0.5 block">
+                  <span className="text-[10px] text-[#06110c] font-bold mt-0.5 block">
                     ₹50,000 pending reconciliation
                   </span>
                 </div>
 
-                <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] transition hover:border-[#263238]">
+                <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] transition hover:border-[#171717]">
                   <div className="text-[10px] sm:text-[11px] text-[#666666] font-semibold">Realized Portfolio APY</div>
-                  <div className="text-sm sm:text-base font-black text-[#263238] font-tabular mt-0.5">
+                  <div className="text-sm sm:text-base font-black text-[#171717] font-tabular mt-0.5">
                     8.4% Net Yield
                   </div>
                   <span className="text-[10px] text-[#666666] font-medium mt-0.5 block">
@@ -750,7 +850,7 @@ export default function OwnerDashboard() {
                     
                     {/* Interactive Floating Popover Tooltip with Clamped Bounds */}
                     <div 
-                      className="absolute top-1 z-30 bg-[#263238] text-white rounded-2xl p-2.5 sm:p-3 shadow-xl space-y-1 text-xs w-40 sm:w-48 transition-all duration-200 border border-[#163B36] pointer-events-none"
+                      className="absolute top-1 z-30 bg-[#171717] text-white rounded-2xl p-2.5 sm:p-3 shadow-xl space-y-1 text-xs w-40 sm:w-48 transition-all duration-200 border border-[#06110c] pointer-events-none"
                       style={{
                         left: hoveredDay === '01' ? '12%' :
                               hoveredDay === '02' ? '24%' :
@@ -762,7 +862,7 @@ export default function OwnerDashboard() {
                       }}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] sm:text-xs font-black text-[#C69A55]">
+                        <span className="text-[11px] sm:text-xs font-black text-[#a31c1b]">
                           {hoveredDay} May 2026 ({
                             hoveredDay === '01' ? 'Fri' :
                             hoveredDay === '02' ? 'Sat' :
@@ -772,7 +872,7 @@ export default function OwnerDashboard() {
                             hoveredDay === '06' ? 'Wed' : 'Thu'
                           })
                         </span>
-                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#163B36] text-white font-bold shrink-0">
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#06110c] text-white font-bold shrink-0">
                           {hoveredDay === '03' ? '🔥 Peak' : 'Recorded'}
                         </span>
                       </div>
@@ -780,7 +880,7 @@ export default function OwnerDashboard() {
                       <div className="pt-1 border-t border-white/10 space-y-1">
                         <div className="flex items-center justify-between text-[11px]">
                           <span className="flex items-center gap-1 text-[#E8F0EC]">
-                            <span className="w-1.5 h-3 rounded-full bg-[#163B36]" />
+                            <span className="w-1.5 h-3 rounded-full bg-[#06110c]" />
                             May Inflow:
                           </span>
                           <span className="font-black text-white font-tabular">
@@ -795,7 +895,7 @@ export default function OwnerDashboard() {
 
                         <div className="flex items-center justify-between text-[11px]">
                           <span className="flex items-center gap-1 text-[#E8F0EC]/70">
-                            <span className="w-1.5 h-3 rounded-full bg-[#163B36]" />
+                            <span className="w-1.5 h-3 rounded-full bg-[#06110c]" />
                             Apr Inflow:
                           </span>
                           <span className="font-semibold text-[#E8F0EC] font-tabular">
@@ -808,7 +908,7 @@ export default function OwnerDashboard() {
                           </span>
                         </div>
 
-                        <div className="flex items-center justify-between text-[10px] text-[#163B36] pt-0.5 border-t border-white/5">
+                        <div className="flex items-center justify-between text-[10px] text-[#06110c] pt-0.5 border-t border-white/5">
                           <span>Growth vs Apr:</span>
                           <span className="font-bold">
                             {hoveredDay === '01' ? '+₹40,000' :
@@ -826,9 +926,9 @@ export default function OwnerDashboard() {
                     <svg className="w-full h-full overflow-visible" viewBox="0 0 700 180" preserveAspectRatio="none">
                       <defs>
                         <linearGradient id="forestAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#263238" stopOpacity="0.32" />
-                          <stop offset="50%" stopColor="#263238" stopOpacity="0.10" />
-                          <stop offset="100%" stopColor="#263238" stopOpacity="0.0" />
+                          <stop offset="0%" stopColor={color('charcoal')} stopOpacity="0.32" />
+                          <stop offset="50%" stopColor={color('charcoal')} stopOpacity="0.10" />
+                          <stop offset="100%" stopColor={color('charcoal')} stopOpacity="0.0" />
                         </linearGradient>
                       </defs>
 
@@ -855,7 +955,7 @@ export default function OwnerDashboard() {
                             hoveredDay === '05' ? '450' :
                             hoveredDay === '06' ? '550' : '650'}
                         y2="170" 
-                        stroke="#263238" 
+                        stroke={color('charcoal')} 
                         strokeWidth="1.5" 
                         strokeDasharray="3 3" 
                       />
@@ -879,7 +979,7 @@ export default function OwnerDashboard() {
                       <path
                         d="M 50,135 C 100,105 150,85 250,38 C 350,34 450,31 550,29 C 600,28 650,26 650,26"
                         fill="none"
-                        stroke="#263238"
+                        stroke={color('charcoal')}
                         strokeWidth="3.5"
                         strokeLinecap="round"
                       />
@@ -923,7 +1023,7 @@ export default function OwnerDashboard() {
                                 cx={dot.cx} 
                                 cy={dot.cyThis} 
                                 r={10} 
-                                fill="#163B36" 
+                                fill="#06110c" 
                                 opacity={0.4}
                               />
                             )}
@@ -932,8 +1032,8 @@ export default function OwnerDashboard() {
                               cx={dot.cx} 
                               cy={dot.cyThis} 
                               r={isHovered ? 6.5 : 4} 
-                              fill={isHovered ? "#163B36" : "#263238"} 
-                              stroke="#263238" 
+                              fill={isHovered ? "#06110c" : "#171717"} 
+                              stroke="#171717" 
                               strokeWidth={isHovered ? 2.5 : 1.5} 
                             />
                           </g>
@@ -962,12 +1062,12 @@ export default function OwnerDashboard() {
                         onClick={() => setHoveredDay(id)}
                         className={`py-2 px-1 sm:px-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition flex flex-col items-center justify-center min-h-[44px] ${
                           isSelected
-                            ? 'bg-[#163B36] text-white shadow-sm ring-1 ring-[#163B36]'
-                            : 'text-[#263238]/70 hover:text-[#263238] hover:bg-[#E8F0EC] bg-transparent'
+                            ? 'bg-[#06110c] text-white shadow-sm ring-1 ring-[#06110c]'
+                            : 'text-[#171717]/70 hover:text-[#171717] hover:bg-[#E8F0EC] bg-transparent'
                         }`}
                       >
                         <span className="font-extrabold">{id} May</span>
-                        <span className={`text-[9px] font-medium transition ${isSelected ? 'text-white/80' : 'text-[#263238]/60'}`}>
+                        <span className={`text-[9px] font-medium transition ${isSelected ? 'text-white/80' : 'text-[#171717]/60'}`}>
                           {dayOfWeek}
                         </span>
                       </button>
@@ -983,20 +1083,22 @@ export default function OwnerDashboard() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-extrabold text-[#263238]">Current Operational Tasks</h3>
-                  <span className="text-xs text-white font-extrabold bg-[#163B36] px-2.5 py-0.5 rounded-full">Done 88%</span>
+                  <h3 className="text-base font-extrabold text-[#171717]">Current Operational Tasks</h3>
+                  <span className="text-xs text-white font-extrabold bg-[#06110c] px-2.5 py-0.5 rounded-full">
+                    Done {realTaskPercentage}%
+                  </span>
                 </div>
 
-                <button className="flex items-center gap-1 text-xs font-bold text-[#263238] hover:text-[#163B36] transition">
+                <button className="flex items-center gap-1 text-xs font-bold text-[#171717] hover:text-[#06110c] transition">
                   <span>This Week</span>
-                  <ChevronDown className="h-3 w-3 text-[#163B36]" />
+                  <ChevronDown className="h-3 w-3 text-[#06110c]" />
                 </button>
               </div>
 
               {/* Task Items */}
               {tasksList.length === 0 ? (
                 <div className="p-6 rounded-2xl bg-white border border-dashed border-[#D2DDD7] text-center space-y-1">
-                  <p className="text-xs font-bold text-[#263238]">No operational tasks pending</p>
+                  <p className="text-xs font-bold text-[#171717]">No operational tasks pending</p>
                   <p className="text-[11px] text-[#666666]">Tasks will automatically generate as tenants request repairs, meters are scanned, or rent is due.</p>
                 </div>
               ) : (
@@ -1004,31 +1106,36 @@ export default function OwnerDashboard() {
                   {tasksList.map((task) => (
                     <div
                       key={task.id}
-                      className="p-3.5 sm:p-4 rounded-2xl bg-white border border-[#D2DDD7] hover:border-[#263238] flex items-center justify-between gap-3 text-xs shadow-2xs transition"
+                      className="p-3.5 sm:p-4 rounded-2xl bg-white border border-[#D2DDD7] hover:border-[#171717] flex items-center justify-between gap-3 text-xs shadow-2xs transition"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-9 w-9 rounded-full bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-center text-[#263238] shrink-0">
-                          {task.icon === 'sparkles' && <Zap className="h-4 w-4 text-[#263238]" />}
-                          {task.icon === 'search' && <Search className="h-4 w-4 text-[#163B36]" />}
-                          {task.icon === 'code' && <Laptop className="h-4 w-4 text-[#263238]" />}
+                        <div className="h-9 w-9 rounded-full bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-center text-[#171717] shrink-0">
+                          {task.icon === 'sparkles' && <Zap className="h-4 w-4 text-[#171717]" />}
+                          {task.icon === 'search' && <Search className="h-4 w-4 text-[#06110c]" />}
+                          {task.icon === 'code' && <Laptop className="h-4 w-4 text-[#171717]" />}
                         </div>
-                        <span className="font-bold text-[#263238] truncate">
+                        <span className="font-bold text-[#171717] truncate">
                           {task.title}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-4 sm:gap-6 shrink-0">
-                        <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => toggleTaskStatus(task.id)}
+                          className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-[#E8F0EC] transition cursor-pointer"
+                          title="Click to toggle status (Done / In progress)"
+                        >
                           <span className={`h-2.5 w-2.5 rounded-full ${task.statusColor}`} />
-                          <span className="text-xs font-bold text-[#263238] hidden sm:inline">{task.status}</span>
-                        </div>
+                          <span className="text-xs font-bold text-[#171717] hidden sm:inline">{task.status}</span>
+                        </button>
 
                         <div className="flex items-center gap-1 text-[#666666] font-bold font-tabular">
                           <Clock className="h-3.5 w-3.5" />
                           <span>{task.hours}</span>
                         </div>
 
-                        <button className="text-[#666666] hover:text-[#263238] p-1">
+                        <button className="text-[#666666] hover:text-[#171717] p-1">
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
                       </div>
@@ -1055,18 +1162,18 @@ export default function OwnerDashboard() {
                     className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-xs mx-auto"
                   />
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-[#163B36] text-white font-black text-2xl flex items-center justify-center border-2 border-white shadow-xs mx-auto">
+                  <div className="w-20 h-20 rounded-full bg-[#06110c] text-white font-black text-2xl flex items-center justify-center border-2 border-white shadow-xs mx-auto">
                     {(currentUser.name || 'Owner').charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full bg-[#C69A55] ring-2 ring-white" />
+                <span className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full bg-[#a31c1b] ring-2 ring-white" />
               </div>
 
               <div>
-                <h3 className="font-extrabold text-base text-[#263238]">
+                <h3 className="font-extrabold text-base text-[#171717]">
                   {currentUser.name || (isDemoAccount ? 'Vikram Singhania' : 'Property Owner')}
                 </h3>
-                <p className="text-xs text-[#263238]/70 font-bold mt-0.5">
+                <p className="text-xs text-[#171717]/70 font-bold mt-0.5">
                   {currentUser.roleLabel || 'Property & Asset Host'}
                 </p>
               </div>
@@ -1075,21 +1182,21 @@ export default function OwnerDashboard() {
               <div className="flex items-center justify-center gap-3 pt-1">
                 <button 
                   onClick={() => alert('Call connected with tenant WhatsApp gateway')}
-                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-[#163B36] hover:bg-[#163B36] hover:text-white transition shadow-2xs"
+                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-[#06110c] hover:bg-[#06110c] hover:text-white transition shadow-2xs"
                   title="Phone Call"
                 >
                   <Phone className="h-4 w-4" />
                 </button>
                 <button 
                   onClick={() => alert('Live video inspection room generated.')}
-                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-[#163B36] hover:bg-[#163B36] hover:text-white transition shadow-2xs"
+                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-[#06110c] hover:bg-[#06110c] hover:text-white transition shadow-2xs"
                   title="Video Inspection"
                 >
                   <Video className="h-4 w-4" />
                 </button>
                 <button 
                   onClick={() => setActiveView('settings')}
-                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-[#163B36] hover:bg-[#163B36] hover:text-white transition shadow-2xs"
+                  className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-[#06110c] hover:bg-[#06110c] hover:text-white transition shadow-2xs"
                   title="Settings"
                 >
                   <MoreVertical className="h-4 w-4" />
@@ -1099,11 +1206,11 @@ export default function OwnerDashboard() {
 
             {/* Activity & Chat Feed */}
             <div className="space-y-4">
-              <h3 className="text-sm font-extrabold text-[#263238] px-1">Live Tenant &amp; Team Activity</h3>
+              <h3 className="text-sm font-extrabold text-[#171717] px-1">Live Tenant &amp; Team Activity</h3>
 
               {activityFeed.length === 0 ? (
                 <div className="p-5 rounded-2xl bg-white border border-dashed border-[#D2DDD7] text-center space-y-1">
-                  <p className="text-xs font-bold text-[#263238]">No recent team activity</p>
+                  <p className="text-xs font-bold text-[#171717]">No recent team activity</p>
                   <p className="text-[11px] text-[#666666]">Team notes, tenant comments, and system updates will appear here.</p>
                 </div>
               ) : (
@@ -1118,7 +1225,7 @@ export default function OwnerDashboard() {
                             className="h-7 w-7 rounded-full object-cover shrink-0 border border-[#D2DDD7]" 
                           />
                           <div className="truncate">
-                            <span className="font-extrabold text-[#263238] mr-1">{item.name}</span>
+                            <span className="font-extrabold text-[#171717] mr-1">{item.name}</span>
                             <span className="text-[11px] text-[#666666]">{item.action}</span>
                           </div>
                         </div>
@@ -1126,10 +1233,10 @@ export default function OwnerDashboard() {
                       </div>
 
                       {item.type === 'message' && item.text && (
-                        <div className="relative ml-9 p-3 rounded-2xl bg-[#E8F0EC] text-[#263238] text-xs font-medium leading-relaxed border border-[#D2DDD7]">
+                        <div className="relative ml-9 p-3 rounded-2xl bg-[#E8F0EC] text-[#171717] text-xs font-medium leading-relaxed border border-[#D2DDD7]">
                           <p>{item.text}</p>
                           {item.reaction && (
-                            <div className="absolute -bottom-2 right-2 h-5 w-5 rounded-full bg-[#163B36] border border-[#263238]/20 flex items-center justify-center text-[10px] shadow-2xs">
+                            <div className="absolute -bottom-2 right-2 h-5 w-5 rounded-full bg-[#06110c] border border-[#171717]/20 flex items-center justify-center text-[10px] shadow-2xs">
                               {item.reaction}
                             </div>
                           )}
@@ -1139,18 +1246,18 @@ export default function OwnerDashboard() {
                       {item.type === 'file' && (
                         <div className="ml-9 p-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-between gap-2 shadow-2xs">
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="h-8 w-8 rounded-xl bg-[#163B36] text-white flex items-center justify-center font-bold text-[10px] shrink-0">
+                            <div className="h-8 w-8 rounded-xl bg-[#06110c] text-white flex items-center justify-center font-bold text-[10px] shrink-0">
                               PDF
                             </div>
                             <div className="truncate">
-                              <div className="font-bold text-[#263238] truncate">{item.fileName}</div>
+                              <div className="font-bold text-[#171717] truncate">{item.fileName}</div>
                               <div className="text-[10px] text-[#666666]">{item.fileSize}</div>
                             </div>
                           </div>
 
                           <button 
                             onClick={() => alert(`Downloading ${item.fileName}...`)}
-                            className="h-7 w-7 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-[#263238] hover:bg-[#163B36] transition shrink-0"
+                            className="h-7 w-7 rounded-full bg-white border border-[#D2DDD7] flex items-center justify-center text-[#171717] hover:bg-[#06110c] transition shrink-0"
                           >
                             <Download className="h-3.5 w-3.5" />
                           </button>
@@ -1165,7 +1272,7 @@ export default function OwnerDashboard() {
               {/* Chat Message Input Bar */}
               <form onSubmit={handleSendMessage} className="pt-2">
                 <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs shadow-2xs">
-                  <button type="button" className="text-[#163B36] hover:text-[#263238] transition">
+                  <button type="button" className="text-[#06110c] hover:text-[#171717] transition">
                     <Paperclip className="h-4 w-4" />
                   </button>
                   <input
@@ -1173,16 +1280,16 @@ export default function OwnerDashboard() {
                     value={chatMessage}
                     onChange={e => setChatMessage(e.target.value)}
                     placeholder="Message tenant or team..."
-                    className="flex-1 bg-transparent border-none outline-none text-[#263238] placeholder-[#666666] text-xs font-medium"
+                    className="flex-1 bg-transparent border-none outline-none text-[#171717] placeholder-[#666666] text-xs font-medium"
                   />
-                  <button type="button" className="text-[#163B36] hover:text-[#263238] transition">
+                  <button type="button" className="text-[#06110c] hover:text-[#171717] transition">
                     <Smile className="h-4 w-4" />
                   </button>
-                  <button type="button" className="text-[#163B36] hover:text-[#263238] transition">
+                  <button type="button" className="text-[#06110c] hover:text-[#171717] transition">
                     <Mic className="h-4 w-4" />
                   </button>
                   {chatMessage && (
-                    <button type="submit" className="text-[#263238] hover:text-[#263238]">
+                    <button type="submit" className="text-[#171717] hover:text-[#171717]">
                       <Send className="h-4 w-4" />
                     </button>
                   )}
@@ -1210,8 +1317,8 @@ export default function OwnerDashboard() {
                   onClick={() => setHeatmapFilter(filter)}
                   className={`px-3 py-1 rounded-full text-xs font-bold transition ${
                     heatmapFilter === filter 
-                      ? 'bg-[#163B36] text-white shadow-xs' 
-                      : 'bg-white text-[#263238] hover:bg-[#E8F0EC] border border-[#D2DDD7]'
+                      ? 'bg-[#06110c] text-white shadow-xs' 
+                      : 'bg-white text-[#171717] hover:bg-[#E8F0EC] border border-[#D2DDD7]'
                   }`}
                 >
                   {filter.replace('_', ' ')}
@@ -1222,25 +1329,44 @@ export default function OwnerDashboard() {
 
           {filteredProperties.length === 0 ? (
             <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
-              <p className="text-sm font-bold text-[#263238]">No properties found in this view</p>
-              <p className="text-xs text-[#666666]">Add your first property using the top header to begin tracking units, leases, and tenant rent.</p>
+              <button
+                type="button"
+                onClick={() => setIsAddPropertyOpen(true)}
+                className="w-12 h-12 rounded-full bg-[#E8F0EC] hover:bg-[#DCE8E1] border border-[#D2DDD7] hover:border-[#171717] flex items-center justify-center mx-auto text-[#06110c] hover:scale-105 transition-all shadow-xs cursor-pointer group"
+                title="Add Property"
+                aria-label="Add Property"
+              >
+                <Plus className="h-6 w-6 group-hover:rotate-90 transition-transform duration-200" />
+              </button>
+              <p className="text-sm font-bold text-[#171717]">No properties found in this view</p>
+              <p className="text-xs text-[#666666]">Add your first property using the + button above to begin tracking units, leases, and tenant rent.</p>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setIsAddPropertyOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#171717] hover:bg-[#06110c] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>+ Add Property</span>
+                </button>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredProperties.map(prop => (
                 <div 
                   key={prop.id}
-                  className="rounded-2xl bg-white border border-[#D2DDD7] p-5 shadow-xs hover:border-[#263238] transition space-y-3"
+                  className="rounded-2xl bg-white border border-[#D2DDD7] p-5 shadow-xs hover:border-[#171717] transition space-y-3"
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-[#163B36] text-white border border-[#263238]/20">
+                      <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-[#06110c] text-white border border-[#171717]/20">
                         {prop.type}
                       </span>
-                      <h3 className="font-extrabold text-base text-[#263238] mt-1.5">{prop.name}</h3>
+                      <h3 className="font-extrabold text-base text-[#171717] mt-1.5">{prop.name}</h3>
                       <p className="text-xs text-[#666666]">{prop.address}</p>
                     </div>
-                    <div className="h-8 w-8 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-center text-xs font-black text-[#163B36]">
+                    <div className="h-8 w-8 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-center text-xs font-black text-[#06110c]">
                       {prop.healthScore}%
                     </div>
                   </div>
@@ -1248,11 +1374,11 @@ export default function OwnerDashboard() {
                   <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#D1D5DB] text-xs">
                     <div>
                       <span className="text-[10px] text-[#666666]">Units Occupancy</span>
-                      <div className="font-bold text-[#263238]">{prop.occupiedUnits} / {prop.totalUnits} Units</div>
+                      <div className="font-bold text-[#171717]">{prop.occupiedUnits} / {prop.totalUnits} Units</div>
                     </div>
                     <div>
                       <span className="text-[10px] text-[#666666]">Monthly Rent</span>
-                      <div className="font-bold text-[#263238]">₹{prop.expectedMonthlyRent.toLocaleString('en-IN')}</div>
+                      <div className="font-bold text-[#171717]">₹{prop.expectedMonthlyRent.toLocaleString('en-IN')}</div>
                     </div>
                   </div>
 
@@ -1266,7 +1392,7 @@ export default function OwnerDashboard() {
                           setPropertyToEdit(prop);
                           setIsEditPropertyModalOpen(true);
                         }}
-                        className="px-3 py-1 rounded-full bg-[#E8F0EC] hover:bg-[#163B36] text-xs font-bold text-[#163B36] hover:text-white border border-[#D2DDD7] transition shadow-2xs cursor-pointer"
+                        className="px-3 py-1 rounded-full bg-[#E8F0EC] hover:bg-[#06110c] text-xs font-bold text-[#06110c] hover:text-white border border-[#D2DDD7] transition shadow-2xs cursor-pointer"
                       >
                         Edit
                       </button>
@@ -1292,19 +1418,19 @@ export default function OwnerDashboard() {
       {/* ========================================================================= */}
       {activeTab === 'bank_accounts' && (
         <div className="space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
             <div>
-              <h3 className="text-sm font-extrabold text-[#263238]">Direct Bank Payout Accounts</h3>
+              <h3 className="text-sm font-extrabold text-[#171717]">Direct Bank Payout Accounts</h3>
               <p className="text-xs text-[#666666]">Automated payouts routed directly to verified nodal accounts</p>
             </div>
             {activeRole === 'manager' ? (
-              <span className="px-3.5 py-1.5 rounded-full bg-rose-50 text-rose-800 text-[11px] font-bold border border-rose-200">
+              <span className="px-3.5 py-1.5 rounded-full bg-rose-50 text-rose-800 text-[11px] font-bold border border-rose-200 self-start sm:self-auto">
                 🔒 Payout &amp; Withdrawal Restricted: Owner Only
               </span>
             ) : (
               <button
                 onClick={() => setIsAddBankModalOpen(true)}
-                className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold shadow-xs transition cursor-pointer"
+                className="px-4 py-2 rounded-full bg-[#06110c] hover:bg-[#06110c] text-white text-xs font-extrabold shadow-xs transition cursor-pointer self-start sm:self-auto"
               >
                 + Add Bank Account
               </button>
@@ -1313,14 +1439,14 @@ export default function OwnerDashboard() {
 
           {bankAccounts.length === 0 ? (
             <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
-              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#263238] flex items-center justify-center mx-auto">
+              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#171717] flex items-center justify-center mx-auto">
                 <Landmark className="h-6 w-6" />
               </div>
-              <p className="text-sm font-bold text-[#263238]">No bank accounts linked yet</p>
+              <p className="text-sm font-bold text-[#171717]">No bank accounts linked yet</p>
               <p className="text-xs text-[#666666]">Add your primary bank account or nodal escrow trust to receive direct tenant rent payouts.</p>
               <button
                 onClick={() => setIsAddBankModalOpen(true)}
-                className="px-4 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
+                className="px-4 py-2 rounded-full bg-[#06110c] text-white text-xs font-bold hover:bg-[#06110c] transition shadow-xs"
               >
                 + Add Bank Account
               </button>
@@ -1331,15 +1457,15 @@ export default function OwnerDashboard() {
                 <div key={bank.id} className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-xs space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="h-10 w-10 rounded-xl bg-[#E8F0EC] text-[#263238] flex items-center justify-center font-bold">
+                      <div className="h-10 w-10 rounded-xl bg-[#E8F0EC] text-[#171717] flex items-center justify-center font-bold">
                         <Landmark className="h-5 w-5" />
                       </div>
                       <div>
-                        <h4 className="font-extrabold text-sm text-[#263238]">{bank.bankName}</h4>
+                        <h4 className="font-extrabold text-sm text-[#171717]">{bank.bankName}</h4>
                         <p className="text-xs text-[#666666] font-mono">{bank.accountNumber}</p>
                       </div>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full bg-[#163B36] text-white text-[10px] font-black border border-[#263238]/20">
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#06110c] text-white text-[10px] font-black border border-[#171717]/20">
                       {bank.status}
                     </span>
                   </div>
@@ -1347,11 +1473,11 @@ export default function OwnerDashboard() {
                   <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[#D1D5DB]">
                     <div>
                       <span className="text-[10px] text-[#666666]">IFSC Code:</span>
-                      <div className="font-bold text-[#263238]">{bank.ifsc}</div>
+                      <div className="font-bold text-[#171717]">{bank.ifsc}</div>
                     </div>
                     <div>
                       <span className="text-[10px] text-[#666666]">Holder:</span>
-                      <div className="font-bold text-[#263238] truncate">{bank.holderName}</div>
+                      <div className="font-bold text-[#171717] truncate">{bank.holderName}</div>
                     </div>
                   </div>
                 </div>
@@ -1366,14 +1492,14 @@ export default function OwnerDashboard() {
       {/* ========================================================================= */}
       {activeTab === 'documents' && (
         <div className="space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
             <div>
-              <h3 className="text-sm font-extrabold text-[#263238]">Legal Deeds &amp; Document Vault</h3>
+              <h3 className="text-sm font-extrabold text-[#171717]">Legal Deeds &amp; Document Vault</h3>
               <p className="text-xs text-[#666666]">DigiLocker &amp; Municipal statutory registry verified documents</p>
             </div>
             <button
               onClick={() => setIsUploadDocModalOpen(true)}
-              className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold shadow-xs transition"
+              className="px-4 py-2 rounded-full bg-[#06110c] hover:bg-[#06110c] text-white text-xs font-extrabold shadow-xs transition self-start sm:self-auto"
             >
               + Upload Document
             </button>
@@ -1381,14 +1507,14 @@ export default function OwnerDashboard() {
 
           {documents.length === 0 ? (
             <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
-              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#263238] flex items-center justify-center mx-auto">
+              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#171717] flex items-center justify-center mx-auto">
                 <FileText className="h-6 w-6" />
               </div>
-              <p className="text-sm font-bold text-[#263238]">Document vault is empty</p>
+              <p className="text-sm font-bold text-[#171717]">Document vault is empty</p>
               <p className="text-xs text-[#666666]">Upload title deeds, tax receipts, encumbrance certificates, and building insurance policies.</p>
               <button
                 onClick={() => setIsUploadDocModalOpen(true)}
-                className="px-4 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
+                className="px-4 py-2 rounded-full bg-[#06110c] text-white text-xs font-bold hover:bg-[#06110c] transition shadow-xs"
               >
                 + Upload Document
               </button>
@@ -1398,17 +1524,17 @@ export default function OwnerDashboard() {
               {documents.map(doc => (
                 <div key={doc.id} className="p-4 rounded-2xl bg-white border border-[#D2DDD7] shadow-xs flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-xl bg-[#E8F0EC] text-[#263238] flex items-center justify-center">
+                    <div className="h-10 w-10 rounded-xl bg-[#E8F0EC] text-[#171717] flex items-center justify-center">
                       <FileText className="h-5 w-5" />
                     </div>
                     <div>
-                      <h4 className="font-extrabold text-xs text-[#263238]">{doc.title}</h4>
+                      <h4 className="font-extrabold text-xs text-[#171717]">{doc.title}</h4>
                       <p className="text-[10px] text-[#666666]">{doc.category} • {doc.size}</p>
                     </div>
                   </div>
                   <button 
                     onClick={() => alert(`Downloading ${doc.title}...`)}
-                    className="p-2 rounded-full hover:bg-[#163B36] text-[#263238] hover:text-white transition"
+                    className="p-2 rounded-full hover:bg-[#06110c] text-[#171717] hover:text-white transition"
                   >
                     <Download className="h-4 w-4" />
                   </button>
@@ -1424,14 +1550,14 @@ export default function OwnerDashboard() {
       {/* ========================================================================= */}
       {activeTab === 'delegates' && (
         <div className="space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
             <div>
-              <h3 className="text-sm font-extrabold text-[#263238]">Team &amp; Manager Access</h3>
+              <h3 className="text-sm font-extrabold text-[#171717]">Team &amp; Manager Access</h3>
               <p className="text-xs text-[#666666]">Give your manager access to their work while you stay in control.</p>
             </div>
             <button
               onClick={() => setIsAddDelegateModalOpen(true)}
-              className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold shadow-xs transition"
+              className="px-4 py-2 rounded-full bg-[#06110c] hover:bg-[#06110c] text-white text-xs font-extrabold shadow-xs transition self-start sm:self-auto"
             >
               + Invite Member
             </button>
@@ -1439,14 +1565,14 @@ export default function OwnerDashboard() {
 
           {activeDelegates.length === 0 ? (
             <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
-              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#263238] flex items-center justify-center mx-auto">
+              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#171717] flex items-center justify-center mx-auto">
                 <Users className="h-6 w-6" />
               </div>
-              <p className="text-sm font-bold text-[#263238]">No team members added yet</p>
+              <p className="text-sm font-bold text-[#171717]">No team members added yet</p>
               <p className="text-xs text-[#666666]">Give your manager or caretaker access to their work while you stay in control.</p>
               <button
                 onClick={() => setIsAddDelegateModalOpen(true)}
-                className="px-4 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
+                className="px-4 py-2 rounded-full bg-[#06110c] text-white text-xs font-bold hover:bg-[#06110c] transition shadow-xs"
               >
                 + Invite Member
               </button>
@@ -1457,11 +1583,11 @@ export default function OwnerDashboard() {
                 <div key={del.id} className="p-5 rounded-2xl bg-white border border-[#D2DDD7] shadow-xs space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-extrabold text-sm text-[#263238]">{del.name}</h4>
+                      <h4 className="font-extrabold text-sm text-[#171717]">{del.name}</h4>
                       <p className="text-xs text-[#666666]">{del.email} • {del.phone}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="px-2.5 py-0.5 rounded-full bg-[#163B36] text-white text-[10px] font-black border border-[#263238]/20">
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#06110c] text-white text-[10px] font-black border border-[#171717]/20">
                         {del.role}
                       </span>
                       {!isDemoAccount && (
@@ -1478,7 +1604,7 @@ export default function OwnerDashboard() {
                   </div>
                   <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[#D1D5DB]">
                     {del.permissions.map((p, idx) => (
-                      <span key={idx} className="px-2 py-0.5 rounded-md bg-[#E8F0EC] border border-[#D2DDD7] text-[10px] text-[#263238] font-semibold">
+                      <span key={idx} className="px-2 py-0.5 rounded-md bg-[#E8F0EC] border border-[#D2DDD7] text-[10px] text-[#171717] font-semibold">
                         ✓ {p}
                       </span>
                     ))}
@@ -1498,9 +1624,9 @@ export default function OwnerDashboard() {
       {/* ========================================================================= */}
       {activeTab === 'utilities' && (
         <div className="space-y-4 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#E8F0EC] p-4 rounded-2xl border border-[#D2DDD7]">
             <div>
-              <h3 className="text-sm font-extrabold text-[#263238]">Electricity &amp; Utility Sub-Meters</h3>
+              <h3 className="text-sm font-extrabold text-[#171717]">Electricity &amp; Utility Sub-Meters</h3>
               <p className="text-xs text-[#666666]">AI OCR extraction and automated WhatsApp bill sharing with tenants</p>
             </div>
             <button
@@ -1508,7 +1634,7 @@ export default function OwnerDashboard() {
                 setPreselectedUnitForUpload('101');
                 setIsUploadBillModalOpen(true);
               }}
-              className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-extrabold shadow-xs transition"
+              className="px-4 py-2 rounded-full bg-[#06110c] hover:bg-[#06110c] text-white text-xs font-extrabold shadow-xs transition self-start sm:self-auto"
             >
               + Upload Power Bill
             </button>
@@ -1516,17 +1642,17 @@ export default function OwnerDashboard() {
 
           {activeElectricityBills.length === 0 ? (
             <div className="py-12 text-center bg-white rounded-2xl border border-dashed border-[#D2DDD7] p-8 space-y-3">
-              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#263238] flex items-center justify-center mx-auto">
-                <Zap className="h-6 w-6 text-[#163B36]" />
+              <div className="h-12 w-12 rounded-full bg-[#E8F0EC] text-[#171717] flex items-center justify-center mx-auto">
+                <Zap className="h-6 w-6 text-[#06110c]" />
               </div>
-              <p className="text-sm font-bold text-[#263238]">No utility bills uploaded yet</p>
+              <p className="text-sm font-bold text-[#171717]">No utility bills uploaded yet</p>
               <p className="text-xs text-[#666666]">Upload discom electricity bills or log sub-meter readings to automatically invoice tenants.</p>
               <button
                 onClick={() => {
                   setPreselectedUnitForUpload(null);
                   setIsUploadBillModalOpen(true);
                 }}
-                className="px-4 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#0F2925] transition shadow-xs"
+                className="px-4 py-2 rounded-full bg-[#06110c] text-white text-xs font-bold hover:bg-[#06110c] transition shadow-xs"
               >
                 + Upload Power Bill
               </button>
@@ -1538,15 +1664,15 @@ export default function OwnerDashboard() {
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="font-extrabold text-sm text-[#263238]">Unit {bill.unitNumber}</span>
-                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#163B36] text-white font-black border border-[#263238]/20">
+                        <span className="font-extrabold text-sm text-[#171717]">Unit {bill.unitNumber}</span>
+                        <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#06110c] text-white font-black border border-[#171717]/20">
                           {bill.propertyName}
                         </span>
                       </div>
                       <p className="text-xs text-[#666666] mt-0.5">{bill.tenantName || 'Occupied'}</p>
                     </div>
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                      bill.status === 'Paid' ? 'bg-[#163B36] text-white' : 'bg-amber-100 text-amber-800'
+                      bill.status === 'Paid' ? 'bg-[#06110c] text-white' : 'bg-amber-100 text-amber-800'
                     }`}>
                       {bill.status}
                     </span>
@@ -1555,15 +1681,15 @@ export default function OwnerDashboard() {
                   <div className="p-3 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs space-y-1">
                     <div className="flex justify-between">
                       <span className="text-[#666666]">Provider:</span>
-                      <span className="font-bold text-[#263238]">{bill.discom}</span>
+                      <span className="font-bold text-[#171717]">{bill.discom}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-[#666666]">Consumption:</span>
-                      <span className="font-bold text-[#263238]">{bill.unitsConsumed} Units</span>
+                      <span className="font-bold text-[#171717]">{bill.unitsConsumed} Units</span>
                     </div>
                     <div className="flex justify-between border-t border-[#D2DDD7] pt-1">
                       <span className="text-[#666666]">Bill Amount:</span>
-                      <span className="font-black text-sm text-[#263238]">₹{bill.totalAmount.toLocaleString('en-IN')}</span>
+                      <span className="font-black text-sm text-[#171717]">₹{bill.totalAmount.toLocaleString('en-IN')}</span>
                     </div>
                   </div>
                 </div>
@@ -1580,43 +1706,43 @@ export default function OwnerDashboard() {
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-base text-[#263238]">Add Bank Account</h3>
-              <button onClick={() => setIsAddBankModalOpen(false)} className="text-[#666666] hover:text-[#263238]">
+              <h3 className="font-extrabold text-base text-[#171717]">Add Bank Account</h3>
+              <button onClick={() => setIsAddBankModalOpen(false)} className="text-[#666666] hover:text-[#171717]">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={e => { e.preventDefault(); setIsAddBankModalOpen(false); }} className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-[#263238]">Bank Name</label>
+                <label className="text-xs font-bold text-[#171717]">Bank Name</label>
                 <input 
                   type="text" 
                   value={newBank.bankName}
                   onChange={e => setNewBank({ ...newBank, bankName: e.target.value })}
-                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717]"
                   required
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-[#263238]">Account Number</label>
+                <label className="text-xs font-bold text-[#171717]">Account Number</label>
                 <input 
                   type="password" 
                   value={newBank.accountNumber}
                   onChange={e => setNewBank({ ...newBank, accountNumber: e.target.value })}
-                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717]"
                   required
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-[#263238]">IFSC Code</label>
+                <label className="text-xs font-bold text-[#171717]">IFSC Code</label>
                 <input 
                   type="text" 
                   value={newBank.ifsc}
                   onChange={e => setNewBank({ ...newBank, ifsc: e.target.value })}
-                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717]"
                   required
                 />
               </div>
-              <button type="submit" className="w-full py-2.5 rounded-full bg-[#163B36] text-white text-xs font-black hover:bg-[#0F2925] transition shadow-xs">
+              <button type="submit" className="w-full py-2.5 rounded-full bg-[#06110c] text-white text-xs font-black hover:bg-[#06110c] transition shadow-xs">
                 Save &amp; Verify Bank Account
               </button>
             </form>
@@ -1631,23 +1757,23 @@ export default function OwnerDashboard() {
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-base text-[#263238]">Upload Document</h3>
-              <button onClick={() => setIsUploadDocModalOpen(false)} className="text-[#263238]/70 hover:text-[#263238]">
+              <h3 className="font-extrabold text-base text-[#171717]">Upload Document</h3>
+              <button onClick={() => setIsUploadDocModalOpen(false)} className="text-[#171717]/70 hover:text-[#171717]">
                 <X className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={e => { e.preventDefault(); setIsUploadDocModalOpen(false); }} className="space-y-3">
               <div>
-                <label className="text-xs font-bold text-[#263238]">Title</label>
+                <label className="text-xs font-bold text-[#171717]">Title</label>
                 <input 
                   type="text" 
                   value={newDoc.title}
                   onChange={e => setNewDoc({ ...newDoc, title: e.target.value })}
-                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717]"
                   required
                 />
               </div>
-              <button type="submit" className="w-full py-2.5 rounded-full bg-[#163B36] text-white text-xs font-black hover:bg-[#0F2925] transition shadow-xs">
+              <button type="submit" className="w-full py-2.5 rounded-full bg-[#06110c] text-white text-xs font-black hover:bg-[#06110c] transition shadow-xs">
                 Upload to Vault
               </button>
             </form>
@@ -1663,10 +1789,10 @@ export default function OwnerDashboard() {
           <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
               <div>
-                <h3 className="font-extrabold text-base text-[#263238]">Invite Team Member</h3>
+                <h3 className="font-extrabold text-base text-[#171717]">Invite Team Member</h3>
                 <p className="text-xs text-[#546E7A]">Give your manager access to their work while you stay in control</p>
               </div>
-              <button onClick={() => setIsAddDelegateModalOpen(false)} className="text-[#263238]/70 hover:text-[#263238]">
+              <button onClick={() => setIsAddDelegateModalOpen(false)} className="text-[#171717]/70 hover:text-[#171717]">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -1700,48 +1826,48 @@ export default function OwnerDashboard() {
               });
             }} className="space-y-3.5 text-xs">
               <div>
-                <label className="text-xs font-bold text-[#263238] block mb-1">Full Name</label>
+                <label className="text-xs font-bold text-[#171717] block mb-1">Full Name</label>
                 <input 
                   type="text" 
                   placeholder="e.g. CA Rajesh Kulkarni"
                   value={newDelegate.name}
                   onChange={e => setNewDelegate({ ...newDelegate, name: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#171717]"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-[#263238] block mb-1">Email</label>
+                  <label className="text-xs font-bold text-[#171717] block mb-1">Email</label>
                   <input 
                     type="email" 
                     placeholder="rajesh@cacafe.in"
                     value={newDelegate.email}
                     onChange={e => setNewDelegate({ ...newDelegate, email: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#171717]"
                     required
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-[#263238] block mb-1">Phone</label>
+                  <label className="text-xs font-bold text-[#171717] block mb-1">Phone</label>
                   <input 
                     type="text" 
                     placeholder="+91 98450 11928"
                     value={newDelegate.phone}
                     onChange={e => setNewDelegate({ ...newDelegate, phone: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238] font-mono"
+                    className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#171717] font-mono"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-[#263238] block mb-1">Assigned Role</label>
+                <label className="text-xs font-bold text-[#171717] block mb-1">Assigned Role</label>
                 <select
                   value={newDelegate.role}
                   onChange={e => setNewDelegate({ ...newDelegate, role: e.target.value as any })}
-                  className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#263238]"
+                  className="w-full p-2.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#171717]"
                 >
                   <option value="Accountant">Chartered Accountant (CA)</option>
                   <option value="Property Manager">Property Manager</option>
@@ -1750,13 +1876,13 @@ export default function OwnerDashboard() {
               </div>
 
               <div className="p-3 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-2 text-xs">
-                <span className="font-bold text-[#263238] block">Operational Permissions:</span>
+                <span className="font-bold text-[#171717] block">Operational Permissions:</span>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={newDelegate.allowLedger}
                     onChange={e => setNewDelegate({ ...newDelegate, allowLedger: e.target.checked })}
-                    className="rounded text-[#163B36]"
+                    className="rounded text-[#06110c]"
                   />
                   <span>View Double-Entry Ledger &amp; Tax P&amp;L</span>
                 </label>
@@ -1765,7 +1891,7 @@ export default function OwnerDashboard() {
                     type="checkbox"
                     checked={newDelegate.allowInvoices}
                     onChange={e => setNewDelegate({ ...newDelegate, allowInvoices: e.target.checked })}
-                    className="rounded text-[#163B36]"
+                    className="rounded text-[#06110c]"
                   />
                   <span>Inspect Rent Invoices &amp; TDS Statements</span>
                 </label>
@@ -1774,7 +1900,7 @@ export default function OwnerDashboard() {
                     type="checkbox"
                     checked={newDelegate.allowMaintenance}
                     onChange={e => setNewDelegate({ ...newDelegate, allowMaintenance: e.target.checked })}
-                    className="rounded text-[#163B36]"
+                    className="rounded text-[#06110c]"
                   />
                   <span>Manage Work Orders &amp; Field Repairs</span>
                 </label>
@@ -1784,7 +1910,7 @@ export default function OwnerDashboard() {
                 🔒 <b>Strict Compliance Rule:</b> Money withdrawal and escrow account alterations are strictly prohibited for delegates. Only the verified Property Owner can withdraw rental funds.
               </div>
 
-              <button type="submit" className="w-full py-2.5 rounded-full bg-[#163B36] text-white text-xs font-black hover:bg-[#0F2925] transition shadow-xs cursor-pointer">
+              <button type="submit" className="w-full py-2.5 rounded-full bg-[#06110c] text-white text-xs font-black hover:bg-[#06110c] transition shadow-xs cursor-pointer">
                 Authorize Delegate
               </button>
             </form>

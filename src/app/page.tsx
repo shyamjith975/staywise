@@ -56,6 +56,8 @@ import CommercialCAMView from '../components/modules/commercial/CommercialCAMVie
 import MoveFlowRetentionView from '../components/modules/moveflow/MoveFlowRetentionView';
 import FindHomeView from '../components/modules/discovery/FindHomeView';
 import LandingPageView from '../components/landing/LandingPageView';
+import StaywiseRewardsHub from '../components/modules/rewards/StaywiseRewardsHub';
+import DepositProtectHub from '../components/modules/deposit/DepositProtectHub';
 
 function MainAppShell() {
   const { 
@@ -68,26 +70,56 @@ function MainAppShell() {
     preselectedUnitForUpload 
   } = useAppState();
 
-  const [unauthScreen, setUnauthScreen] = React.useState<'landing' | 'login'>('landing');
+  const [unauthScreen, setUnauthScreen] = React.useState<'landing' | 'login'>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('login') === 'true' || urlParams.get('view') === 'login' || urlParams.get('logout') === 'true') {
+          return 'login';
+        }
+        const saved = sessionStorage.getItem('staywise_unauth_screen') || localStorage.getItem('staywise_unauth_screen');
+        if (saved === 'login') return 'login';
+      } catch (e) {}
+    }
+    return 'landing';
+  });
 
   // Check URL query parameters (?login=true or ?view=login)
   React.useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('login') === 'true' || urlParams.get('view') === 'login') {
+      if (urlParams.get('login') === 'true' || urlParams.get('view') === 'login' || urlParams.get('logout') === 'true') {
         setUnauthScreen('login');
       }
     } catch (e) {}
   }, []);
 
-  // If not logged in, render the modern high-converting Landing Page by default
-  // with 1-click option to switch to LoginView or open 7-day trial modal
+  // If not logged in, render the modern high-converting Landing Page or LoginView
   if (!isAuthenticated) {
     if (unauthScreen === 'login') {
-      return <LoginView onBackToLanding={() => setUnauthScreen('landing')} />;
+      return (
+        <LoginView 
+          onBackToLanding={() => {
+            try {
+              sessionStorage.removeItem('staywise_unauth_screen');
+              localStorage.removeItem('staywise_unauth_screen');
+            } catch (e) {}
+            setUnauthScreen('landing');
+          }} 
+        />
+      );
     }
-    return <LandingPageView onNavigateToLogin={() => setUnauthScreen('login')} />;
+    return (
+      <LandingPageView 
+        onNavigateToLogin={() => {
+          try {
+            sessionStorage.setItem('staywise_unauth_screen', 'login');
+          } catch (e) {}
+          setUnauthScreen('login');
+        }} 
+      />
+    );
   }
 
 
@@ -98,9 +130,12 @@ function MainAppShell() {
         case 'find_home':
           return <FindHomeView />;
         case 'rentflow':
-        case 'rewards':
         case 'reports':
           return <RentFlowOverview />;
+        case 'rewards':
+          return <StaywiseRewardsHub />;
+        case 'deposit_protect':
+          return <DepositProtectHub />;
         case 'maintenance':
           return <MaintenanceList />;
         case 'ai':
@@ -135,6 +170,8 @@ function MainAppShell() {
           return <EstateHospitalityDashboard initialTab="STAFF" />;
         case 'pricing':
           return <EstateHospitalityDashboard initialTab="PRICING" />;
+        case 'deposit_protect':
+          return <DepositProtectHub />;
         case 'settings':
           return <EstateSettingsView />;
         case 'overview':
@@ -164,8 +201,11 @@ function MainAppShell() {
       case 'referrals':
         return <MoveFlowRetentionView />;
       case 'rentflow':
-      case 'rewards':
         return <RentFlowOverview />;
+      case 'rewards':
+        return <StaywiseRewardsHub />;
+      case 'deposit_protect':
+        return <DepositProtectHub />;
       case 'maintenance':
         return <MaintenanceList />;
       case 'leads':
@@ -190,17 +230,17 @@ function MainAppShell() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F8F6] text-[#263238] flex font-sans selection:bg-[#163B36] selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#F7F8F6] text-[#171717] flex font-sans selection:bg-[#06110c] selection:text-white overflow-x-hidden">
       {/* Left Sidebar Navigation matching reference design */}
       <FloatingNavRail />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white lg:rounded-l-[2.5rem] my-0 lg:my-3 lg:mr-3 shadow-sm border-l border-[#D2DDD7] overflow-hidden min-h-[calc(100vh-1.5rem)]">
+      <div className="flex-1 flex flex-col min-w-0 bg-white lg:rounded-l-[2.5rem] my-0 lg:my-3 lg:mr-3 shadow-sm border-l-0 lg:border-l border-[#D2DDD7] overflow-hidden min-h-[calc(100vh-1.5rem)]">
         {/* Top Header */}
         <TopHeader />
 
         {/* Content Canvas */}
-        <main className="flex-1 p-3.5 sm:p-6 pb-28 lg:pb-8 w-full mx-auto overflow-y-auto">
+        <main className="flex-1 p-3 sm:p-6 pb-28 lg:pb-8 w-full mx-auto overflow-y-auto">
           {renderActiveView()}
         </main>
       </div>

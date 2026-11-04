@@ -44,10 +44,23 @@ import {
   SubscriptionInvoice,
   SubscriptionTierId,
   PropertyUnit,
-  TenantConnectionRequest
+  TenantConnectionRequest,
+  TenancyType,
+  RewardsAccount,
+  RewardsLedgerEntry,
+  RewardRule,
+  MerchantOffer,
+  RewardActionType,
+  DepositProtectionApplication,
+  ProtectionApplicationStatus,
+  ProtectionContract,
+  PropertyConditionReport,
+  ProtectionClaim,
+  ClaimStatus
 } from '../../types';
 import { SUBSCRIPTION_PLANS, calculateSubscriptionHash } from '../security/subscriptionCatalog';
 import { hashPassword, verifyPassword, isSha256 } from '../security/auth';
+import { invalidateBootstrapCache } from '../cache/apiCache';
 import { 
   generateUniqueId, 
   generateUserId, 
@@ -63,7 +76,13 @@ import {
   generateBillId,
   generateLeadId,
   generateVisitorId,
-  generateReferralId
+  generateReferralId,
+  generateRewardEntryId,
+  generateProtectionAppId,
+  generateProtectionContractId,
+  generatePolicyNumber,
+  generateConditionReportId,
+  generateClaimId
 } from '../utils/uniqueId';
 
 export interface UserAccount {
@@ -106,7 +125,16 @@ export interface StaywiseDatabaseSchema {
   referrals: TenantReferralItem[];
   influencerOffers: InfluencerOffer[];
   subscriptions: OwnerSubscription[];
+  rewardsAccounts: RewardsAccount[];
+  rewardsLedger: RewardsLedgerEntry[];
+  rewardRules: RewardRule[];
+  merchantOffers: MerchantOffer[];
+  depositApplications: DepositProtectionApplication[];
+  protectionContracts: ProtectionContract[];
+  conditionReports: PropertyConditionReport[];
+  protectionClaims: ProtectionClaim[];
 }
+
 
 const DB_FILE = path.join(process.cwd(), 'database.db');
 
@@ -115,23 +143,46 @@ const sb = (val: unknown, fallback: unknown = null) => (val === undefined ? fall
 
 class DatabaseEngine {
   private sqlite: DatabaseSync;
+  private static hasMigratedPasswords = false;
+  private static userCache = new Map<string, { user: UserAccount; cachedAt: number }>();
+  private static userEmailCache = new Map<string, { user: UserAccount; cachedAt: number }>();
+  private static readonly USER_CACHE_TTL_MS = 60 * 1000;
+
+  public static invalidateUserCache(userId?: string, email?: string) {
+    if (userId) {
+      DatabaseEngine.userCache.delete(userId);
+    }
+    if (email) {
+      DatabaseEngine.userEmailCache.delete(email.toLowerCase().trim());
+    }
+    if (!userId && !email) {
+      DatabaseEngine.userCache.clear();
+      DatabaseEngine.userEmailCache.clear();
+    }
+  }
 
   constructor() {
-    // Connect directly to root SQLite Database with busy_timeout for concurrency
+    // Connect directly to root SQLite Database with busy_timeout and performance pragmas
     this.sqlite = new DatabaseSync(DB_FILE);
     this.sqlite.exec('PRAGMA busy_timeout = 5000;');
     this.sqlite.exec('PRAGMA foreign_keys = ON;');
+    this.sqlite.exec('PRAGMA cache_size = -64000;'); // 64MB memory cache for SQLite
+    this.sqlite.exec('PRAGMA temp_store = MEMORY;');  // In-memory temp tables & sorting
     try {
-      this.sqlite.exec('PRAGMA journal_mode = DELETE;');
-      this.sqlite.exec('PRAGMA synchronous = FULL;');
+      this.sqlite.exec('PRAGMA journal_mode = WAL;');
+      this.sqlite.exec('PRAGMA synchronous = NORMAL;');
     } catch (e) {
-      // Journal mode already set or locked by concurrent reader
+      try {
+        this.sqlite.exec('PRAGMA journal_mode = DELETE;');
+        this.sqlite.exec('PRAGMA synchronous = NORMAL;');
+      } catch (e2) {}
     }
     this.ensureSchema();
   }
 
   private syncRootDb(): void {
-    // Commits write directly to root database.db synchronously with journal_mode = DELETE
+    // Automatically invalidate in-memory bootstrap cache on any database mutation
+    invalidateBootstrapCache();
   }
 
   private ensureSchema(): void {
@@ -600,6 +651,148 @@ class DatabaseEngine {
         preferences_json TEXT DEFAULT '{}',
         updated_at TEXT NOT NULL
       );
+
+      CREATE TABLE IF NOT EXISTS rewards_accounts (
+        user_id TEXT PRIMARY KEY,
+        user_name TEXT,
+        user_role TEXT,
+        total_earned INTEGER NOT NULL DEFAULT 0,
+        total_redeemed INTEGER NOT NULL DEFAULT 0,
+        current_balance INTEGER NOT NULL DEFAULT 0,
+        pending_points INTEGER NOT NULL DEFAULT 0,
+        current_streak INTEGER NOT NULL DEFAULT 0,
+        tier TEXT NOT NULL DEFAULT 'SILVER',
+        updated_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS rewards_ledger (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        action_type TEXT NOT NULL,
+        points INTEGER NOT NULL,
+        points_type TEXT NOT NULL,
+        reference_id TEXT,
+        reference_type TEXT,
+        description TEXT NOT NULL,
+        financial_cost REAL NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS reward_rules (
+        id TEXT PRIMARY KEY,
+        rule_code TEXT UNIQUE NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        points_awarded INTEGER NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        category TEXT NOT NULL,
+        monthly_cap INTEGER NOT NULL DEFAULT 1000,
+        partner_funded INTEGER NOT NULL DEFAULT 0
+      );
+
+      CREATE TABLE IF NOT EXISTS merchant_offers (
+        id TEXT PRIMARY KEY,
+        partner_name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        offer_title TEXT NOT NULL,
+        discount_description TEXT NOT NULL,
+        points_required INTEGER NOT NULL,
+        voucher_code TEXT NOT NULL,
+        image_url TEXT,
+        terms TEXT NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        expiry_date TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS deposit_protection_applications (
+        id TEXT PRIMARY KEY,
+        tenant_id TEXT NOT NULL,
+        tenant_name TEXT NOT NULL,
+        tenant_email TEXT,
+        tenant_phone TEXT,
+        owner_id TEXT NOT NULL,
+        owner_name TEXT,
+        property_id TEXT NOT NULL,
+        property_name TEXT NOT NULL,
+        unit_number TEXT NOT NULL,
+        monthly_rent REAL NOT NULL,
+        traditional_deposit_amount REAL NOT NULL,
+        monthly_fee REAL NOT NULL,
+        coverage_limit REAL NOT NULL,
+        risk_score INTEGER NOT NULL DEFAULT 85,
+        eligibility_status TEXT NOT NULL DEFAULT 'ELIGIBLE',
+        status TEXT NOT NULL DEFAULT 'PENDING_ASSESSMENT',
+        disclosures_accepted INTEGER NOT NULL DEFAULT 1,
+        partner_provider TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS protection_contracts (
+        id TEXT PRIMARY KEY,
+        application_id TEXT NOT NULL,
+        policy_number TEXT UNIQUE NOT NULL,
+        tenant_id TEXT NOT NULL,
+        tenant_name TEXT NOT NULL,
+        owner_id TEXT NOT NULL,
+        owner_name TEXT NOT NULL,
+        property_id TEXT NOT NULL,
+        property_name TEXT NOT NULL,
+        unit_number TEXT NOT NULL,
+        coverage_limit REAL NOT NULL,
+        monthly_fee REAL NOT NULL,
+        start_date TEXT NOT NULL,
+        end_date TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'ACTIVE',
+        partner_name TEXT NOT NULL,
+        certificate_url TEXT,
+        covered_risks_json TEXT NOT NULL DEFAULT '[]',
+        exclusions_json TEXT NOT NULL DEFAULT '[]',
+        created_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS property_condition_reports (
+        id TEXT PRIMARY KEY,
+        contract_id TEXT,
+        property_id TEXT NOT NULL,
+        property_name TEXT NOT NULL,
+        unit_number TEXT NOT NULL,
+        tenant_id TEXT NOT NULL,
+        tenant_name TEXT NOT NULL,
+        report_type TEXT NOT NULL,
+        inspection_date TEXT NOT NULL,
+        overall_condition TEXT NOT NULL,
+        items_json TEXT NOT NULL DEFAULT '[]',
+        photos_json TEXT NOT NULL DEFAULT '[]',
+        notes TEXT NOT NULL,
+        verified_by TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'VERIFIED',
+        created_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS protection_claims (
+        id TEXT PRIMARY KEY,
+        contract_id TEXT NOT NULL,
+        policy_number TEXT NOT NULL,
+        property_id TEXT NOT NULL,
+        property_name TEXT NOT NULL,
+        unit_number TEXT NOT NULL,
+        owner_id TEXT NOT NULL,
+        owner_name TEXT NOT NULL,
+        tenant_id TEXT NOT NULL,
+        tenant_name TEXT NOT NULL,
+        claim_type TEXT NOT NULL,
+        claimed_amount REAL NOT NULL,
+        approved_amount REAL,
+        deductible REAL NOT NULL DEFAULT 0,
+        description TEXT NOT NULL,
+        evidence_urls_json TEXT NOT NULL DEFAULT '[]',
+        status TEXT NOT NULL DEFAULT 'FILED',
+        dispute_reason TEXT,
+        settlement_date TEXT,
+        settlement_txn_id TEXT,
+        created_at TEXT NOT NULL
+      );
     `);
 
     // Automatic non-destructive schema migrations
@@ -627,18 +820,232 @@ class DatabaseEngine {
     try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN co_tenant_phone TEXT;'); } catch (e) {}
     try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN co_tenant_email TEXT;'); } catch (e) {}
 
-    // Automatic SHA-256 password migration: ensure all stored passwords are encrypted in SHA-256 format
+    // High-performance secondary indexes for sub-millisecond query execution
+    const indexStatements = [
+      'CREATE INDEX IF NOT EXISTS idx_properties_owner_id ON properties(owner_id);',
+      'CREATE INDEX IF NOT EXISTS idx_properties_portfolio ON properties(portfolio);',
+      'CREATE INDEX IF NOT EXISTS idx_properties_status ON properties(status);',
+      'CREATE INDEX IF NOT EXISTS idx_property_units_property_id ON property_units(property_id);',
+      'CREATE INDEX IF NOT EXISTS idx_tenants_property_id ON tenants(property_id);',
+      'CREATE INDEX IF NOT EXISTS idx_tenants_phone ON tenants(phone);',
+      'CREATE INDEX IF NOT EXISTS idx_tenants_user_id ON tenants(user_id);',
+      'CREATE INDEX IF NOT EXISTS idx_invoices_tenant_id ON invoices(tenant_id);',
+      'CREATE INDEX IF NOT EXISTS idx_invoices_property_id ON invoices(property_id);',
+      'CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);',
+      'CREATE INDEX IF NOT EXISTS idx_invoices_due_date ON invoices(due_date);',
+      'CREATE INDEX IF NOT EXISTS idx_ledger_reference_id ON ledger(reference_id);',
+      'CREATE INDEX IF NOT EXISTS idx_ledger_account ON ledger(account);',
+      'CREATE INDEX IF NOT EXISTS idx_ledger_type ON ledger(type);',
+      'CREATE INDEX IF NOT EXISTS idx_tickets_property_id ON tickets(property_id);',
+      'CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);',
+      'CREATE INDEX IF NOT EXISTS idx_leads_property_interest ON leads(property_interest);',
+      'CREATE INDEX IF NOT EXISTS idx_bills_property_id ON electricity_bills(property_id);',
+      'CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id);',
+      'CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);',
+      'CREATE INDEX IF NOT EXISTS idx_tenant_connections_owner_id ON tenant_connection_requests(owner_id);',
+      'CREATE INDEX IF NOT EXISTS idx_tenant_connections_tenant_id ON tenant_connection_requests(tenant_id);',
+      'CREATE INDEX IF NOT EXISTS idx_pg_beds_room_id ON pg_beds(room_id);',
+      'CREATE INDEX IF NOT EXISTS idx_pg_beds_tenant_id ON pg_beds(tenant_id);',
+      'CREATE INDEX IF NOT EXISTS idx_commercial_units_property_id ON commercial_units(property_id);',
+      'CREATE INDEX IF NOT EXISTS idx_estate_assets_estate_name ON estate_assets(estate_name);',
+      'CREATE INDEX IF NOT EXISTS idx_deposit_disputes_property_id ON deposit_disputes(property_id);',
+      'CREATE INDEX IF NOT EXISTS idx_rewards_ledger_user ON rewards_ledger(user_id);',
+      'CREATE INDEX IF NOT EXISTS idx_dp_apps_tenant ON deposit_protection_applications(tenant_id);',
+      'CREATE INDEX IF NOT EXISTS idx_dp_apps_owner ON deposit_protection_applications(owner_id);',
+      'CREATE INDEX IF NOT EXISTS idx_dp_contracts_tenant ON protection_contracts(tenant_id);',
+      'CREATE INDEX IF NOT EXISTS idx_dp_contracts_owner ON protection_contracts(owner_id);',
+      'CREATE INDEX IF NOT EXISTS idx_cond_reports_prop ON property_condition_reports(property_id);',
+      'CREATE INDEX IF NOT EXISTS idx_cond_reports_tenant ON property_condition_reports(tenant_id);',
+      'CREATE INDEX IF NOT EXISTS idx_claims_contract ON protection_claims(contract_id);',
+      'CREATE INDEX IF NOT EXISTS idx_claims_owner ON protection_claims(owner_id);',
+      'CREATE INDEX IF NOT EXISTS idx_claims_tenant ON protection_claims(tenant_id);'
+    ];
+
+    for (const sql of indexStatements) {
+      try {
+        this.sqlite.exec(sql);
+      } catch (e) {}
+    }
+
+    // Seed default Reward Rules and Merchant Offers if table is fresh
     try {
-      const usersToMigrate = this.sqlite.prepare('SELECT id, password FROM users').all() as { id: string; password: string }[];
-      const updateStmt = this.sqlite.prepare('UPDATE users SET password = ? WHERE id = ?');
-      for (const u of usersToMigrate) {
-        if (u.password && !isSha256(u.password)) {
-          const hashed = hashPassword(u.password);
-          updateStmt.run(hashed, u.id);
+      const ruleCount = (this.sqlite.prepare('SELECT COUNT(*) as c FROM reward_rules').get() as any)?.c || 0;
+      if (ruleCount === 0) {
+        const insertRule = this.sqlite.prepare(`
+          INSERT INTO reward_rules (id, rule_code, name, description, points_awarded, is_active, category, monthly_cap, partner_funded)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        insertRule.run('rule-rent-ontime', 'RULE_RENT_ONTIME', 'Verified On-Time Rent Payment', 'Points awarded for rent settled on or before due date via UPI or Bank Transfer', 100, 1, 'RENT', 100, 0);
+        insertRule.run('rule-lease-renewal', 'RULE_LEASE_RENEWAL', 'Lease Renewal Completed', 'Bonus points when renewing lease agreement through Staywise', 200, 1, 'TENANCY', 200, 0);
+        insertRule.run('rule-condition-report', 'RULE_MOVEIN_INSPECTION', 'Verified Move-In Condition Report', 'Audit condition photos submitted with room checklist', 100, 1, 'TENANCY', 100, 0);
+        insertRule.run('rule-referral-lease', 'RULE_REFERRAL_LEASE', 'Eligible Referral Lease Completion', 'When a referred tenant or landlord executes a verified lease', 300, 1, 'COMMUNITY', 900, 0);
+        insertRule.run('rule-annual-streak', 'RULE_ANNUAL_STREAK', '12-Month On-Time Rent Streak', 'Annual loyalty bonus for consistent on-time tenancy records', 500, 1, 'LOYALTY', 500, 0);
+        insertRule.run('rule-merchant-partner', 'RULE_MERCHANT_PURCHASE', 'Participating Merchant Spend', 'Bonus points sponsored by neighborhood brand partners', 150, 1, 'MERCHANT', 1500, 1);
+      }
+
+      const offerCount = (this.sqlite.prepare('SELECT COUNT(*) as c FROM merchant_offers').get() as any)?.c || 0;
+      if (offerCount === 0) {
+        const insertOffer = this.sqlite.prepare(`
+          INSERT INTO merchant_offers (id, partner_name, category, offer_title, discount_description, points_required, voucher_code, image_url, terms, is_active, expiry_date)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `);
+        insertOffer.run('mo-cult', 'Cult.fit', 'Fitness', '1-Month All-Access Gym Pass', '₹1,500 off Annual Cultpass or 1 Free Month of group classes', 500, 'CULT-STAYWISE-FIT', 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400', 'Valid across 300+ Cult centers nationwide', 1, '2027-12-31');
+        insertOffer.run('mo-uc', 'Urban Company', 'Home Services', 'Deep Home & AC Cleaning', 'Flat ₹600 Instant Voucher on deep cleaning or AC service', 250, 'UC-STAYWISE-CLEAN', 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=400', 'Valid on services above ₹1,499. One redemption per month.', 1, '2027-12-31');
+        insertOffer.run('mo-bt', 'Blue Tokai', 'Dining', 'BOGO Coffee & Café Voucher', 'Buy 1 Get 1 on all artisan pour-overs and whole bean packs', 150, 'BT-WISECOFFEE', 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400', 'Valid in-store and online at Blue Tokai roasteries', 1, '2027-12-31');
+        insertOffer.run('mo-nb', "Nature's Basket", 'Groceries', '₹500 Gourmet Grocery Credit', 'Flat ₹500 off on fresh organic groceries and dairy', 200, 'NB-WISEGROCERY', 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400', 'Valid on minimum order value of ₹2,000', 1, '2027-12-31');
+        insertOffer.run('mo-pepper', 'Pepperfry', 'Furnishing', '₹2,000 Home Furnishing Voucher', '₹2,000 off on furniture, study tables, and home decor', 400, 'PEPPER-STAYWISE-DECOR', 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400', 'Applicable on orders above ₹8,000 at Pepperfry online/studios', 1, '2027-12-31');
+        insertOffer.run('mo-apollo', 'Apollo 24|7', 'Lifestyle', 'Health Check + ₹300 Meds Credit', 'Complimentary annual health screening + ₹300 medicine credit', 180, 'APOLLO-HEALTH-WISE', 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400', 'Valid pan-India on Apollo 24|7 app bookings', 1, '2027-12-31');
+      }
+
+      // Seed initial rewards account & ledger for demo tenant (Shyam Sundar)
+      const tenantRow = this.sqlite.prepare('SELECT id, name FROM users WHERE email = ? LIMIT 1').get('tenant@staywise.com') as any;
+      if (tenantRow) {
+        const existingAcc = this.sqlite.prepare('SELECT user_id FROM rewards_accounts WHERE user_id = ?').get(tenantRow.id);
+        if (!existingAcc) {
+          this.sqlite.prepare(`
+            INSERT INTO rewards_accounts (user_id, user_name, user_role, total_earned, total_redeemed, current_balance, pending_points, current_streak, tier, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).run(tenantRow.id, tenantRow.name, 'tenant', 950, 300, 650, 100, 5, 'GOLD', new Date().toISOString());
+
+          const insertLedger = this.sqlite.prepare(`
+            INSERT INTO rewards_ledger (id, user_id, action_type, points, points_type, reference_id, reference_type, description, financial_cost, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `);
+          insertLedger.run('rew-101', tenantRow.id, 'RENT_PAID_ON_TIME', 100, 'EARNED', 'inv-oct-2026', 'INVOICE', 'Verified On-Time Rent Payment (Oct 2026)', 10.0, '2026-10-04T10:30:00Z');
+          insertLedger.run('rew-102', tenantRow.id, 'MOVE_IN_INSPECTION_COMPLETED', 100, 'EARNED', 'cr-304-baseline', 'INSPECTION', 'Move-in Condition Report & Photo Audit Completed', 10.0, '2026-09-01T14:15:00Z');
+          insertLedger.run('rew-103', tenantRow.id, 'REFERRAL_COMPLETED', 300, 'EARNED', 'ref-rohan-2026', 'REFERRAL', 'Referred Rohan Verma — Verified Tenancy Signed', 30.0, '2026-09-12T16:00:00Z');
+          insertLedger.run('rew-104', tenantRow.id, 'DEPOSIT_PROTECT_BONUS', 350, 'EARNED', 'dp-ct-beachroad', 'LEASE', 'Zero-Deposit Protection Program Enrollment Bonus', 35.0, '2026-09-02T11:00:00Z');
+          insertLedger.run('rew-105', tenantRow.id, 'REDEMPTION_MERCHANT_VOUCHER', -150, 'REDEEMED', 'mo-bt', 'VOUCHER', 'Redeemed Blue Tokai BOGO Coffee Voucher', 15.0, '2026-09-20T18:45:00Z');
+          insertLedger.run('rew-106', tenantRow.id, 'REDEMPTION_RENT_CREDIT', -150, 'REDEEMED', 'inv-sep-2026', 'INVOICE', 'Applied ₹75 Rent Credit to September Invoice', 15.0, '2026-09-30T09:00:00Z');
+          insertLedger.run('rew-107', tenantRow.id, 'RENT_PAID_ON_TIME', 100, 'EARNED', 'inv-sep-2026', 'INVOICE', 'Verified On-Time Rent Payment (Sep 2026)', 10.0, '2026-09-03T12:00:00Z');
         }
       }
+
+      // Seed sample Deposit Protection Application and Active Contract
+      const contractCount = (this.sqlite.prepare('SELECT COUNT(*) as c FROM protection_contracts').get() as any)?.c || 0;
+      if (contractCount === 0 && tenantRow) {
+        const ownerRow = this.sqlite.prepare('SELECT id, name FROM users WHERE email = ? LIMIT 1').get('owner@staywise.com') as any;
+        const ownerId = ownerRow?.id || 'user-owner-vikram';
+        const ownerName = ownerRow?.name || 'Vikram Menon';
+
+        const appId = 'dp-app-beachroad-304';
+        const contractId = 'dp-ct-beachroad-304';
+        const policyNum = 'SW-DP-2026-KL902';
+        const nowIso = new Date().toISOString();
+
+        this.sqlite.prepare(`
+          INSERT INTO deposit_protection_applications (
+            id, tenant_id, tenant_name, tenant_email, tenant_phone,
+            owner_id, owner_name, property_id, property_name, unit_number,
+            monthly_rent, traditional_deposit_amount, monthly_fee, coverage_limit,
+            risk_score, eligibility_status, status, disclosures_accepted, partner_provider,
+            created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          appId, tenantRow.id, tenantRow.name, 'tenant@staywise.com', '+91 98460 21980',
+          ownerId, ownerName, 'prop-beach-road', 'Beach Road Apartments', '304',
+          28700, 60000, 750, 100000,
+          92, 'ELIGIBLE', 'ACTIVE', 1, 'ICICI Lombard / Staywise Institutional Guarantee Facility',
+          '2026-09-01T10:00:00Z', nowIso
+        );
+
+        const coveredRisks = JSON.stringify([
+          'Unpaid rent arrears up to 3 months (Max ₹86,100)',
+          'Tenant-caused physical damages exceeding normal wear and tear',
+          'Painting, deep cleaning, and wall restoration expenses',
+          'Utility arrears capped up to ₹10,000'
+        ]);
+
+        const exclusions = JSON.stringify([
+          'Pre-existing damages documented during verified Move-In inspection',
+          'Normal wear and tear (e.g. minor scuffs, standard carpet fading)',
+          'Unapproved utility surcharges without official sub-meter proof',
+          'Deliberate or fraudulent owner modifications'
+        ]);
+
+        this.sqlite.prepare(`
+          INSERT INTO protection_contracts (
+            id, application_id, policy_number, tenant_id, tenant_name, owner_id, owner_name,
+            property_id, property_name, unit_number, coverage_limit, monthly_fee,
+            start_date, end_date, status, partner_name, certificate_url,
+            covered_risks_json, exclusions_json, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          contractId, appId, policyNum, tenantRow.id, tenantRow.name, ownerId, ownerName,
+          'prop-beach-road', 'Beach Road Apartments', '304', 100000, 750,
+          '2026-09-01', '2027-08-31', 'ACTIVE', 'ICICI Lombard Institutional Risk Pool',
+          '/certificates/SW-DP-2026-KL902.pdf', coveredRisks, exclusions, '2026-09-01T10:15:00Z'
+        );
+
+        // Seed Baseline Move-In Condition Report
+        const conditionItems = JSON.stringify([
+          { id: 'ci-1', area: 'Living Room', item: 'Walls & Acrylic Paint', condition: 'EXCELLENT', notes: 'Fresh Asian Paints Royale finish. Zero nail holes or chips.' },
+          { id: 'ci-2', area: 'Living Room', item: 'Daikin 1.5T Inverter AC', condition: 'GOOD', notes: 'Serviced on Aug 28, 2026. Remote working smoothly.' },
+          { id: 'ci-3', area: 'Kitchen', item: 'Modular Cabinets & Chimney', condition: 'EXCELLENT', notes: 'Faber chimney suction tested. Soft-close hinges intact.' },
+          { id: 'ci-4', area: 'Master Bedroom', item: 'Vitrified Tiles & Skirting', condition: 'EXCELLENT', notes: 'Zero cracks, stains or hollow spots.' },
+          { id: 'ci-5', area: 'Master Bathroom', item: 'Kohler Ceramic & Geyser', condition: 'GOOD', notes: 'AO Smith 15L geyser working. Minimal limescale on tap.' }
+        ]);
+
+        const conditionPhotos = JSON.stringify([
+          'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=500',
+          'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?w=500',
+          'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=500',
+          'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=500'
+        ]);
+
+        this.sqlite.prepare(`
+          INSERT INTO property_condition_reports (
+            id, contract_id, property_id, property_name, unit_number,
+            tenant_id, tenant_name, report_type, inspection_date, overall_condition,
+            items_json, photos_json, notes, verified_by, status, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          'cr-304-baseline', contractId, 'prop-beach-road', 'Beach Road Apartments', '304',
+          tenantRow.id, tenantRow.name, 'MOVE_IN', '2026-09-01', 'Pristine',
+          conditionItems, conditionPhotos, 'Move-in audit completed with tenant & building superintendent. Baseline approved.',
+          'Staywise Inspection Audit #991', 'VERIFIED', '2026-09-01T14:00:00Z'
+        );
+
+        // Seed Sample Resolved Protection Claim
+        const claimPhotos = JSON.stringify([
+          'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500'
+        ]);
+
+        this.sqlite.prepare(`
+          INSERT INTO protection_claims (
+            id, contract_id, policy_number, property_id, property_name, unit_number,
+            owner_id, owner_name, tenant_id, tenant_name, claim_type,
+            claimed_amount, approved_amount, deductible, description, evidence_urls_json,
+            status, dispute_reason, settlement_date, settlement_txn_id, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          'clm-sample-01', contractId, policyNum, 'prop-beach-road', 'Beach Road Apartments', '304',
+          ownerId, ownerName, tenantRow.id, tenantRow.name, 'TENANT_DAMAGE',
+          3500, 3500, 0, 'Kitchen sink mixer tap mechanical breakage caused by excessive force; invoice attached from authorized plumber.',
+          claimPhotos, 'SETTLED', 'Tenant agreed to repair estimate without dispute.',
+          '2026-09-25T15:00:00Z', 'TXN-DP-SETTLE-8819', '2026-09-22T09:30:00Z'
+        );
+      }
     } catch (e) {
-      console.warn('[Database] SHA-256 password migration notice:', e);
+      console.warn('[Database] Rewards & Deposit Protect seed notice:', e);
+    }
+
+
+    // Automatic SHA-256 password migration: ensure all stored passwords are encrypted in SHA-256 format
+    if (!DatabaseEngine.hasMigratedPasswords) {
+      DatabaseEngine.hasMigratedPasswords = true;
+      try {
+        const usersToMigrate = this.sqlite.prepare('SELECT id, password FROM users').all() as { id: string; password: string }[];
+        const updateStmt = this.sqlite.prepare('UPDATE users SET password = ? WHERE id = ?');
+        for (const u of usersToMigrate) {
+          if (u.password && !isSha256(u.password)) {
+            const hashed = hashPassword(u.password);
+            updateStmt.run(hashed, u.id);
+          }
+        }
+      } catch (e) {
+        console.warn('[Database] SHA-256 password migration notice:', e);
+      }
     }
   }
 
@@ -663,9 +1070,15 @@ class DatabaseEngine {
       }));
     },
     findByEmail: async (email: string): Promise<UserAccount | null> => {
-      const row = this.sqlite.prepare('SELECT * FROM users WHERE LOWER(email) = LOWER(?) LIMIT 1').get(email.trim()) as any;
+      const cleanEmail = email.toLowerCase().trim();
+      const now = Date.now();
+      const cached = DatabaseEngine.userEmailCache.get(cleanEmail);
+      if (cached && now - cached.cachedAt < DatabaseEngine.USER_CACHE_TTL_MS) {
+        return cached.user;
+      }
+      const row = this.sqlite.prepare('SELECT * FROM users WHERE LOWER(email) = LOWER(?) LIMIT 1').get(cleanEmail) as any;
       if (!row) return null;
-      return {
+      const user: UserAccount = {
         id: row.id,
         email: row.email,
         password: row.password,
@@ -678,11 +1091,19 @@ class DatabaseEngine {
         phone: row.phone || undefined,
         createdAt: row.created_at
       };
+      DatabaseEngine.userEmailCache.set(cleanEmail, { user, cachedAt: now });
+      DatabaseEngine.userCache.set(row.id, { user, cachedAt: now });
+      return user;
     },
     findById: async (id: string): Promise<UserAccount | null> => {
+      const now = Date.now();
+      const cached = DatabaseEngine.userCache.get(id);
+      if (cached && now - cached.cachedAt < DatabaseEngine.USER_CACHE_TTL_MS) {
+        return cached.user;
+      }
       const row = this.sqlite.prepare('SELECT * FROM users WHERE id = ? LIMIT 1').get(id) as any;
       if (!row) return null;
-      return {
+      const user: UserAccount = {
         id: row.id,
         email: row.email,
         password: row.password,
@@ -695,6 +1116,9 @@ class DatabaseEngine {
         phone: row.phone || undefined,
         createdAt: row.created_at
       };
+      DatabaseEngine.userCache.set(id, { user, cachedAt: now });
+      DatabaseEngine.userEmailCache.set(row.email.toLowerCase().trim(), { user, cachedAt: now });
+      return user;
     },
     authenticate: async (email: string, pass: string): Promise<UserAccount | null> => {
       const cleanEmail = email.toLowerCase().trim();
@@ -710,6 +1134,7 @@ class DatabaseEngine {
           const newHash = hashPassword(pass);
           this.sqlite.prepare('UPDATE users SET password = ? WHERE id = ?').run(newHash, row.id);
           row.password = newHash;
+          DatabaseEngine.invalidateUserCache(row.id, cleanEmail);
         } catch (e) {}
       }
 
@@ -749,6 +1174,7 @@ class DatabaseEngine {
         createdAt
       );
       this.syncRootDb();
+      DatabaseEngine.invalidateUserCache(id, payload.email);
       return {
         id,
         ...payload,
@@ -760,6 +1186,7 @@ class DatabaseEngine {
       const passwordHash = isSha256(newPasswordPlain) ? newPasswordPlain : hashPassword(newPasswordPlain);
       const res = this.sqlite.prepare('UPDATE users SET password = ? WHERE id = ?').run(passwordHash, userId);
       this.syncRootDb();
+      DatabaseEngine.invalidateUserCache(userId);
       return (res as any).changes > 0;
     },
     updateProfile: async (userId: string, data: Partial<{ name: string; email: string; phone: string; title: string; description: string }>): Promise<boolean> => {
@@ -782,6 +1209,7 @@ class DatabaseEngine {
         userId
       );
       this.syncRootDb();
+      DatabaseEngine.invalidateUserCache(userId, data.email);
       return (res as any).changes > 0;
     }
   };
@@ -790,7 +1218,7 @@ class DatabaseEngine {
   // PROPERTIES REPOSITORY
   // ==========================================
   public properties = {
-    findMany: async (filter?: { portfolio?: string; verificationStatus?: string; ownerId?: string }): Promise<Property[]> => {
+    findMany: async (filter?: { portfolio?: string; verificationStatus?: string; ownerId?: string; limit?: number; offset?: number }): Promise<Property[]> => {
       let query = 'SELECT * FROM properties';
       const params: any[] = [];
       const conditions: string[] = [];
@@ -812,12 +1240,26 @@ class DatabaseEngine {
       }
       query += ' ORDER BY created_at DESC';
 
-      const rows = this.sqlite.prepare(query).all(...params);
-      const unitsStmt = this.sqlite.prepare('SELECT * FROM property_units WHERE property_id = ?');
+      if (filter?.limit && filter.limit > 0) {
+        const safeLimit = Math.min(100, filter.limit);
+        query += ` LIMIT ${safeLimit}`;
+        if (filter.offset && filter.offset > 0) {
+          query += ` OFFSET ${filter.offset}`;
+        }
+      }
 
-      return rows.map(r => {
-        const uRows = unitsStmt.all(r.id);
-        const units: PropertyUnit[] = uRows.map(u => ({
+      const rows = this.sqlite.prepare(query).all(...params) as any[];
+      if (rows.length === 0) return [];
+
+      // Batch load units for all returned properties in a single query (eliminates N+1 query bottleneck)
+      const propIds = rows.map(r => r.id);
+      const placeholders = propIds.map(() => '?').join(',');
+      const allUnits = this.sqlite.prepare(`SELECT * FROM property_units WHERE property_id IN (${placeholders})`).all(...propIds) as any[];
+
+      const unitsByProp = new Map<string, PropertyUnit[]>();
+      for (const u of allUnits) {
+        const list = unitsByProp.get(u.property_id) || [];
+        list.push({
           id: u.id,
           propertyId: u.property_id,
           unitNumber: u.unit_number,
@@ -832,8 +1274,12 @@ class DatabaseEngine {
           areaSqFt: u.area_sq_ft,
           bedrooms: u.bedrooms,
           bathrooms: u.bathrooms
-        }));
+        });
+        unitsByProp.set(u.property_id, list);
+      }
 
+      return rows.map(r => {
+        const units = unitsByProp.get(r.id) || [];
         let submittedDocs: string[] = [];
         let amenities: string[] = [];
         try { submittedDocs = JSON.parse(r.submitted_docs || '[]'); } catch(e) {}
@@ -1045,7 +1491,7 @@ class DatabaseEngine {
   // TENANTS REPOSITORY & ONBOARDING PIPELINE
   // ==========================================
   public tenants = {
-    findMany: async (filter?: { propertyId?: string; userId?: string }): Promise<Tenant[]> => {
+    findMany: async (filter?: { propertyId?: string; userId?: string; limit?: number; offset?: number }): Promise<Tenant[]> => {
       let query = 'SELECT * FROM tenants';
       const params: any[] = [];
       const conditions: string[] = [];
@@ -1063,7 +1509,15 @@ class DatabaseEngine {
       }
       query += ' ORDER BY created_at DESC';
 
-      const rows = this.sqlite.prepare(query).all(...params);
+      if (filter?.limit && filter.limit > 0) {
+        const safeLimit = Math.min(100, filter.limit);
+        query += ` LIMIT ${safeLimit}`;
+        if (filter.offset && filter.offset > 0) {
+          query += ` OFFSET ${filter.offset}`;
+        }
+      }
+
+      const rows = this.sqlite.prepare(query).all(...params) as any[];
       return rows.map(r => ({
         id: r.id,
         userId: r.user_id || undefined,
@@ -1204,7 +1658,7 @@ class DatabaseEngine {
       leaseEnd: string;
       rentDueDate: number;
       password?: string;
-      tenancyType?: 'PG' | 'Residential' | 'Commercial';
+      tenancyType?: TenancyType;
       hasFood?: boolean;
       roomSharing?: 'Single' | '2_Sharing' | '3_Sharing';
       coTenant?: {
@@ -1508,7 +1962,7 @@ class DatabaseEngine {
   // INVOICES & RENT PAYMENTS REPOSITORY
   // ==========================================
   public invoices = {
-    findMany: async (filter?: { tenantId?: string; propertyId?: string }): Promise<RentInvoice[]> => {
+    findMany: async (filter?: { tenantId?: string; propertyId?: string; status?: string; limit?: number; offset?: number }): Promise<RentInvoice[]> => {
       let query = 'SELECT * FROM invoices';
       const conditions: string[] = [];
       const params: any[] = [];
@@ -1521,12 +1975,24 @@ class DatabaseEngine {
         conditions.push('property_id = ?');
         params.push(filter.propertyId);
       }
+      if (filter?.status && filter.status !== 'ALL') {
+        conditions.push('status = ?');
+        params.push(filter.status);
+      }
       if (conditions.length > 0) {
         query += ' WHERE ' + conditions.join(' AND ');
       }
       query += ' ORDER BY created_at DESC';
 
-      const rows = this.sqlite.prepare(query).all(...params);
+      if (filter?.limit && filter.limit > 0) {
+        const safeLimit = Math.min(100, filter.limit);
+        query += ` LIMIT ${safeLimit}`;
+        if (filter.offset && filter.offset > 0) {
+          query += ` OFFSET ${filter.offset}`;
+        }
+      }
+
+      const rows = this.sqlite.prepare(query).all(...params) as any[];
       return rows.map(r => ({
         id: r.id,
         invoiceNumber: r.invoice_number,
@@ -1664,8 +2130,33 @@ class DatabaseEngine {
   // DOUBLE-ENTRY LEDGER REPOSITORY
   // ==========================================
   public ledger = {
-    findMany: async (): Promise<LedgerEntry[]> => {
-      const rows = this.sqlite.prepare('SELECT * FROM ledger ORDER BY created_at DESC').all();
+    findMany: async (filter?: { limit?: number; offset?: number; type?: 'DEBIT' | 'CREDIT'; referenceId?: string }): Promise<LedgerEntry[]> => {
+      let query = 'SELECT * FROM ledger';
+      const conditions: string[] = [];
+      const params: any[] = [];
+
+      if (filter?.type) {
+        conditions.push('type = ?');
+        params.push(filter.type);
+      }
+      if (filter?.referenceId) {
+        conditions.push('reference_id = ?');
+        params.push(filter.referenceId);
+      }
+      if (conditions.length > 0) {
+        query += ' WHERE ' + conditions.join(' AND ');
+      }
+      query += ' ORDER BY created_at DESC';
+
+      if (filter?.limit && filter.limit > 0) {
+        const safeLimit = Math.min(250, filter.limit);
+        query += ` LIMIT ${safeLimit}`;
+        if (filter.offset && filter.offset > 0) {
+          query += ` OFFSET ${filter.offset}`;
+        }
+      }
+
+      const rows = this.sqlite.prepare(query).all(...params) as any[];
       return rows.map(r => ({
         id: r.id,
         timestamp: r.timestamp,
@@ -1921,8 +2412,33 @@ class DatabaseEngine {
   // TICKETS REPOSITORY
   // ==========================================
   public tickets = {
-    findMany: async (): Promise<MaintenanceTicket[]> => {
-      const rows = this.sqlite.prepare('SELECT * FROM tickets ORDER BY created_at DESC').all();
+    findMany: async (filter?: { propertyId?: string; status?: string; limit?: number; offset?: number }): Promise<MaintenanceTicket[]> => {
+      let query = 'SELECT * FROM tickets';
+      const conditions: string[] = [];
+      const params: any[] = [];
+
+      if (filter?.propertyId) {
+        conditions.push('property_id = ?');
+        params.push(filter.propertyId);
+      }
+      if (filter?.status && filter.status !== 'ALL') {
+        conditions.push('status = ?');
+        params.push(filter.status);
+      }
+      if (conditions.length > 0) {
+        query += ' WHERE ' + conditions.join(' AND ');
+      }
+      query += ' ORDER BY created_at DESC';
+
+      if (filter?.limit && filter.limit > 0) {
+        const safeLimit = Math.min(100, filter.limit);
+        query += ` LIMIT ${safeLimit}`;
+        if (filter.offset && filter.offset > 0) {
+          query += ` OFFSET ${filter.offset}`;
+        }
+      }
+
+      const rows = this.sqlite.prepare(query).all(...params) as any[];
       return rows.map(r => ({
         id: r.id,
         ticketNumber: r.ticket_number,
@@ -1951,6 +2467,16 @@ class DatabaseEngine {
     create: async (ticket: MaintenanceTicket): Promise<MaintenanceTicket> => {
       const id = ticket.id || generateTicketId();
       const ticketNumber = ticket.ticketNumber || generateTicketNumber();
+      const status = ticket.status || 'Reported';
+      const priority = ticket.priority || 'Medium';
+      const category = ticket.category || 'General';
+      const title = ticket.title || 'Maintenance Request';
+      const description = ticket.description || '';
+      const propertyId = ticket.propertyId || '';
+      const propertyName = ticket.propertyName || '';
+      const unitNumber = ticket.unitNumber || '';
+      const tenantName = ticket.tenantName || 'Resident';
+
       this.sqlite.prepare(`
         INSERT OR REPLACE INTO tickets (
           id, ticket_number, property_id, property_name, unit_number, tenant_name,
@@ -1961,15 +2487,15 @@ class DatabaseEngine {
       `).run(
         id,
         ticketNumber,
-        ticket.propertyId,
-        ticket.propertyName,
-        ticket.unitNumber,
-        ticket.tenantName,
-        ticket.category,
-        ticket.title,
-        ticket.description,
-        ticket.priority,
-        ticket.status,
+        propertyId,
+        propertyName,
+        unitNumber,
+        tenantName,
+        category,
+        title,
+        description,
+        priority,
+        status,
         sb(ticket.estimatedCost, 0),
         sb(ticket.actualCost, null),
         ticket.requiresOwnerApproval ? 1 : 0,
@@ -2859,7 +3385,507 @@ class DatabaseEngine {
       return true;
     }
   };
+
+  // ==========================================
+  // STAYWISE REWARDS (WISEPOINTS) REPOSITORY
+  // ==========================================
+  public rewards = {
+    getAccount: async (userId: string): Promise<RewardsAccount> => {
+      const row = this.sqlite.prepare('SELECT * FROM rewards_accounts WHERE user_id = ?').get(userId) as any;
+      if (row) {
+        return {
+          userId: row.user_id,
+          userName: row.user_name || undefined,
+          userRole: row.user_role as UserRole,
+          totalEarned: Number(row.total_earned || 0),
+          totalRedeemed: Number(row.total_redeemed || 0),
+          currentBalance: Number(row.current_balance || 0),
+          pendingPoints: Number(row.pending_points || 0),
+          currentStreak: Number(row.current_streak || 0),
+          tier: (row.tier || 'SILVER') as any,
+          updatedAt: row.updated_at
+        };
+      }
+
+      // Automatically initialize account if user exists
+      const user = await this.users.findById(userId);
+      const now = new Date().toISOString();
+      const initialTier = 'SILVER';
+      this.sqlite.prepare(`
+        INSERT INTO rewards_accounts (user_id, user_name, user_role, total_earned, total_redeemed, current_balance, pending_points, current_streak, tier, updated_at)
+        VALUES (?, ?, ?, 0, 0, 0, 0, 0, ?, ?)
+      `).run(userId, user?.name || 'Resident', user?.role || 'tenant', initialTier, now);
+      this.syncRootDb();
+
+      return {
+        userId,
+        userName: user?.name,
+        userRole: user?.role,
+        totalEarned: 0,
+        totalRedeemed: 0,
+        currentBalance: 0,
+        pendingPoints: 0,
+        currentStreak: 0,
+        tier: 'SILVER',
+        updatedAt: now
+      };
+    },
+
+    getLedger: async (userId?: string): Promise<RewardsLedgerEntry[]> => {
+      const query = userId
+        ? 'SELECT * FROM rewards_ledger WHERE user_id = ? ORDER BY created_at DESC'
+        : 'SELECT * FROM rewards_ledger ORDER BY created_at DESC';
+      const rows = (userId ? this.sqlite.prepare(query).all(userId) : this.sqlite.prepare(query).all()) as any[];
+      return rows.map(r => ({
+        id: r.id,
+        userId: r.user_id,
+        actionType: r.action_type,
+        points: Number(r.points),
+        pointsType: r.points_type,
+        referenceId: r.reference_id || undefined,
+        referenceType: r.reference_type || undefined,
+        description: r.description,
+        financialCost: Number(r.financial_cost || 0),
+        createdAt: r.created_at
+      }));
+    },
+
+    getRules: async (): Promise<RewardRule[]> => {
+      const rows = this.sqlite.prepare('SELECT * FROM reward_rules WHERE is_active = 1').all() as any[];
+      return rows.map(r => ({
+        id: r.id,
+        ruleCode: r.rule_code,
+        name: r.name,
+        description: r.description,
+        pointsAwarded: Number(r.points_awarded),
+        isActive: Boolean(r.is_active),
+        category: r.category,
+        monthlyCap: Number(r.monthly_cap || 1000),
+        partnerFunded: Boolean(r.partner_funded)
+      }));
+    },
+
+    getOffers: async (): Promise<MerchantOffer[]> => {
+      const rows = this.sqlite.prepare('SELECT * FROM merchant_offers WHERE is_active = 1').all() as any[];
+      return rows.map(r => ({
+        id: r.id,
+        partnerName: r.partner_name,
+        category: r.category,
+        offerTitle: r.offer_title,
+        discountDescription: r.discount_description,
+        pointsRequired: Number(r.points_required),
+        voucherCode: r.voucher_code,
+        imageUrl: r.image_url || undefined,
+        terms: r.terms,
+        isActive: Boolean(r.is_active),
+        expiryDate: r.expiry_date || undefined
+      }));
+    },
+
+    awardPoints: async (params: {
+      userId: string;
+      actionType: RewardActionType;
+      points: number;
+      referenceId?: string;
+      referenceType?: 'INVOICE' | 'INSPECTION' | 'LEASE' | 'REFERRAL' | 'VOUCHER' | 'CLAIM';
+      description: string;
+      financialCost?: number;
+    }): Promise<{ success: boolean; newBalance: number; entry: RewardsLedgerEntry }> => {
+      const account = await this.rewards.getAccount(params.userId);
+      const points = Math.max(0, Math.floor(params.points));
+      const newTotal = account.totalEarned + points;
+      const newBalance = account.currentBalance + points;
+      const isRentPayment = params.actionType === 'RENT_PAID_ON_TIME';
+      const newStreak = isRentPayment ? account.currentStreak + 1 : account.currentStreak;
+      
+      let newTier = account.tier;
+      if (newBalance >= 1500) newTier = 'PLATINUM';
+      else if (newBalance >= 500) newTier = 'GOLD';
+
+      const now = new Date().toISOString();
+      const entryId = generateRewardEntryId();
+      const financialCost = params.financialCost ?? (points * 0.1); // Default ₹0.10 per point cost
+
+      this.sqlite.prepare(`
+        UPDATE rewards_accounts SET
+          total_earned = ?, current_balance = ?, current_streak = ?, tier = ?, updated_at = ?
+        WHERE user_id = ?
+      `).run(newTotal, newBalance, newStreak, newTier, now, params.userId);
+
+      this.sqlite.prepare(`
+        INSERT INTO rewards_ledger (id, user_id, action_type, points, points_type, reference_id, reference_type, description, financial_cost, created_at)
+        VALUES (?, ?, ?, ?, 'EARNED', ?, ?, ?, ?, ?)
+      `).run(
+        entryId, params.userId, params.actionType, points,
+        sb(params.referenceId), sb(params.referenceType), params.description, financialCost, now
+      );
+
+      this.syncRootDb();
+
+      return {
+        success: true,
+        newBalance,
+        entry: {
+          id: entryId,
+          userId: params.userId,
+          actionType: params.actionType,
+          points,
+          pointsType: 'EARNED',
+          referenceId: params.referenceId,
+          referenceType: params.referenceType,
+          description: params.description,
+          financialCost,
+          createdAt: now
+        }
+      };
+    },
+
+    redeemPoints: async (params: {
+      userId: string;
+      actionType: RewardActionType;
+      points: number;
+      referenceId?: string;
+      referenceType?: 'INVOICE' | 'INSPECTION' | 'LEASE' | 'REFERRAL' | 'VOUCHER' | 'CLAIM';
+      description: string;
+      financialCost?: number;
+    }): Promise<{ success: boolean; newBalance: number; entry: RewardsLedgerEntry; error?: string }> => {
+      const account = await this.rewards.getAccount(params.userId);
+      const points = Math.max(0, Math.floor(params.points));
+
+      if (account.currentBalance < points) {
+        return {
+          success: false,
+          newBalance: account.currentBalance,
+          entry: null as any,
+          error: `Insufficient WisePoints balance. Required: ${points}, Available: ${account.currentBalance}`
+        };
+      }
+
+      const newRedeemed = account.totalRedeemed + points;
+      const newBalance = account.currentBalance - points;
+      const now = new Date().toISOString();
+      const entryId = generateRewardEntryId();
+      const financialCost = params.financialCost ?? (points * 0.1);
+
+      this.sqlite.prepare(`
+        UPDATE rewards_accounts SET
+          total_redeemed = ?, current_balance = ?, updated_at = ?
+        WHERE user_id = ?
+      `).run(newRedeemed, newBalance, now, params.userId);
+
+      this.sqlite.prepare(`
+        INSERT INTO rewards_ledger (id, user_id, action_type, points, points_type, reference_id, reference_type, description, financial_cost, created_at)
+        VALUES (?, ?, ?, ?, 'REDEEMED', ?, ?, ?, ?, ?)
+      `).run(
+        entryId, params.userId, params.actionType, -points,
+        sb(params.referenceId), sb(params.referenceType), params.description, financialCost, now
+      );
+
+      this.syncRootDb();
+
+      return {
+        success: true,
+        newBalance,
+        entry: {
+          id: entryId,
+          userId: params.userId,
+          actionType: params.actionType,
+          points: -points,
+          pointsType: 'REDEEMED',
+          referenceId: params.referenceId,
+          referenceType: params.referenceType,
+          description: params.description,
+          financialCost,
+          createdAt: now
+        }
+      };
+    }
+  };
+
+  // ==========================================
+  // STAYWISE DEPOSIT PROTECT REPOSITORY
+  // ==========================================
+  public depositProtect = {
+    getApplications: async (filter?: { tenantId?: string; ownerId?: string }): Promise<DepositProtectionApplication[]> => {
+      let query = 'SELECT * FROM deposit_protection_applications';
+      const params: any[] = [];
+      if (filter?.tenantId && filter?.ownerId) {
+        query += ' WHERE tenant_id = ? OR owner_id = ?';
+        params.push(filter.tenantId, filter.ownerId);
+      } else if (filter?.tenantId) {
+        query += ' WHERE tenant_id = ?';
+        params.push(filter.tenantId);
+      } else if (filter?.ownerId) {
+        query += ' WHERE owner_id = ?';
+        params.push(filter.ownerId);
+      }
+      query += ' ORDER BY created_at DESC';
+
+      const rows = this.sqlite.prepare(query).all(...params) as any[];
+      return rows.map(r => ({
+        id: r.id,
+        tenantId: r.tenant_id,
+        tenantName: r.tenant_name,
+        tenantEmail: r.tenant_email || undefined,
+        tenantPhone: r.tenant_phone || undefined,
+        ownerId: r.owner_id,
+        ownerName: r.owner_name || undefined,
+        propertyId: r.property_id,
+        propertyName: r.property_name,
+        unitNumber: r.unit_number,
+        monthlyRent: Number(r.monthly_rent),
+        traditionalDepositAmount: Number(r.traditional_deposit_amount),
+        monthlyFee: Number(r.monthly_fee),
+        coverageLimit: Number(r.coverage_limit),
+        riskScore: Number(r.risk_score || 85),
+        eligibilityStatus: r.eligibility_status,
+        status: r.status,
+        disclosuresAccepted: Boolean(r.disclosures_accepted),
+        partnerProvider: r.partner_provider,
+        createdAt: r.created_at,
+        updatedAt: r.updated_at
+      }));
+    },
+
+    createApplication: async (app: DepositProtectionApplication): Promise<DepositProtectionApplication> => {
+      this.sqlite.prepare(`
+        INSERT INTO deposit_protection_applications (
+          id, tenant_id, tenant_name, tenant_email, tenant_phone,
+          owner_id, owner_name, property_id, property_name, unit_number,
+          monthly_rent, traditional_deposit_amount, monthly_fee, coverage_limit,
+          risk_score, eligibility_status, status, disclosures_accepted, partner_provider,
+          created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        app.id, app.tenantId, app.tenantName, sb(app.tenantEmail), sb(app.tenantPhone),
+        app.ownerId, sb(app.ownerName), app.propertyId, app.propertyName, app.unitNumber,
+        app.monthlyRent, app.traditionalDepositAmount, app.monthlyFee, app.coverageLimit,
+        app.riskScore, app.eligibilityStatus, app.status, app.disclosuresAccepted ? 1 : 0, app.partnerProvider,
+        app.createdAt, app.updatedAt
+      );
+      this.syncRootDb();
+      return app;
+    },
+
+    updateApplicationStatus: async (id: string, status: ProtectionApplicationStatus): Promise<boolean> => {
+      const now = new Date().toISOString();
+      this.sqlite.prepare(`
+        UPDATE deposit_protection_applications SET status = ?, updated_at = ? WHERE id = ?
+      `).run(status, now, id);
+      this.syncRootDb();
+      return true;
+    },
+
+    getContracts: async (filter?: { tenantId?: string; ownerId?: string }): Promise<ProtectionContract[]> => {
+      let query = 'SELECT * FROM protection_contracts';
+      const params: any[] = [];
+      if (filter?.tenantId && filter?.ownerId) {
+        query += ' WHERE tenant_id = ? OR owner_id = ?';
+        params.push(filter.tenantId, filter.ownerId);
+      } else if (filter?.tenantId) {
+        query += ' WHERE tenant_id = ?';
+        params.push(filter.tenantId);
+      } else if (filter?.ownerId) {
+        query += ' WHERE owner_id = ?';
+        params.push(filter.ownerId);
+      }
+      query += ' ORDER BY created_at DESC';
+
+      const rows = this.sqlite.prepare(query).all(...params) as any[];
+      return rows.map(r => {
+        let coveredRisks: string[] = [];
+        let exclusions: string[] = [];
+        try { coveredRisks = JSON.parse(r.covered_risks_json || '[]'); } catch (e) {}
+        try { exclusions = JSON.parse(r.exclusions_json || '[]'); } catch (e) {}
+        return {
+          id: r.id,
+          applicationId: r.application_id,
+          policyNumber: r.policy_number,
+          tenantId: r.tenant_id,
+          tenantName: r.tenant_name,
+          ownerId: r.owner_id,
+          ownerName: r.owner_name,
+          propertyId: r.property_id,
+          propertyName: r.property_name,
+          unitNumber: r.unit_number,
+          coverageLimit: Number(r.coverage_limit),
+          monthlyFee: Number(r.monthly_fee),
+          startDate: r.start_date,
+          endDate: r.end_date,
+          status: r.status,
+          partnerName: r.partner_name,
+          certificateUrl: r.certificate_url || undefined,
+          coveredRisks,
+          exclusions,
+          createdAt: r.created_at
+        };
+      });
+    },
+
+    createContract: async (contract: ProtectionContract): Promise<ProtectionContract> => {
+      this.sqlite.prepare(`
+        INSERT INTO protection_contracts (
+          id, application_id, policy_number, tenant_id, tenant_name,
+          owner_id, owner_name, property_id, property_name, unit_number,
+          coverage_limit, monthly_fee, start_date, end_date, status,
+          partner_name, certificate_url, covered_risks_json, exclusions_json, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        contract.id, contract.applicationId, contract.policyNumber, contract.tenantId, contract.tenantName,
+        contract.ownerId, contract.ownerName, contract.propertyId, contract.propertyName, contract.unitNumber,
+        contract.coverageLimit, contract.monthlyFee, contract.startDate, contract.endDate, contract.status,
+        contract.partnerName, sb(contract.certificateUrl), JSON.stringify(contract.coveredRisks), JSON.stringify(contract.exclusions), contract.createdAt
+      );
+      this.syncRootDb();
+      return contract;
+    },
+
+    getConditionReports: async (filter?: { propertyId?: string; tenantId?: string }): Promise<PropertyConditionReport[]> => {
+      let query = 'SELECT * FROM property_condition_reports';
+      const params: any[] = [];
+      if (filter?.propertyId && filter?.tenantId) {
+        query += ' WHERE property_id = ? OR tenant_id = ?';
+        params.push(filter.propertyId, filter.tenantId);
+      } else if (filter?.propertyId) {
+        query += ' WHERE property_id = ?';
+        params.push(filter.propertyId);
+      } else if (filter?.tenantId) {
+        query += ' WHERE tenant_id = ?';
+        params.push(filter.tenantId);
+      }
+      query += ' ORDER BY inspection_date DESC';
+
+      const rows = this.sqlite.prepare(query).all(...params) as any[];
+      return rows.map(r => {
+        let items: any[] = [];
+        let photos: string[] = [];
+        try { items = JSON.parse(r.items_json || '[]'); } catch (e) {}
+        try { photos = JSON.parse(r.photos_json || '[]'); } catch (e) {}
+        return {
+          id: r.id,
+          contractId: r.contract_id || undefined,
+          propertyId: r.property_id,
+          propertyName: r.property_name,
+          unitNumber: r.unit_number,
+          tenantId: r.tenant_id,
+          tenantName: r.tenant_name,
+          reportType: r.report_type,
+          inspectionDate: r.inspection_date,
+          overallCondition: r.overall_condition,
+          items,
+          photos,
+          notes: r.notes,
+          verifiedBy: r.verified_by,
+          status: r.status,
+          createdAt: r.created_at
+        };
+      });
+    },
+
+    createConditionReport: async (report: PropertyConditionReport): Promise<PropertyConditionReport> => {
+      this.sqlite.prepare(`
+        INSERT INTO property_condition_reports (
+          id, contract_id, property_id, property_name, unit_number,
+          tenant_id, tenant_name, report_type, inspection_date, overall_condition,
+          items_json, photos_json, notes, verified_by, status, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        report.id, sb(report.contractId), report.propertyId, report.propertyName, report.unitNumber,
+        report.tenantId, report.tenantName, report.reportType, report.inspectionDate, report.overallCondition,
+        JSON.stringify(report.items), JSON.stringify(report.photos), report.notes, report.verifiedBy, report.status, report.createdAt
+      );
+      this.syncRootDb();
+      return report;
+    },
+
+    getClaims: async (filter?: { ownerId?: string; tenantId?: string }): Promise<ProtectionClaim[]> => {
+      let query = 'SELECT * FROM protection_claims';
+      const params: any[] = [];
+      if (filter?.ownerId && filter?.tenantId) {
+        query += ' WHERE owner_id = ? OR tenant_id = ?';
+        params.push(filter.ownerId, filter.tenantId);
+      } else if (filter?.ownerId) {
+        query += ' WHERE owner_id = ?';
+        params.push(filter.ownerId);
+      } else if (filter?.tenantId) {
+        query += ' WHERE tenant_id = ?';
+        params.push(filter.tenantId);
+      }
+      query += ' ORDER BY created_at DESC';
+
+      const rows = this.sqlite.prepare(query).all(...params) as any[];
+      return rows.map(r => {
+        let evidenceUrls: string[] = [];
+        try { evidenceUrls = JSON.parse(r.evidence_urls_json || '[]'); } catch (e) {}
+        return {
+          id: r.id,
+          contractId: r.contract_id,
+          policyNumber: r.policy_number,
+          propertyId: r.property_id,
+          propertyName: r.property_name,
+          unitNumber: r.unit_number,
+          ownerId: r.owner_id,
+          ownerName: r.owner_name,
+          tenantId: r.tenant_id,
+          tenantName: r.tenant_name,
+          claimType: r.claim_type,
+          claimedAmount: Number(r.claimed_amount),
+          approvedAmount: r.approved_amount !== null ? Number(r.approved_amount) : undefined,
+          deductible: Number(r.deductible || 0),
+          description: r.description,
+          evidenceUrls,
+          status: r.status,
+          disputeReason: r.dispute_reason || undefined,
+          settlementDate: r.settlement_date || undefined,
+          settlementTxnId: r.settlement_txn_id || undefined,
+          createdAt: r.created_at
+        };
+      });
+    },
+
+    createClaim: async (claim: ProtectionClaim): Promise<ProtectionClaim> => {
+      this.sqlite.prepare(`
+        INSERT INTO protection_claims (
+          id, contract_id, policy_number, property_id, property_name, unit_number,
+          owner_id, owner_name, tenant_id, tenant_name, claim_type,
+          claimed_amount, approved_amount, deductible, description, evidence_urls_json,
+          status, dispute_reason, settlement_date, settlement_txn_id, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        claim.id, claim.contractId, claim.policyNumber, claim.propertyId, claim.propertyName, claim.unitNumber,
+        claim.ownerId, claim.ownerName, claim.tenantId, claim.tenantName, claim.claimType,
+        claim.claimedAmount, sb(claim.approvedAmount), claim.deductible || 0, claim.description,
+        JSON.stringify(claim.evidenceUrls), claim.status, sb(claim.disputeReason), sb(claim.settlementDate), sb(claim.settlementTxnId), claim.createdAt
+      );
+      this.syncRootDb();
+      return claim;
+    },
+
+    updateClaimStatus: async (
+      id: string,
+      status: ClaimStatus,
+      extra?: { approvedAmount?: number; disputeReason?: string; settlementDate?: string; settlementTxnId?: string }
+    ): Promise<boolean> => {
+      const existing = this.sqlite.prepare('SELECT * FROM protection_claims WHERE id = ?').get(id) as any;
+      if (!existing) return false;
+
+      const approvedAmount = extra?.approvedAmount !== undefined ? extra.approvedAmount : existing.approved_amount;
+      const disputeReason = extra?.disputeReason !== undefined ? extra.disputeReason : existing.dispute_reason;
+      const settlementDate = extra?.settlementDate !== undefined ? extra.settlementDate : existing.settlement_date;
+      const settlementTxnId = extra?.settlementTxnId !== undefined ? extra.settlementTxnId : existing.settlement_txn_id;
+
+      this.sqlite.prepare(`
+        UPDATE protection_claims SET
+          status = ?, approved_amount = ?, dispute_reason = ?, settlement_date = ?, settlement_txn_id = ?
+        WHERE id = ?
+      `).run(status, approvedAmount, disputeReason, settlementDate, settlementTxnId, id);
+
+      this.syncRootDb();
+      return true;
+    }
+  };
 }
+
 
 // Global Singleton Instance across Next.js API Routes & Server Actions
 const globalForDb = global as unknown as { staywiseDbInstance?: DatabaseEngine };

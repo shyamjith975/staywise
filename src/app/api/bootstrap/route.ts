@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { db } from '../../../lib/db';
 import { getAuthenticatedUser } from '../../../lib/security/authorization';
+
+import { 
+  getBootstrapCache, 
+  setBootstrapCache, 
+  invalidateBootstrapCache, 
+  BOOTSTRAP_CACHE_TTL 
+} from '../../../lib/cache/apiCache';
+
+export function clearBootstrapCache() {
+  invalidateBootstrapCache();
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -27,6 +39,98 @@ export async function GET(req: NextRequest) {
     const isSuperAdmin = userRole === 'admin';
     const isDemoAccount = userEmail === 'owner@staywise.com' || targetUserId === 'user-owner-vikram' || targetUserId === 'demo-owner' || (targetUserId === null && req.nextUrl.searchParams.get('demo') === 'true');
 
+    // Fast-path: Check in-memory cache and client ETag (HTTP 304)
+    const cacheKey = `${targetUserId || 'anon'}:${userRole || 'public'}:${isDemoAccount}`;
+    const cached = getBootstrapCache(cacheKey);
+    const clientEtag = req.headers.get('if-none-match');
+
+    if (cached) {
+      if (clientEtag && clientEtag === cached.etag) {
+        return new NextResponse(null, {
+          status: 304,
+          headers: {
+            'ETag': cached.etag,
+            'Cache-Control': 'private, max-age=15, stale-while-revalidate=45',
+            'X-Staywise-Cache': 'HIT_304'
+          }
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: cached.data
+      }, {
+        headers: {
+          'ETag': cached.etag,
+          'Cache-Control': 'private, max-age=15, stale-while-revalidate=45',
+          'X-Staywise-Cache': 'HIT_RAM'
+        }
+      });
+    }
+
+    // Unauthenticated requests without demo flag receive clean empty dataset without burning DB queries
+    if (!targetUserId && !isDemoAccount) {
+      const emptyData = {
+        properties: [],
+        tenants: [],
+        invoices: [],
+        ledger: [],
+        depositDisputes: [],
+        influencerOffers: [],
+        tickets: [],
+        pgBeds: [],
+        pgRooms: [],
+        pgMeals: [],
+        commercialUnits: [],
+        camExpenses: [],
+        commercialVisitors: [],
+        estateAssets: [],
+        staff: [],
+        electricityBills: [],
+        subscription: null,
+        leads: [],
+        utilities: [],
+        aiInsights: [],
+        moveFlowChecklist: [],
+        referrals: [],
+        users: [],
+        tenantConnectionRequests: [],
+        rewardsAccount: null,
+        rewardsLedger: [],
+        rewardRules: [],
+        merchantOffers: [],
+        depositApplications: [],
+        protectionContracts: [],
+        conditionReports: [],
+        protectionClaims: []
+      };
+
+      const etag = `W/"${crypto.createHash('md5').update(JSON.stringify(emptyData)).digest('hex').slice(0, 16)}"`;
+      setBootstrapCache(cacheKey, emptyData, etag);
+
+      if (clientEtag && clientEtag === etag) {
+        return new NextResponse(null, {
+          status: 304,
+          headers: {
+            'ETag': etag,
+            'Cache-Control': 'private, max-age=30, stale-while-revalidate=60',
+            'X-Staywise-Cache': 'REVALIDATED_304'
+          }
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        data: emptyData
+      }, {
+        headers: {
+          'ETag': etag,
+          'Cache-Control': 'private, max-age=30, stale-while-revalidate=60',
+          'X-Staywise-Cache': 'MISS_ANON'
+        }
+      });
+    }
+
     const [
       allProperties,
       allTenants,
@@ -51,7 +155,13 @@ export async function GET(req: NextRequest) {
       allMoveFlowChecklist,
       allReferrals,
       allUsers,
-      allTenantConnections
+      allTenantConnections,
+      allRewardRules,
+      allMerchantOffers,
+      allDepositApps,
+      allProtectionContracts,
+      allConditionReports,
+      allProtectionClaims
     ] = await Promise.all([
       db.properties.findMany(),
       db.tenants.findMany(),
@@ -76,82 +186,80 @@ export async function GET(req: NextRequest) {
       db.moveFlow.findMany(),
       db.referrals.findMany(),
       db.users.findMany(),
-      db.tenantConnections.findMany()
+      db.tenantConnections.findMany(),
+      db.rewards.getRules(),
+      db.rewards.getOffers(),
+      db.depositProtect.getApplications(),
+      db.depositProtect.getContracts(),
+      db.depositProtect.getConditionReports(),
+      db.depositProtect.getClaims()
     ]);
+
+    const activeUserAccount = targetUserId 
+      ? await db.rewards.getAccount(targetUserId)
+      : (isDemoAccount ? await db.rewards.getAccount('user-tenant-shyam') : null);
+
+    const activeLedger = targetUserId 
+      ? await db.rewards.getLedger(targetUserId)
+      : (isDemoAccount ? await db.rewards.getLedger() : []);
+
+    let responseData: any;
+
 
     // For Super Admin or Demo Account: return platform-wide catalog
     if (isSuperAdmin || isDemoAccount) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          properties: allProperties,
-          tenants: allTenants,
-          invoices: allInvoices,
-          ledger: allLedger,
-          depositDisputes: allDisputes,
-          influencerOffers: allInfluencerOffers,
-          tickets: allTickets,
-          pgBeds: allPgBeds,
-          pgRooms: allPgRooms,
-          pgMeals: allPgMeals,
-          commercialUnits: allCommercialUnits,
-          camExpenses: allCamExpenses,
-          commercialVisitors: allCommercialVisitors,
-          estateAssets: allEstateAssets,
-          staff: allStaff,
-          electricityBills: allBills,
-          subscription: allSubscription,
-          leads: allLeads,
-          utilities: allUtilities,
-          aiInsights: allAiInsights,
-          moveFlowChecklist: allMoveFlowChecklist,
-          referrals: allReferrals,
-          users: allUsers.map(({ password, ...u }) => u),
-          tenantConnectionRequests: allTenantConnections
-        }
-      });
-    }
+      responseData = {
+        properties: allProperties,
+        tenants: allTenants,
+        invoices: allInvoices,
+        ledger: allLedger,
+        depositDisputes: allDisputes,
+        influencerOffers: allInfluencerOffers,
+        tickets: allTickets,
+        pgBeds: allPgBeds,
+        pgRooms: allPgRooms,
+        pgMeals: allPgMeals,
+        commercialUnits: allCommercialUnits,
+        camExpenses: allCamExpenses,
+        commercialVisitors: allCommercialVisitors,
+        estateAssets: allEstateAssets,
+        staff: allStaff,
+        electricityBills: allBills,
+        subscription: allSubscription,
+        leads: allLeads,
+        utilities: allUtilities,
+        aiInsights: allAiInsights,
+        moveFlowChecklist: allMoveFlowChecklist,
+        referrals: allReferrals,
+        users: allUsers.map(({ password, ...u }) => u),
+        tenantConnectionRequests: allTenantConnections,
+        rewardsAccount: activeUserAccount,
+        rewardsLedger: activeLedger,
+        rewardRules: allRewardRules,
+        merchantOffers: allMerchantOffers,
+        depositApplications: allDepositApps,
+        protectionContracts: allProtectionContracts,
+        conditionReports: allConditionReports,
+        protectionClaims: allProtectionClaims
+      };
+    } else {
 
-    // Unauthenticated requests without demo flag receive clean empty dataset
-    if (!targetUserId) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          properties: [],
-          tenants: [],
-          invoices: [],
-          ledger: [],
-          depositDisputes: [],
-          influencerOffers: [],
-          tickets: [],
-          pgBeds: [],
-          pgRooms: [],
-          pgMeals: [],
-          commercialUnits: [],
-          camExpenses: [],
-          commercialVisitors: [],
-          estateAssets: [],
-          staff: [],
-          electricityBills: [],
-          subscription: null,
-          leads: [],
-          utilities: [],
-          aiInsights: [],
-          moveFlowChecklist: [],
-          referrals: [],
-          users: allUsers.map(({ password, ...u }) => u),
-          tenantConnectionRequests: []
-        }
-      });
-    }
-
-    // FOR NEW / REAL ONBOARDED USERS: Strict user isolation (zero mock data bleed)
     const userProperties = allProperties.filter(p => p.ownerId === targetUserId);
     const userPropIds = userProperties.map(p => p.id);
+    const userPropNames = userProperties.map(p => p.name.toLowerCase());
+
+    // Approved connection emails for this owner
+    const approvedTenantEmails = allTenantConnections
+      .filter(r => (r.ownerId === targetUserId || (userEmail && r.ownerEmail?.toLowerCase() === userEmail.toLowerCase()) || (r.propertyId && userPropIds.includes(r.propertyId))) && r.status === 'APPROVED')
+      .map(r => r.tenantEmail?.toLowerCase() || '');
 
     const userTenants = (userRole === 'tenant')
       ? allTenants.filter(t => t.userId === targetUserId || (userEmail && t.email.toLowerCase() === userEmail.toLowerCase()))
-      : allTenants.filter(t => userPropIds.includes(t.propertyId));
+      : allTenants.filter(t => 
+          userPropIds.includes(t.propertyId) || 
+          (t.propertyName && userPropNames.includes(t.propertyName.toLowerCase())) ||
+          (t.email && approvedTenantEmails.includes(t.email.toLowerCase()))
+        );
     const userTenantIds = userTenants.map(t => t.id);
 
     const userInvoices = (userRole === 'tenant')
@@ -167,7 +275,7 @@ export async function GET(req: NextRequest) {
       : allBills.filter(b => userPropIds.includes(b.propertyId));
 
     const userLedger = (userRole === 'tenant')
-      ? allLedger.filter(l => l.referenceId.includes(targetUserId) || userTenantIds.some(tid => l.referenceId.includes(tid)))
+      ? allLedger.filter(l => (targetUserId && l.referenceId.includes(targetUserId)) || userTenantIds.some(tid => l.referenceId.includes(tid)))
       : allLedger.filter(l => userPropIds.some(pid => l.referenceId.includes(pid)));
 
     const userEstateNames = userProperties.map(p => p.name);
@@ -189,9 +297,7 @@ export async function GET(req: NextRequest) {
       userPropIds.includes(d.propertyId) || userTenants.some(t => t.name === d.tenantName)
     );
 
-    return NextResponse.json({
-      success: true,
-      data: {
+      responseData = {
         properties: userProperties,
         tenants: userTenants,
         invoices: userInvoices,
@@ -217,7 +323,54 @@ export async function GET(req: NextRequest) {
         users: allUsers.map(({ password, ...u }) => u),
         tenantConnectionRequests: (userRole === 'tenant')
           ? allTenantConnections.filter(r => r.tenantUserId === targetUserId || (userEmail && r.tenantEmail?.toLowerCase() === userEmail.toLowerCase()))
-          : allTenantConnections.filter(r => r.ownerId === targetUserId || (userEmail && r.ownerEmail?.toLowerCase() === userEmail.toLowerCase()) || (r.propertyId && userPropIds.includes(r.propertyId)))
+          : allTenantConnections.filter(r => 
+              (r.ownerId && r.ownerId === targetUserId) || 
+              (userEmail && r.ownerEmail && r.ownerEmail.toLowerCase() === userEmail.toLowerCase()) || 
+              (r.propertyId && userPropIds.includes(r.propertyId)) ||
+              (r.propertyName && userPropNames.includes(r.propertyName.toLowerCase()))
+            ),
+        rewardsAccount: activeUserAccount,
+        rewardsLedger: activeLedger,
+        rewardRules: allRewardRules,
+        merchantOffers: allMerchantOffers,
+        depositApplications: (userRole === 'tenant')
+          ? allDepositApps.filter(a => a.tenantId === targetUserId)
+          : allDepositApps.filter(a => a.ownerId === targetUserId || userPropIds.includes(a.propertyId)),
+        protectionContracts: (userRole === 'tenant')
+          ? allProtectionContracts.filter(c => c.tenantId === targetUserId)
+          : allProtectionContracts.filter(c => c.ownerId === targetUserId || userPropIds.includes(c.propertyId)),
+        conditionReports: (userRole === 'tenant')
+          ? allConditionReports.filter(cr => cr.tenantId === targetUserId)
+          : allConditionReports.filter(cr => userPropIds.includes(cr.propertyId)),
+        protectionClaims: (userRole === 'tenant')
+          ? allProtectionClaims.filter(cl => cl.tenantId === targetUserId)
+          : allProtectionClaims.filter(cl => cl.ownerId === targetUserId || userPropIds.includes(cl.propertyId))
+      };
+    }
+
+
+    const etag = `W/"${crypto.createHash('md5').update(JSON.stringify(responseData)).digest('hex').slice(0, 16)}"`;
+    setBootstrapCache(cacheKey, responseData, etag);
+
+    if (clientEtag && clientEtag === etag) {
+      return new NextResponse(null, {
+        status: 304,
+        headers: {
+          'ETag': etag,
+          'Cache-Control': 'private, max-age=15, stale-while-revalidate=45',
+          'X-Staywise-Cache': 'REVALIDATED_304'
+        }
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: responseData
+    }, {
+      headers: {
+        'ETag': etag,
+        'Cache-Control': 'private, max-age=15, stale-while-revalidate=45',
+        'X-Staywise-Cache': 'MISS_COMPUTED'
       }
     });
 

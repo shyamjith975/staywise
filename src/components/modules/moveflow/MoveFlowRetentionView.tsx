@@ -54,22 +54,22 @@ export default function MoveFlowRetentionView() {
   };
 
   return (
-    <div className="space-y-6 font-sans bg-[#F7F8F6] text-[#263238]">
+    <div className="space-y-6 font-sans bg-[#F7F8F6] text-[#171717]">
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-[#D2DDD7] shadow-xs">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#163B36] border border-[#D2DDD7]">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#06110c] border border-[#D2DDD7]">
               {isOwner ? 'Staywise Owner Operations' : 'Resident Escrow Protection'}
             </span>
-            <span className="text-xs text-[#263238]/60 font-medium">
+            <span className="text-xs text-[#171717]/60 font-medium">
               {isOwner ? 'Landlord Referral Network • Escrow Deposit Settlements' : 'Deposit Disputes & Referrals'}
             </span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-[#263238]">
+          <h1 className="text-xl sm:text-2xl font-black text-[#171717]">
             {isOwner ? 'Owner Referral Network & Deposit Settlements' : 'Escrow Deposit Settlements & Referrals'}
           </h1>
-          <p className="text-xs text-[#263238]/70">
+          <p className="text-xs text-[#171717]/70">
             {isOwner 
               ? 'Refer fellow property owners to earn ₹5,000 cash credit, and resolve escrow deposit settlements with digital proof.' 
               : 'Review itemized deposit deductions, inspect audit photos, and settle escrow balances with zero broker mediation.'}
@@ -81,20 +81,20 @@ export default function MoveFlowRetentionView() {
           <button
             onClick={() => setActiveTab('REFERRALS')}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
-              activeTab === 'REFERRALS' ? 'bg-[#163B36] text-white shadow-xs' : 'text-[#263238]/70 hover:text-[#263238]'
+              activeTab === 'REFERRALS' ? 'bg-[#06110c] text-white shadow-xs' : 'text-[#171717]/70 hover:text-[#171717]'
             }`}
           >
-            <Gift className="h-3.5 w-3.5 text-[#C69A55]" />
+            <Gift className="h-3.5 w-3.5 text-[#a31c1b]" />
             <span>{isOwner ? 'Refer Landlords & Earn' : 'Refer & Earn'}</span>
           </button>
 
           <button
             onClick={() => setActiveTab('DISPUTES')}
             className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
-              activeTab === 'DISPUTES' ? 'bg-[#163B36] text-white shadow-xs' : 'text-[#263238]/70 hover:text-[#263238]'
+              activeTab === 'DISPUTES' ? 'bg-[#06110c] text-white shadow-xs' : 'text-[#171717]/70 hover:text-[#171717]'
             }`}
           >
-            <ShieldCheck className="h-3.5 w-3.5 text-[#C69A55]" />
+            <ShieldCheck className="h-3.5 w-3.5 text-[#a31c1b]" />
             <span>Deposit Settlements</span>
           </button>
         </div>
@@ -105,13 +105,13 @@ export default function MoveFlowRetentionView() {
         <div className="space-y-4">
           <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[#D2DDD7] space-y-5 shadow-xs">
             <div>
-              <span className="text-[10px] font-bold text-[#163B36] uppercase tracking-wider bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
+              <span className="text-[10px] font-bold text-[#06110c] uppercase tracking-wider bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
                 {isOwner ? 'Owner Landlord Referral Network' : 'Tenant Referral Hub'}
               </span>
-              <h2 className="text-base font-extrabold text-[#263238] mt-1.5">
+              <h2 className="text-base font-extrabold text-[#171717] mt-1.5">
                 {isOwner ? 'Refer Fellow Landlords & Earn ₹5,000 Cash' : 'Refer Friends & Earn Cash Rewards'}
               </h2>
-              <p className="text-xs text-[#263238]/70">
+              <p className="text-xs text-[#171717]/70">
                 {isOwner 
                   ? 'Refer other property owners, apartment landlords, or PG operators. Earn ₹5,000 cash reward + 20% lifetime management fee discount for each building onboarded.'
                   : 'Share your referral code when friends rent through Staywise. Earn cash rewards deposited straight to your UPI account.'}
@@ -119,10 +119,10 @@ export default function MoveFlowRetentionView() {
             </div>
 
             {/* Referral Code Card */}
-            <div className="p-6 rounded-3xl bg-gradient-to-br from-[#163B36] to-[#0F2925] text-white space-y-5 shadow-xl border border-[#D2DDD7]">
+            <div className="p-6 rounded-3xl bg-gradient-to-br from-[#06110c] to-[#06110c] text-white space-y-5 shadow-xl border border-[#D2DDD7]">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <div className="text-[10px] uppercase font-bold tracking-widest text-[#C69A55]">
+                  <div className="text-[10px] uppercase font-bold tracking-widest text-[#a31c1b]">
                     {isOwner ? 'YOUR LANDLORD REFERRAL CODE' : 'YOUR TENANT REFERRAL CODE'}
                   </div>
                   <div className="text-2xl sm:text-3xl font-mono font-black tracking-wider mt-1 text-white">
@@ -136,7 +136,7 @@ export default function MoveFlowRetentionView() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleCopyCode}
-                    className="px-4 py-2.5 rounded-2xl bg-white text-[#163B36] hover:bg-[#E8F0EC] font-extrabold text-xs transition flex items-center gap-1.5 shadow-md"
+                    className="px-4 py-2.5 rounded-2xl bg-white text-[#06110c] hover:bg-[#E8F0EC] font-extrabold text-xs transition flex items-center gap-1.5 shadow-md"
                   >
                     <Copy className="h-4 w-4" />
                     <span>Copy Code</span>
@@ -162,7 +162,7 @@ export default function MoveFlowRetentionView() {
                   <span className="text-lg font-black text-white">₹{totalEarned.toLocaleString('en-IN')}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-[#C69A55] block">Pending Payout</span>
+                  <span className="text-[10px] text-[#a31c1b] block">Pending Payout</span>
                   <span className="text-lg font-black text-white">₹{totalPending.toLocaleString('en-IN')}</span>
                 </div>
                 <div>
@@ -174,13 +174,13 @@ export default function MoveFlowRetentionView() {
 
             {/* Recent Referral Pipeline */}
             <div className="space-y-3 pt-2">
-              <h3 className="text-xs font-black uppercase tracking-wider text-[#263238]">
+              <h3 className="text-xs font-black uppercase tracking-wider text-[#171717]">
                 Your Referral History
               </h3>
               {userReferrals.length === 0 ? (
                 <div className="p-8 text-center rounded-2xl bg-[#E8F0EC]/50 border border-[#D2DDD7] space-y-1">
-                  <div className="font-extrabold text-xs text-[#263238]">No Referrals Yet</div>
-                  <p className="text-[11px] text-[#263238]/60">Share your code with friends or fellow landlords to start earning rewards.</p>
+                  <div className="font-extrabold text-xs text-[#171717]">No Referrals Yet</div>
+                  <p className="text-[11px] text-[#171717]/60">Share your code with friends or fellow landlords to start earning rewards.</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -190,13 +190,13 @@ export default function MoveFlowRetentionView() {
                       className="p-3.5 rounded-2xl border border-[#D2DDD7] bg-[#E8F0EC]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
                     >
                       <div>
-                        <div className="font-bold text-[#263238] flex items-center gap-2">
+                        <div className="font-bold text-[#171717] flex items-center gap-2">
                           <span>{ref.referredName}</span>
-                          <span className="text-[10px] px-2 py-0.5 rounded bg-white text-[#163B36] border border-[#D2DDD7]">
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-white text-[#06110c] border border-[#D2DDD7]">
                             {ref.propertyType}
                           </span>
                         </div>
-                        <div className="text-[11px] text-[#263238]/60 mt-0.5">
+                        <div className="text-[11px] text-[#171717]/60 mt-0.5">
                           Code: {ref.referralCode} • {ref.date}
                         </div>
                       </div>
@@ -204,14 +204,14 @@ export default function MoveFlowRetentionView() {
                       <div className="flex items-center gap-3">
                         <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full ${
                           ref.status === 'Converted' 
-                            ? 'bg-[#163B36]/10 text-[#163B36]' 
+                            ? 'bg-[#06110c]/10 text-[#06110c]' 
                             : ref.status === 'Redeemed'
-                            ? 'bg-[#C69A55]/15 text-[#C69A55]'
+                            ? 'bg-[#a31c1b]/15 text-[#a31c1b]'
                             : 'bg-amber-100 text-amber-800'
                         }`}>
                           {ref.status}
                         </span>
-                        <span className="font-black text-[#263238]">₹{ref.rewardAmount.toLocaleString('en-IN')}</span>
+                        <span className="font-black text-[#171717]">₹{ref.rewardAmount.toLocaleString('en-IN')}</span>
                       </div>
                     </div>
                   ))}
@@ -227,22 +227,22 @@ export default function MoveFlowRetentionView() {
         <div className="space-y-4">
           <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[#D2DDD7] space-y-4 shadow-xs">
             <div>
-              <span className="text-[10px] font-bold text-[#163B36] uppercase tracking-wider bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
+              <span className="text-[10px] font-bold text-[#06110c] uppercase tracking-wider bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#D2DDD7]">
                 Statutory Security Deposit Protection
               </span>
-              <h2 className="text-base font-extrabold text-[#263238] mt-1">
+              <h2 className="text-base font-extrabold text-[#171717] mt-1">
                 Active Escrow Security Deposit Settlements
               </h2>
-              <p className="text-xs text-[#263238]/70">
+              <p className="text-xs text-[#171717]/70">
                 All tenant security deposits are held in RBI-licensed Escrow Trust accounts. Deductions must be itemized with geo-tagged photographic evidence.
               </p>
             </div>
 
             {(!isDemo || depositDisputes.length === 0) ? (
               <div className="p-8 text-center rounded-2xl bg-[#E8F0EC]/50 border border-[#D2DDD7] space-y-1">
-                <CheckCircle2 className="h-8 w-8 text-[#163B36] mx-auto" />
-                <div className="font-extrabold text-xs text-[#263238]">Zero Active Deposit Disputes</div>
-                <p className="text-[11px] text-[#263238]/60">Your security deposit is 100% locked and protected in the digital escrow trust.</p>
+                <CheckCircle2 className="h-8 w-8 text-[#06110c] mx-auto" />
+                <div className="font-extrabold text-xs text-[#171717]">Zero Active Deposit Disputes</div>
+                <p className="text-[11px] text-[#171717]/60">Your security deposit is 100% locked and protected in the digital escrow trust.</p>
               </div>
             ) : (
               depositDisputes.map(dispute => (
@@ -256,37 +256,37 @@ export default function MoveFlowRetentionView() {
                         <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-200 text-amber-900">
                           {dispute.status}
                         </span>
-                        <span className="text-xs font-bold text-[#263238]/60">{dispute.id}</span>
+                        <span className="text-xs font-bold text-[#171717]/60">{dispute.id}</span>
                       </div>
-                      <h3 className="text-sm font-extrabold text-[#263238] mt-1">
+                      <h3 className="text-sm font-extrabold text-[#171717] mt-1">
                         {dispute.propertyName} • {dispute.unitOrBed} ({dispute.tenantName})
                       </h3>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-[10px] text-[#263238]/60 block">Total Escrow Deposit</span>
-                      <span className="text-base font-black text-[#263238]">₹{dispute.depositPaid.toLocaleString('en-IN')}</span>
+                      <span className="text-[10px] text-[#171717]/60 block">Total Escrow Deposit</span>
+                      <span className="text-base font-black text-[#171717]">₹{dispute.depositPaid.toLocaleString('en-IN')}</span>
                     </div>
                   </div>
 
                   {/* Deductions Breakdown */}
                   <div className="space-y-2 bg-white p-3.5 rounded-xl border border-[#D2DDD7] text-xs">
-                    <div className="font-bold text-[#263238] text-[11px] uppercase tracking-wider flex items-center justify-between">
+                    <div className="font-bold text-[#171717] text-[11px] uppercase tracking-wider flex items-center justify-between">
                       <span>Proposed Move-Out Deductions</span>
                       <span className="text-rose-600 font-tabular">Disputed: ₹{dispute.disputedAmount.toLocaleString('en-IN')}</span>
                     </div>
                     {dispute.deductions.map((item, idx) => (
                       <div key={idx} className="flex items-center justify-between py-1 border-b border-[#D2DDD7]/50 last:border-0">
                         <div className="flex items-center gap-2">
-                          <Camera className="h-3.5 w-3.5 text-[#263238]/50" />
+                          <Camera className="h-3.5 w-3.5 text-[#171717]/50" />
                           <span>{item.item}</span>
                           {item.evidenceUrl && (
-                            <span className="text-[10px] text-[#163B36] bg-[#E8F0EC] px-1.5 py-0.5 rounded border border-[#D2DDD7]">
+                            <span className="text-[10px] text-[#06110c] bg-[#E8F0EC] px-1.5 py-0.5 rounded border border-[#D2DDD7]">
                               Photo Proof Attached
                             </span>
                           )}
                         </div>
-                        <span className="font-bold text-[#263238]">₹{item.amount.toLocaleString('en-IN')}</span>
+                        <span className="font-bold text-[#171717]">₹{item.amount.toLocaleString('en-IN')}</span>
                       </div>
                     ))}
                   </div>
@@ -306,15 +306,15 @@ export default function MoveFlowRetentionView() {
 
                   {/* Dispute Actions */}
                   <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                    <div className="text-xs text-[#263238]/70">
-                      Proposed Refund: <span className="font-bold text-[#163B36]">₹{dispute.proposedRefund.toLocaleString('en-IN')}</span>
+                    <div className="text-xs text-[#171717]/70">
+                      Proposed Refund: <span className="font-bold text-[#06110c]">₹{dispute.proposedRefund.toLocaleString('en-IN')}</span>
                     </div>
                     <button 
                       onClick={() => {
                         resolveDepositDispute(dispute.id, 'Agreed');
                         addNotification('Dispute Resolved', `Escrow deposit settlement approved for ${dispute.tenantName}.`, 'RENT');
                       }}
-                      className="px-4 py-2 rounded-xl bg-[#163B36] hover:bg-[#0F2925] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
+                      className="px-4 py-2 rounded-xl bg-[#06110c] hover:bg-[#06110c] text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm"
                     >
                       <CheckCircle2 className="h-4 w-4" />
                       <span>Approve Escrow Refund Settlement</span>

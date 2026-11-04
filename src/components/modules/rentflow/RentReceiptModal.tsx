@@ -29,14 +29,14 @@ export default function RentReceiptModal() {
       <div className="w-full max-w-xl bg-white border border-[#D2DDD7] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto">
         {/* Modal Top Bar */}
         <div className="flex items-center justify-between px-6 py-3.5 border-b border-[#E0E0E0] bg-[#ffffff] print:hidden">
-          <div className="flex items-center gap-2 text-xs font-bold text-[#263238]">
+          <div className="flex items-center gap-2 text-xs font-bold text-[#171717]">
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
             <span>Official Staywise Rent Receipt</span>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] text-[#263238] text-xs font-bold flex items-center gap-1.5 border border-[#D2DDD7] transition shadow-sm"
+              className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] text-[#171717] text-xs font-bold flex items-center gap-1.5 border border-[#D2DDD7] transition shadow-sm"
             >
               <Printer className="h-3.5 w-3.5" />
               <span>Print / PDF</span>
@@ -44,7 +44,7 @@ export default function RentReceiptModal() {
             <button
               type="button"
               onClick={() => setSelectedReceiptInvoice(null)}
-              className="h-8 w-8 rounded-full flex items-center justify-center text-[#666666] hover:text-[#263238] hover:bg-[#E8F0EC] transition"
+              className="h-8 w-8 rounded-full flex items-center justify-center text-[#666666] hover:text-[#171717] hover:bg-[#E8F0EC] transition"
               aria-label="Close receipt"
             >
               <X className="h-5 w-5" />
@@ -53,15 +53,15 @@ export default function RentReceiptModal() {
         </div>
 
         {/* Printable Official Receipt Body */}
-        <div className="p-8 overflow-y-auto bg-white text-[#263238] space-y-6">
+        <div className="p-8 overflow-y-auto bg-white text-[#171717] space-y-6">
           {/* Header */}
           <div className="flex justify-between items-start pb-6 border-b border-[#E0E0E0]">
             <div>
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-xl bg-[#263238] flex items-center justify-center text-white font-black text-xs">
+                <div className="h-8 w-8 rounded-xl bg-[#171717] flex items-center justify-center text-white font-black text-xs">
                   SW
                 </div>
-                <span className="font-black text-lg tracking-tight text-[#263238]">STAYWISE</span>
+                <span className="font-black text-lg tracking-tight text-[#171717]">STAYWISE</span>
               </div>
               <p className="text-[11px] text-[#666666] mt-1">
                 Staywise Technologies Pvt. Ltd. • Escrow Trustee
@@ -73,7 +73,7 @@ export default function RentReceiptModal() {
               <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
                 Payment Settled
               </span>
-              <div className="text-xs font-mono font-bold text-[#263238] mt-2">
+              <div className="text-xs font-mono font-bold text-[#171717] mt-2">
                 Receipt #{selectedReceiptInvoice.invoiceNumber}
               </div>
               <div className="text-[11px] text-[#666666]">
@@ -88,16 +88,16 @@ export default function RentReceiptModal() {
               <span className="text-[10px] uppercase tracking-wider text-[#666666] font-bold">
                 Received From (Tenant)
               </span>
-              <div className="font-extrabold text-[#263238] text-sm">{selectedReceiptInvoice.tenantName}</div>
+              <div className="font-extrabold text-[#171717] text-sm">{selectedReceiptInvoice.tenantName}</div>
               <div className="text-[#666666]">Resident ID: {selectedReceiptInvoice.tenantId}</div>
-              <div className="text-[#263238] font-semibold">Digital KYC: Aadhaar Verified ✓</div>
+              <div className="text-[#171717] font-semibold">Digital KYC: Aadhaar Verified ✓</div>
             </div>
 
             <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-1">
               <span className="text-[10px] uppercase tracking-wider text-[#666666] font-bold">
                 Property & Unit
               </span>
-              <div className="font-extrabold text-[#263238] text-sm">{selectedReceiptInvoice.propertyName}</div>
+              <div className="font-extrabold text-[#171717] text-sm">{selectedReceiptInvoice.propertyName}</div>
               <div className="text-[#666666]">Unit: Apartment {selectedReceiptInvoice.unitNumber}</div>
               <div className="text-[#666666]">Rental Period: {selectedReceiptInvoice.period}</div>
             </div>
@@ -114,22 +114,22 @@ export default function RentReceiptModal() {
               </thead>
               <tbody className="divide-y divide-[#E0E0E0]">
                 <tr>
-                  <td className="py-2.5 px-4 font-medium text-[#263238]">Monthly Base Rent ({selectedReceiptInvoice.period})</td>
+                  <td className="py-2.5 px-4 font-medium text-[#171717]">Monthly Base Rent ({selectedReceiptInvoice.period})</td>
                   <td className="py-2.5 px-4 text-right font-tabular font-bold">₹{selectedInvoiceOrFallback(selectedReceiptInvoice.baseRent)}</td>
                 </tr>
                 {selectedReceiptInvoice.camCharges && (
                   <tr>
-                    <td className="py-2.5 px-4 font-medium text-[#263238]">Common Area Maintenance (CAM) & Facilities</td>
+                    <td className="py-2.5 px-4 font-medium text-[#171717]">Common Area Maintenance (CAM) & Facilities</td>
                     <td className="py-2.5 px-4 text-right font-tabular">₹{selectedReceiptInvoice.camCharges.toLocaleString('en-IN')}</td>
                   </tr>
                 )}
                 {selectedReceiptInvoice.utilityCharges && (
                   <tr>
-                    <td className="py-2.5 px-4 font-medium text-[#263238]">Electricity & Water Pro-Rata Share</td>
+                    <td className="py-2.5 px-4 font-medium text-[#171717]">Electricity & Water Pro-Rata Share</td>
                     <td className="py-2.5 px-4 text-right font-tabular">₹{selectedReceiptInvoice.utilityCharges.toLocaleString('en-IN')}</td>
                   </tr>
                 )}
-                <tr className="bg-[#E8F0EC] font-extrabold text-[#263238]">
+                <tr className="bg-[#E8F0EC] font-extrabold text-[#171717]">
                   <td className="py-3 px-4 text-sm">Total Cleared Payment</td>
                   <td className="py-3 px-4 text-right text-sm text-emerald-700 font-tabular font-black">
                     ₹{selectedReceiptInvoice.totalAmount.toLocaleString('en-IN')}
@@ -142,18 +142,18 @@ export default function RentReceiptModal() {
           {/* Payment Metadata & Verification Seal */}
           <div className="flex items-center justify-between pt-4 border-t border-[#E0E0E0] text-[11px] text-[#666666]">
             <div className="space-y-1">
-              <div><b className="text-[#263238]">Transaction ID:</b> {selectedReceiptInvoice.transactionId || 'UPI-774920198421'}</div>
-              <div><b className="text-[#263238]">Payment Rail:</b> {selectedReceiptInvoice.paymentMethod || 'UPI / Escrow Direct'}</div>
-              <div><b className="text-[#263238]">Status:</b> Cleared to Axis Nodal Settlement Account</div>
+              <div><b className="text-[#171717]">Transaction ID:</b> {selectedReceiptInvoice.transactionId || 'UPI-774920198421'}</div>
+              <div><b className="text-[#171717]">Payment Rail:</b> {selectedReceiptInvoice.paymentMethod || 'UPI / Escrow Direct'}</div>
+              <div><b className="text-[#171717]">Status:</b> Cleared to Axis Nodal Settlement Account</div>
             </div>
 
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <div className="text-[10px] uppercase font-bold text-[#263238]">Digital Seal</div>
+                <div className="text-[10px] uppercase font-bold text-[#171717]">Digital Seal</div>
                 <div className="text-[10px] text-[#888888]">Cryptographically Signed</div>
               </div>
               <div className="h-12 w-12 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-center">
-                <QrCode className="h-7 w-7 text-[#263238]" />
+                <QrCode className="h-7 w-7 text-[#171717]" />
               </div>
             </div>
           </div>

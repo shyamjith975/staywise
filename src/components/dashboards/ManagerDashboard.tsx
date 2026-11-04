@@ -15,6 +15,7 @@ import {
   TrendingUp,
   ShieldAlert
 } from 'lucide-react';
+import { color } from '../../lib/colors';
 
 export default function ManagerDashboard() {
   const { properties, tickets, leads, invoices, setActiveView } = useAppState();
@@ -32,10 +33,10 @@ export default function ManagerDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D2DDD7]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#263238]">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#171717]">
               Operations & Field Command
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#263238] font-bold border border-[#263238]/20">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#171717] font-bold border border-[#171717]/20">
               Field Active
             </span>
           </div>
@@ -49,7 +50,7 @@ export default function ManagerDashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
         <div className="organic-card p-3.5">
           <span className="text-[11px] font-semibold text-[#666666]">Properties</span>
-          <div className="text-xl font-black text-[#263238] mt-1 font-tabular">{totalProps}</div>
+          <div className="text-xl font-black text-[#171717] mt-1 font-tabular">{totalProps}</div>
         </div>
         <div className="organic-card p-3.5">
           <span className="text-[11px] font-semibold text-[#666666]">Occupied</span>
@@ -69,7 +70,7 @@ export default function ManagerDashboard() {
         </div>
         <div className="organic-card p-3.5">
           <span className="text-[11px] font-semibold text-[#666666]">Active Leads</span>
-          <div className="text-xl font-black text-[#263238] mt-1 font-tabular">{leads.length}</div>
+          <div className="text-xl font-black text-[#171717] mt-1 font-tabular">{leads.length}</div>
         </div>
         <div className="organic-card p-3.5 col-span-2 sm:col-span-1">
           <span className="text-[11px] font-semibold text-[#666666]">Visits Today</span>
@@ -83,12 +84,12 @@ export default function ManagerDashboard() {
         <div className="organic-card p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-extrabold text-[#263238]">Maintenance Triage Queue</h3>
+              <h3 className="text-sm font-extrabold text-[#171717]">Maintenance Triage Queue</h3>
               <p className="text-[11px] text-[#666666]">Field requests waiting for triage or vendor dispatch</p>
             </div>
             <button 
               onClick={() => setActiveView('maintenance')}
-              className="text-xs font-bold text-[#263238] hover:underline"
+              className="text-xs font-bold text-[#171717] hover:underline"
             >
               All tickets →
             </button>
@@ -101,7 +102,7 @@ export default function ManagerDashboard() {
                 className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-between gap-3 text-xs"
               >
                 <div>
-                  <div className="font-bold text-[#263238] flex items-center gap-2">
+                  <div className="font-bold text-[#171717] flex items-center gap-2">
                     <span>{t.title}</span>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
                       t.priority === 'Emergency' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
@@ -116,7 +117,7 @@ export default function ManagerDashboard() {
 
                 <button
                   onClick={() => setActiveView('maintenance')}
-                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#263238] hover:text-white text-[#263238] font-bold text-xs border border-[#D2DDD7] transition shrink-0"
+                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#171717] hover:text-white text-[#171717] font-bold text-xs border border-[#D2DDD7] transition shrink-0"
                 >
                   Dispatch
                 </button>
@@ -129,12 +130,12 @@ export default function ManagerDashboard() {
         <div className="organic-card p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-extrabold text-[#263238]">Upcoming Property Visits</h3>
+              <h3 className="text-sm font-extrabold text-[#171717]">Upcoming Property Visits</h3>
               <p className="text-[11px] text-[#666666]">Prospective tenants scheduled for physical inspection</p>
             </div>
             <button 
               onClick={() => setActiveView('leads')}
-              className="text-xs font-bold text-[#263238] hover:underline"
+              className="text-xs font-bold text-[#171717] hover:underline"
             >
               CRM pipeline →
             </button>
@@ -147,7 +148,7 @@ export default function ManagerDashboard() {
                 className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-between gap-3 text-xs"
               >
                 <div>
-                  <div className="font-bold text-[#263238] flex items-center gap-2">
+                  <div className="font-bold text-[#171717] flex items-center gap-2">
                     <span>{lead.name}</span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">
                       {lead.stage}
@@ -161,13 +162,13 @@ export default function ManagerDashboard() {
                 <div className="flex items-center gap-1.5 shrink-0">
                   <a
                     href={`tel:${lead.phone}`}
-                    className="p-2 rounded-xl bg-white hover:bg-[#263238] hover:text-white text-[#263238] border border-[#D2DDD7] transition"
+                    className="p-2 rounded-xl bg-white hover:bg-[#171717] hover:text-white text-[#171717] border border-[#D2DDD7] transition"
                   >
                     📞
                   </a>
                   <button
                     onClick={() => setActiveView('leads')}
-                    className="px-3 py-1.5 rounded-xl bg-[#263238] text-white font-bold text-xs shadow-sm hover:bg-[#263238] transition"
+                    className="px-3 py-1.5 rounded-xl bg-[#171717] text-white font-bold text-xs shadow-sm hover:bg-[#171717] transition"
                   >
                     Conduct Visit
                   </button>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
+import { invalidateBootstrapCache } from '../../../lib/cache/apiCache';
 
 export async function GET() {
   try {
@@ -13,6 +14,11 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const apiKey = 
+      req.headers.get('x-api-key') || 
+      req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ||
+      req.headers.get('x-staywise-client-key');
+
     const body = await req.json();
     if (!body.name || !body.email || !body.propertyId) {
       return NextResponse.json(
@@ -44,6 +50,8 @@ export async function POST(req: NextRequest) {
         documents: body.documents
       });
 
+      invalidateBootstrapCache();
+
       return NextResponse.json({
         success: true,
         message: `Tenant ${body.name} successfully onboarded into Unit ${body.unitNumber} and saved to SQLite database.`,
@@ -56,6 +64,8 @@ export async function POST(req: NextRequest) {
       ...body,
       id: body.id || `t-${Date.now()}`
     });
+
+    invalidateBootstrapCache();
 
     return NextResponse.json({ success: true, data: newTenant }, { status: 201 });
   } catch (error) {

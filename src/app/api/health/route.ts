@@ -1,26 +1,28 @@
 import { NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
+import { dbManager } from '../../../lib/db/postgresClient';
+import { telemetry } from '../../../lib/observability/telemetry';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const startTime = Date.now();
 
-  // Test database availability
-  let dbStatus = 'operational';
+  let dbHealth = await dbManager.checkHealth();
   let totalPropertiesCount = 0;
   try {
     const properties = await db.properties.findMany();
     totalPropertiesCount = properties.length;
   } catch (err) {
-    dbStatus = 'degraded';
+    dbHealth.isHealthy = false;
   }
 
   const mem = process.memoryUsage();
   const latencyMs = Date.now() - startTime;
+  telemetry.recordApiLatency(latencyMs);
 
   const healthData = {
-    status: dbStatus === 'operational' ? 'healthy' : 'degraded',
+    status: dbHealth.isHealthy ? 'healthy' : 'degraded',
     version: '1.0.0',
     service: 'staywise-enterprise-core',
     environment: process.env.NODE_ENV || 'production',
@@ -36,8 +38,9 @@ export async function GET() {
     },
     services: {
       database: {
-        status: dbStatus,
-        driver: 'AtomicJsonEngine (ACID Safe)',
+        status: dbHealth.isHealthy ? 'operational' : 'degraded',
+        engine: dbHealth.activeEngine,
+        poolStatus: dbHealth.poolStatus,
         recordsMonitored: totalPropertiesCount
       },
       rateLimiter: {
@@ -59,7 +62,7 @@ export async function GET() {
     }
   };
 
-  const statusHttp = dbStatus === 'operational' ? 200 : 503;
+  const statusHttp = dbHealth.isHealthy ? 200 : 503;
 
   return NextResponse.json(healthData, {
     status: statusHttp,

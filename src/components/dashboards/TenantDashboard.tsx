@@ -39,7 +39,8 @@ import {
   Building2,
   LogOut
 } from 'lucide-react';
-import { Roommate } from '../../types';
+import { Roommate, TenancyType } from '../../types';
+import { color } from '../../lib/colors';
 import ViewElectricityBillDocumentModal from '../modules/rentflow/ViewElectricityBillDocumentModal';
 
 const DEMO_ROOMMATES: Roommate[] = [
@@ -94,13 +95,15 @@ export default function TenantDashboard() {
     tenantConnectionRequests,
     createTenantConnectionRequest,
     requestTenantMoveOut,
-    addNotification
+    addNotification,
+    rewardsAccount,
+    protectionContracts
   } = useAppState();
 
   const isDemoTenant = currentUser?.email === 'tenant@staywise.com' || currentUser?.id === 'user-tenant-shyam';
 
-  // Tenancy Property Category: PG, Residential, Commercial
-  const [activeTenancyType, setActiveTenancyType] = useState<'PG' | 'Residential' | 'Commercial'>('PG');
+  // Tenancy Property Category: PG, Residential, Commercial, Warehouse, Villa, etc.
+  const [activeTenancyType, setActiveTenancyType] = useState<TenancyType>('PG');
 
   // Connect to Landlord Modal State
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
@@ -113,7 +116,7 @@ export default function TenantDashboard() {
     monthlyRent: 25000,
     depositAmount: 50000,
     leaseStartDate: '2026-11-01',
-    tenancyType: 'PG' as 'PG' | 'Residential' | 'Commercial',
+    tenancyType: 'PG' as TenancyType,
     includeFoodPlan: true,
     aadhaarNumber: '',
     panNumber: '',
@@ -419,14 +422,14 @@ export default function TenantDashboard() {
     };
 
     return (
-      <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 bg-[#171717]/60 backdrop-blur-xs flex items-center justify-center p-4">
         <div className="w-full max-w-lg max-h-[92vh] overflow-y-auto bg-white rounded-3xl border border-[#D2DDD7] p-6 space-y-4 shadow-2xl">
           <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
             <div>
-              <h3 className="text-base font-extrabold text-[#263238]">Connect to Landlord &amp; Complete eKYC</h3>
+              <h3 className="text-base font-extrabold text-[#171717]">Connect to Landlord &amp; Complete eKYC</h3>
               <p className="text-xs text-[#546E7A]">Mandatory Digital KYC, Agreement &amp; Unit Linking</p>
             </div>
-            <button onClick={() => setIsConnectModalOpen(false)} className="text-[#546E7A] hover:text-[#263238] cursor-pointer">
+            <button onClick={() => setIsConnectModalOpen(false)} className="text-[#546E7A] hover:text-[#171717] cursor-pointer">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -441,7 +444,7 @@ export default function TenantDashboard() {
           <form onSubmit={handleConnectSubmit} className="space-y-4 text-xs">
             {/* Landlord Identification */}
             <div>
-              <label className="block text-[#263238] font-bold mb-1">
+              <label className="block text-[#171717] font-bold mb-1">
                 Owner Phone Number, Owner ID, or Email <span className="text-rose-500">*</span>
               </label>
               <input
@@ -450,7 +453,7 @@ export default function TenantDashboard() {
                 value={connectForm.ownerIdentifier}
                 onChange={(e) => setConnectForm({ ...connectForm, ownerIdentifier: e.target.value })}
                 required
-                className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium"
               />
               <span className="text-[10px] text-[#546E7A] mt-0.5 block">
                 Enter your landlord&apos;s registered mobile number, email, or unique Owner ID.
@@ -459,7 +462,7 @@ export default function TenantDashboard() {
 
             {/* Property Selection */}
             <div>
-              <label className="block text-[#263238] font-bold mb-1">Property Name / Campus (Optional)</label>
+              <label className="block text-[#171717] font-bold mb-1">Property Name / Campus (Optional)</label>
               {properties.length > 0 ? (
                 <div className="space-y-1.5">
                   <select
@@ -468,7 +471,7 @@ export default function TenantDashboard() {
                       const p = properties.find(prop => prop.id === e.target.value);
                       setConnectForm({ ...connectForm, propertyId: e.target.value, propertyName: p?.name || '' });
                     }}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium"
                   >
                     <option value="">Select registered property (or enter name below)...</option>
                     {properties.map(p => (
@@ -480,7 +483,7 @@ export default function TenantDashboard() {
                     placeholder="Or enter property name (e.g. Prestige Greenwoods)"
                     value={connectForm.propertyName}
                     onChange={(e) => setConnectForm({ ...connectForm, propertyName: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium text-xs"
+                    className="w-full px-3.5 py-2 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium text-xs"
                   />
                 </div>
               ) : (
@@ -489,14 +492,14 @@ export default function TenantDashboard() {
                   placeholder="e.g. Beach Road Luxury Apartments, Horizon Villa"
                   value={connectForm.propertyName}
                   onChange={(e) => setConnectForm({ ...connectForm, propertyName: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium"
                 />
               )}
             </div>
 
             {/* Tenancy Type */}
             <div>
-              <label className="block text-[#263238] font-bold mb-1">
+              <label className="block text-[#171717] font-bold mb-1">
                 Tenancy Category <span className="text-rose-500">*</span>
               </label>
               <select
@@ -506,7 +509,7 @@ export default function TenantDashboard() {
                   setConnectForm({ ...connectForm, tenancyType: newType });
                   setActiveTenancyType(newType);
                 }}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium"
               >
                 <option value="PG">PG &amp; Co-Living (Hostel / Bed / Shared Room)</option>
                 <option value="Residential">Residential (Apartment / Flat / Independent Home)</option>
@@ -517,14 +520,14 @@ export default function TenantDashboard() {
             {connectForm.tenancyType === 'PG' && (
               <div className="p-3 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-between">
                 <div>
-                  <div className="font-bold text-[#263238] text-xs">Include Mess &amp; Daily Meals</div>
+                  <div className="font-bold text-[#171717] text-xs">Include Mess &amp; Daily Meals</div>
                   <div className="text-[10px] text-[#546E7A]">₹3,600/month for daily breakfast, lunch &amp; dinner pass</div>
                 </div>
                 <input
                   type="checkbox"
                   checked={connectForm.includeFoodPlan}
                   onChange={(e) => setConnectForm({ ...connectForm, includeFoodPlan: e.target.checked })}
-                  className="h-4 w-4 rounded accent-[#163B36] cursor-pointer"
+                  className="h-4 w-4 rounded accent-[#06110c] cursor-pointer"
                 />
               </div>
             )}
@@ -532,7 +535,7 @@ export default function TenantDashboard() {
             {/* Unit & Lease Date */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[#263238] font-bold mb-1">
+                <label className="block text-[#171717] font-bold mb-1">
                   Unit / Flat / Room <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -541,17 +544,17 @@ export default function TenantDashboard() {
                   value={connectForm.unitNumber}
                   onChange={(e) => setConnectForm({ ...connectForm, unitNumber: e.target.value })}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium"
                 />
               </div>
               <div>
-                <label className="block text-[#263238] font-bold mb-1">Lease Start Date</label>
+                <label className="block text-[#171717] font-bold mb-1">Lease Start Date</label>
                 <input
                   type="date"
                   value={connectForm.leaseStartDate}
                   onChange={(e) => setConnectForm({ ...connectForm, leaseStartDate: e.target.value })}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium"
                 />
               </div>
             </div>
@@ -559,23 +562,23 @@ export default function TenantDashboard() {
             {/* Rent & Deposit */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[#263238] font-bold mb-1">Monthly Rent (₹)</label>
+                <label className="block text-[#171717] font-bold mb-1">Monthly Rent (₹)</label>
                 <input
                   type="number"
                   value={connectForm.monthlyRent}
                   onChange={(e) => setConnectForm({ ...connectForm, monthlyRent: Number(e.target.value) })}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium font-tabular"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium font-tabular"
                 />
               </div>
               <div>
-                <label className="block text-[#263238] font-bold mb-1">Security Deposit (₹)</label>
+                <label className="block text-[#171717] font-bold mb-1">Security Deposit (₹)</label>
                 <input
                   type="number"
                   value={connectForm.depositAmount}
                   onChange={(e) => setConnectForm({ ...connectForm, depositAmount: Number(e.target.value) })}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium font-tabular"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium font-tabular"
                 />
               </div>
             </div>
@@ -583,8 +586,8 @@ export default function TenantDashboard() {
             {/* MANDATORY eKYC SECTION */}
             <div className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7] space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 font-black text-[#263238]">
-                  <Fingerprint className="h-4 w-4 text-[#163B36]" />
+                <div className="flex items-center gap-1.5 font-black text-[#171717]">
+                  <Fingerprint className="h-4 w-4 text-[#06110c]" />
                   <span>Mandatory Resident eKYC</span>
                 </div>
                 <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
@@ -608,7 +611,7 @@ export default function TenantDashboard() {
                       setConnectForm({ ...connectForm, aadhaarNumber: formatted });
                     }}
                     required
-                    className="w-full px-3 py-2 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-mono font-bold"
+                    className="w-full px-3 py-2 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-mono font-bold"
                   />
                   <span className="text-[10px] text-[#546E7A] mt-0.5 block">12-digit Indian Aadhaar</span>
                 </div>
@@ -624,7 +627,7 @@ export default function TenantDashboard() {
                     value={connectForm.panNumber}
                     onChange={(e) => setConnectForm({ ...connectForm, panNumber: e.target.value.toUpperCase().trim() })}
                     required
-                    className="w-full px-3 py-2 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-mono font-bold uppercase"
+                    className="w-full px-3 py-2 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-mono font-bold uppercase"
                   />
                   <span className="text-[10px] text-[#546E7A] mt-0.5 block">10-digit Permanent Account Number</span>
                 </div>
@@ -634,24 +637,24 @@ export default function TenantDashboard() {
             {/* MANDATORY DOCUMENTS & RENTAL AGREEMENT UPLOAD */}
             <div className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7] space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 font-black text-[#263238]">
-                  <FileText className="h-4 w-4 text-[#163B36]" />
+                <div className="flex items-center gap-1.5 font-black text-[#171717]">
+                  <FileText className="h-4 w-4 text-[#06110c]" />
                   <span>Rental Agreement &amp; Identity Documents <span className="text-rose-500">*</span></span>
                 </div>
                 <button
                   type="button"
                   onClick={handleAttachSampleDocs}
-                  className="text-[11px] font-bold text-[#163B36] hover:underline cursor-pointer flex items-center gap-1"
+                  className="text-[11px] font-bold text-[#06110c] hover:underline cursor-pointer flex items-center gap-1"
                 >
-                  <Sparkles className="h-3 w-3 text-[#C69A55]" />
+                  <Sparkles className="h-3 w-3 text-[#a31c1b]" />
                   <span>+ Auto-attach Sample eKYC &amp; Agreement</span>
                 </button>
               </div>
 
               {/* Upload Dropzone */}
-              <label className="border-2 border-dashed border-[#D2DDD7] hover:border-[#163B36] rounded-2xl p-4 text-center block cursor-pointer transition bg-white">
-                <UploadCloud className="h-6 w-6 text-[#163B36] mx-auto mb-1" />
-                <span className="font-bold text-[#263238] block text-xs">Click to browse or drag and drop</span>
+              <label className="border-2 border-dashed border-[#D2DDD7] hover:border-[#06110c] rounded-2xl p-4 text-center block cursor-pointer transition bg-white">
+                <UploadCloud className="h-6 w-6 text-[#06110c] mx-auto mb-1" />
+                <span className="font-bold text-[#171717] block text-xs">Click to browse or drag and drop</span>
                 <span className="text-[10px] text-[#546E7A] block">Upload Aadhaar / Passport PDF, Voter ID, and signed Rental Agreement (PDF, PNG, JPG)</span>
                 <input
                   type="file"
@@ -669,8 +672,8 @@ export default function TenantDashboard() {
                   {connectForm.documents.map((doc) => (
                     <div key={doc.id} className="p-2.5 rounded-xl bg-white border border-[#D2DDD7] flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 overflow-hidden">
-                        <FileText className="h-4 w-4 text-[#163B36] shrink-0" />
-                        <span className="font-bold text-[#263238] truncate text-[11px]">{doc.name}</span>
+                        <FileText className="h-4 w-4 text-[#06110c] shrink-0" />
+                        <span className="font-bold text-[#171717] truncate text-[11px]">{doc.name}</span>
                         <span className="text-[10px] text-[#546E7A] shrink-0">({doc.size})</span>
                       </div>
                       <button
@@ -689,9 +692,9 @@ export default function TenantDashboard() {
 
             <button
               type="submit"
-              className="w-full py-3.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-black text-xs transition shadow-md cursor-pointer mt-2 flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-full bg-[#06110c] hover:bg-[#171717] text-white font-black text-xs transition shadow-md cursor-pointer mt-2 flex items-center justify-center gap-2"
             >
-              <ShieldCheck className="h-4 w-4 text-[#C69A55]" />
+              <ShieldCheck className="h-4 w-4 text-[#a31c1b]" />
               <span>Verify eKYC &amp; Send Connection Request</span>
             </button>
           </form>
@@ -703,18 +706,18 @@ export default function TenantDashboard() {
   // If new tenant is not assigned to any property yet, show dedicated unassigned onboarding dashboard
   if (!currentTenant) {
     return (
-      <div className="space-y-6 pb-12 font-sans text-[#263238]">
+      <div className="space-y-6 pb-12 font-sans text-[#171717]">
         {/* Unassigned Greeting Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D2DDD7]">
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#263238]">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#171717]">
                 Welcome, {currentUser?.name || 'Resident'}!
               </h1>
               <span className={`text-xs px-3 py-1 rounded-full font-extrabold border flex items-center gap-1 shadow-2xs ${
                 ekycStatus === 'Verified' 
                   ? 'bg-emerald-50 text-emerald-800 border-emerald-300' 
-                  : 'bg-[#FAF5EB] text-[#8C6B2E] border-[#ECCFA4]'
+                  : 'bg-[#fbebeb] text-[#7a1413] border-[#f5c2c2]'
               }`}>
                 <ShieldCheck className="h-3.5 w-3.5" />
                 <span>{ekycStatus === 'Verified' ? 'eKYC Verified' : 'KYC Pending'}</span>
@@ -728,9 +731,9 @@ export default function TenantDashboard() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsEKYCModalOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#E8F0EC] text-[#263238] text-xs font-bold border border-[#D2DDD7] transition shadow-2xs cursor-pointer"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#E8F0EC] text-[#171717] text-xs font-bold border border-[#D2DDD7] transition shadow-2xs cursor-pointer"
             >
-              <Fingerprint className="h-4 w-4 text-[#163B36]" />
+              <Fingerprint className="h-4 w-4 text-[#06110c]" />
               <span>Complete Digital KYC</span>
             </button>
           </div>
@@ -738,7 +741,7 @@ export default function TenantDashboard() {
 
         {/* Connection Status or Connect Button */}
         {userConnection?.status === 'PENDING_APPROVAL' ? (
-          <div className="rounded-3xl bg-[#E8F0EC] border border-[#163B36]/30 p-6 sm:p-8 shadow-sm">
+          <div className="rounded-3xl bg-[#E8F0EC] border border-[#06110c]/30 p-6 sm:p-8 shadow-sm">
             <div className="max-w-2xl space-y-4">
               <div className="flex items-center gap-2">
                 <span className="h-3 w-3 rounded-full bg-amber-500 animate-pulse"></span>
@@ -747,7 +750,7 @@ export default function TenantDashboard() {
                 </span>
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-black text-[#263238]">
+                <h2 className="text-lg sm:text-xl font-black text-[#171717]">
                   Connecting to {userConnection.propertyName || 'Property'} • Unit {userConnection.unitNumber}
                 </h2>
                 <p className="text-xs text-[#546E7A] mt-1 leading-relaxed">
@@ -758,19 +761,19 @@ export default function TenantDashboard() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs">
                 <div className="p-3 bg-white rounded-xl border border-[#D2DDD7]">
                   <span className="text-[10px] text-[#546E7A] block">Unit Number</span>
-                  <span className="font-bold text-[#263238]">{userConnection.unitNumber}</span>
+                  <span className="font-bold text-[#171717]">{userConnection.unitNumber}</span>
                 </div>
                 <div className="p-3 bg-white rounded-xl border border-[#D2DDD7]">
                   <span className="text-[10px] text-[#546E7A] block">Monthly Rent</span>
-                  <span className="font-bold text-[#163B36] font-tabular">₹{userConnection.monthlyRent?.toLocaleString('en-IN')}</span>
+                  <span className="font-bold text-[#06110c] font-tabular">₹{userConnection.monthlyRent?.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="p-3 bg-white rounded-xl border border-[#D2DDD7]">
                   <span className="text-[10px] text-[#546E7A] block">Security Deposit</span>
-                  <span className="font-bold text-[#263238] font-tabular">₹{userConnection.depositAmount?.toLocaleString('en-IN')}</span>
+                  <span className="font-bold text-[#171717] font-tabular">₹{userConnection.depositAmount?.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="p-3 bg-white rounded-xl border border-[#D2DDD7]">
                   <span className="text-[10px] text-[#546E7A] block">Lease Start</span>
-                  <span className="font-bold text-[#263238]">{userConnection.leaseStartDate}</span>
+                  <span className="font-bold text-[#171717]">{userConnection.leaseStartDate}</span>
                 </div>
               </div>
             </div>
@@ -782,7 +785,7 @@ export default function TenantDashboard() {
                 <CheckCircle2 className="h-6 w-6" />
               </div>
               <div>
-                <h2 className="text-lg font-black text-[#263238]">Previous Tenancy Completed &amp; Settled</h2>
+                <h2 className="text-lg font-black text-[#171717]">Previous Tenancy Completed &amp; Settled</h2>
                 <p className="text-xs text-[#546E7A] mt-1.5 leading-relaxed">
                   Your move-out from {userConnection.propertyName} Unit {userConnection.unitNumber} was verified by the owner. Security deposit escrow of ₹{userConnection.depositSettledAmount?.toLocaleString('en-IN')} has been settled.
                 </p>
@@ -791,7 +794,7 @@ export default function TenantDashboard() {
               <div className="pt-2">
                 <button
                   onClick={() => setIsConnectModalOpen(true)}
-                  className="px-6 py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
+                  className="px-6 py-3 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
                 >
                   <Home className="h-4 w-4" />
                   <span>+ Connect to Next Property / Landlord</span>
@@ -802,11 +805,11 @@ export default function TenantDashboard() {
         ) : (
           <div className="rounded-3xl bg-white border border-[#D2DDD7] p-6 sm:p-8 shadow-sm">
             <div className="max-w-2xl space-y-4">
-              <div className="h-12 w-12 rounded-2xl bg-[#FAF5EB] text-[#8C6B2E] border border-[#ECCFA4] flex items-center justify-center">
+              <div className="h-12 w-12 rounded-2xl bg-[#fbebeb] text-[#7a1413] border border-[#f5c2c2] flex items-center justify-center">
                 <Home className="h-6 w-6" />
               </div>
               <div>
-                <h2 className="text-lg font-black text-[#263238]">Connect to Your Property (Residential, PG, or Commercial)</h2>
+                <h2 className="text-lg font-black text-[#171717]">Connect to Your Property (Residential, PG, or Commercial)</h2>
                 <p className="text-xs text-[#546E7A] mt-1.5 leading-relaxed">
                   Connect your tenant account directly to your property owner to view your lease agreement, upcoming rent dues, roommate splits, electricity bills, and service requests.
                 </p>
@@ -815,13 +818,13 @@ export default function TenantDashboard() {
               <div className="pt-2 flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => setIsConnectModalOpen(true)}
-                  className="px-6 py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
+                  className="px-6 py-3 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
                 >
                   <Home className="h-4 w-4" />
                   <span>+ Connect with Property Owner</span>
                 </button>
                 <div className="p-3 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs text-[#546E7A]">
-                  Your ID: <b className="text-[#263238] font-mono">{currentUser?.email || currentUser?.id}</b>
+                  Your ID: <b className="text-[#171717] font-mono">{currentUser?.email || currentUser?.id}</b>
                 </div>
               </div>
             </div>
@@ -831,16 +834,16 @@ export default function TenantDashboard() {
         {/* 3 Onboarding Steps */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="rounded-2xl bg-white border border-[#D2DDD7] p-5 space-y-2.5">
-            <div className="h-9 w-9 rounded-xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center font-bold text-xs">
+            <div className="h-9 w-9 rounded-xl bg-[#E8F0EC] text-[#06110c] flex items-center justify-center font-bold text-xs">
               1
             </div>
-            <h3 className="font-extrabold text-sm text-[#263238]">Quick Identity Verification</h3>
+            <h3 className="font-extrabold text-sm text-[#171717]">Quick Identity Verification</h3>
             <p className="text-xs text-[#546E7A]">
               Verify your Aadhaar and PAN so your landlord can prepare your rental agreement without paperwork.
             </p>
             <button
               onClick={() => setIsEKYCModalOpen(true)}
-              className="text-xs font-bold text-[#163B36] hover:underline pt-1 inline-flex items-center gap-1 cursor-pointer"
+              className="text-xs font-bold text-[#06110c] hover:underline pt-1 inline-flex items-center gap-1 cursor-pointer"
             >
               Verify identity now →
             </button>
@@ -850,33 +853,45 @@ export default function TenantDashboard() {
             <div className="h-9 w-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-xs">
               2
             </div>
-            <h3 className="font-extrabold text-sm text-[#263238]">Safe Security Deposit</h3>
+            <h3 className="font-extrabold text-sm text-[#171717]">Zero-Deposit Protection</h3>
             <p className="text-xs text-[#546E7A]">
-              Your deposit is tracked with a clear digital record and itemized checkout checklist for a smooth, fair refund.
+              Rent without a ₹50k+ upfront cash lock. Replace traditional deposits with vetted institutional protection.
             </p>
+            <button
+              onClick={() => setActiveView('deposit_protect')}
+              className="text-xs font-bold text-[#06110c] hover:underline pt-1 inline-flex items-center gap-1 cursor-pointer"
+            >
+              Explore Deposit Protect →
+            </button>
           </div>
 
           <div className="rounded-2xl bg-white border border-[#D2DDD7] p-5 space-y-2.5">
-            <div className="h-9 w-9 rounded-xl bg-[#FAF5EB] text-[#8C6B2E] flex items-center justify-center font-bold text-xs">
+            <div className="h-9 w-9 rounded-xl bg-[#fbebeb] text-[#7a1413] flex items-center justify-center font-bold text-xs">
               3
             </div>
-            <h3 className="font-extrabold text-sm text-[#263238]">On-Time Rent Rewards</h3>
+            <h3 className="font-extrabold text-sm text-[#171717]">WisePoints Rent Rewards</h3>
             <p className="text-xs text-[#546E7A]">
-              Earn resident reward points every time you pay rent on time via UPI, card, or autopay.
+              Earn WisePoints on every on-time rent payment. Redeem for rent discounts, home deep cleaning, and local perks.
             </p>
+            <button
+              onClick={() => setActiveView('rewards')}
+              className="text-xs font-bold text-[#7a1413] hover:underline pt-1 inline-flex items-center gap-1 cursor-pointer"
+            >
+              Open Rewards Wallet ({rewardsAccount?.currentBalance ?? 650} pts) →
+            </button>
           </div>
         </div>
 
         {/* Digital ID & KYC Modal */}
         {isEKYCModalOpen && (
-          <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 bg-[#171717]/60 backdrop-blur-xs flex items-center justify-center p-4">
             <div className="w-full max-w-md bg-white rounded-3xl border border-[#D2DDD7] p-6 space-y-4 shadow-2xl">
               <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
                 <div className="flex items-center gap-2">
-                  <Fingerprint className="h-5 w-5 text-[#163B36]" />
-                  <h3 className="font-extrabold text-base text-[#263238]">Resident Digital KYC</h3>
+                  <Fingerprint className="h-5 w-5 text-[#06110c]" />
+                  <h3 className="font-extrabold text-base text-[#171717]">Resident Digital KYC</h3>
                 </div>
-                <button onClick={() => setIsEKYCModalOpen(false)} className="text-[#546E7A] hover:text-[#263238] cursor-pointer">
+                <button onClick={() => setIsEKYCModalOpen(false)} className="text-[#546E7A] hover:text-[#171717] cursor-pointer">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -894,7 +909,7 @@ export default function TenantDashboard() {
                     placeholder="XXXX XXXX XXXX"
                     value={aadhaarNumber}
                     onChange={e => setAadhaarNumber(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-bold font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#163B36]"
+                    className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#171717] font-bold font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#06110c]"
                     required
                   />
                 </div>
@@ -906,7 +921,7 @@ export default function TenantDashboard() {
                     placeholder="e.g. ABCDE1234F"
                     value={panNumber}
                     onChange={e => setPanNumber(e.target.value.toUpperCase())}
-                    className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-bold font-mono uppercase focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#163B36]"
+                    className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#171717] font-bold font-mono uppercase focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#06110c]"
                     required
                   />
                 </div>
@@ -918,7 +933,7 @@ export default function TenantDashboard() {
 
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-full bg-[#163B36] text-white font-bold text-xs hover:bg-[#102B27] transition shadow-md cursor-pointer"
+                  className="w-full py-3 rounded-full bg-[#06110c] text-white font-bold text-xs hover:bg-[#171717] transition shadow-md cursor-pointer"
                 >
                   Verify &amp; Save KYC
                 </button>
@@ -970,18 +985,18 @@ export default function TenantDashboard() {
     },
     Residential: {
       label: 'Residential Flat',
-      badgeClass: 'bg-emerald-50 text-[#163B36] border-emerald-200',
-      icon: <Home className="h-3.5 w-3.5 text-[#163B36] shrink-0" />
+      badgeClass: 'bg-emerald-50 text-[#06110c] border-emerald-200',
+      icon: <Home className="h-3.5 w-3.5 text-[#06110c] shrink-0" />
     }
   }[normalizedCategory];
 
   return (
-    <div className="space-y-6 pb-12 font-sans text-[#263238]">
+    <div className="space-y-6 pb-12 font-sans text-[#171717]">
       {/* Resident Greeting Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-3 sm:pb-4 border-b border-[#D2DDD7]">
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-[#263238] flex flex-wrap items-center gap-2">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-[#171717] flex flex-wrap items-center gap-2">
               <span>Welcome home, {currentTenant.name.split(' ')[0]}!</span>
               <span 
                 className={`text-xs px-2.5 py-1 rounded-full font-extrabold border inline-flex items-center gap-1.5 shadow-2xs ${categoryDetails.badgeClass}`}
@@ -993,10 +1008,10 @@ export default function TenantDashboard() {
             </h1>
             <span className={`text-xs px-2.5 sm:px-3 py-1 rounded-full font-extrabold border flex items-center gap-1 shadow-2xs shrink-0 ${
               ekycStatus === 'Verified' 
-                ? 'bg-[#163B36] text-white border-[#163B36]' 
-                : 'bg-[#FAF5EB] text-[#8C6B2E] border-[#ECCFA4]'
+                ? 'bg-[#06110c] text-white border-[#06110c]' 
+                : 'bg-[#fbebeb] text-[#7a1413] border-[#f5c2c2]'
             }`}>
-              <ShieldCheck className="h-3.5 w-3.5 text-[#C69A55] shrink-0" />
+              <ShieldCheck className="h-3.5 w-3.5 text-[#a31c1b] shrink-0" />
               <span>{ekycStatus === 'Verified' ? 'eKYC Verified' : 'KYC Pending'}</span>
             </span>
           </div>
@@ -1026,20 +1041,20 @@ export default function TenantDashboard() {
           )}
           <button
             onClick={() => setIsEKYCModalOpen(true)}
-            className="flex items-center justify-center gap-1.5 h-8 w-8 sm:h-auto sm:w-auto p-0 sm:px-3.5 sm:py-2 rounded-full bg-white hover:bg-[#E8F0EC] text-[#263238] text-xs font-bold border border-[#D2DDD7] transition shadow-2xs cursor-pointer shrink-0"
+            className="flex items-center justify-center gap-1.5 h-8 w-8 sm:h-auto sm:w-auto p-0 sm:px-3.5 sm:py-2 rounded-full bg-white hover:bg-[#E8F0EC] text-[#171717] text-xs font-bold border border-[#D2DDD7] transition shadow-2xs cursor-pointer shrink-0"
             title="Digital ID / eKYC"
             aria-label="Digital ID"
           >
-            <Fingerprint className="h-4 w-4 text-[#163B36] shrink-0" />
+            <Fingerprint className="h-4 w-4 text-[#06110c] shrink-0" />
             <span className="hidden sm:inline">Digital ID</span>
           </button>
           <button
             onClick={() => setIsCreateTicketOpen(true)}
-            className="flex items-center justify-center gap-1.5 h-8 w-8 sm:h-auto sm:w-auto p-0 sm:px-4 sm:py-2 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold shadow-xs transition cursor-pointer shrink-0"
+            className="flex items-center justify-center gap-1.5 h-8 w-8 sm:h-auto sm:w-auto p-0 sm:px-4 sm:py-2 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold shadow-xs transition cursor-pointer shrink-0"
             title="Request Repair / Maintenance"
             aria-label="Request Repair"
           >
-            <Wrench className="h-4 w-4 text-[#C69A55] shrink-0" />
+            <Wrench className="h-4 w-4 text-[#a31c1b] shrink-0" />
             <span className="hidden sm:inline">Request Repair</span>
           </button>
         </div>
@@ -1051,13 +1066,13 @@ export default function TenantDashboard() {
         <div className="bg-[#E8F0EC] rounded-2xl p-4 border border-[#D2DDD7] flex items-center justify-between">
           <div>
             <div className="text-[11px] font-semibold text-[#546E7A]">Your Monthly Rent</div>
-            <div className="text-xl font-black text-[#263238] mt-0.5 font-tabular">
+            <div className="text-xl font-black text-[#171717] mt-0.5 font-tabular">
               ₹{rentAmount.toLocaleString('en-IN')}
             </div>
             <span className={`text-[10px] font-bold flex items-center gap-1 mt-1 ${
               pendingInvoice ? 'text-amber-800' : 'text-emerald-800'
             }`}>
-              <Clock className="h-3 w-3 text-[#C69A55]" />
+              <Clock className="h-3 w-3 text-[#a31c1b]" />
               {pendingInvoice ? `Due: ${pendingInvoice.dueDate}` : 'Current month settled'}
             </span>
           </div>
@@ -1072,7 +1087,7 @@ export default function TenantDashboard() {
                 });
                 setIsPayRentOpen(true);
               }}
-              className="px-4 py-2 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-black shadow-xs transition cursor-pointer"
+              className="px-4 py-2 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-black shadow-xs transition cursor-pointer"
             >
               Pay UPI
             </button>
@@ -1083,31 +1098,38 @@ export default function TenantDashboard() {
         <div className="bg-[#E8F0EC] rounded-2xl p-4 border border-[#D2DDD7] flex items-center justify-between">
           <div>
             <div className="text-[11px] font-semibold text-[#546E7A]">Reliability Score</div>
-            <div className="text-xl font-black text-[#263238] mt-0.5 font-tabular">
+            <div className="text-xl font-black text-[#171717] mt-0.5 font-tabular">
               {currentTenant.reliabilityScore || 96} / 100
             </div>
-            <span className="text-[10px] font-bold text-[#163B36] mt-1 block">
+            <span className="text-[10px] font-bold text-[#06110c] mt-1 block">
               ✓ On-Time Payment Profile
             </span>
           </div>
-          <div className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] text-[#163B36] flex items-center justify-center font-bold shadow-2xs">
-            <ShieldCheck className="h-5 w-5 text-[#163B36]" />
+          <div className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] text-[#06110c] flex items-center justify-center font-bold shadow-2xs">
+            <ShieldCheck className="h-5 w-5 text-[#06110c]" />
           </div>
         </div>
 
         {/* Metric 3: Resident Points & Rewards */}
-        <div className="bg-[#E8F0EC] rounded-2xl p-4 border border-[#D2DDD7] flex items-center justify-between">
+        <div 
+          onClick={() => setActiveView('rewards')}
+          className="bg-[#E8F0EC] hover:bg-[#dce8e1] transition rounded-2xl p-4 border border-[#D2DDD7] flex items-center justify-between cursor-pointer group shadow-2xs"
+        >
           <div>
-            <div className="text-[11px] font-semibold text-[#546E7A]">Resident Points</div>
-            <div className="text-xl font-black text-[#263238] mt-0.5 font-tabular">
-              {currentTenant.rewardsBalance || 0} SWP
+            <div className="text-[11px] font-semibold text-[#546E7A] flex items-center gap-1">
+              <span>Resident Points</span>
+              <span className="text-[9px] font-extrabold text-[#7a1413] bg-[#fbebeb] px-1.5 py-0.5 rounded-full">WisePoints</span>
             </div>
-            <span className="text-[10px] font-bold text-[#C69A55] mt-1 block">
-              Earn on every on-time payment
+            <div className="text-xl font-black text-[#171717] mt-0.5 font-tabular">
+              {rewardsAccount?.currentBalance ?? currentTenant.rewardsBalance ?? 650} pts
+            </div>
+            <span className="text-[10px] font-bold text-[#a31c1b] mt-1 flex items-center gap-1 group-hover:underline">
+              <span>View perks &amp; redeem</span>
+              <span>→</span>
             </span>
           </div>
-          <div className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] text-[#C69A55] flex items-center justify-center font-bold shadow-2xs">
-            <Gift className="h-5 w-5 text-[#C69A55]" />
+          <div className="h-10 w-10 rounded-full bg-white border border-[#D2DDD7] text-[#a31c1b] flex items-center justify-center font-bold shadow-2xs group-hover:scale-105 transition">
+            <Gift className="h-5 w-5 text-[#a31c1b]" />
           </div>
         </div>
       </div>
@@ -1122,7 +1144,7 @@ export default function TenantDashboard() {
           <div className="rounded-3xl bg-white border border-[#D2DDD7] p-5 sm:p-6 shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-[#D1D5DB] pb-3">
               <div>
-                <h3 className="text-base font-extrabold text-[#263238]">Roommates &amp; Split Rent</h3>
+                <h3 className="text-base font-extrabold text-[#171717]">Roommates &amp; Split Rent</h3>
                 <p className="text-xs text-[#666666]">
                   {roommates.length > 0 
                     ? `Split unit rent & utilities with verified flatmates`
@@ -1131,10 +1153,10 @@ export default function TenantDashboard() {
               </div>
               <button
                 onClick={() => setIsAddRoommateModalOpen(true)}
-                className="px-3 sm:px-3.5 py-1.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer shrink-0"
+                className="px-3 sm:px-3.5 py-1.5 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer shrink-0"
                 title="Add Roommate"
               >
-                <UserPlus className="h-3.5 w-3.5 text-[#C69A55] shrink-0" />
+                <UserPlus className="h-3.5 w-3.5 text-[#a31c1b] shrink-0" />
                 <span className="hidden sm:inline">Add Roommate</span>
                 <span className="sm:hidden text-[11px]">+ Add</span>
               </button>
@@ -1154,13 +1176,13 @@ export default function TenantDashboard() {
                     className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-full bg-[#163B36] text-[#C69A55] font-black flex items-center justify-center text-xs shrink-0">
+                      <div className="h-9 w-9 rounded-full bg-[#06110c] text-[#a31c1b] font-black flex items-center justify-center text-xs shrink-0">
                         {rm.name.slice(0, 2).toUpperCase()}
                       </div>
                       <div>
-                        <div className="font-black text-[#263238] flex items-center gap-1.5">
+                        <div className="font-black text-[#171717] flex items-center gap-1.5">
                           <span>{rm.name}</span>
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#163B36] text-white font-black">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#06110c] text-white font-black">
                             {rm.splitPercentage}% Split
                           </span>
                         </div>
@@ -1171,11 +1193,11 @@ export default function TenantDashboard() {
                     </div>
 
                     <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#D2DDD7]">
-                      <span className="font-black text-sm text-[#263238] font-tabular">
+                      <span className="font-black text-sm text-[#171717] font-tabular">
                         ₹{rm.totalPayable.toLocaleString('en-IN')}
                       </span>
                       <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        rm.status === 'Paid' ? 'bg-[#DCE8E1] text-[#163B36] border border-[#D2DDD7]' : 'bg-[#FAF5EB] text-[#8C6B2E] border border-[#ECCFA4]'
+                        rm.status === 'Paid' ? 'bg-[#DCE8E1] text-[#06110c] border border-[#D2DDD7]' : 'bg-[#fbebeb] text-[#7a1413] border border-[#f5c2c2]'
                       }`}>
                         {rm.status}
                       </span>
@@ -1188,7 +1210,7 @@ export default function TenantDashboard() {
 
           {/* Tenancy Documents */}
           <div className="rounded-3xl bg-white border border-[#D2DDD7] p-5 sm:p-6 shadow-xs space-y-4">
-            <h3 className="text-base font-extrabold text-[#263238]">My Tenancy Documents</h3>
+            <h3 className="text-base font-extrabold text-[#171717]">My Tenancy Documents</h3>
             <div className="space-y-2">
               {residentDocs.length === 0 ? (
                 <div className="p-8 text-center border border-dashed border-[#D2DDD7] rounded-2xl">
@@ -1200,14 +1222,14 @@ export default function TenantDashboard() {
                 residentDocs.map(doc => (
                   <div key={doc.id} className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <FileText className="h-4 w-4 text-[#163B36] shrink-0" />
-                      <span className="font-bold text-[#263238] truncate">{doc.name}</span>
+                      <FileText className="h-4 w-4 text-[#06110c] shrink-0" />
+                      <span className="font-bold text-[#171717] truncate">{doc.name}</span>
                     </div>
                     <button 
                       onClick={() => alert(`Downloading ${doc.name}...`)}
-                      className="p-1.5 rounded-full hover:bg-[#DCE8E1] text-[#546E7A] hover:text-[#263238] transition cursor-pointer"
+                      className="p-1.5 rounded-full hover:bg-[#DCE8E1] text-[#546E7A] hover:text-[#171717] transition cursor-pointer"
                     >
-                      <Download className="h-3.5 w-3.5 text-[#163B36]" />
+                      <Download className="h-3.5 w-3.5 text-[#06110c]" />
                     </button>
                   </div>
                 ))
@@ -1221,24 +1243,24 @@ export default function TenantDashboard() {
               /* Mess & Dining Service Disabled / Accommodation Only Message Card */
               <div className="rounded-3xl bg-white border border-[#D2DDD7] p-5 sm:p-6 shadow-xs space-y-4">
                 <div className="flex items-center gap-3 border-b border-[#D1D5DB] pb-3">
-                  <div className="h-10 w-10 rounded-2xl bg-[#FAF5EB] text-[#8C6B2E] border border-[#ECCFA4] flex items-center justify-center font-bold">
+                  <div className="h-10 w-10 rounded-2xl bg-[#fbebeb] text-[#7a1413] border border-[#f5c2c2] flex items-center justify-center font-bold">
                     <Utensils className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-extrabold text-[#263238]">Mess &amp; Dining Service — Accommodation Only</h3>
+                    <h3 className="text-base font-extrabold text-[#171717]">Mess &amp; Dining Service — Accommodation Only</h3>
                     <p className="text-xs text-[#546E7A]">No meal plan is registered for Room {currentTenant.unitNumber || 'assigned'}</p>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-[#FAF5EB] border border-[#ECCFA4] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="p-4 rounded-2xl bg-[#fbebeb] border border-[#f5c2c2] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-white text-[#8C6B2E] border border-[#ECCFA4]">
+                      <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-white text-[#7a1413] border border-[#f5c2c2]">
                         No Food Facility Active
                       </span>
-                      <span className="text-xs font-bold text-[#8C6B2E]">Mess charges excluded from your rent</span>
+                      <span className="text-xs font-bold text-[#7a1413]">Mess charges excluded from your rent</span>
                     </div>
-                    <p className="text-xs text-[#263238] leading-relaxed">
+                    <p className="text-xs text-[#171717] leading-relaxed">
                       Your room/bed was onboarded with accommodation-only (No Food). If you would like fresh breakfast, lunch, and dinner delivered daily from Annapoorna Kitchens, submit an activation request to your property manager.
                     </p>
                   </div>
@@ -1252,14 +1274,14 @@ export default function TenantDashboard() {
                           'RENT'
                         );
                       }}
-                      className="px-4 py-2.5 rounded-xl bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                      className="px-4 py-2.5 rounded-xl bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5"
                     >
-                      <Utensils className="h-3.5 w-3.5 text-[#C69A55]" />
+                      <Utensils className="h-3.5 w-3.5 text-[#a31c1b]" />
                       <span>Request Meal Plan (₹3,600/mo)</span>
                     </button>
                     <button
                       onClick={() => setIsViewMenuModalOpen(true)}
-                      className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-[#E8F0EC] text-[#163B36] border border-[#D2DDD7] text-xs font-bold transition cursor-pointer flex items-center gap-1"
+                      className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-[#E8F0EC] text-[#06110c] border border-[#D2DDD7] text-xs font-bold transition cursor-pointer flex items-center gap-1"
                     >
                       <FileText className="h-3.5 w-3.5" />
                       <span>View Menu</span>
@@ -1272,11 +1294,11 @@ export default function TenantDashboard() {
               <div className="rounded-3xl bg-white border border-[#D2DDD7] p-5 sm:p-6 shadow-xs space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D1D5DB] pb-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center font-bold">
+                    <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#06110c] flex items-center justify-center font-bold">
                       <Utensils className="h-5 w-5" />
                     </div>
                     <div>
-                      <h3 className="text-base font-extrabold text-[#263238]">Mess &amp; Dining Subscription</h3>
+                      <h3 className="text-base font-extrabold text-[#171717]">Mess &amp; Dining Subscription</h3>
                       <p className="text-xs text-[#546E7A]">
                         {foodOptedOut
                           ? 'You have opted out of the mess plan (₹3,600 deducted from monthly dues)'
@@ -1288,16 +1310,16 @@ export default function TenantDashboard() {
                   <div className="flex items-center gap-2 self-start sm:self-auto">
                     <button
                       onClick={() => setIsViewMenuModalOpen(true)}
-                      className="px-3 py-1.5 rounded-full bg-[#E8F0EC] hover:bg-[#DCE8E1] text-[#163B36] text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                      className="px-3 py-1.5 rounded-full bg-[#E8F0EC] hover:bg-[#DCE8E1] text-[#06110c] text-xs font-bold transition flex items-center gap-1 cursor-pointer"
                     >
                       <FileText className="h-3.5 w-3.5" />
                       <span>View Menu</span>
                     </button>
                     <button
                       onClick={() => setIsMealCustomizerOpen(true)}
-                      className="px-3.5 py-1.5 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer"
                     >
-                      <Utensils className="h-3.5 w-3.5 text-[#C69A55]" />
+                      <Utensils className="h-3.5 w-3.5 text-[#a31c1b]" />
                       <span>Customize Meals</span>
                     </button>
                   </div>
@@ -1310,7 +1332,7 @@ export default function TenantDashboard() {
                       <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
                         foodOptedOut
                           ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                          : 'bg-[#E8F0EC] text-[#163B36] border border-[#D2DDD7]'
+                          : 'bg-[#E8F0EC] text-[#06110c] border border-[#D2DDD7]'
                       }`}>
                         {foodOptedOut ? 'Opted Out / No Food' : 'Active Resident Plan'}
                       </span>
@@ -1318,7 +1340,7 @@ export default function TenantDashboard() {
                         Vendor: Annapoorna Kitchens
                       </span>
                     </div>
-                    <p className="text-xs text-[#263238] mt-1 font-medium">
+                    <p className="text-xs text-[#171717] mt-1 font-medium">
                       {foodOptedOut
                         ? 'No meal charges will be billed to your account. You can opt back in anytime.'
                         : 'Unlimited mess dining pass during scheduled serving hours.'}
@@ -1328,7 +1350,7 @@ export default function TenantDashboard() {
                   <div className="flex items-center gap-3 self-end sm:self-auto">
                     <div className="text-right">
                       <div className="text-[10px] text-[#546E7A] font-semibold">Monthly Mess Fee</div>
-                      <div className="text-base font-black text-[#163B36] font-tabular">
+                      <div className="text-base font-black text-[#06110c] font-tabular">
                         {foodOptedOut ? '₹0' : '₹3,600 / mo'}
                       </div>
                     </div>
@@ -1337,7 +1359,7 @@ export default function TenantDashboard() {
                       onClick={toggleFoodPlanStatus}
                       className={`px-3 py-2 rounded-xl text-xs font-bold transition border cursor-pointer ${
                         foodOptedOut
-                          ? 'bg-[#163B36] text-white hover:bg-[#102B27] border-[#163B36]'
+                          ? 'bg-[#06110c] text-white hover:bg-[#171717] border-[#06110c]'
                           : 'bg-white text-rose-700 hover:bg-rose-50 border-rose-200'
                       }`}
                     >
@@ -1351,7 +1373,7 @@ export default function TenantDashboard() {
                   <div className="grid grid-cols-3 gap-2.5 text-xs">
                     <div className={`p-3 rounded-2xl border transition ${
                       subscribedMeals.breakfast 
-                        ? 'bg-[#E8F0EC] border-[#163B36]/30 text-[#163B36]' 
+                        ? 'bg-[#E8F0EC] border-[#06110c]/30 text-[#06110c]' 
                         : 'bg-white border-[#D2DDD7] text-[#546E7A] opacity-60'
                     }`}>
                       <div className="font-extrabold text-[11px] flex items-center justify-between">
@@ -1363,7 +1385,7 @@ export default function TenantDashboard() {
 
                     <div className={`p-3 rounded-2xl border transition ${
                       subscribedMeals.lunch 
-                        ? 'bg-[#E8F0EC] border-[#163B36]/30 text-[#163B36]' 
+                        ? 'bg-[#E8F0EC] border-[#06110c]/30 text-[#06110c]' 
                         : 'bg-white border-[#D2DDD7] text-[#546E7A] opacity-60'
                     }`}>
                       <div className="font-extrabold text-[11px] flex items-center justify-between">
@@ -1375,7 +1397,7 @@ export default function TenantDashboard() {
 
                     <div className={`p-3 rounded-2xl border transition ${
                       subscribedMeals.dinner 
-                        ? 'bg-[#E8F0EC] border-[#163B36]/30 text-[#163B36]' 
+                        ? 'bg-[#E8F0EC] border-[#06110c]/30 text-[#06110c]' 
                         : 'bg-white border-[#D2DDD7] text-[#546E7A] opacity-60'
                     }`}>
                       <div className="font-extrabold text-[11px] flex items-center justify-between">
@@ -1393,11 +1415,11 @@ export default function TenantDashboard() {
             <div className="rounded-3xl bg-white border border-[#D2DDD7] p-5 sm:p-6 shadow-xs space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D1D5DB] pb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center font-bold">
+                  <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#06110c] flex items-center justify-center font-bold">
                     <Home className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-extrabold text-[#263238]">Society Amenities &amp; Access</h3>
+                    <h3 className="text-base font-extrabold text-[#171717]">Society Amenities &amp; Access</h3>
                     <p className="text-xs text-[#546E7A]">Residential apartment privileges, visitor gatepass, and parking slot</p>
                   </div>
                 </div>
@@ -1410,18 +1432,18 @@ export default function TenantDashboard() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                 <div className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7]">
-                  <div className="font-bold text-[#263238]">Designated Parking</div>
-                  <div className="text-[11px] text-[#163B36] mt-1 font-mono font-bold">Slot P-204 (Basement 1)</div>
+                  <div className="font-bold text-[#171717]">Designated Parking</div>
+                  <div className="text-[11px] text-[#06110c] mt-1 font-mono font-bold">Slot P-204 (Basement 1)</div>
                   <div className="text-[10px] text-[#546E7A] mt-0.5">Four-wheeler &amp; two-wheeler permit</div>
                 </div>
                 <div className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7]">
-                  <div className="font-bold text-[#263238]">Visitor Gatepass Code</div>
-                  <div className="text-[11px] text-[#163B36] mt-1 font-mono font-bold">#SW-9842</div>
+                  <div className="font-bold text-[#171717]">Visitor Gatepass Code</div>
+                  <div className="text-[11px] text-[#06110c] mt-1 font-mono font-bold">#SW-9842</div>
                   <div className="text-[10px] text-[#546E7A] mt-0.5">Share with guests for security entry</div>
                 </div>
                 <div className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7]">
-                  <div className="font-bold text-[#263238]">Clubhouse &amp; Gym</div>
-                  <div className="text-[11px] text-[#163B36] mt-1 font-mono font-bold">Digital Access Active</div>
+                  <div className="font-bold text-[#171717]">Clubhouse &amp; Gym</div>
+                  <div className="text-[11px] text-[#06110c] mt-1 font-mono font-bold">Digital Access Active</div>
                   <div className="text-[10px] text-[#546E7A] mt-0.5">6:00 AM – 10:00 PM Daily</div>
                 </div>
               </div>
@@ -1431,16 +1453,16 @@ export default function TenantDashboard() {
             <div className="rounded-3xl bg-white border border-[#D2DDD7] p-5 sm:p-6 shadow-xs space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D1D5DB] pb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#163B36] flex items-center justify-center font-bold">
+                  <div className="h-10 w-10 rounded-2xl bg-[#E8F0EC] text-[#06110c] flex items-center justify-center font-bold">
                     <Building className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-base font-extrabold text-[#263238]">Commercial Lease &amp; Business GST</h3>
+                    <h3 className="text-base font-extrabold text-[#171717]">Commercial Lease &amp; Business GST</h3>
                     <p className="text-xs text-[#546E7A]">Registered GSTIN, Input Tax Credit (ITC) tax invoice, and CAM schedule</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-extrabold px-3 py-1 rounded-full bg-[#163B36] text-white">
+                  <span className="text-[10px] font-extrabold px-3 py-1 rounded-full bg-[#06110c] text-white">
                     Commercial Lease
                   </span>
                 </div>
@@ -1448,18 +1470,18 @@ export default function TenantDashboard() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                 <div className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7]">
-                  <div className="font-bold text-[#263238]">Registered Business GSTIN</div>
-                  <div className="text-[11px] text-[#163B36] mt-1 font-mono font-bold">29AABCS1429K1Z5</div>
+                  <div className="font-bold text-[#171717]">Registered Business GSTIN</div>
+                  <div className="text-[11px] text-[#06110c] mt-1 font-mono font-bold">29AABCS1429K1Z5</div>
                   <div className="text-[10px] text-[#546E7A] mt-0.5">18% GST Input Credit applicable</div>
                 </div>
                 <div className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7]">
-                  <div className="font-bold text-[#263238]">Monthly CAM Charges</div>
-                  <div className="text-[11px] text-[#163B36] mt-1 font-mono font-bold">₹4,500 / month</div>
+                  <div className="font-bold text-[#171717]">Monthly CAM Charges</div>
+                  <div className="text-[11px] text-[#06110c] mt-1 font-mono font-bold">₹4,500 / month</div>
                   <div className="text-[10px] text-[#546E7A] mt-0.5">Common area maintenance &amp; HVAC</div>
                 </div>
                 <div className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7]">
-                  <div className="font-bold text-[#263238]">Loading Dock &amp; Safety</div>
-                  <div className="text-[11px] text-[#163B36] mt-1 font-mono font-bold">NOC Compliant (Active)</div>
+                  <div className="font-bold text-[#171717]">Loading Dock &amp; Safety</div>
+                  <div className="text-[11px] text-[#06110c] mt-1 font-mono font-bold">NOC Compliant (Active)</div>
                   <div className="text-[10px] text-[#546E7A] mt-0.5">Commercial cargo access Bay 2</div>
                 </div>
               </div>
@@ -1474,13 +1496,13 @@ export default function TenantDashboard() {
           {/* Unit Electricity Bill */}
           <div className="rounded-3xl bg-[#E8F0EC] border border-[#D2DDD7] p-5 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#263238] flex items-center gap-1.5">
-                <Zap className="h-4 w-4 text-[#C69A55]" />
+              <span className="text-xs font-bold text-[#171717] flex items-center gap-1.5">
+                <Zap className="h-4 w-4 text-[#a31c1b]" />
                 <span>Unit Electricity Bill</span>
               </span>
               {unitBill && (
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                  unitBill.status === 'Paid' ? 'bg-[#DCE8E1] text-[#163B36]' : 'bg-[#FAF5EB] text-[#8C6B2E]'
+                  unitBill.status === 'Paid' ? 'bg-[#DCE8E1] text-[#06110c]' : 'bg-[#fbebeb] text-[#7a1413]'
                 }`}>
                   {unitBill.status}
                 </span>
@@ -1489,7 +1511,7 @@ export default function TenantDashboard() {
 
             {unitBill ? (
               <>
-                <div className="text-2xl font-black text-[#263238] font-tabular">
+                <div className="text-2xl font-black text-[#171717] font-tabular">
                   ₹{unitBill.totalAmount.toLocaleString('en-IN')}
                 </div>
                 <p className="text-xs text-[#546E7A]">{unitBill.discom} • Due {unitBill.dueDate}</p>
@@ -1500,7 +1522,7 @@ export default function TenantDashboard() {
                       updateElectricityBill(unitBill.id, { status: 'Paid' });
                       alert('Power bill marked paid via UPI!');
                     }}
-                    className="w-full py-2 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white text-xs font-bold shadow-xs transition cursor-pointer"
+                    className="w-full py-2 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold shadow-xs transition cursor-pointer"
                   >
                     Pay Electricity Bill
                   </button>
@@ -1516,7 +1538,7 @@ export default function TenantDashboard() {
 
           {/* Service Requests */}
           <div className="rounded-3xl bg-white border border-[#D2DDD7] p-5 space-y-3 shadow-xs">
-            <h3 className="text-sm font-extrabold text-[#263238]">Active Repairs</h3>
+            <h3 className="text-sm font-extrabold text-[#171717]">Active Repairs</h3>
             <div className="space-y-2 text-xs">
               {tenantTickets.length === 0 ? (
                 <div className="py-6 text-center">
@@ -1527,9 +1549,9 @@ export default function TenantDashboard() {
               ) : (
                 tenantTickets.map(t => (
                   <div key={t.id} className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-1">
-                    <div className="flex justify-between font-bold text-[#263238]">
+                    <div className="flex justify-between font-bold text-[#171717]">
                       <span>{t.title}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#163B36] text-white font-black">{t.status}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#06110c] text-white font-black">{t.status}</span>
                     </div>
                     <p className="text-[11px] text-[#546E7A]">{t.description}</p>
                   </div>
@@ -1538,17 +1560,73 @@ export default function TenantDashboard() {
             </div>
           </div>
 
+          {/* Zero-Deposit Protection Status Card */}
+          <div className="rounded-3xl bg-linear-to-br from-[#06110c] to-[#171717] text-white p-5 space-y-3.5 shadow-lg border border-[#06110c]">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-800/60 flex items-center gap-1">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span>Zero-Deposit Active</span>
+              </span>
+              <span className="text-[10px] text-[#A0AEC0] font-mono">
+                {protectionContracts?.[0]?.policyNumber || 'SW-DP-2026-KL902'}
+              </span>
+            </div>
+            <div>
+              <div className="text-sm font-extrabold text-white">Institutional Lease Protection</div>
+              <p className="text-xs text-[#CBD5E0] mt-0.5 leading-relaxed">
+                You avoided an upfront cash lock of <b className="text-emerald-300">₹60,000</b>. Landlord is protected up to ₹1,00,000 against unpaid rent &amp; damage.
+              </p>
+            </div>
+            <div className="pt-1 flex items-center justify-between border-t border-white/10 text-xs">
+              <span className="text-[11px] text-[#A0AEC0]">Monthly Fee: <b className="text-white">₹750/mo</b></span>
+              <button
+                onClick={() => setActiveView('deposit_protect')}
+                className="px-3.5 py-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white text-[11px] font-extrabold transition cursor-pointer flex items-center gap-1"
+              >
+                <span>Policy &amp; Claims</span>
+                <span>→</span>
+              </button>
+            </div>
+          </div>
+
+          {/* WisePoints Rewards Promo Card */}
+          <div className="rounded-3xl bg-[#E8F0EC] border border-[#D2DDD7] p-5 space-y-3 shadow-xs">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-xl bg-[#fbebeb] text-[#7a1413] flex items-center justify-center font-bold">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-[#171717]">WisePoints Balance</h4>
+                  <div className="text-base font-black text-[#171717] font-tabular">
+                    {rewardsAccount?.currentBalance ?? 650} pts <span className="text-[11px] font-medium text-[#546E7A]">(~₹{(rewardsAccount?.currentBalance ?? 650) * 0.5})</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p className="text-[11px] text-[#546E7A] leading-relaxed">
+              Redeem towards your next rent invoice, Urban Company deep cleaning, or Cult.fit gym memberships.
+            </p>
+            <button
+              onClick={() => setActiveView('rewards')}
+              className="w-full py-2.5 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <Gift className="h-3.5 w-3.5 text-[#a31c1b]" />
+              <span>Explore Rewards &amp; Offers</span>
+            </button>
+          </div>
+
         </div>
 
       </div>
 
       {/* Modal Add Roommate */}
       {isAddRoommateModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#171717]/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
-              <h3 className="font-extrabold text-base text-[#263238]">Add Roommate</h3>
-              <button onClick={() => setIsAddRoommateModalOpen(false)} className="text-[#546E7A] hover:text-[#263238] cursor-pointer">
+              <h3 className="font-extrabold text-base text-[#171717]">Add Roommate</h3>
+              <button onClick={() => setIsAddRoommateModalOpen(false)} className="text-[#546E7A] hover:text-[#171717] cursor-pointer">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -1576,7 +1654,7 @@ export default function TenantDashboard() {
                   type="text"
                   value={newRoommate.name}
                   onChange={e => setNewRoommate({ ...newRoommate, name: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#163B36]"
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#171717] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#06110c]"
                   required
                 />
               </div>
@@ -1586,7 +1664,7 @@ export default function TenantDashboard() {
                   type="text"
                   value={newRoommate.phone}
                   onChange={e => setNewRoommate({ ...newRoommate, phone: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#163B36]"
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#171717] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#06110c]"
                   required
                 />
               </div>
@@ -1596,7 +1674,7 @@ export default function TenantDashboard() {
                   type="email"
                   value={newRoommate.email}
                   onChange={e => setNewRoommate({ ...newRoommate, email: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#163B36]"
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#171717] font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#06110c]"
                 />
               </div>
               <div>
@@ -1608,12 +1686,12 @@ export default function TenantDashboard() {
                   step="5"
                   value={newRoommate.splitPercentage}
                   onChange={e => setNewRoommate({ ...newRoommate, splitPercentage: Number(e.target.value) })}
-                  className="w-full accent-[#163B36]"
+                  className="w-full accent-[#06110c]"
                 />
               </div>
               <button
                 type="submit"
-                className="w-full py-2.5 rounded-full bg-[#163B36] text-white font-bold text-xs hover:bg-[#102B27] transition cursor-pointer"
+                className="w-full py-2.5 rounded-full bg-[#06110c] text-white font-bold text-xs hover:bg-[#171717] transition cursor-pointer"
               >
                 Save Roommate
               </button>
@@ -1624,14 +1702,14 @@ export default function TenantDashboard() {
 
       {/* Digital ID & KYC Modal */}
       {isEKYCModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#171717]/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-3xl border border-[#D2DDD7] p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
               <div className="flex items-center gap-2">
-                <Fingerprint className="h-5 w-5 text-[#163B36]" />
-                <h3 className="font-extrabold text-base text-[#263238]">Resident Digital KYC</h3>
+                <Fingerprint className="h-5 w-5 text-[#06110c]" />
+                <h3 className="font-extrabold text-base text-[#171717]">Resident Digital KYC</h3>
               </div>
-              <button onClick={() => setIsEKYCModalOpen(false)} className="text-[#546E7A] hover:text-[#263238] cursor-pointer">
+              <button onClick={() => setIsEKYCModalOpen(false)} className="text-[#546E7A] hover:text-[#171717] cursor-pointer">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -1649,7 +1727,7 @@ export default function TenantDashboard() {
                   placeholder="XXXX XXXX XXXX"
                   value={aadhaarNumber}
                   onChange={e => setAadhaarNumber(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-bold font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#163B36]"
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#171717] font-bold font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#06110c]"
                   required
                 />
               </div>
@@ -1661,7 +1739,7 @@ export default function TenantDashboard() {
                   placeholder="e.g. ABCDE1234F"
                   value={panNumber}
                   onChange={e => setPanNumber(e.target.value.toUpperCase())}
-                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#263238] font-bold font-mono uppercase focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#163B36]"
+                  className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#171717] font-bold font-mono uppercase focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#06110c]"
                   required
                 />
               </div>
@@ -1673,7 +1751,7 @@ export default function TenantDashboard() {
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-full bg-[#163B36] text-white font-bold text-xs hover:bg-[#102B27] transition shadow-md cursor-pointer"
+                className="w-full py-3 rounded-full bg-[#06110c] text-white font-bold text-xs hover:bg-[#171717] transition shadow-md cursor-pointer"
               >
                 Verify &amp; Save KYC
               </button>
@@ -1683,14 +1761,14 @@ export default function TenantDashboard() {
       )}
       {/* Modal: Customize Meals (PG Tenants Only) */}
       {activeTenancyType === 'PG' && isMealCustomizerOpen && (
-        <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#171717]/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl border border-[#D2DDD7] p-6 max-w-md w-full shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
               <div>
-                <h3 className="font-extrabold text-base text-[#263238]">Customize Daily Meal Plan</h3>
+                <h3 className="font-extrabold text-base text-[#171717]">Customize Daily Meal Plan</h3>
                 <p className="text-xs text-[#546E7A]">Select which meals you want included in your monthly rent</p>
               </div>
-              <button onClick={() => setIsMealCustomizerOpen(false)} className="text-[#546E7A] hover:text-[#263238]">
+              <button onClick={() => setIsMealCustomizerOpen(false)} className="text-[#546E7A] hover:text-[#171717]">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -1706,12 +1784,12 @@ export default function TenantDashboard() {
                   onClick={() => toggleMealOption(meal.key)}
                   className={`p-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
                     subscribedMeals[meal.key] && !foodOptedOut
-                      ? 'bg-[#E8F0EC] border-[#163B36] text-[#263238]'
+                      ? 'bg-[#E8F0EC] border-[#06110c] text-[#171717]'
                       : 'bg-[#F7F8F6] border-[#D2DDD7] text-[#546E7A]'
                   }`}
                 >
                   <div className="space-y-0.5">
-                    <div className="font-extrabold text-sm text-[#263238] flex items-center gap-2">
+                    <div className="font-extrabold text-sm text-[#171717] flex items-center gap-2">
                       <span>{meal.label}</span>
                       <span className="text-[10px] text-[#546E7A] font-normal">({meal.timing})</span>
                     </div>
@@ -1719,9 +1797,9 @@ export default function TenantDashboard() {
                   </div>
 
                   <div className="text-right">
-                    <span className="font-bold text-xs text-[#163B36] block">{meal.price}</span>
+                    <span className="font-bold text-xs text-[#06110c] block">{meal.price}</span>
                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 inline-block ${
-                      subscribedMeals[meal.key] && !foodOptedOut ? 'bg-[#163B36] text-white' : 'bg-slate-200 text-[#546E7A]'
+                      subscribedMeals[meal.key] && !foodOptedOut ? 'bg-[#06110c] text-white' : 'bg-slate-200 text-[#546E7A]'
                     }`}>
                       {subscribedMeals[meal.key] && !foodOptedOut ? 'Included' : 'Paused'}
                     </span>
@@ -1730,7 +1808,7 @@ export default function TenantDashboard() {
               ))}
             </div>
 
-            <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs text-[#263238]">
+            <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs text-[#171717]">
               <b>Flexible Policy:</b> Any meal plan updates take effect immediately on your digital rent ledger.
             </div>
 
@@ -1739,7 +1817,7 @@ export default function TenantDashboard() {
                 setIsMealCustomizerOpen(false);
                 addNotification('Meal Plan Updated', 'Your customized daily dining preferences have been saved.', 'RENT');
               }}
-              className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer"
+              className="w-full py-3 rounded-full bg-[#06110c] hover:bg-[#171717] text-white font-bold text-xs transition shadow-xs cursor-pointer"
             >
               Save Meal Preferences
             </button>
@@ -1749,16 +1827,16 @@ export default function TenantDashboard() {
 
       {/* Modal: View Food Menu (PG Tenants Only) */}
       {activeTenancyType === 'PG' && isViewMenuModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#171717]/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl border border-[#D2DDD7] p-6 max-w-lg w-full shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
               <div>
-                <h3 className="font-extrabold text-base text-[#263238]">Hostel &amp; Mess Dining Menu</h3>
+                <h3 className="font-extrabold text-base text-[#171717]">Hostel &amp; Mess Dining Menu</h3>
                 <p className="text-xs text-[#546E7A]">
                   {foodMenuItems.length > 0 ? `${foodMenuItems[0].vendor || 'Kitchen'} • Daily Rotation` : (isDemoTenant ? 'Catered by Annapoorna Kitchens • Quality Audited Weekly' : 'Daily Resident Menu')}
                 </p>
               </div>
-              <button onClick={() => setIsViewMenuModalOpen(false)} className="text-[#546E7A] hover:text-[#263238]">
+              <button onClick={() => setIsViewMenuModalOpen(false)} className="text-[#546E7A] hover:text-[#171717]">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -1779,7 +1857,7 @@ export default function TenantDashboard() {
                   return (
                     <div className="p-8 text-center rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7] space-y-2">
                       <Utensils className="h-8 w-8 text-[#546E7A] mx-auto opacity-50" />
-                      <div className="font-extrabold text-sm text-[#263238]">No Meal Plan Published Yet</div>
+                      <div className="font-extrabold text-sm text-[#171717]">No Meal Plan Published Yet</div>
                       <p className="text-xs text-[#546E7A] max-w-xs mx-auto">
                         Your property manager has not published the dining menu for this hostel/residence.
                       </p>
@@ -1791,14 +1869,14 @@ export default function TenantDashboard() {
                   <div key={idx} className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7] space-y-1.5">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-[#263238] text-sm">{m.mealType}</span>
+                        <span className="font-extrabold text-[#171717] text-sm">{m.mealType}</span>
                         {m.dietaryType && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
                             {m.dietaryType}
                           </span>
                         )}
                       </div>
-                      <span className="text-[10px] font-bold text-[#163B36] bg-[#E8F0EC] px-2 py-0.5 rounded-md border border-[#D2DDD7]">
+                      <span className="text-[10px] font-bold text-[#06110c] bg-[#E8F0EC] px-2 py-0.5 rounded-md border border-[#D2DDD7]">
                         ₹{m.costPerMeal}/plate
                       </span>
                     </div>
@@ -1814,13 +1892,13 @@ export default function TenantDashboard() {
                   setIsViewMenuModalOpen(false);
                   setIsMealCustomizerOpen(true);
                 }}
-                className="px-4 py-2 rounded-full bg-[#163B36] text-white text-xs font-bold hover:bg-[#102B27] transition shadow-xs cursor-pointer"
+                className="px-4 py-2 rounded-full bg-[#06110c] text-white text-xs font-bold hover:bg-[#171717] transition shadow-xs cursor-pointer"
               >
                 Customize My Plan
               </button>
               <button
                 onClick={() => setIsViewMenuModalOpen(false)}
-                className="px-4 py-2 rounded-full bg-[#E8F0EC] text-[#263238] text-xs font-bold hover:bg-[#DCE8E1] transition cursor-pointer"
+                className="px-4 py-2 rounded-full bg-[#E8F0EC] text-[#171717] text-xs font-bold hover:bg-[#DCE8E1] transition cursor-pointer"
               >
                 Close
               </button>
@@ -1834,14 +1912,14 @@ export default function TenantDashboard() {
 
       {/* Modal: Request Move-Out */}
       {isMoveOutModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#263238]/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#171717]/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-3xl border border-[#D2DDD7] p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between pb-2 border-b border-[#D2DDD7]">
               <div>
-                <h3 className="text-base font-extrabold text-[#263238]">Request Move-Out &amp; Settlement</h3>
+                <h3 className="text-base font-extrabold text-[#171717]">Request Move-Out &amp; Settlement</h3>
                 <p className="text-xs text-[#546E7A]">Initiate move-out inspection and escrow deposit release</p>
               </div>
-              <button onClick={() => setIsMoveOutModalOpen(false)} className="text-[#546E7A] hover:text-[#263238]">
+              <button onClick={() => setIsMoveOutModalOpen(false)} className="text-[#546E7A] hover:text-[#171717]">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -1855,22 +1933,22 @@ export default function TenantDashboard() {
               setIsMoveOutModalOpen(false);
             }} className="space-y-3.5 text-xs">
               <div>
-                <label className="block text-[#263238] font-bold mb-1">Expected Move-Out Date</label>
+                <label className="block text-[#171717] font-bold mb-1">Expected Move-Out Date</label>
                 <input
                   type="date"
                   value={moveOutForm.moveOutDate}
                   onChange={(e) => setMoveOutForm({ ...moveOutForm, moveOutDate: e.target.value })}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium"
                 />
               </div>
 
               <div>
-                <label className="block text-[#263238] font-bold mb-1">Reason for Move-Out</label>
+                <label className="block text-[#171717] font-bold mb-1">Reason for Move-Out</label>
                 <select
                   value={moveOutForm.moveOutReason}
                   onChange={(e) => setMoveOutForm({ ...moveOutForm, moveOutReason: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium"
                 >
                   <option value="Job relocation">Job relocation</option>
                   <option value="Lease tenure completed">Lease tenure completed</option>
@@ -1880,24 +1958,24 @@ export default function TenantDashboard() {
               </div>
 
               <div>
-                <label className="block text-[#263238] font-bold mb-1">Refund Bank UPI ID (For Escrow Release)</label>
+                <label className="block text-[#171717] font-bold mb-1">Refund Bank UPI ID (For Escrow Release)</label>
                 <input
                   type="text"
                   placeholder="e.g. resident@okhdfcbank"
                   value={moveOutForm.forwardingUpi}
                   onChange={(e) => setMoveOutForm({ ...moveOutForm, forwardingUpi: e.target.value })}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#263238] font-medium font-mono"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium font-mono"
                 />
               </div>
 
-              <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[11px] text-[#263238] leading-relaxed">
+              <div className="p-3 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] text-[11px] text-[#171717] leading-relaxed">
                 <b>MoveFlow Settlement:</b> Your landlord will perform the move-out inspection and counter-sign the escrow release to transfer your deposit directly to your verified bank account.
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-full bg-[#163B36] hover:bg-[#102B27] text-white font-bold text-xs transition shadow-xs cursor-pointer"
+                className="w-full py-3 rounded-full bg-[#06110c] hover:bg-[#171717] text-white font-bold text-xs transition shadow-xs cursor-pointer"
               >
                 Confirm Move-Out Request
               </button>

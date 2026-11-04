@@ -136,6 +136,13 @@ export function proxy(req: NextRequest) {
   response.headers.set('X-Cluster-Node-Id', 'staywise-worker-node-3005');
   response.headers.set('X-Served-By', 'staywise-load-balancer');
 
+  // 7. Edge & CDN Caching for Static Images & Public Pages
+  if (pathname.startsWith('/images/')) {
+    response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+  } else if (!pathname.startsWith('/api') && !req.cookies.get('staywise_token')) {
+    response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+  }
+
   return response;
 }
 

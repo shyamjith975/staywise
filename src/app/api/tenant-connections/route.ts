@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
+import { invalidateBootstrapCache } from '../../../lib/cache/apiCache';
 
 export async function GET() {
   try {
@@ -51,6 +52,8 @@ export async function POST(req: NextRequest) {
       coTenantEmail: body.coTenantEmail
     });
 
+    invalidateBootstrapCache();
+
     return NextResponse.json({ success: true, data: newReq }, { status: 201 });
   } catch (error) {
     console.error('[API /api/tenant-connections] POST Error:', error);
@@ -74,6 +77,8 @@ export async function PATCH(req: NextRequest) {
       inspectionNotes: body.inspectionNotes,
       depositSettledAmount: body.depositSettledAmount
     });
+
+    invalidateBootstrapCache();
 
     return NextResponse.json({ success: true, message: `Connection request ${body.id} updated to ${body.status}` });
   } catch (error) {

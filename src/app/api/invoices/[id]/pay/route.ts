@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../../../lib/db';
 import { validatePaymentPayload } from '../../../../../lib/validation';
 import { getAuthenticatedUser } from '../../../../../lib/security/authorization';
+import { invalidateBootstrapCache } from '../../../../../lib/cache/apiCache';
 
 // In-memory idempotency cache for deduplicating repeated client retries & callbacks (P0.4)
 const idempotencyStore = new Map<string, { result: any; timestamp: number }>();
@@ -127,10 +128,29 @@ export async function POST(
       return NextResponse.json({ success: false, error: 'Invoice not found' }, { status: 404 });
     }
 
+    // Award +100 WisePoints for verified on-time rent payment
+    try {
+      const tenantRow = await db.tenants.findById(inv.tenantId);
+      const targetUserId = tenantRow?.userId || auth?.user.id || 'user-tenant-shyam';
+      await db.rewards.awardPoints({
+        userId: targetUserId,
+        actionType: 'RENT_PAID_ON_TIME',
+        points: 100,
+        referenceId: inv.id,
+        referenceType: 'INVOICE',
+        description: `Verified on-time rent payment for Invoice #${inv.invoiceNumber}`
+      });
+    } catch (e) {
+      console.warn('Failed to award rent payment WisePoints:', e);
+    }
+
     // Cache successful settlement for idempotency guarantee (P0.4)
     if (idempotencyKey) {
       idempotencyStore.set(idempotencyKey, { result, timestamp: Date.now() });
     }
+
+    // Invalidate bootstrap cache so dashboard metrics update on next poll/tab switch
+    invalidateBootstrapCache();
 
     return NextResponse.json({
       success: true,
