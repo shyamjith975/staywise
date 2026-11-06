@@ -77,8 +77,13 @@ export default function TopHeader() {
       {/* Right Controls */}
       <div className="flex items-center gap-2 ml-auto">
         
-        {/* Fixed Quick Add Buttons */}
-        {activeRole !== 'tenant' && (
+        {/* Fixed Quick Add Buttons or Admin Badge */}
+        {activeRole === 'admin' ? (
+          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#06110c] text-white border border-[#a31c1b]/40 text-xs font-black shadow-xs">
+            <span className="text-[#a31c1b]">🛡️</span>
+            <span>Super Admin</span>
+          </div>
+        ) : activeRole !== 'tenant' && (
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <button
               onClick={() => setIsExistingTenantWizardOpen(true)}

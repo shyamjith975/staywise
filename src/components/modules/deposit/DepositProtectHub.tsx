@@ -43,12 +43,13 @@ export default function DepositProtectHub() {
     settleProtectionClaim,
     disputeProtectionClaim,
     properties,
+    tenants,
     addNotification,
     setActiveView
   } = useAppState();
 
-  const isOwnerDefault = activeRole !== 'tenant';
-  const [viewPersona, setViewPersona] = useState<'TENANT' | 'OWNER'>(isOwnerDefault ? 'OWNER' : 'TENANT');
+  // Automatic Role Determination: Tenants see Tenant details; Owners see Owner details
+  const isTenant = activeRole === 'tenant';
   
   // Modals
   const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
@@ -78,9 +79,71 @@ export default function DepositProtectHub() {
   const calculatedMonthlyFee = Math.min(1200, Math.max(600, Math.round(appMonthlyRent * 0.035)));
   const calculatedCoverage = Math.max(100000, appMonthlyRent * 3.5);
 
-  // Active contract for demo tenant
-  const activeContract = protectionContracts[0];
+  // -------------------------------------------------------------------------
+  // STRICT ID MATCHING: TENANT SCOPE
+  // -------------------------------------------------------------------------
+  const myTenant = tenants.find(t => 
+    (currentUser?.id && t.userId === currentUser.id) || 
+    (currentUser?.email && t.email.toLowerCase() === currentUser.email.toLowerCase())
+  );
+  const myTenantId = myTenant?.id || currentUser?.id || '';
+  const isDemoTenant = currentUser?.email === 'tenant@staywise.com' || currentUser?.id === 'user-tenant-shyam';
 
+  const matchingTenantContracts = protectionContracts.filter(c => 
+    c.tenantId === myTenantId || 
+    (currentUser?.id && c.tenantId === currentUser.id) || 
+    (isDemoTenant && (c.tenantName === 'Shyam Sundar' || c.tenantId === 'user-tenant-shyam'))
+  );
+  const activeTenantContract = matchingTenantContracts[0] || null;
+
+  const matchingTenantApplications = depositApplications.filter(a => 
+    a.tenantId === myTenantId || 
+    (currentUser?.id && a.tenantId === currentUser.id) || 
+    (isDemoTenant && a.tenantName === 'Shyam Sundar')
+  );
+
+  const matchingTenantReports = conditionReports.filter(r => 
+    r.tenantId === myTenantId || 
+    (currentUser?.id && r.tenantId === currentUser.id) || 
+    (isDemoTenant && r.tenantName === 'Shyam Sundar')
+  );
+
+  const matchingTenantClaims = protectionClaims.filter(cl => 
+    cl.tenantId === myTenantId || 
+    (currentUser?.id && cl.tenantId === currentUser.id) || 
+    (isDemoTenant && cl.tenantName === 'Shyam Sundar')
+  );
+
+  // -------------------------------------------------------------------------
+  // STRICT ID MATCHING: OWNER SCOPE
+  // -------------------------------------------------------------------------
+  const ownerProperties = properties.filter(p => currentUser?.id && p.ownerId === currentUser.id);
+  const ownerPropIds = ownerProperties.map(p => p.id);
+  const isDemoOwner = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
+
+  const matchingOwnerContracts = isDemoOwner
+    ? protectionContracts
+    : protectionContracts.filter(c => 
+        (currentUser?.id && c.ownerId === currentUser.id) || 
+        ownerPropIds.includes(c.propertyId)
+      );
+
+  const matchingOwnerClaims = isDemoOwner
+    ? protectionClaims
+    : protectionClaims.filter(cl => 
+        (currentUser?.id && cl.ownerId === currentUser.id) || 
+        ownerPropIds.includes(cl.propertyId)
+      );
+
+  const matchingOwnerReports = isDemoOwner
+    ? conditionReports
+    : conditionReports.filter(cr => 
+        ownerPropIds.includes(cr.propertyId)
+      );
+
+  const totalOwnerGuaranteedCoverage = matchingOwnerContracts.reduce((sum, c) => sum + (c.coverageLimit || 0), 0);
+
+  // Form Submissions
   const handleApplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const prop = properties.find(p => p.id === appPropertyId);
@@ -109,10 +172,10 @@ export default function DepositProtectHub() {
     };
 
     await submitConditionReport({
-      contractId: activeContract?.id,
-      propertyId: activeContract?.propertyId || 'prop-beach-road',
-      propertyName: activeContract?.propertyName || 'Beach Road Apartments',
-      unitNumber: activeContract?.unitNumber || '304',
+      contractId: activeTenantContract?.id,
+      propertyId: activeTenantContract?.propertyId || 'prop-beach-road',
+      propertyName: activeTenantContract?.propertyName || 'Beach Road Apartments',
+      unitNumber: activeTenantContract?.unitNumber || '304',
       reportType: 'MOVE_IN',
       overallCondition: 'Pristine',
       items: [item],
@@ -127,16 +190,17 @@ export default function DepositProtectHub() {
 
   const handleClaimSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeContract) return;
+    const targetContract = matchingOwnerContracts[0];
+    if (!targetContract) return;
 
     await submitProtectionClaim({
-      contractId: activeContract.id,
-      policyNumber: activeContract.policyNumber,
-      propertyId: activeContract.propertyId,
-      propertyName: activeContract.propertyName,
-      unitNumber: activeContract.unitNumber,
-      tenantId: activeContract.tenantId,
-      tenantName: activeContract.tenantName,
+      contractId: targetContract.id,
+      policyNumber: targetContract.policyNumber,
+      propertyId: targetContract.propertyId,
+      propertyName: targetContract.propertyName,
+      unitNumber: targetContract.unitNumber,
+      tenantId: targetContract.tenantId,
+      tenantName: targetContract.tenantName,
       claimType,
       claimedAmount,
       description: claimDescription,
@@ -150,7 +214,7 @@ export default function DepositProtectHub() {
   return (
     <div className="space-y-6 font-sans bg-[#F7F8F6] text-[#171717]">
       
-      {/* Hero Header with Persona Switcher */}
+      {/* Hero Header (Direct ID Scoped - View Switcher Options Removed) */}
       <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#D2DDD7] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2 max-w-2xl">
           <div className="flex flex-wrap items-center gap-2">
@@ -170,50 +234,35 @@ export default function DepositProtectHub() {
             Institutional Zero-Deposit Protection
           </h1>
           <p className="text-xs sm:text-sm text-[#546E7A]">
-            Tenants rent without locking away ₹50,000–₹1,50,000 in idle cash. Landlords receive institutional financial guarantees against unpaid rent and verified damage.
+            {isTenant 
+              ? 'Rent without locking away ₹50,000–₹1,50,000 in idle cash. Enjoy institutional guarantee protection with transparent move-out inspections.'
+              : 'Institutional financial guarantees against tenant unpaid rent arrears and verified physical damage across your managed properties.'}
           </p>
         </div>
 
-        {/* View Switcher: Tenant vs Owner */}
-        <div className="flex flex-col items-start sm:items-end gap-2 shrink-0">
-          <div className="flex items-center p-1.5 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7]">
-            <button
-              onClick={() => setViewPersona('TENANT')}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 ${
-                viewPersona === 'TENANT'
-                  ? 'bg-[#06110c] text-white shadow-xs'
-                  : 'text-[#546E7A] hover:text-[#171717]'
-              }`}
-            >
-              <User className="h-3.5 w-3.5" />
-              <span>Resident View</span>
-            </button>
-            <button
-              onClick={() => setViewPersona('OWNER')}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 ${
-                viewPersona === 'OWNER'
-                  ? 'bg-[#06110c] text-white shadow-xs'
-                  : 'text-[#546E7A] hover:text-[#171717]'
-              }`}
-            >
-              <Building2 className="h-3.5 w-3.5" />
-              <span>Property Owner View</span>
-            </button>
+        {/* User Identity Stamp (Matched strictly to ID) */}
+        <div className="flex flex-col items-start sm:items-end gap-1 shrink-0 p-3 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7]">
+          <span className="text-[10px] uppercase tracking-wider font-extrabold text-[#546E7A]">
+            {isTenant ? 'Resident Account' : 'Property Owner Portfolio'}
+          </span>
+          <div className="flex items-center gap-1.5 font-black text-sm text-[#06110c]">
+            {isTenant ? <User className="h-4 w-4 text-emerald-600" /> : <Building2 className="h-4 w-4 text-[#a31c1b]" />}
+            <span>{currentUser?.name || 'Verified Member'}</span>
           </div>
-          <span className="text-[10px] text-[#546E7A]">
-            Logged in as: <strong className="text-[#171717]">{currentUser?.name || 'Member'} ({activeRole})</strong>
+          <span className="text-[10px] font-mono text-[#546E7A]">
+            ID: {currentUser?.id || 'id-verified'}
           </span>
         </div>
       </div>
 
       {/* ============================================================== */}
-      {/* RESIDENT (TENANT) VIEW */}
+      {/* 1. RESIDENT (TENANT) VIEW — Strictly ID Matched                */}
       {/* ============================================================== */}
-      {viewPersona === 'TENANT' && (
+      {isTenant && (
         <div className="space-y-6">
           
           {/* Active Policy Card or Enrollment Callout */}
-          {activeContract ? (
+          {activeTenantContract ? (
             <div className="bg-linear-to-br from-[#06110c] to-[#171717] rounded-3xl p-6 sm:p-7 text-white shadow-lg border border-[#D2DDD7] relative overflow-hidden">
               <div className="absolute top-0 right-0 w-80 h-80 bg-[#a31c1b]/15 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -225,21 +274,21 @@ export default function DepositProtectHub() {
                       Active Protection Guarantee
                     </span>
                     <span className="font-mono text-xs text-white/70">
-                      Policy #{activeContract.policyNumber}
+                      Policy #{activeTenantContract.policyNumber}
                     </span>
                   </div>
 
                   <div>
                     <h3 className="text-xl sm:text-2xl font-black text-white">
-                      Unit {activeContract.unitNumber}, {activeContract.propertyName}
+                      Unit {activeTenantContract.unitNumber}, {activeTenantContract.propertyName}
                     </h3>
                     <p className="text-xs text-[#E8F0EC]/80 mt-1">
-                      Institutional guarantee active underwritten by {activeContract.partnerName}. Traditional deposit of ₹60,000 avoided upfront.
+                      Institutional guarantee active underwritten by {activeTenantContract.partnerName}. Traditional deposit of ₹{(activeTenantContract.coverageLimit * 0.6).toLocaleString('en-IN')} avoided upfront.
                     </p>
                   </div>
 
                   <div className="flex flex-wrap gap-2 pt-1">
-                    {activeContract.coveredRisks.slice(0, 3).map((risk, idx) => (
+                    {activeTenantContract.coveredRisks?.slice(0, 3).map((risk, idx) => (
                       <span key={idx} className="text-[10px] bg-white/10 px-2.5 py-1 rounded-lg border border-white/15 text-[#E8F0EC]">
                         ✓ {risk}
                       </span>
@@ -251,24 +300,24 @@ export default function DepositProtectHub() {
                   <div className="space-y-1">
                     <span className="text-[10px] text-[#E8F0EC]/70 uppercase block">Total Coverage Limit</span>
                     <span className="text-3xl font-black text-white tracking-tight">
-                      ₹{activeContract.coverageLimit.toLocaleString('en-IN')}
+                      ₹{activeTenantContract.coverageLimit.toLocaleString('en-IN')}
                     </span>
                     <div className="text-xs text-[#E8F0EC]/80 pt-1">
-                      Monthly Protection Fee: <strong>₹{activeContract.monthlyFee}/mo</strong>
+                      Monthly Protection Fee: <strong>₹{activeTenantContract.monthlyFee}/mo</strong>
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+                  <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between gap-2">
                     <button
-                      onClick={() => addNotification('Certificate Downloaded', `Policy ${activeContract.policyNumber} certificate downloaded.`, 'SYSTEM')}
-                      className="px-3 py-1.5 rounded-xl bg-white text-[#06110c] text-xs font-bold hover:bg-[#E8F0EC] transition flex items-center gap-1"
+                      onClick={() => addNotification('Certificate Downloaded', `Policy ${activeTenantContract.policyNumber} certificate downloaded.`, 'SYSTEM')}
+                      className="px-3 py-1.5 rounded-xl bg-white text-[#06110c] text-xs font-bold hover:bg-[#E8F0EC] transition flex items-center gap-1 cursor-pointer"
                     >
                       <Download className="h-3.5 w-3.5" />
                       <span>Certificate</span>
                     </button>
                     <button
                       onClick={() => setIsConditionModalOpen(true)}
-                      className="px-3 py-1.5 rounded-xl bg-white/20 text-white text-xs font-bold hover:bg-white/30 transition flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-xl bg-white/20 text-white text-xs font-bold hover:bg-white/30 transition flex items-center gap-1 cursor-pointer"
                     >
                       <Camera className="h-3.5 w-3.5" />
                       <span>Inspect (+100 pts)</span>
@@ -276,6 +325,23 @@ export default function DepositProtectHub() {
                   </div>
                 </div>
               </div>
+            </div>
+          ) : matchingTenantApplications.length > 0 ? (
+            <div className="bg-white p-6 rounded-3xl border border-[#D2DDD7] shadow-xs space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+                  Application Underwriting Status: {matchingTenantApplications[0].status}
+                </span>
+                <span className="text-xs font-mono text-[#546E7A]">
+                  App #{matchingTenantApplications[0].id}
+                </span>
+              </div>
+              <h3 className="text-base font-extrabold text-[#171717]">
+                Application in Progress for Unit {matchingTenantApplications[0].unitNumber}, {matchingTenantApplications[0].propertyName}
+              </h3>
+              <p className="text-xs text-[#546E7A]">
+                Our partner underwriter ({matchingTenantApplications[0].partnerProvider}) is verifying your credit profile. Once approved, your policy certificate will activate immediately.
+              </p>
             </div>
           ) : (
             <div className="bg-white p-6 rounded-3xl border border-[#D2DDD7] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -285,7 +351,7 @@ export default function DepositProtectHub() {
               </div>
               <button
                 onClick={() => setIsApplyModalOpen(true)}
-                className="px-5 py-2.5 rounded-xl bg-[#06110c] text-white hover:bg-[#171717] font-bold text-xs"
+                className="px-5 py-2.5 rounded-xl bg-[#06110c] text-white hover:bg-[#171717] font-bold text-xs cursor-pointer active:scale-95 transition"
               >
                 Apply for Protection
               </button>
@@ -351,91 +417,98 @@ export default function DepositProtectHub() {
                   </li>
                   <li className="flex items-start gap-1.5">
                     <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
-                    <span>Digital move-in inspection protects against wrongful damage claims</span>
+                    <span>Digital move-in condition audit shields against false deductions</span>
                   </li>
                 </ul>
               </div>
             </div>
           </div>
 
-          {/* Move-In Condition Reports Audit Gallery */}
+          {/* Condition Reports for this Tenant */}
           <div className="bg-white p-6 rounded-3xl border border-[#D2DDD7] shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-black text-[#171717]">Digital Move-In Condition Evidence</h3>
-                <p className="text-xs text-[#546E7A]">Verified audit photos establishing the baseline state of the property to safeguard both tenant and owner.</p>
+                <h3 className="text-base font-black text-[#171717]">Digital Condition Audit Proofs</h3>
+                <p className="text-xs text-[#546E7A]">Move-in condition photographs with cryptographic timestamp and audit seal.</p>
               </div>
               <button
                 onClick={() => setIsConditionModalOpen(true)}
-                className="px-4 py-2 rounded-xl bg-[#06110c] text-white hover:bg-[#171717] text-xs font-bold transition flex items-center gap-1.5 shrink-0"
+                className="px-3.5 py-1.5 rounded-xl bg-[#06110c] text-white text-xs font-bold hover:bg-[#171717] transition flex items-center gap-1 cursor-pointer"
               >
-                <Camera className="h-3.5 w-3.5 text-[#a31c1b]" />
-                <span>Add Inspection Photos (+100 pts)</span>
+                <Plus className="h-3.5 w-3.5" />
+                <span>Add Condition Proof</span>
               </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {conditionReports.map((report) => (
-                <div key={report.id} className="p-4 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7] space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-[#E8F0EC] text-[#06110c]">
-                        {report.reportType.replace(/_/g, ' ')}
-                      </span>
-                      <h4 className="text-sm font-extrabold text-[#171717] mt-1">
-                        Unit {report.unitNumber}, {report.propertyName}
-                      </h4>
-                    </div>
-                    <span className="text-[10px] font-mono text-[#546E7A]">
-                      {report.inspectionDate}
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-[#546E7A] bg-white p-2.5 rounded-xl border border-[#D2DDD7]">
-                    &ldquo;{report.notes}&rdquo;
-                  </p>
-
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] font-bold uppercase text-[#546E7A]">Audited Elements:</span>
-                    <div className="space-y-1 text-xs">
-                      {report.items.map((item) => (
-                        <div key={item.id} className="flex justify-between items-center text-[11px] p-1.5 rounded-lg bg-white border border-[#D2DDD7]/50">
-                          <span className="font-medium text-[#171717]">{item.area} — {item.item}</span>
-                          <span className="font-extrabold text-[#06110c]">{item.condition}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="text-[10px] text-green-700 font-bold flex items-center gap-1 pt-1">
-                    <CheckCircle2 className="h-3 w-3" />
-                    <span>{report.verifiedBy}</span>
-                  </div>
+              {matchingTenantReports.length === 0 ? (
+                <div className="col-span-2 p-6 text-center text-xs text-[#546E7A] bg-[#F7F8F6] rounded-2xl border border-[#D2DDD7]">
+                  No condition reports logged yet. Click &quot;Add Condition Proof&quot; to audit your move-in condition and earn 100 Staywise Reward points.
                 </div>
-              ))}
+              ) : (
+                matchingTenantReports.map((report) => (
+                  <div key={report.id} className="p-4 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7] space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold text-[#171717]">{report.reportType} Inspection</span>
+                      <span className="text-[10px] text-[#546E7A] font-mono">{report.inspectionDate}</span>
+                    </div>
+                    <p className="text-xs text-[#546E7A]">{report.notes}</p>
+                    <div className="text-[10px] text-green-700 font-bold flex items-center gap-1 pt-1">
+                      <CheckCircle2 className="h-3 w-3" />
+                      <span>Verified by {report.verifiedBy}</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
+
+          {/* Tenant Matched Claims Desk */}
+          {matchingTenantClaims.length > 0 && (
+            <div className="bg-white p-6 rounded-3xl border border-[#D2DDD7] shadow-xs space-y-3">
+              <h3 className="text-base font-black text-[#171717]">Filed Protection Claims on Your Unit</h3>
+              <div className="space-y-2">
+                {matchingTenantClaims.map(claim => (
+                  <div key={claim.id} className="p-4 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7] flex items-center justify-between text-xs">
+                    <div>
+                      <span className="font-bold text-[#171717]">{claim.claimType.replace(/_/g, ' ')}</span>
+                      <p className="text-[#546E7A] text-[11px] mt-0.5">{claim.description}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-black text-[#a31c1b] block">₹{claim.claimedAmount.toLocaleString('en-IN')}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 font-bold">
+                        {claim.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
       )}
 
       {/* ============================================================== */}
-      {/* PROPERTY OWNER (LANDLORD) VIEW */}
+      {/* 2. PROPERTY OWNER VIEW — Strictly ID Matched                   */}
       {/* ============================================================== */}
-      {viewPersona === 'OWNER' && (
+      {!isTenant && (
         <div className="space-y-6">
           
           {/* Portfolio Protection Header Metrics */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] shadow-xs space-y-1">
               <span className="text-[10px] font-bold text-[#546E7A] uppercase">Protected Units</span>
-              <div className="text-2xl font-black text-[#171717]">{protectionContracts.length} Units Active</div>
+              <div className="text-2xl font-black text-[#171717]">{matchingOwnerContracts.length} Units Active</div>
               <p className="text-[10px] text-green-600 font-bold">100% Zero-Deposit Guarantees</p>
             </div>
 
             <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] shadow-xs space-y-1">
               <span className="text-[10px] font-bold text-[#546E7A] uppercase">Total Guaranteed Coverage</span>
-              <div className="text-2xl font-black text-[#06110c]">₹4,50,000</div>
-              <p className="text-[10px] text-[#546E7A]">Underwritten by ICICI Lombard Risk Pool</p>
+              <div className="text-2xl font-black text-[#06110c]">
+                ₹{totalOwnerGuaranteedCoverage > 0 ? totalOwnerGuaranteedCoverage.toLocaleString('en-IN') : '0'}
+              </div>
+              <p className="text-[10px] text-[#546E7A]">Underwritten by Partner Insurer Risk Pool</p>
             </div>
 
             <div className="bg-white p-5 rounded-3xl border border-[#D2DDD7] shadow-xs space-y-1">
@@ -456,62 +529,76 @@ export default function DepositProtectHub() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="text-base font-black text-[#171717]">Active Institutional Protection Policies</h3>
-                <p className="text-xs text-[#546E7A]">Real-time status of Zero-Deposit policies protecting your rental income and physical asset condition.</p>
+                <p className="text-xs text-[#546E7A]">
+                  Real-time status of Zero-Deposit policies protecting your properties: {ownerProperties.map(p => p.name).join(', ') || 'All Listed Assets'}.
+                </p>
               </div>
 
-              <button
-                onClick={() => setIsClaimModalOpen(true)}
-                className="px-4 py-2.5 rounded-xl bg-[#a31c1b] text-white hover:bg-[#8e1817] text-xs font-black transition flex items-center gap-1.5 shadow-xs shrink-0 active:scale-95"
-              >
-                <AlertTriangle className="h-3.5 w-3.5" />
-                <span>File Protection Claim</span>
-              </button>
+              {matchingOwnerContracts.length > 0 && (
+                <button
+                  onClick={() => setIsClaimModalOpen(true)}
+                  className="px-4 py-2.5 rounded-xl bg-[#a31c1b] text-white hover:bg-[#8e1817] text-xs font-black transition flex items-center gap-1.5 shadow-xs shrink-0 active:scale-95 cursor-pointer"
+                >
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <span>File Protection Claim</span>
+                </button>
+              )}
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs text-left">
-                <thead>
-                  <tr className="border-b border-[#D2DDD7] text-[11px] font-extrabold text-[#546E7A] uppercase tracking-wider bg-[#F7F8F6]">
-                    <th className="py-3 px-4 rounded-l-xl">Policy Number</th>
-                    <th className="py-3 px-4">Unit & Property</th>
-                    <th className="py-3 px-4">Tenant Name</th>
-                    <th className="py-3 px-4">Coverage Limit</th>
-                    <th className="py-3 px-4">Monthly Fee</th>
-                    <th className="py-3 px-4">Valid Period</th>
-                    <th className="py-3 px-4 text-right rounded-r-xl">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#D2DDD7]/50">
-                  {protectionContracts.map((ct) => (
-                    <tr key={ct.id} className="hover:bg-[#F7F8F6]/80 transition">
-                      <td className="py-3.5 px-4 font-mono font-bold text-[#06110c]">
-                        {ct.policyNumber}
-                      </td>
-                      <td className="py-3.5 px-4 font-extrabold text-[#171717]">
-                        Unit {ct.unitNumber}, {ct.propertyName}
-                      </td>
-                      <td className="py-3.5 px-4 text-[#171717] font-medium">
-                        {ct.tenantName}
-                      </td>
-                      <td className="py-3.5 px-4 font-black text-[#06110c]">
-                        ₹{ct.coverageLimit.toLocaleString('en-IN')}
-                      </td>
-                      <td className="py-3.5 px-4 text-[#546E7A]">
-                        ₹{ct.monthlyFee}/mo
-                      </td>
-                      <td className="py-3.5 px-4 text-[11px] text-[#546E7A] font-mono">
-                        {ct.startDate} → {ct.endDate}
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-[#E8F0EC] text-[#06110c] border border-[#D2DDD7]">
-                          {ct.status}
-                        </span>
-                      </td>
+            {matchingOwnerContracts.length === 0 ? (
+              <div className="p-8 text-center bg-[#F7F8F6] rounded-2xl border border-[#D2DDD7] space-y-2">
+                <Shield className="h-8 w-8 text-[#546E7A] mx-auto opacity-40" />
+                <h4 className="text-sm font-bold text-[#171717]">No Zero-Deposit Policies Enrolled Yet</h4>
+                <p className="text-xs text-[#546E7A] max-w-md mx-auto">
+                  When new residents apply for Zero-Deposit renting on your properties, their underwritten institutional guarantee policies will appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left">
+                  <thead>
+                    <tr className="border-b border-[#D2DDD7] text-[11px] font-extrabold text-[#546E7A] uppercase tracking-wider bg-[#F7F8F6]">
+                      <th className="py-3 px-4 rounded-l-xl">Policy Number</th>
+                      <th className="py-3 px-4">Unit & Property</th>
+                      <th className="py-3 px-4">Tenant Name</th>
+                      <th className="py-3 px-4">Coverage Limit</th>
+                      <th className="py-3 px-4">Monthly Fee</th>
+                      <th className="py-3 px-4">Valid Period</th>
+                      <th className="py-3 px-4 text-right rounded-r-xl">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-[#D2DDD7]/50">
+                    {matchingOwnerContracts.map((ct) => (
+                      <tr key={ct.id} className="hover:bg-[#F7F8F6]/80 transition">
+                        <td className="py-3.5 px-4 font-mono font-bold text-[#06110c]">
+                          {ct.policyNumber}
+                        </td>
+                        <td className="py-3.5 px-4 font-extrabold text-[#171717]">
+                          Unit {ct.unitNumber}, {ct.propertyName}
+                        </td>
+                        <td className="py-3.5 px-4 text-[#171717] font-medium">
+                          {ct.tenantName}
+                        </td>
+                        <td className="py-3.5 px-4 font-black text-[#06110c]">
+                          ₹{ct.coverageLimit.toLocaleString('en-IN')}
+                        </td>
+                        <td className="py-3.5 px-4 text-[#546E7A]">
+                          ₹{ct.monthlyFee}/mo
+                        </td>
+                        <td className="py-3.5 px-4 text-[11px] text-[#546E7A] font-mono">
+                          {ct.startDate} → {ct.endDate}
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-[#E8F0EC] text-[#06110c] border border-[#D2DDD7]">
+                            {ct.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           {/* Claims Desk & Dispute Ledger */}
@@ -524,12 +611,12 @@ export default function DepositProtectHub() {
             </div>
 
             <div className="space-y-3">
-              {protectionClaims.length === 0 ? (
-                <div className="p-8 text-center text-[#546E7A] text-xs">
-                  Zero claims filed. All units in pristine standing.
+              {matchingOwnerClaims.length === 0 ? (
+                <div className="p-8 text-center text-[#546E7A] text-xs bg-[#F7F8F6] rounded-2xl border border-[#D2DDD7]">
+                  Zero claims filed across your properties. All units in pristine standing.
                 </div>
               ) : (
-                protectionClaims.map((claim) => (
+                matchingOwnerClaims.map((claim) => (
                   <div key={claim.id} className="p-4 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7] space-y-3">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
@@ -583,7 +670,7 @@ export default function DepositProtectHub() {
                       {claim.status !== 'SETTLED' && (
                         <button
                           onClick={() => settleProtectionClaim(claim.id, claim.claimedAmount)}
-                          className="px-3.5 py-1.5 rounded-xl bg-[#06110c] text-white hover:bg-[#171717] text-xs font-bold transition flex items-center gap-1 active:scale-95"
+                          className="px-3.5 py-1.5 rounded-xl bg-[#06110c] text-white hover:bg-[#171717] text-xs font-bold transition flex items-center gap-1 active:scale-95 cursor-pointer"
                         >
                           <Check className="h-3.5 w-3.5" />
                           <span>Approve Institutional Settlement Payout</span>
@@ -593,7 +680,7 @@ export default function DepositProtectHub() {
                       {claim.status === 'UNDER_REVIEW' && (
                         <button
                           onClick={() => disputeProtectionClaim(claim.id, 'Tenant requested re-inspection and verified photo audit.')}
-                          className="px-3.5 py-1.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#546E7A] hover:bg-[#F7F8F6]"
+                          className="px-3.5 py-1.5 rounded-xl bg-white border border-[#D2DDD7] text-xs font-bold text-[#546E7A] hover:bg-[#F7F8F6] cursor-pointer"
                         >
                           Send to Dispute Arbitration
                         </button>
@@ -608,23 +695,7 @@ export default function DepositProtectHub() {
       )}
 
       {/* ============================================================== */}
-      {/* STATUTORY IRDAI & LEGAL COMPLIANCE FOOTER */}
-      {/* ============================================================== */}
-      <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[#D2DDD7] text-xs text-[#546E7A] space-y-2">
-        <div className="flex items-center gap-2 font-extrabold text-[#171717]">
-          <Info className="h-4 w-4 text-[#06110c]" />
-          <span>Statutory Regulatory Structure & Disclosures (IRDAI & RBI Compliance)</span>
-        </div>
-        <p className="leading-relaxed text-[11px]">
-          Staywise Platform operates strictly as a property-management technology infrastructure provider. Staywise does not directly underwrite unregulated insurance policies on its own corporate balance sheet. Protection guarantees are issued under a structured group master protection facility in partnership with authorized, IRDAI-regulated general insurance partners (e.g., ICICI Lombard General Insurance Co. Ltd.) and institutional guarantee trusts.
-        </p>
-        <p className="leading-relaxed text-[11px]">
-          All claims are subject to documented baseline Move-In Condition Reports, verified payment ledgers, and independent claims assessment guidelines under Indian tenancy jurisprudence.
-        </p>
-      </div>
-
-      {/* ============================================================== */}
-      {/* ZERO-DEPOSIT APPLICATION MODAL */}
+      {/* APPLY FOR ZERO-DEPOSIT PROTECTION MODAL */}
       {/* ============================================================== */}
       {isApplyModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
@@ -632,20 +703,20 @@ export default function DepositProtectHub() {
             <div className="flex items-center justify-between pb-3 border-b border-[#D2DDD7]">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-5 w-5 text-[#a31c1b]" />
-                <h3 className="font-black text-base text-[#171717]">Enroll in Staywise Deposit Protect</h3>
+                <h3 className="font-black text-base text-[#171717]">Apply for Zero-Deposit Guarantee</h3>
               </div>
-              <button onClick={() => setIsApplyModalOpen(false)} className="text-[#546E7A] hover:text-[#171717]">
+              <button onClick={() => setIsApplyModalOpen(false)} className="text-[#546E7A] hover:text-[#171717] cursor-pointer">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <form onSubmit={handleApplySubmit} className="space-y-4 text-xs">
               <div>
-                <label className="font-bold text-[#171717] block mb-1">Select Property</label>
-                <select
-                  value={appPropertyId}
+                <label className="font-bold text-[#171717] block mb-1">Target Property</label>
+                <select 
+                  value={appPropertyId} 
                   onChange={(e) => setAppPropertyId(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-[#D2DDD7] bg-[#F7F8F6] text-[#171717] font-semibold"
+                  className="w-full p-3 rounded-xl border border-[#D2DDD7] bg-[#F7F8F6] text-[#171717] font-bold"
                 >
                   {properties.map(p => (
                     <option key={p.id} value={p.id}>{p.name} ({p.city})</option>
@@ -676,48 +747,49 @@ export default function DepositProtectHub() {
                 </div>
               </div>
 
-              {/* Automatic Fee Breakdown */}
+              {/* Real-time Calculation Summary Card */}
               <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] space-y-2">
-                <div className="flex justify-between items-center text-[#546E7A]">
-                  <span>Traditional Deposit Avoided:</span>
-                  <span className="font-bold text-[#171717]">₹{calculatedDepositAvoided.toLocaleString('en-IN')} (Saved Upfront)</span>
+                <div className="flex justify-between font-bold text-xs">
+                  <span className="text-[#546E7A]">Upfront Cash Saved:</span>
+                  <span className="text-[#06110c]">₹{calculatedDepositAvoided.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="flex justify-between items-center text-[#546E7A]">
-                  <span>Monthly Protection Fee:</span>
-                  <span className="font-black text-[#06110c] text-sm">₹{calculatedMonthlyFee}/mo</span>
+                <div className="flex justify-between font-bold text-xs">
+                  <span className="text-[#546E7A]">Monthly Guarantee Fee:</span>
+                  <span className="text-emerald-700 font-extrabold">₹{calculatedMonthlyFee}/mo</span>
                 </div>
-                <div className="flex justify-between items-center text-[#546E7A]">
-                  <span>Guarantee Coverage Limit:</span>
-                  <span className="font-bold text-[#171717]">₹{calculatedCoverage.toLocaleString('en-IN')}</span>
+                <div className="flex justify-between font-bold text-xs">
+                  <span className="text-[#546E7A]">Landlord Coverage:</span>
+                  <span className="text-[#171717]">₹{calculatedCoverage.toLocaleString('en-IN')}</span>
                 </div>
               </div>
 
-              <label className="flex items-start gap-2 cursor-pointer pt-1">
+              <div className="flex items-start gap-2 pt-1">
                 <input
                   type="checkbox"
+                  id="acceptDisclosures"
                   checked={appAcceptDisclosures}
                   onChange={(e) => setAppAcceptDisclosures(e.target.checked)}
-                  className="rounded border-[#D2DDD7] text-[#06110c] focus:ring-0 mt-0.5"
+                  className="mt-1 h-4 w-4 rounded accent-[#06110c]"
                   required
                 />
-                <span className="text-[11px] text-[#546E7A] leading-relaxed">
-                  I agree to the Staywise Zero-Deposit Institutional Guarantee Terms & authorize the partner risk pool assessment. I understand that normal wear & tear is excluded, and damages are audited via move-in photos.
-                </span>
-              </label>
+                <label htmlFor="acceptDisclosures" className="text-[11px] text-[#546E7A]">
+                  I consent to automated soft-pull bureau underwriting and agree that intentional damage or willful rent defaults will be recovered via the surety underwriter.
+                </label>
+              </div>
 
               <div className="flex gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsApplyModalOpen(false)}
-                  className="flex-1 py-3 rounded-xl border border-[#D2DDD7] text-xs font-bold text-[#546E7A]"
+                  className="flex-1 py-3 rounded-xl border border-[#D2DDD7] text-xs font-bold text-[#546E7A] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 rounded-xl bg-[#06110c] text-white hover:bg-[#171717] font-black text-xs shadow-md active:scale-95"
+                  className="flex-1 py-3 rounded-xl bg-[#06110c] text-white hover:bg-[#171717] font-black text-xs shadow-md active:scale-95 cursor-pointer"
                 >
-                  Activate Zero-Deposit
+                  Submit Instant Assessment
                 </button>
               </div>
             </form>
@@ -726,17 +798,17 @@ export default function DepositProtectHub() {
       )}
 
       {/* ============================================================== */}
-      {/* MOVE-IN CONDITION INSPECTION MODAL */}
+      {/* DIGITAL MOVE-IN CONDITION REPORT MODAL */}
       {/* ============================================================== */}
       {isConditionModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white w-full max-w-lg rounded-3xl p-6 border border-[#D2DDD7] shadow-2xl space-y-5 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-[#D2DDD7]">
               <div className="flex items-center gap-2">
-                <Camera className="h-5 w-5 text-[#a31c1b]" />
-                <h3 className="font-black text-base text-[#171717]">Move-In Condition Report (+100 WisePoints)</h3>
+                <Camera className="h-5 w-5 text-[#06110c]" />
+                <h3 className="font-black text-base text-[#171717]">Log Move-In Inspection Proof</h3>
               </div>
-              <button onClick={() => setIsConditionModalOpen(false)} className="text-[#546E7A] hover:text-[#171717]">
+              <button onClick={() => setIsConditionModalOpen(false)} className="text-[#546E7A] hover:text-[#171717] cursor-pointer">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -752,46 +824,39 @@ export default function DepositProtectHub() {
                   >
                     <option value="Living Room">Living Room</option>
                     <option value="Master Bedroom">Master Bedroom</option>
-                    <option value="Kitchen">Kitchen</option>
-                    <option value="Master Bathroom">Master Bathroom</option>
-                    <option value="Balcony">Balcony</option>
+                    <option value="Kitchen">Kitchen &amp; Hob</option>
+                    <option value="Bathroom">Bathroom Fixtures</option>
+                    <option value="Balcony">Balcony &amp; Railings</option>
                   </select>
                 </div>
                 <div>
-                  <label className="font-bold text-[#171717] block mb-1">Item / Fixture</label>
-                  <input
-                    type="text"
-                    value={reportItem}
-                    onChange={(e) => setReportItem(e.target.value)}
-                    className="w-full p-3 rounded-xl border border-[#D2DDD7] bg-[#F7F8F6] font-bold"
-                    placeholder="e.g. Paint, AC, Tiles"
-                    required
-                  />
+                  <label className="font-bold text-[#171717] block mb-1">Condition Rating</label>
+                  <select
+                    value={reportCondition}
+                    onChange={(e) => setReportCondition(e.target.value as any)}
+                    className="w-full p-3 rounded-xl border border-[#D2DDD7] bg-[#F7F8F6] text-[#171717] font-bold"
+                  >
+                    <option value="EXCELLENT">Pristine / Excellent</option>
+                    <option value="GOOD">Good (Minor Wear)</option>
+                    <option value="FAIR">Fair (Existing Marks)</option>
+                    <option value="DAMAGED">Pre-existing Damage</option>
+                  </select>
                 </div>
               </div>
 
               <div>
-                <label className="font-bold text-[#171717] block mb-1">Observed Condition</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {(['EXCELLENT', 'GOOD', 'FAIR', 'DAMAGED'] as const).map((cond) => (
-                    <button
-                      key={cond}
-                      type="button"
-                      onClick={() => setReportCondition(cond)}
-                      className={`py-2 rounded-xl border font-bold text-xs transition ${
-                        reportCondition === cond
-                          ? 'bg-[#06110c] text-white border-[#06110c]'
-                          : 'bg-white border-[#D2DDD7] text-[#546E7A] hover:bg-[#F7F8F6]'
-                      }`}
-                    >
-                      {cond}
-                    </button>
-                  ))}
-                </div>
+                <label className="font-bold text-[#171717] block mb-1">Item Inspected</label>
+                <input
+                  type="text"
+                  value={reportItem}
+                  onChange={(e) => setReportItem(e.target.value)}
+                  className="w-full p-3 rounded-xl border border-[#D2DDD7] bg-[#F7F8F6] font-bold"
+                  required
+                />
               </div>
 
               <div>
-                <label className="font-bold text-[#171717] block mb-1">Inspection Notes & Details</label>
+                <label className="font-bold text-[#171717] block mb-1">Audit Notes</label>
                 <textarea
                   value={reportNotes}
                   onChange={(e) => setReportNotes(e.target.value)}
@@ -805,7 +870,7 @@ export default function DepositProtectHub() {
               {/* Photo Upload Simulation */}
               <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-dashed border-[#D2DDD7] text-center space-y-2">
                 <Upload className="h-6 w-6 text-[#06110c] mx-auto" />
-                <div className="text-xs font-bold text-[#171717]">2 Audit Photos Attached (Geotagged & Timestamped)</div>
+                <div className="text-xs font-bold text-[#171717]">2 Audit Photos Attached (Geotagged &amp; Timestamped)</div>
                 <div className="text-[10px] text-[#546E7A]">living_room_wall_audit.jpg • ac_remote_serial.jpg</div>
               </div>
 
@@ -813,13 +878,13 @@ export default function DepositProtectHub() {
                 <button
                   type="button"
                   onClick={() => setIsConditionModalOpen(false)}
-                  className="flex-1 py-3 rounded-xl border border-[#D2DDD7] text-xs font-bold text-[#546E7A]"
+                  className="flex-1 py-3 rounded-xl border border-[#D2DDD7] text-xs font-bold text-[#546E7A] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 rounded-xl bg-[#06110c] text-white hover:bg-[#171717] font-black text-xs shadow-md active:scale-95 flex items-center justify-center gap-1.5"
+                  className="flex-1 py-3 rounded-xl bg-[#06110c] text-white hover:bg-[#171717] font-black text-xs shadow-md active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Sparkles className="h-3.5 w-3.5 text-[#a31c1b]" />
                   <span>Verify Report (+100 pts)</span>
@@ -841,7 +906,7 @@ export default function DepositProtectHub() {
                 <AlertTriangle className="h-5 w-5 text-[#a31c1b]" />
                 <h3 className="font-black text-base text-[#171717]">File Protection Claim (Landlord)</h3>
               </div>
-              <button onClick={() => setIsClaimModalOpen(false)} className="text-[#546E7A] hover:text-[#171717]">
+              <button onClick={() => setIsClaimModalOpen(false)} className="text-[#546E7A] hover:text-[#171717] cursor-pointer">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -850,7 +915,7 @@ export default function DepositProtectHub() {
               <div>
                 <label className="font-bold text-[#171717] block mb-1">Select Policy / Unit</label>
                 <div className="p-3 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-xs font-bold text-[#171717]">
-                  Unit {activeContract?.unitNumber || '304'}, {activeContract?.propertyName || 'Beach Road Apartments'} (Policy #{activeContract?.policyNumber || 'SW-DP-2026-KL902'})
+                  Unit {matchingOwnerContracts[0]?.unitNumber || '304'}, {matchingOwnerContracts[0]?.propertyName || 'Beach Road Apartments'} (Policy #{matchingOwnerContracts[0]?.policyNumber || 'SW-DP-2026-KL902'})
                 </div>
               </div>
 
@@ -864,7 +929,7 @@ export default function DepositProtectHub() {
                   >
                     <option value="TENANT_DAMAGE">Tenant-Caused Damage</option>
                     <option value="UNPAID_RENT">Unpaid Rent Arrears</option>
-                    <option value="PAINTING_CLEANING">Deep Painting & Restoration</option>
+                    <option value="PAINTING_CLEANING">Deep Painting &amp; Restoration</option>
                     <option value="COMBINED">Combined Arrears + Damage</option>
                   </select>
                 </div>
@@ -881,7 +946,7 @@ export default function DepositProtectHub() {
               </div>
 
               <div>
-                <label className="font-bold text-[#171717] block mb-1">Damage Description & Quotation Details</label>
+                <label className="font-bold text-[#171717] block mb-1">Damage Description &amp; Quotation Details</label>
                 <textarea
                   value={claimDescription}
                   onChange={(e) => setClaimDescription(e.target.value)}
@@ -893,7 +958,7 @@ export default function DepositProtectHub() {
 
               <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-dashed border-[#D2DDD7] text-center space-y-1">
                 <Upload className="h-5 w-5 text-[#06110c] mx-auto" />
-                <div className="text-xs font-bold text-[#171717]">Contractor Quotation & Damage Photo Attached</div>
+                <div className="text-xs font-bold text-[#171717]">Contractor Quotation &amp; Damage Photo Attached</div>
                 <div className="text-[10px] text-[#546E7A]">plumbing_repair_invoice.pdf (₹4,500)</div>
               </div>
 
@@ -901,13 +966,13 @@ export default function DepositProtectHub() {
                 <button
                   type="button"
                   onClick={() => setIsClaimModalOpen(false)}
-                  className="flex-1 py-3 rounded-xl border border-[#D2DDD7] text-xs font-bold text-[#546E7A]"
+                  className="flex-1 py-3 rounded-xl border border-[#D2DDD7] text-xs font-bold text-[#546E7A] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 rounded-xl bg-[#a31c1b] text-white hover:bg-[#8e1817] font-black text-xs shadow-md active:scale-95"
+                  className="flex-1 py-3 rounded-xl bg-[#a31c1b] text-white hover:bg-[#8e1817] font-black text-xs shadow-md active:scale-95 cursor-pointer"
                 >
                   Submit Claim to Underwriter
                 </button>

@@ -243,3 +243,4 @@ The entire codebase has been verified with automated test suites:
 - **`scripts/test_production_readiness.mjs`**: 10/10 tests passed (brute-force lockout, HMAC tokens, cross-tenant isolation).
 - **`scripts/test_e2e_real_world_simulation.mjs`**: 13/13 tests passed (owner property creation, tenant connection, rent invoice payment, double-entry ledger debit=credit, rewards crediting, maintenance dispatch, deposit protect contract, cost per property formulas).
 - **`npm run build`**: 43/43 Next.js routes compiled and passed TypeScript validation with **0 errors**.
+

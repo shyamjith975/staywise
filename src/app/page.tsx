@@ -26,6 +26,7 @@ import LiveActivityTicker from '../components/layout/LiveActivityTicker';
 // Dashboards
 import OwnerDashboard from '../components/dashboards/OwnerDashboard';
 import TenantDashboard from '../components/dashboards/TenantDashboard';
+import AdminDashboard from '../components/dashboards/AdminDashboard';
 
 // Modules
 import PropertyList from '../components/modules/properties/PropertyList';
@@ -179,6 +180,31 @@ function MainAppShell() {
         case 'dashboard':
         default:
           return <EstateHospitalityDashboard initialTab="OVERVIEW" />;
+      }
+    }
+
+    // Dedicated Super Admin Governance Center
+    if (activeRole === 'admin') {
+      switch (activeView) {
+        case 'deposit_protect':
+          return <DepositProtectHub />;
+        case 'properties':
+          return <PropertyList />;
+        case 'tenants':
+          return <TenantsDirectory />;
+        case 'rentflow':
+          return <RentFlowOverview />;
+        case 'reports':
+          return <FinancialAnalyticsView />;
+        case 'maintenance':
+          return <MaintenanceList />;
+        case 'ai':
+          return <StaywiseAIPanel />;
+        case 'settings':
+          return <SettingsView />;
+        case 'dashboard':
+        default:
+          return <AdminDashboard />;
       }
     }
 

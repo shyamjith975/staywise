@@ -45,7 +45,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
   const [otpHint, setOtpHint] = useState<string | null>(null);
 
   // Sign In State
-  const ALLOWED_LOGIN_ROLES: UserRole[] = ['owner', 'tenant', 'estate_manager'];
+  const ALLOWED_LOGIN_ROLES: UserRole[] = ['owner', 'tenant', 'estate_manager', 'admin'];
   const [selectedRole, setSelectedRole] = useState<UserRole>('owner');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -179,6 +179,46 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
 
   const handleQuickDemoLogin = (role: UserRole) => {
     login(role);
+  };
+
+  const handleAdminTempLogin = async () => {
+    setLoginLoading(true);
+    setLoginError(null);
+    setSelectedRole('admin');
+    setEmail('admin@staywise.com');
+    setPassword('admin@123');
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'admin@staywise.com', password: 'admin@123', role: 'admin' })
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        // Fallback to local admin demo credential if offline/network restricted
+        login('admin', DEMO_CREDENTIALS.admin);
+        return;
+      }
+
+      const u = data.user;
+      login('admin', {
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        role: 'admin',
+        roleLabel: u.roleLabel || 'Super Admin',
+        avatar: u.avatar || '🛡️',
+        title: u.title || 'Platform Governance & Risk',
+        description: u.description || 'Statutory Double-Entry Ledger Surveillance'
+      });
+    } catch {
+      // In case of network error, gracefully authenticate local admin credentials
+      login('admin', DEMO_CREDENTIALS.admin);
+    } finally {
+      setLoginLoading(false);
+    }
   };
 
   const handleSignupSubmit = async (e: React.FormEvent) => {
@@ -549,19 +589,25 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
               {/* Role Context Bar */}
               <div className="flex items-center justify-between text-xs pb-1">
                 <span className="text-[10px] font-semibold text-slate-400">Sign in as</span>
-                <div className="flex items-center gap-1.5">
-                  {(['owner', 'tenant', 'estate_manager'] as UserRole[]).map(r => (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {(['owner', 'tenant', 'estate_manager', 'admin'] as UserRole[]).map(r => (
                     <button
                       key={r}
                       type="button"
-                      onClick={() => setSelectedRole(r)}
+                      onClick={() => {
+                        setSelectedRole(r);
+                        if (r === 'admin') {
+                          setEmail('admin@staywise.com');
+                          setPassword('admin@123');
+                        }
+                      }}
                       className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition capitalize cursor-pointer border ${
                         selectedRole === r 
                           ? 'bg-[#06110c] text-[#a31c1b] border-[#a31c1b]/40 shadow-xs' 
                           : 'bg-white/5 text-slate-400 hover:text-white border-transparent'
                       }`}
                     >
-                      {r === 'estate_manager' ? 'Estate' : r}
+                      {r === 'estate_manager' ? 'Estate' : r === 'admin' ? '🛡️ Admin' : r}
                     </button>
                   ))}
                 </div>
@@ -626,6 +672,28 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                   className="font-bold text-[#a31c1b] hover:text-[#d8ad69] transition cursor-pointer"
                 >
                   Forgot password?
+                </button>
+              </div>
+
+              {/* Super Admin Temp Pass Login Card */}
+              <div className="p-3 rounded-2xl bg-[#0a1f18]/90 border border-[#23534B] flex items-center justify-between gap-3 text-xs shadow-inner">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 text-[11px] font-black text-white">
+                    <ShieldCheck className="h-3.5 w-3.5 text-[#a31c1b]" />
+                    <span>Admin Temp Pass Option</span>
+                  </div>
+                  <div className="text-[10px] text-slate-400 truncate">
+                    <span className="text-white/80 font-mono">admin@staywise.com</span> • pass: <span className="text-white/80 font-mono">admin@123</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAdminTempLogin}
+                  disabled={loginLoading}
+                  className="px-3.5 py-1.5 rounded-full bg-[#a31c1b] hover:bg-[#851615] text-white text-[11px] font-black transition cursor-pointer shrink-0 shadow-sm disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  <span>1-Click Admin</span>
                 </button>
               </div>
 

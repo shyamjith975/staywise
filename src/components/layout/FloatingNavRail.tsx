@@ -75,10 +75,24 @@ export default function FloatingNavRail() {
     { id: 'settings', label: 'Resident Settings', icon: <Settings className="h-4 w-4" /> },
   ];
 
+  const adminNavItems: NavItem[] = [
+    { id: 'dashboard', label: 'Governance Centre', icon: <ShieldCheck className="h-4 w-4 text-[#a31c1b]" /> },
+    { id: 'deposit_protect', label: 'Zero-Deposit Risk', icon: <ShieldCheck className="h-4 w-4" /> },
+    { id: 'properties', label: 'Properties Surveillance', icon: <Building2 className="h-4 w-4" /> },
+    { id: 'tenants', label: 'Tenants Directory', icon: <Users2 className="h-4 w-4" /> },
+    { id: 'rentflow', label: 'Ledger Surveillance', icon: <CreditCard className="h-4 w-4" /> },
+    { id: 'reports', label: 'Financial Analytics', icon: <BarChart2 className="h-4 w-4" /> },
+    { id: 'maintenance', label: 'Maintenance System', icon: <Wrench className="h-4 w-4" /> },
+    { id: 'ai', label: 'AI Governance Hub', icon: <Sparkles className="h-4 w-4 text-[#a31c1b]" /> },
+    { id: 'settings', label: 'System Settings', icon: <Settings className="h-4 w-4" /> },
+  ];
+
   const navItems = activeRole === 'tenant' 
     ? tenantNavItems 
     : activeRole === 'estate_manager' 
     ? estateNavItems 
+    : activeRole === 'admin'
+    ? adminNavItems
     : ownerNavItems;
 
   return (
@@ -150,7 +164,7 @@ export default function FloatingNavRail() {
       <div className="space-y-3 pt-3 border-t border-[#D2DDD7] shrink-0">
         
         {/* Upgrade to Pro Card */}
-        {activeRole !== 'tenant' && (
+        {activeRole !== 'tenant' && activeRole !== 'admin' && (
           <div className="rounded-2xl bg-[#E8F0EC] p-3.5 text-center space-y-2 border border-[#D2DDD7]">
             <div className="flex items-center justify-center gap-1.5 text-[#171717]">
               <Crown className="h-4 w-4 text-[#a31c1b]" />
