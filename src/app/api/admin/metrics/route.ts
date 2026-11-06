@@ -24,8 +24,8 @@ export async function GET(req: NextRequest) {
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'X-Telemetry-Latency-P95': report.apiLatency.p95Ms.toString(),
-        'X-CPAU-Usd': report.unitEconomicsScale.costPerActiveUserUsd.toString(),
-        'X-CPLP-Inr': report.unitEconomicsScale.costPerListedPropertyInr.toString()
+        'X-CPAP-Inr': report.costControlCentre.costPerActivePropertyInr.toString(),
+        'X-Gross-Margin-Pct': report.costControlCentre.grossMarginPercent.toString()
       }
     });
   } catch (error: any) {

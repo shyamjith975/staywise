@@ -858,7 +858,15 @@ class DatabaseEngine {
       'CREATE INDEX IF NOT EXISTS idx_cond_reports_tenant ON property_condition_reports(tenant_id);',
       'CREATE INDEX IF NOT EXISTS idx_claims_contract ON protection_claims(contract_id);',
       'CREATE INDEX IF NOT EXISTS idx_claims_owner ON protection_claims(owner_id);',
-      'CREATE INDEX IF NOT EXISTS idx_claims_tenant ON protection_claims(tenant_id);'
+      'CREATE INDEX IF NOT EXISTS idx_claims_tenant ON protection_claims(tenant_id);',
+      'CREATE INDEX IF NOT EXISTS idx_properties_owner_status ON properties(owner_id, status);',
+      'CREATE INDEX IF NOT EXISTS idx_invoices_tenant_status ON invoices(tenant_id, status);',
+      'CREATE INDEX IF NOT EXISTS idx_invoices_prop_due ON invoices(property_id, due_date);',
+      'CREATE INDEX IF NOT EXISTS idx_tickets_prop_status ON tickets(property_id, status);',
+      'CREATE INDEX IF NOT EXISTS idx_ledger_ref_type ON ledger(reference_id, type);',
+      'CREATE INDEX IF NOT EXISTS idx_tenants_user_prop ON tenants(user_id, property_id);',
+      'CREATE INDEX IF NOT EXISTS idx_contracts_tenant_status ON protection_contracts(tenant_id, status);',
+      'CREATE INDEX IF NOT EXISTS idx_rewards_ledger_user_created ON rewards_ledger(user_id, created_at);'
     ];
 
     for (const sql of indexStatements) {

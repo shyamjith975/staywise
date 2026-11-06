@@ -167,16 +167,24 @@ export class AIGovernanceService {
     totalCustomersTracked: number;
     aggregateSpendUsd: number;
     averageCostPerCustomerUsd: number;
+    aggregateOperationsCount: number;
+    totalTokensUsed: number;
   } {
     let aggregateSpend = 0;
+    let aggregateOps = 0;
+    let totalTokens = 0;
     for (const record of this.usageMap.values()) {
       aggregateSpend += record.totalCostUsd;
+      aggregateOps += record.operationsCount;
+      totalTokens += record.totalTokensUsed;
     }
     const count = this.usageMap.size;
     return {
       totalCustomersTracked: count,
       aggregateSpendUsd: aggregateSpend,
-      averageCostPerCustomerUsd: count > 0 ? aggregateSpend / count : 0
+      averageCostPerCustomerUsd: count > 0 ? aggregateSpend / count : 0,
+      aggregateOperationsCount: aggregateOps,
+      totalTokensUsed: totalTokens
     };
   }
 }

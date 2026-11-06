@@ -52,6 +52,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { color } from '../../lib/colors';
+import CostControlCentre from '../modules/admin/CostControlCentre';
 
 export default function AdminDashboard() {
   const { 
@@ -72,7 +73,7 @@ export default function AdminDashboard() {
     users
   } = useAppState();
 
-  const [activeTab, setActiveTab] = useState<'OWNERS' | 'ANALYTICS' | 'MAINTENANCE_DISPUTES' | 'REFERRALS' | 'PROPERTIES' | 'LEDGER'>('OWNERS');
+  const [activeTab, setActiveTab] = useState<'OWNERS' | 'ANALYTICS' | 'MAINTENANCE_DISPUTES' | 'REFERRALS' | 'PROPERTIES' | 'LEDGER' | 'COST_CONTROL'>('OWNERS');
   const [propertyFilter, setPropertyFilter] = useState<'ALL' | 'PENDING' | 'APPROVED'>('ALL');
   const [ticketFilter, setTicketFilter] = useState<'ALL' | 'DISPUTED' | 'EMERGENCY' | 'RESOLVED'>('ALL');
   const [selectedAuditDocs, setSelectedAuditDocs] = useState<{ name: string; docs: string[] } | null>(null);
@@ -435,6 +436,21 @@ export default function AdminDashboard() {
         >
           <Database className="h-4 w-4" />
           <span>Statutory Ledger</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('COST_CONTROL')}
+          className={`px-3.5 py-2 rounded-xl transition shrink-0 flex items-center gap-2 ${
+            activeTab === 'COST_CONTROL' 
+              ? 'bg-[#06110c] text-white shadow-sm' 
+              : 'text-[#666666] hover:text-[#171717]'
+          }`}
+        >
+          <DollarSign className="h-4 w-4 text-emerald-400" />
+          <span>Cost Control Centre</span>
+          <span className="h-5 px-1.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] flex items-center justify-center">
+            Live
+          </span>
         </button>
       </div>
 
@@ -1404,6 +1420,13 @@ export default function AdminDashboard() {
             )}
           </div>
         </div>
+      )}
+
+      {/* -------------------------------------------------------------------- */}
+      {/* TAB 7: COST CONTROL CENTRE & CLOUD INFRASTRUCTURE SURVEILLANCE     */}
+      {/* -------------------------------------------------------------------- */}
+      {activeTab === 'COST_CONTROL' && (
+        <CostControlCentre />
       )}
 
       {/* MODAL: GENERATE INFLUENCER CODE & OFFER */}
