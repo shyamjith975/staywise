@@ -75,7 +75,9 @@ export default function ExistingTenantWizardModal() {
     setIsExistingTenantWizardOpen, 
     setIsAddPropertyOpen,
     properties, 
-    addExistingTenant 
+    addExistingTenant,
+    createTenantConnectionRequest,
+    currentUser
   } = useAppState();
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -194,6 +196,39 @@ export default function ExistingTenantWizardModal() {
       return;
     }
 
+    // Pre-register pending tenant connection in SQLite so the invitation is tracked in real-time
+    const targetProp = properties.find(p => p.id === formData.propertyId) || properties[0];
+    const totalRent = Number(formData.monthlyRent) || 0;
+    const pRent = formData.roomSharing === '2_Sharing'
+      ? Math.round((totalRent * (100 - formData.rentSharePercentage)) / 100)
+      : totalRent;
+
+    try {
+      createTenantConnectionRequest({
+        tenantUserId: `usr-pending-${Date.now().toString().slice(-6)}`,
+        tenantName: formData.name,
+        tenantEmail: formData.email,
+        tenantPhone: formData.phone || '+91 98450 11928',
+        ownerId: currentUser?.id,
+        ownerEmail: currentUser?.email,
+        propertyId: formData.propertyId,
+        propertyName: targetProp?.name || 'Staywise Residence',
+        unitNumber: formData.unitNumber || '101',
+        monthlyRent: pRent,
+        depositAmount: Number(formData.deposit) || 0,
+        leaseStartDate: formData.leaseStart,
+        tenancyType: formData.tenancyType,
+        hasFood: formData.includeFood,
+        roomSharing: formData.roomSharing,
+        coTenantName: formData.roomSharing === '2_Sharing' ? formData.coTenantName : undefined,
+        coTenantPhone: formData.roomSharing === '2_Sharing' ? formData.coTenantPhone : undefined,
+        coTenantEmail: formData.roomSharing === '2_Sharing' ? formData.coTenantEmail : undefined,
+        documents: []
+      });
+    } catch (err) {
+      console.warn('Pre-registration connection error:', err);
+    }
+
     setStep(2);
   };
 
@@ -249,15 +284,26 @@ export default function ExistingTenantWizardModal() {
     });
   };
 
-  const baseUnitCode = (formData.unitNumber || '304').replace(/\s+/g, '-');
-  const inviteLinkPrimary = `https://staywise.app/invite/stw-${baseUnitCode}-t1-${Date.now().toString().slice(-4)}`;
-  const inviteLinkCoTenant = `https://staywise.app/invite/stw-${baseUnitCode}-t2-${Date.now().toString().slice(-4)}`;
+  const targetProp = properties.find(p => p.id === formData.propertyId) || properties[0];
+  const appOrigin = typeof window !== 'undefined' ? window.location.origin : 'https://staywise.in';
+  const propNameEnc = encodeURIComponent(targetProp?.name || 'Staywise Residence');
+  const unitEnc = encodeURIComponent(formData.unitNumber || '304');
+  const primaryNameEnc = encodeURIComponent(formData.name || 'Resident');
+  const primaryEmailEnc = encodeURIComponent(formData.email || '');
+  const coNameEnc = encodeURIComponent(formData.coTenantName || 'Co-Resident');
+  const coEmailEnc = encodeURIComponent(formData.coTenantEmail || '');
+  const ownerEmailEnc = encodeURIComponent(currentUser?.email || 'owner@staywise.com');
+  const ownerIdEnc = encodeURIComponent(currentUser?.id || 'owner-vikram');
 
   const totalRentNum = Number(formData.monthlyRent) || 0;
   const primaryRentNum = formData.roomSharing === '2_Sharing'
     ? Math.round((totalRentNum * (100 - formData.rentSharePercentage)) / 100)
     : totalRentNum;
   const coRentNum = totalRentNum - primaryRentNum;
+
+  const inviteLinkPrimary = `${appOrigin}/invite?propertyId=${formData.propertyId || ''}&propertyName=${propNameEnc}&unitNumber=${unitEnc}&rent=${primaryRentNum}&deposit=${formData.deposit || 0}&name=${primaryNameEnc}&email=${primaryEmailEnc}&phone=${encodeURIComponent(formData.phone || '')}&ownerId=${ownerIdEnc}&ownerEmail=${ownerEmailEnc}&type=${formData.tenancyType}`;
+  
+  const inviteLinkCoTenant = `${appOrigin}/invite?propertyId=${formData.propertyId || ''}&propertyName=${propNameEnc}&unitNumber=${unitEnc}&rent=${coRentNum}&deposit=0&name=${coNameEnc}&email=${coEmailEnc}&phone=${encodeURIComponent(formData.coTenantPhone || '')}&ownerId=${ownerIdEnc}&ownerEmail=${ownerEmailEnc}&type=${formData.tenancyType}&isCoTenant=true`;
 
   return (
     <div 

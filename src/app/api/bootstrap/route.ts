@@ -244,23 +244,31 @@ export async function GET(req: NextRequest) {
       };
     } else {
 
-    const userProperties = allProperties.filter(p => p.ownerId === targetUserId);
-    const userPropIds = userProperties.map(p => p.id);
-    const userPropNames = userProperties.map(p => p.name.toLowerCase());
-
     // Approved connection emails for this owner
     const approvedTenantEmails = allTenantConnections
-      .filter(r => (r.ownerId === targetUserId || (userEmail && r.ownerEmail?.toLowerCase() === userEmail.toLowerCase()) || (r.propertyId && userPropIds.includes(r.propertyId))) && r.status === 'APPROVED')
+      .filter(r => (r.ownerId === targetUserId || (userEmail && r.ownerEmail?.toLowerCase() === userEmail.toLowerCase()) || (r.propertyId && allProperties.some(p => p.id === r.propertyId && p.ownerId === targetUserId))) && r.status === 'APPROVED')
       .map(r => r.tenantEmail?.toLowerCase() || '');
 
     const userTenants = (userRole === 'tenant')
       ? allTenants.filter(t => t.userId === targetUserId || (userEmail && t.email.toLowerCase() === userEmail.toLowerCase()))
       : allTenants.filter(t => 
-          userPropIds.includes(t.propertyId) || 
-          (t.propertyName && userPropNames.includes(t.propertyName.toLowerCase())) ||
+          (allProperties.filter(p => p.ownerId === targetUserId).map(p => p.id)).includes(t.propertyId) || 
+          (t.propertyName && (allProperties.filter(p => p.ownerId === targetUserId).map(p => p.name.toLowerCase())).includes(t.propertyName.toLowerCase())) ||
           (t.email && approvedTenantEmails.includes(t.email.toLowerCase()))
         );
     const userTenantIds = userTenants.map(t => t.id);
+
+    // For Tenants: supply verified platform properties catalog so tenants can discover homes, select properties to connect, and apply for Zero-Deposit Protect
+    // For Owners: supply only properties owned by this owner
+    const userProperties = (userRole === 'tenant')
+      ? allProperties
+      : allProperties.filter(p => p.ownerId === targetUserId);
+    const userPropIds = (userRole === 'tenant')
+      ? userTenants.map(t => t.propertyId).filter(Boolean)
+      : userProperties.map(p => p.id);
+    const userPropNames = (userRole === 'tenant')
+      ? userTenants.map(t => t.propertyName?.toLowerCase()).filter(Boolean)
+      : userProperties.map(p => p.name.toLowerCase());
 
     const userInvoices = (userRole === 'tenant')
       ? allInvoices.filter(i => userTenantIds.includes(i.tenantId) || (userEmail && i.tenantName?.toLowerCase().includes(userEmail.toLowerCase())))
@@ -334,16 +342,16 @@ export async function GET(req: NextRequest) {
         rewardRules: allRewardRules,
         merchantOffers: allMerchantOffers,
         depositApplications: (userRole === 'tenant')
-          ? allDepositApps.filter(a => a.tenantId === targetUserId)
+          ? allDepositApps.filter(a => a.tenantId === targetUserId || userTenantIds.includes(a.tenantId) || (userEmail && a.tenantName?.toLowerCase().includes(userEmail.toLowerCase())))
           : allDepositApps.filter(a => a.ownerId === targetUserId || userPropIds.includes(a.propertyId)),
         protectionContracts: (userRole === 'tenant')
-          ? allProtectionContracts.filter(c => c.tenantId === targetUserId)
+          ? allProtectionContracts.filter(c => c.tenantId === targetUserId || userTenantIds.includes(c.tenantId) || (userEmail && c.tenantName?.toLowerCase().includes(userEmail.toLowerCase())))
           : allProtectionContracts.filter(c => c.ownerId === targetUserId || userPropIds.includes(c.propertyId)),
         conditionReports: (userRole === 'tenant')
-          ? allConditionReports.filter(cr => cr.tenantId === targetUserId)
+          ? allConditionReports.filter(cr => cr.tenantId === targetUserId || userTenantIds.includes(cr.tenantId) || (userEmail && cr.tenantName?.toLowerCase().includes(userEmail.toLowerCase())))
           : allConditionReports.filter(cr => userPropIds.includes(cr.propertyId)),
         protectionClaims: (userRole === 'tenant')
-          ? allProtectionClaims.filter(cl => cl.tenantId === targetUserId)
+          ? allProtectionClaims.filter(cl => cl.tenantId === targetUserId || userTenantIds.includes(cl.tenantId) || (userEmail && cl.tenantName?.toLowerCase().includes(userEmail.toLowerCase())))
           : allProtectionClaims.filter(cl => cl.ownerId === targetUserId || userPropIds.includes(cl.propertyId))
       };
     }

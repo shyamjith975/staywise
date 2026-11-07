@@ -726,6 +726,7 @@ export interface TenantConnectionRequest {
   ekycVerified?: boolean;
   documents?: { id: string; name: string; size?: string; date: string; type?: string; url?: string }[];
   agreementUrl?: string;
+  roomSharing?: 'Single' | '2_Sharing' | '3_Sharing';
   coTenantName?: string;
   coTenantPhone?: string;
   coTenantEmail?: string;

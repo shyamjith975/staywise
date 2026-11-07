@@ -96,6 +96,23 @@ export default function DepositProtectHub() {
   );
   const activeTenantContract = matchingTenantContracts[0] || null;
 
+  // Auto-populate active tenant lease details into application form
+  React.useEffect(() => {
+    if (myTenant) {
+      if (myTenant.propertyId) setAppPropertyId(myTenant.propertyId);
+      if (myTenant.unitNumber) setAppUnitNumber(myTenant.unitNumber);
+      if (myTenant.monthlyRent) setAppMonthlyRent(myTenant.monthlyRent);
+    } else if (properties.length > 0 && (!appPropertyId || appPropertyId === 'prop-beach-road')) {
+      setAppPropertyId(properties[0].id);
+      if (properties[0].units && properties[0].units.length > 0) {
+        setAppUnitNumber(properties[0].units[0].unitNumber);
+        if (properties[0].units[0].rentAmount) {
+          setAppMonthlyRent(properties[0].units[0].rentAmount);
+        }
+      }
+    }
+  }, [myTenant, properties]);
+
   const matchingTenantApplications = depositApplications.filter(a => 
     a.tenantId === myTenantId || 
     (currentUser?.id && a.tenantId === currentUser.id) || 
@@ -148,10 +165,10 @@ export default function DepositProtectHub() {
     e.preventDefault();
     const prop = properties.find(p => p.id === appPropertyId);
     await applyForDepositProtect({
-      propertyId: appPropertyId,
-      propertyName: prop?.name || 'Beach Road Apartments',
-      unitNumber: appUnitNumber,
-      monthlyRent: appMonthlyRent,
+      propertyId: appPropertyId || myTenant?.propertyId || 'prop-beach-road',
+      propertyName: prop?.name || myTenant?.propertyName || 'Beach Road Luxury Apartments',
+      unitNumber: appUnitNumber || myTenant?.unitNumber || '304',
+      monthlyRent: appMonthlyRent || myTenant?.monthlyRent || 25000,
       traditionalDepositAmount: calculatedDepositAvoided,
       monthlyFee: calculatedMonthlyFee,
       coverageLimit: calculatedCoverage,
@@ -713,15 +730,38 @@ export default function DepositProtectHub() {
             <form onSubmit={handleApplySubmit} className="space-y-4 text-xs">
               <div>
                 <label className="font-bold text-[#171717] block mb-1">Target Property</label>
-                <select 
-                  value={appPropertyId} 
-                  onChange={(e) => setAppPropertyId(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-[#D2DDD7] bg-[#F7F8F6] text-[#171717] font-bold"
-                >
-                  {properties.map(p => (
-                    <option key={p.id} value={p.id}>{p.name} ({p.city})</option>
-                  ))}
-                </select>
+                {properties.length > 0 ? (
+                  <select 
+                    value={appPropertyId} 
+                    onChange={(e) => {
+                      setAppPropertyId(e.target.value);
+                      const prop = properties.find(p => p.id === e.target.value);
+                      if (prop?.units && prop.units.length > 0) {
+                        setAppUnitNumber(prop.units[0].unitNumber);
+                        if (prop.units[0].rentAmount) {
+                          setAppMonthlyRent(prop.units[0].rentAmount);
+                        }
+                      }
+                    }}
+                    className="w-full p-3 rounded-xl border border-[#D2DDD7] bg-[#F7F8F6] text-[#171717] font-bold"
+                  >
+                    <option value="">Select registered property...</option>
+                    {properties.map(p => (
+                      <option key={p.id} value={p.id}>{p.name} ({p.city})</option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="space-y-1">
+                    <input
+                      type="text"
+                      placeholder="e.g. Beach Road Luxury Apartments"
+                      value={myTenant?.propertyName || 'Beach Road Luxury Apartments'}
+                      readOnly
+                      className="w-full p-3 rounded-xl border border-[#D2DDD7] bg-[#F7F8F6] text-[#171717] font-bold"
+                    />
+                    <span className="text-[10px] text-[#546E7A]">Using your registered lease property</span>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">

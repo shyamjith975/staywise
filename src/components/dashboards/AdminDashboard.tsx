@@ -284,7 +284,8 @@ export default function AdminDashboard() {
   };
 
   const handleCopyCode = (code: string) => {
-    navigator.clipboard?.writeText(`https://staywise.in/join?ref=${code}`);
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://staywise.in';
+    navigator.clipboard?.writeText(`${origin}/?ref=${code}`);
     addNotification('Referral Link Copied', `Sharable referral URL for "${code}" copied to clipboard!`, 'SYSTEM');
   };
 
