@@ -19,7 +19,8 @@ import {
   BedDouble,
   Truck,
   Briefcase,
-  Plus
+  Plus,
+  ExternalLink
 } from 'lucide-react';
 import { TenancyType } from '../../../types';
 
@@ -893,6 +894,16 @@ export default function ExistingTenantWizardModal() {
                     <span>{copiedPrimary ? 'Copied' : 'Copy'}</span>
                   </button>
                   <a
+                    href={inviteLinkPrimary}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3.5 py-2 rounded-xl bg-[#171717] hover:bg-[#06110c] text-white font-bold flex items-center gap-1 shadow-2xs cursor-pointer text-center"
+                    title="Open invite link in new tab"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span>Open</span>
+                  </a>
+                  <a
                     href={`https://wa.me/?text=${encodeURIComponent(`Hi ${formData.name}, here is your digital tenancy onboarding & lease agreement link for Unit ${formData.unitNumber}: ${inviteLinkPrimary}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -933,6 +944,16 @@ export default function ExistingTenantWizardModal() {
                       {copiedCoTenant ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                       <span>{copiedCoTenant ? 'Copied' : 'Copy'}</span>
                     </button>
+                    <a
+                      href={inviteLinkCoTenant}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3.5 py-2 rounded-xl bg-[#171717] hover:bg-[#06110c] text-white font-bold flex items-center gap-1 shadow-2xs cursor-pointer text-center"
+                      title="Open co-tenant invite link in new tab"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      <span>Open</span>
+                    </a>
                     <a
                       href={`https://wa.me/?text=${encodeURIComponent(`Hi ${formData.coTenantName}, here is your shared room onboarding & joint lease agreement link for Unit ${formData.unitNumber}: ${inviteLinkCoTenant}`)}`}
                       target="_blank"

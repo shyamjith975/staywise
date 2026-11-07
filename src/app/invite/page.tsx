@@ -106,7 +106,7 @@ function InviteContent() {
 
       setSuccess(true);
       setTimeout(() => {
-        router.push('/');
+        window.location.href = '/?role=tenant&view=dashboard';
       }, 1000);
     } catch (err: any) {
       setError(err.message || 'Unable to connect lease. Please verify your details.');

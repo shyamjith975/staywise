@@ -1688,7 +1688,16 @@ class DatabaseEngine {
       user: UserAccount 
     }> => {
       const tenantId = generateTenantId();
-      const prop = await this.properties.findById(data.propertyId);
+      let prop = data.propertyId ? await this.properties.findById(data.propertyId) : null;
+      if (!prop && data.propertyId) {
+        const allProps = await this.properties.findMany();
+        prop = allProps.find(p => p.id === data.propertyId || p.name.toLowerCase() === data.propertyId.toLowerCase()) || null;
+      }
+      if (!prop) {
+        const allProps = await this.properties.findMany();
+        prop = allProps[0] || null;
+      }
+      const resolvedPropertyId = prop ? prop.id : (data.propertyId || 'prop-beach-road');
       const propName = prop ? prop.name : 'Staywise Residency';
 
       const isSharing = data.roomSharing === '2_Sharing' && Boolean(data.coTenant?.name);
@@ -1755,7 +1764,7 @@ class DatabaseEngine {
         name: data.name,
         email: data.email,
         phone: data.phone,
-        propertyId: data.propertyId,
+        propertyId: resolvedPropertyId,
         propertyName: propName,
         unitNumber: data.unitNumber,
         monthlyRent: primaryMonthlyRent,
@@ -1791,7 +1800,7 @@ class DatabaseEngine {
           name: data.coTenant.name,
           email: data.coTenant.email,
           phone: data.coTenant.phone,
-          propertyId: data.propertyId,
+          propertyId: resolvedPropertyId,
           propertyName: propName,
           unitNumber: data.unitNumber,
           monthlyRent: coMonthlyRent,
