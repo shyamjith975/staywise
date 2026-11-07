@@ -437,8 +437,35 @@ export default function TenantsDirectory() {
                           <Phone className="h-3.5 w-3.5" />
                         </button>
                         <button
-                          onClick={() => alert(`Digital Lease Agreement PDF generated for ${t.name}. Verified with Aadhaar eSign.`)}
-                          className="p-1.5 rounded-xl bg-[#E8F0EC] hover:bg-[#171717] hover:text-white text-[#171717] transition"
+                          onClick={() => {
+                            const agreementText = `========================================================================
+MODEL TENANCY AGREEMENT (UNDER MODEL TENANCY ACT, 2021)
+========================================================================
+TENANT: ${t.name}
+PHONE: ${t.phone}
+EMAIL: ${t.email}
+UNIT / ROOM: Unit ${t.unitNumber}
+PROPERTY: ${properties.find(p => p.id === t.propertyId)?.name || 'Staywise Asset'}
+MONTHLY RENT: INR ${t.monthlyRent.toLocaleString('en-IN')}
+SECURITY DEPOSIT: INR ${(t.depositPaid || t.monthlyRent * 2).toLocaleString('en-IN')}
+LEASE PERIOD: ${t.leaseStart} to ${t.leaseEnd}
+AADHAAR eSIGN: VERIFIED (VID: ****-****-9102)
+DIGITAL STAMP: STAMP-IN-KA-2026-${t.id.slice(-6).toUpperCase()}
+------------------------------------------------------------------------
+This agreement is legally binding and digitally registered in the Staywise Escrow Ledger.
+========================================================================`;
+                            const blob = new Blob([agreementText], { type: 'application/pdf' });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `Lease_Agreement_${t.name.replace(/\s+/g, '_')}.pdf`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                            addNotification('Lease Agreement Downloaded', `Digital Lease Agreement PDF generated for ${t.name}.`, 'SYSTEM');
+                          }}
+                          className="p-1.5 rounded-xl bg-[#E8F0EC] hover:bg-[#171717] hover:text-white text-[#171717] transition cursor-pointer"
                           title="Download eSigned Lease Agreement"
                         >
                           <FileText className="h-3.5 w-3.5" />

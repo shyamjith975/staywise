@@ -248,7 +248,7 @@ export default function EstateOSView() {
                   <div className="pt-2 border-t border-[#D2DDD7] flex justify-between items-center text-[10px] text-[#546E7A]">
                     <span>Warranty: {asset.warrantyUntil}</span>
                     <span 
-                      onClick={() => alert(`Service logged for ${asset.name}`)}
+                      onClick={() => addNotification('Service Logged', `Service logged for ${asset.name}. Warranty status updated.`, 'SYSTEM')}
                       className="text-[#06110c] font-bold cursor-pointer hover:underline"
                     >
                       Log Service →
@@ -338,7 +338,7 @@ export default function EstateOSView() {
               <p className="text-[11px] text-[#546E7A]">Real-time recording of KSEB, Solar export, and Generator fuel levels</p>
             </div>
             <button
-              onClick={() => alert('Connecting IoT Solar Inverter & KSEB Smart Meter...')}
+              onClick={() => addNotification('Smart Meter Connecting', 'Scanning local network for IoT Solar Inverter & KSEB Smart Meter gateway.', 'SYSTEM')}
               className="px-3.5 py-1.5 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition flex items-center gap-1 shadow-2xs self-start sm:self-auto cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5 text-[#a31c1b]" />

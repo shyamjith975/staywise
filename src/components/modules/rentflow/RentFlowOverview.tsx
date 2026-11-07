@@ -76,7 +76,6 @@ export default function RentFlowOverview() {
   const handlePayElectricityBill = (bill: ElectricityBill) => {
     updateElectricityBill(bill.id, { status: 'Paid', paidDate: 'Today (UPI)' });
     addNotification('Electricity Payment Settled', `₹${bill.totalAmount.toLocaleString('en-IN')} paid via instant UPI for Unit ${bill.unitNumber}.`, 'RENT');
-    alert(`₹${bill.totalAmount.toLocaleString('en-IN')} Electricity Bill paid successfully via UPI (BESCOM Discom Settled)!`);
   };
 
   const handleGenerateBillSubmit = (e: React.FormEvent) => {
@@ -632,7 +631,6 @@ export default function RentFlowOverview() {
                               <button
                                 onClick={() => {
                                   addNotification('Payment Recorded', `Marked ₹${row.amount.toLocaleString('en-IN')} as collected offline for ${row.name}.`, 'RENT');
-                                  alert(`Recorded offline payment of ₹${row.amount.toLocaleString('en-IN')} for ${row.name}.`);
                                 }}
                                 className="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[#E8F0EC] hover:bg-[#171717] hover:text-white text-[#171717] text-xs font-bold border border-[#D2DDD7] flex items-center gap-1 transition shrink-0"
                                 title="Record cash or direct bank transfer"

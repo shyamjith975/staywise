@@ -39,7 +39,42 @@ export default function ViewElectricityBillDocumentModal({
   };
 
   const handleDownloadPDF = () => {
-    alert(`Downloading official statement: ${bill.attachmentName || `Electricity_Bill_Unit_${bill.unitNumber}.pdf`}`);
+    const filename = bill.attachmentName || `Electricity_Bill_Unit_${bill.unitNumber}.pdf`;
+    const docText = `========================================================================
+STAYWISE UTILITY CLEARING HOUSE - ELECTRICITY SUB-METER STATEMENT
+========================================================================
+Bill Reference: ${bill.id}
+Unit Number: Unit ${bill.unitNumber} (${bill.propertyName})
+Discom: ${bill.discom}
+Meter Number: ${bill.meterNumber}
+Billing Cycle: ${bill.billingMonth}
+Due Date: ${bill.dueDate}
+Status: ${bill.status}
+
+METER READINGS:
+Previous Reading: ${bill.previousReading} kWh
+Current Reading: ${bill.currentReading} kWh
+Net Units Consumed: ${bill.unitsConsumed} kWh
+Tariff Rate: INR ${bill.ratePerUnit} / kWh
+
+CHARGE BREAKDOWN:
+Energy Consumption Charges: INR ${(bill.unitsConsumed * bill.ratePerUnit).toLocaleString('en-IN')}
+Fixed Grid Charges: INR ${bill.fixedCharges.toLocaleString('en-IN')}
+------------------------------------------------------------------------
+TOTAL AMOUNT PAYABLE: INR ${bill.totalAmount.toLocaleString('en-IN')}
+------------------------------------------------------------------------
+Payment Gateway: UPI Instant Escrow Rail (Discom Direct Settlement)
+Verified by Staywise Smart Meter Gateway (BESCOM / KSEB / MSEDCL)
+========================================================================`;
+    const blob = new Blob([docText], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (

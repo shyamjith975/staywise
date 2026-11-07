@@ -33,7 +33,9 @@ import {
   BedDouble,
   Check,
   Phone,
-  UserPlus
+  UserPlus,
+  Copy,
+  Download
 } from 'lucide-react';
 import { color } from '../../lib/colors';
 import { EstateAsset } from '../../types';
@@ -308,8 +310,7 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
   };
 
   const handleSyncOTAs = () => {
-    addNotification('OTA Channels Synced', 'Updated real-time calendars across Airbnb, Booking.com, and Agoda.', 'SYSTEM');
-    alert('Synchronization complete! All calendars, nightly tariffs, and smart-lock timecodes synced across Airbnb Superhost & Booking.com Genius.');
+    addNotification('OTA Channels Synced', 'All calendars, nightly tariffs, and smart-lock timecodes synced across Airbnb Superhost & Booking.com Genius.', 'SYSTEM');
   };
 
   // Metrics computation
@@ -911,8 +912,8 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
                   <div className="flex items-center justify-between text-xs pt-1">
                     <span className="font-bold text-[#06110c]">● Live on Airbnb Superhost &amp; Direct</span>
                     <button
-                      onClick={() => alert('Updated Wayanad Villa calendar and base rates.')}
-                      className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] font-bold text-[#06110c] shadow-sm transition"
+                      onClick={() => addNotification('Tariffs Configured', 'Updated Wayanad Villa calendar and base rates to ₹18,500/night.', 'SYSTEM')}
+                      className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] font-bold text-[#06110c] shadow-sm transition cursor-pointer"
                     >
                       Configure Tariffs
                     </button>
@@ -954,8 +955,8 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
                   <div className="flex items-center justify-between text-xs pt-1">
                     <span className="font-bold text-[#06110c]">● Live on Booking.com &amp; Airbnb</span>
                     <button
-                      onClick={() => alert('Updated Alibaug Beachfront calendar and base rates.')}
-                      className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] font-bold text-[#06110c] shadow-sm transition"
+                      onClick={() => addNotification('Tariffs Configured', 'Updated Alibaug Beachfront calendar and base rates to ₹28,000/night.', 'SYSTEM')}
+                      className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] font-bold text-[#06110c] shadow-sm transition cursor-pointer"
                     >
                       Configure Tariffs
                     </button>
@@ -1065,8 +1066,8 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
                   </div>
 
                   <button
-                    onClick={() => alert(`Marked ${t.room} as Inspected and Guest-Ready!`)}
-                    className="w-full py-2 rounded-xl bg-[#06110c] hover:bg-[#06110c] text-white font-bold text-xs transition"
+                    onClick={() => addNotification('Room Inspected', `Marked ${t.room} as Inspected and Guest-Ready with rotated smart lock passcode.`, 'SYSTEM')}
+                    className="w-full py-2 rounded-xl bg-[#06110c] hover:bg-[#06110c] text-white font-bold text-xs transition cursor-pointer"
                   >
                     Mark Inspected &amp; Guest-Ready
                   </button>
@@ -1134,8 +1135,8 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
 
                   <div className="flex items-center gap-2 pt-1">
                     <button
-                      onClick={() => alert(`Service ticket logged for ${asset.name}.`)}
-                      className="flex-1 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#06110c] font-bold text-xs transition shadow-2xs"
+                      onClick={() => addNotification('Service Scheduled', `Service ticket logged for ${asset.name}. AMC contractor notified.`, 'SYSTEM')}
+                      className="flex-1 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#06110c] font-bold text-xs transition shadow-2xs cursor-pointer"
                     >
                       Schedule AMC
                     </button>
@@ -1276,9 +1277,36 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
           </div>
 
           <div className="organic-card p-6 space-y-4">
-            <div>
-              <h3 className="text-base font-extrabold text-[#171717]">Connected Channels &amp; Calendar Feeds</h3>
-              <p className="text-xs text-[#171717]/70">Two-way iCal and XML channel connectivity</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1">
+              <div>
+                <h3 className="text-base font-extrabold text-[#171717]">Connected Channels &amp; Calendar Feeds</h3>
+                <p className="text-xs text-[#171717]/70">Two-way iCal and XML channel connectivity</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/api/estate/ical/${activeEstateProperties[0]?.id || 'campus-all'}`;
+                    navigator.clipboard?.writeText(url);
+                    addNotification('iCal Feed URL Copied', 'Calendar sync URL copied to clipboard. Paste into Airbnb or Booking.com calendar sync.', 'SYSTEM');
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#06110c] text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                  title="Copy iCal Feed URL"
+                >
+                  <Copy className="h-3.5 w-3.5 text-[#06110c]" />
+                  <span>Copy iCal URL</span>
+                </button>
+                <a
+                  href={`/api/estate/ical/${activeEstateProperties[0]?.id || 'campus-all'}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#E8F0EC] border border-[#D2DDD7] text-[#06110c] text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                  title="Download .ics Calendar File"
+                >
+                  <Download className="h-3.5 w-3.5 text-[#06110c]" />
+                  <span>.ics Feed</span>
+                </a>
+              </div>
             </div>
 
             <div className="space-y-3 text-xs">

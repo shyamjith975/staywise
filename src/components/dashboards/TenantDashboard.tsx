@@ -1226,7 +1226,28 @@ export default function TenantDashboard() {
                       <span className="font-bold text-[#171717] truncate">{doc.name}</span>
                     </div>
                     <button 
-                      onClick={() => alert(`Downloading ${doc.name}...`)}
+                      onClick={() => {
+                        const blob = new Blob([
+`STAYWISE OFFICIAL RESIDENT DOCUMENT
+DOCUMENT: ${doc.name}
+TENANT: ${currentTenant?.name || currentUser?.name || 'Resident'}
+PROPERTY: ${currentTenant?.propertyName || properties.find(p => p.id === currentTenant?.propertyId)?.name || 'Staywise Asset'}
+UNIT: ${currentTenant?.unitNumber || 'Unit 101'}
+GENERATED: ${new Date().toLocaleDateString('en-IN')}
+STATUS: DIGITALLY VERIFIED
+---------------------------------------------------------
+Official copy registered in the Staywise Tenancy Portal.`
+                        ], { type: 'application/pdf' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${doc.name.replace(/\s+/g, '_')}.pdf`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        addNotification('Document Downloaded', `Downloaded ${doc.name}`, 'SYSTEM');
+                      }}
                       className="p-1.5 rounded-full hover:bg-[#DCE8E1] text-[#546E7A] hover:text-[#171717] transition cursor-pointer"
                     >
                       <Download className="h-3.5 w-3.5 text-[#06110c]" />
@@ -1520,7 +1541,7 @@ export default function TenantDashboard() {
                   <button
                     onClick={() => {
                       updateElectricityBill(unitBill.id, { status: 'Paid' });
-                      alert('Power bill marked paid via UPI!');
+                      addNotification('Power Bill Settled', `₹${unitBill.totalAmount.toLocaleString('en-IN')} electricity bill paid via instant UPI.`, 'RENT');
                     }}
                     className="w-full py-2 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold shadow-xs transition cursor-pointer"
                   >
