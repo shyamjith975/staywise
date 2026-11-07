@@ -1,0 +1,1518 @@
+// ============================================================================
+// STAYWISE PLATFORM — PRODUCTION PRISMA ORM SCHEMA SPECIFICATION
+// Target Database: PostgreSQL 15+ (Amazon RDS / Supabase / Neon / Self-Hosted)
+// ============================================================================
+// Comprehensive relational model covering all 12 operational modules & 51 entities:
+// 1. Organization (organizations, organization_memberships, invitations)
+// 2. Access control (roles, permissions, role_permissions, resource_access_grants)
+// 3. Property structure (portfolios, properties, buildings, floors, units, rooms, beds, assets)
+// 4. Occupancy (tenancies, lease_parties, occupancy_history)
+// 5. Leasing (leads, applications, visits, lease_documents, renewals)
+// 6. Billing (rent_schedules, invoices, invoice_lines, payments, payment_allocations)
+// 7. Accounting (accounts, journal_entries, journal_lines, settlements, refunds)
+// 8. Deposits (security_deposits, deposit_transactions, deposit_settlements, disputes)
+// 9. Maintenance (work_orders, quotes, vendor_assignments, approvals, service_evidence)
+// 10. Files (documents, document_versions, document_access_logs)
+// 11. Operations (meter_readings, utility_bills, inspections, scheduled_tasks)
+// 12. Platform (subscriptions, plans, webhook_events, notifications, audit_logs)
+// ============================================================================
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres", "postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [uuid_ossp(map: "uuid-ossp"), pgcrypto]
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum GlobalRole {
+  SUPER_ADMIN
+  SUPPORT_AGENT
+  PLATFORM_AUDITOR
+  USER
+}
+
+enum OrgRole {
+  OWNER
+  CO_OWNER
+  PORTFOLIO_MANAGER
+  PROPERTY_MANAGER
+  LEASING_AGENT
+  ACCOUNTANT
+  MAINTENANCE_SUPERVISOR
+  CARETAKER
+  FIELD_STAFF
+  TENANT
+  VENDOR
+}
+
+enum Permission {
+  ORG_MANAGE
+  ORG_BILLING_VIEW
+  ORG_BILLING_MANAGE
+  ORG_MEMBERS_INVITE
+  ORG_MEMBERS_MANAGE
+  PROPERTY_CREATE
+  PROPERTY_VIEW
+  PROPERTY_EDIT
+  PROPERTY_DELETE
+  PROPERTY_VERIFY
+  UNIT_CREATE
+  UNIT_VIEW
+  UNIT_EDIT
+  UNIT_DELETE
+  LEAD_MANAGE
+  APPLICATION_REVIEW
+  LEASE_CREATE
+  LEASE_SIGN
+  LEASE_TERMINATE
+  TENANT_VIEW
+  INVOICE_GENERATE
+  INVOICE_VIEW
+  INVOICE_CANCEL
+  PAYMENT_COLLECT
+  PAYMENT_RECORD
+  REFUND_INITIATE
+  REFUND_APPROVE
+  LEDGER_VIEW
+  LEDGER_POST
+  MAINTENANCE_CREATE
+  MAINTENANCE_ASSIGN
+  MAINTENANCE_APPROVE_QUOTE
+  MAINTENANCE_CLOSE
+  INSPECTION_CONDUCT
+  UTILITY_MANAGE
+  DOCUMENT_UPLOAD
+  DOCUMENT_VIEW_PRIVATE
+  DOCUMENT_DELETE
+  DOCUMENT_AUDIT
+  SUBSCRIPTION_MANAGE
+  AUDIT_LOG_VIEW
+}
+
+enum PropertyType {
+  RESIDENTIAL_APARTMENT
+  RESIDENTIAL_FLAT
+  INDEPENDENT_HOUSE
+  VILLA
+  DUPLEX
+  STUDIO
+  PG_HOSTEL
+  CO_LIVING
+  DORMITORY
+  COMMERCIAL_OFFICE
+  RETAIL_SHOP
+  WAREHOUSE
+  TECH_PARK
+  BOUTIQUE_HOTEL
+  HOLIDAY_ESTATE
+  SERVICED_APARTMENT
+}
+
+enum PropertyStatus {
+  ACTIVE
+  VACANT
+  LISTED
+  UNDER_MAINTENANCE
+  OCCUPIED
+  PARTIALLY_OCCUPIED
+  RESERVED
+  ARCHIVED
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  DOCS_REQUIRED
+}
+
+enum UnitStatus {
+  VACANT
+  OCCUPIED
+  RESERVED
+  MAINTENANCE
+  BLOCKED
+}
+
+enum LeaseStatus {
+  DRAFT
+  PENDING_SIGNATURE
+  ACTIVE
+  UPCOMING_EXPIRY
+  RENEWED
+  TERMINATED
+  EXPIRED
+  DISPUTED
+}
+
+enum LeasePartyRole {
+  PRIMARY_TENANT
+  CO_TENANT
+  GUARANTOR
+  OCCUPANT
+  CORPORATE_SIGNATORY
+  LANDLORD_SIGNATORY
+}
+
+enum InvoiceStatus {
+  DRAFT
+  PENDING
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  CANCELLED
+  REFUNDED
+  WRITTEN_OFF
+}
+
+enum PaymentStatus {
+  INITIATED
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  DISPUTED
+  REVERSED
+}
+
+enum PaymentMethod {
+  UPI_INTENT
+  UPI_COLLECT
+  CREDIT_CARD
+  DEBIT_CARD
+  NET_BANKING
+  NACH_MANDATE
+  DIRECT_BANK_TRANSFER
+  CASH
+  CHEQUE
+}
+
+enum LedgerEntryType {
+  DEBIT
+  CREDIT
+}
+
+enum AccountCategory {
+  ASSET_CASH
+  ASSET_BANK
+  ASSET_RECEIVABLE_RENT
+  ASSET_RECEIVABLE_UTILITY
+  LIABILITY_SECURITY_DEPOSIT
+  LIABILITY_VENDOR_PAYABLE
+  LIABILITY_TAX_COLLECTED
+  REVENUE_RENTAL_INCOME
+  REVENUE_LATE_FEES
+  REVENUE_CAM_CHARGES
+  REVENUE_CONVENIENCE_FEES
+  EXPENSE_MAINTENANCE
+  EXPENSE_UTILITIES
+  EXPENSE_PLATFORM_FEE
+  EXPENSE_COMMISSION
+  EQUITY_OWNER_CAPITAL
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  EMERGENCY
+}
+
+enum TicketStatus {
+  REPORTED
+  TRIAGED
+  ASSIGNED
+  QUOTE_REQUESTED
+  QUOTE_APPROVED
+  WORK_IN_PROGRESS
+  VERIFICATION_PENDING
+  RESOLVED
+  CLOSED
+  CANCELLED
+}
+
+enum DocumentCategory {
+  LEASE_AGREEMENT
+  TITLE_DEED
+  TAX_RECEIPT
+  GOVERNMENT_ID
+  POLICE_VERIFICATION
+  INSPECTION_REPORT
+  UTILITY_BILL
+  MAINTENANCE_INVOICE
+  PAYMENT_RECEIPT
+  ESTATE_INVENTORY
+}
+
+enum DocumentAccessLevel {
+  PUBLIC
+  ORGANIZATION_INTERNAL
+  CONFIDENTIAL_OWNER_ONLY
+  PRIVATE_TENANT_SPECIFIC
+  SYSTEM_RESTRICTED
+}
+
+enum SubscriptionBillingCycle {
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  GRACE_PERIOD
+  UNPAID
+  CANCELLED
+  EXPIRED
+}
+
+// ============================================================================
+// MODULE 1: ORGANIZATION & MEMBERSHIP
+// ============================================================================
+
+model User {
+  id                   String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email                String                  @unique @db.VarChar(255)
+  passwordHash         String                  @map("password_hash") @db.VarChar(255)
+  fullName             String                  @map("full_name") @db.VarChar(150)
+  phone                String?                 @db.VarChar(30)
+  avatarUrl            String?                 @map("avatar_url") @db.Text
+  globalRole           GlobalRole              @default(USER) @map("global_role")
+  isActive             Boolean                 @default(true) @map("is_active")
+  twoFactorEnabled     Boolean                 @default(false) @map("two_factor_enabled")
+  twoFactorSecret      String?                 @map("two_factor_secret") @db.VarChar(128)
+  failedLoginAttempts  Int                     @default(0) @map("failed_login_attempts")
+  lockedUntil          DateTime?               @map("locked_until") @db.Timestamptz(6)
+  lastLoginAt          DateTime?               @map("last_login_at") @db.Timestamptz(6)
+  createdAt            DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  memberships          OrganizationMembership[]
+  ownedOrganizations   Organization[]          @relation("OrgOwner")
+  resourceGrants       ResourceAccessGrant[]
+  sessions             UserSession[]
+  passwordResetTokens  PasswordResetToken[]
+  auditEvents          AuditEvent[]            @relation("ActorAuditEvents")
+  leasesSigned         LeaseParty[]
+  reportedTickets      WorkOrder[]             @relation("TicketReporter")
+  assignedTasks        WorkOrder[]             @relation("TicketAssignee")
+  documentAuditLogs    DocumentAccessLog[]
+  subscriptionsOwned   Subscription[]
+  notifications        Notification[]
+  leadsAssigned        Lead[]                  @relation("LeadAssignee")
+  applicationsReviewed Application[]           @relation("ApplicationReviewer")
+  visitsConducted      Visit[]                 @relation("VisitAgent")
+  approvalsGiven       Approval[]              @relation("ApprovalUser")
+  assignedWorkOrders   VendorAssignment[]      @relation("VendorAssignee")
+
+  @@index([email])
+  @@index([phone])
+  @@map("users")
+}
+
+model UserSession {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  sessionToken String    @unique @map("session_token") @db.VarChar(255)
+  ipAddress    String?   @map("ip_address") @db.VarChar(45)
+  userAgent    String?   @map("user_agent") @db.Text
+  expiresAt    DateTime  @map("expires_at") @db.Timestamptz(6)
+  revokedAt    DateTime? @map("revoked_at") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sessionToken])
+  @@map("user_sessions")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash") @db.VarChar(255)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(6)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@map("password_reset_tokens")
+}
+
+model Organization {
+  id                  String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                String                   @db.VarChar(200)
+  slug                String                   @unique @db.VarChar(100)
+  legalEntityName     String?                  @map("legal_entity_name") @db.VarChar(255)
+  taxIdentifier       String?                  @map("tax_identifier") @db.VarChar(50)
+  ownerId             String                   @map("owner_id") @db.Uuid
+  billingEmail        String?                  @map("billing_email") @db.VarChar(255)
+  currency            String                   @default("INR") @db.VarChar(3)
+  country             String                   @default("IND") @db.VarChar(3)
+  createdAt           DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  owner               User                     @relation("OrgOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  memberships         OrganizationMembership[]
+  invitations         OrganizationInvitation[]
+  portfolios          Portfolio[]
+  properties          Property[]
+  accounts            Account[]
+  journalEntries      JournalEntry[]
+  subscriptions       Subscription[]
+  auditEvents         AuditEvent[]
+  vendors             Vendor[]
+  scheduledTasks      ScheduledTask[]
+  notifications       Notification[]
+  leads               Lead[]
+
+  @@index([slug])
+  @@index([ownerId])
+  @@map("organizations")
+}
+
+model OrganizationMembership {
+  id             String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String                @map("organization_id") @db.Uuid
+  userId         String                @map("user_id") @db.Uuid
+  role           OrgRole               @default(TENANT)
+  isDefault      Boolean               @default(false) @map("is_default")
+  createdAt      DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime              @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  organization   Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  customRoles    MembershipRole[]
+  resourceGrants ResourceAccessGrant[]
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+  @@map("organization_memberships")
+}
+
+model OrganizationInvitation {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  email          String    @db.VarChar(255)
+  role           OrgRole   @default(FIELD_STAFF)
+  tokenHash      String    @unique @map("token_hash") @db.VarChar(255)
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz(6)
+  acceptedAt     DateTime? @map("accepted_at") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([email])
+  @@map("invitations")
+}
+
+// ============================================================================
+// MODULE 2: ACCESS CONTROL & PERMISSIONS
+// ============================================================================
+
+model Role {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name           String           @unique @db.VarChar(50)
+  description    String?          @db.Text
+  isSystem       Boolean          @default(false) @map("is_system")
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  permissions    RolePermission[]
+  memberships    MembershipRole[]
+
+  @@map("roles")
+}
+
+model RolePermission {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  roleId     String     @map("role_id") @db.Uuid
+  permission Permission
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permission])
+  @@map("role_permissions")
+}
+
+model MembershipRole {
+  membershipId String                 @map("membership_id") @db.Uuid
+  roleId       String                 @map("role_id") @db.Uuid
+
+  membership   OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  role         Role                   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([membershipId, roleId])
+  @@map("membership_roles")
+}
+
+model ResourceAccessGrant {
+  id             String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  membershipId   String                 @map("membership_id") @db.Uuid
+  userId         String                 @map("user_id") @db.Uuid
+  resourceType   String                 @map("resource_type") @db.VarChar(50)
+  resourceId     String                 @map("resource_id") @db.Uuid
+  canRead        Boolean                @default(true) @map("can_read")
+  canWrite       Boolean                @default(false) @map("can_write")
+  canDelete      Boolean                @default(false) @map("can_delete")
+  createdAt      DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  membership     OrganizationMembership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  user           User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([membershipId, resourceType, resourceId])
+  @@index([userId, resourceType, resourceId])
+  @@map("resource_access_grants")
+}
+
+// ============================================================================
+// MODULE 3: PROPERTY STRUCTURE (PORTFOLIOS, BUILDINGS, FLOORS, UNITS, ROOMS, BEDS, ASSETS)
+// ============================================================================
+
+model Portfolio {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  name           String        @db.VarChar(150)
+  description    String?       @db.Text
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  properties     Property[]
+
+  @@index([organizationId])
+  @@map("portfolios")
+}
+
+model Property {
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId     String             @map("organization_id") @db.Uuid
+  portfolioId        String?            @map("portfolio_id") @db.Uuid
+  name               String             @db.VarChar(200)
+  propertyType       PropertyType       @map("property_type")
+  addressStreet      String             @map("address_street") @db.Text
+  city               String             @db.VarChar(100)
+  state              String             @db.VarChar(100)
+  pincode            String             @db.VarChar(20)
+  latitude           Decimal?           @db.Decimal(10, 8)
+  longitude          Decimal?           @db.Decimal(11, 8)
+  status             PropertyStatus     @default(ACTIVE)
+  verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
+  verifiedAt         DateTime?          @map("verified_at") @db.Timestamptz(6)
+  verifiedBy         String?            @map("verified_by") @db.Uuid
+  heroImageUrl       String?            @map("hero_image_url") @db.Text
+  totalAreaSqFt      Decimal?           @map("total_area_sq_ft") @db.Decimal(12, 2)
+  amenities          Json               @default("[]")
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  organization       Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  portfolio          Portfolio?         @relation(fields: [portfolioId], references: [id], onDelete: SetNull)
+  buildings          Building[]
+  units              PropertyUnit[]
+  assets             Asset[]
+  documents          Document[]
+  workOrders         WorkOrder[]
+  invoices           Invoice[]
+  meterReadings      MeterReading[]
+  utilityBills       UtilityBill[]
+  visits             Visit[]
+  applications       Application[]
+  scheduledTasks     ScheduledTask[]
+
+  @@index([organizationId])
+  @@index([portfolioId])
+  @@index([verificationStatus])
+  @@map("properties")
+}
+
+model Building {
+  id          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  propertyId  String         @map("property_id") @db.Uuid
+  name        String         @db.VarChar(100) // "Tower A", "Block 1", "Main Villa"
+  totalFloors Int            @default(1) @map("total_floors")
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  property    Property       @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  floors      Floor[]
+  units       PropertyUnit[]
+
+  @@unique([propertyId, name])
+  @@index([propertyId])
+  @@map("buildings")
+}
+
+model Floor {
+  id          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  buildingId  String         @map("building_id") @db.Uuid
+  floorNumber Int            @map("floor_number")
+  floorLabel  String         @map("floor_label") @db.VarChar(50) // "3rd Floor", "Ground Floor", "Mezzanine"
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  building    Building       @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  units       PropertyUnit[]
+
+  @@unique([buildingId, floorNumber])
+  @@index([buildingId])
+  @@map("floors")
+}
+
+model PropertyUnit {
+  id             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  propertyId     String              @map("property_id") @db.Uuid
+  buildingId     String?             @map("building_id") @db.Uuid
+  floorId        String?             @map("floor_id") @db.Uuid
+  unitNumber     String              @map("unit_number") @db.VarChar(50)
+  unitType       String              @default("1BHK") @map("unit_type") @db.VarChar(50)
+  status         UnitStatus          @default(VACANT)
+  marketRent     Decimal             @map("market_rent") @db.Decimal(12, 2)
+  depositRequired Decimal            @map("deposit_required") @db.Decimal(12, 2)
+  areaSqFt       Decimal?            @map("area_sq_ft") @db.Decimal(10, 2)
+  bedrooms       Int                 @default(1)
+  bathrooms      Int                 @default(1)
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  property       Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  building       Building?           @relation(fields: [buildingId], references: [id], onDelete: SetNull)
+  floor          Floor?              @relation(fields: [floorId], references: [id], onDelete: SetNull)
+  rooms          Room[]
+  assets         Asset[]
+  tenancies      Tenancy[]
+  meterReadings  MeterReading[]
+  utilityBills   UtilityBill[]
+  workOrders     WorkOrder[]
+  applications   Application[]
+  occupancies    OccupancyHistory[]
+
+  @@unique([propertyId, unitNumber])
+  @@index([propertyId])
+  @@index([buildingId])
+  @@index([floorId])
+  @@index([status])
+  @@map("units")
+}
+
+model Room {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  unitId      String       @map("unit_id") @db.Uuid
+  roomNumber  String       @map("room_number") @db.VarChar(50) // "Room 101", "Master Bedroom"
+  roomType    String       @default("PRIVATE") @map("room_type") @db.VarChar(50)
+  status      UnitStatus   @default(VACANT)
+  monthlyRent Decimal      @map("monthly_rent") @db.Decimal(12, 2)
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  unit        PropertyUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  beds        Bed[]
+  assets      Asset[]
+
+  @@unique([unitId, roomNumber])
+  @@index([unitId])
+  @@map("rooms")
+}
+
+model Bed {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  roomId      String       @map("room_id") @db.Uuid
+  bedCode     String       @map("bed_code") @db.VarChar(50) // "Bed A", "Lower Bunk 1"
+  status      UnitStatus   @default(VACANT)
+  monthlyRent Decimal      @map("monthly_rent") @db.Decimal(12, 2)
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  room        Room         @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  tenancies   Tenancy[]
+
+  @@unique([roomId, bedCode])
+  @@index([roomId])
+  @@map("beds")
+}
+
+model Asset {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  propertyId     String       @map("property_id") @db.Uuid
+  unitId         String?      @map("unit_id") @db.Uuid
+  roomId         String?      @map("room_id") @db.Uuid
+  assetTag       String       @unique @map("asset_tag") @db.VarChar(100)
+  category       String       @db.VarChar(100) // "APPLIANCE", "FURNITURE", "HVAC", "GENERATOR"
+  brand          String?      @db.VarChar(100)
+  modelNumber    String?      @map("model_number") @db.VarChar(100)
+  serialNumber   String?      @map("serial_number") @db.VarChar(100)
+  purchaseDate   DateTime?    @map("purchase_date") @db.Date
+  warrantyUntil  DateTime?    @map("warranty_until") @db.Date
+  condition      String       @default("EXCELLENT") @db.VarChar(50)
+  amcProvider    String?      @map("amc_provider") @db.VarChar(150)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  property       Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  unit           PropertyUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  room           Room?        @relation(fields: [roomId], references: [id], onDelete: SetNull)
+
+  @@index([propertyId])
+  @@index([unitId])
+  @@map("assets")
+}
+
+// ============================================================================
+// MODULE 4: OCCUPANCY (TENANCIES, LEASE PARTIES, OCCUPANCY HISTORY)
+// ============================================================================
+
+model Tenancy {
+  id                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  unitId             String             @map("unit_id") @db.Uuid
+  bedId              String?            @map("bed_id") @db.Uuid
+  leaseNumber        String             @unique @map("lease_number") @db.VarChar(50)
+  status             LeaseStatus        @default(ACTIVE)
+  startDate          DateTime           @map("start_date") @db.Date
+  endDate            DateTime           @map("end_date") @db.Date
+  monthlyRent        Decimal            @map("monthly_rent") @db.Decimal(12, 2)
+  depositRequired    Decimal            @map("deposit_required") @db.Decimal(12, 2)
+  depositReceived    Decimal            @default(0) @map("deposit_received") @db.Decimal(12, 2)
+  rentDueDayOfMonth  Int                @default(5) @map("rent_due_day_of_month")
+  gracePeriodDays    Int                @default(3) @map("grace_period_days")
+  lateFeeFlat        Decimal            @default(0) @map("late_fee_flat") @db.Decimal(12, 2)
+  autopayEnabled     Boolean            @default(false) @map("autopay_enabled")
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  unit               PropertyUnit       @relation(fields: [unitId], references: [id], onDelete: Restrict)
+  bed                Bed?               @relation(fields: [bedId], references: [id], onDelete: SetNull)
+  parties            LeaseParty[]
+  rentSchedules      RentSchedule[]
+  invoices           Invoice[]
+  securityDeposits   SecurityDeposit[]
+  inspections        Inspection[]
+  documents          LeaseDocument[]
+  renewals           Renewal[]
+  occupancyLogs      OccupancyHistory[]
+
+  @@index([unitId])
+  @@index([bedId])
+  @@index([status])
+  @@map("tenancies")
+}
+
+model LeaseParty {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenancyId      String         @map("tenancy_id") @db.Uuid
+  userId         String         @map("user_id") @db.Uuid
+  partyRole      LeasePartyRole @default(PRIMARY_TENANT) @map("party_role")
+  sharePercent   Decimal        @default(100) @map("share_percent") @db.Decimal(5, 2)
+  isSignatory    Boolean        @default(true) @map("is_signatory")
+  signedAt       DateTime?      @map("signed_at") @db.Timestamptz(6)
+  kycVerified    Boolean        @default(false) @map("kyc_verified")
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  tenancy        Tenancy        @relation(fields: [tenancyId], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([tenancyId, userId])
+  @@index([tenancyId])
+  @@index([userId])
+  @@map("lease_parties")
+}
+
+model OccupancyHistory {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenancyId      String       @map("tenancy_id") @db.Uuid
+  unitId         String       @map("unit_id") @db.Uuid
+  eventType      String       @map("event_type") @db.VarChar(50) // "MOVE_IN", "RENEWAL", "ROOM_TRANSFER", "MOVE_OUT"
+  eventDate      DateTime     @map("event_date") @db.Date
+  notes          String?      @db.Text
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  tenancy        Tenancy      @relation(fields: [tenancyId], references: [id], onDelete: Cascade)
+  unit           PropertyUnit @relation(fields: [unitId], references: [id], onDelete: Restrict)
+
+  @@index([tenancyId])
+  @@index([unitId])
+  @@map("occupancy_history")
+}
+
+// ============================================================================
+// MODULE 5: LEASING (LEADS, APPLICATIONS, VISITS, LEASE DOCUMENTS, RENEWALS)
+// ============================================================================
+
+model Lead {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String        @map("organization_id") @db.Uuid
+  assignedToId   String?       @map("assigned_to_id") @db.Uuid
+  prospectName   String        @map("prospect_name") @db.VarChar(150)
+  email          String        @db.VarChar(255)
+  phone          String        @db.VarChar(30)
+  budgetMin      Decimal?      @map("budget_min") @db.Decimal(12, 2)
+  budgetMax      Decimal?      @map("budget_max") @db.Decimal(12, 2)
+  preferredType  String?       @map("preferred_type") @db.VarChar(50)
+  targetCity     String        @map("target_city") @db.VarChar(100)
+  status         String        @default("NEW") @db.VarChar(50) // "NEW", "CONTACTED", "VISIT_SCHEDULED", "APPLIED", "CONVERTED", "LOST"
+  sourceChannel  String?       @map("source_channel") @db.VarChar(100)
+  notes          String?       @db.Text
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  assignedTo     User?         @relation("LeadAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  visits         Visit[]
+  applications   Application[]
+
+  @@index([organizationId])
+  @@index([assignedToId])
+  @@index([status])
+  @@map("leads")
+}
+
+model Application {
+  id                 String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  propertyId         String       @map("property_id") @db.Uuid
+  unitId             String?      @map("unit_id") @db.Uuid
+  leadId             String?      @map("lead_id") @db.Uuid
+  reviewedById       String?      @map("reviewed_by_id") @db.Uuid
+  applicantName      String       @map("applicant_name") @db.VarChar(150)
+  applicantEmail     String       @map("applicant_email") @db.VarChar(255)
+  applicantPhone     String       @map("applicant_phone") @db.VarChar(30)
+  annualIncome       Decimal?     @map("annual_income") @db.Decimal(12, 2)
+  creditScore        Int?         @map("credit_score")
+  status             String       @default("SUBMITTED") @db.VarChar(50) // "SUBMITTED", "UNDER_REVIEW", "APPROVED", "REJECTED"
+  decisionNotes      String?      @map("decision_notes") @db.Text
+  createdAt          DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  property           Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  unit               PropertyUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  lead               Lead?        @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  reviewedBy         User?        @relation("ApplicationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([propertyId])
+  @@index([leadId])
+  @@index([status])
+  @@map("applications")
+}
+
+model Visit {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  propertyId     String    @map("property_id") @db.Uuid
+  leadId         String    @map("lead_id") @db.Uuid
+  agentId        String?   @map("agent_id") @db.Uuid
+  scheduledTime  DateTime  @map("scheduled_time") @db.Timestamptz(6)
+  status         String    @default("SCHEDULED") @db.VarChar(50) // "SCHEDULED", "COMPLETED", "CANCELLED", "NO_SHOW"
+  visitorNotes   String?   @map("visitor_notes") @db.Text
+  feedback       String?   @db.Text
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  property       Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  lead           Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  agent          User?     @relation("VisitAgent", fields: [agentId], references: [id], onDelete: SetNull)
+
+  @@index([propertyId])
+  @@index([leadId])
+  @@map("visits")
+}
+
+model LeaseDocument {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenancyId      String    @map("tenancy_id") @db.Uuid
+  title          String    @db.VarChar(200)
+  documentType   String    @map("document_type") @db.VarChar(100) // "DRAFT_AGREEMENT", "EXECUTED_LEASE", "ADDENDUM", "POLICE_NOC"
+  storageKey     String    @map("storage_key") @db.Text
+  sha256Hash     String    @map("sha256_hash") @db.VarChar(64)
+  isExecuted     Boolean   @default(false) @map("is_executed")
+  signedAt       DateTime? @map("signed_at") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  tenancy        Tenancy   @relation(fields: [tenancyId], references: [id], onDelete: Cascade)
+
+  @@index([tenancyId])
+  @@map("lease_documents")
+}
+
+model Renewal {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenancyId         String    @map("tenancy_id") @db.Uuid
+  proposedStartDate DateTime  @map("proposed_start_date") @db.Date
+  proposedEndDate   DateTime  @map("proposed_end_date") @db.Date
+  proposedRent      Decimal   @map("proposed_rent") @db.Decimal(12, 2)
+  escalationPercent Decimal   @default(5) @map("escalation_percent") @db.Decimal(5, 2)
+  status            String    @default("PROPOSED") @db.VarChar(50) // "PROPOSED", "ACCEPTED", "DECLINED", "EXECUTED"
+  tenantRespondedAt DateTime? @map("tenant_responded_at") @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  tenancy           Tenancy   @relation(fields: [tenancyId], references: [id], onDelete: Cascade)
+
+  @@index([tenancyId])
+  @@map("renewals")
+}
+
+// ============================================================================
+// MODULE 6: BILLING (RENT SCHEDULES, INVOICES, LINES, PAYMENTS, ALLOCATIONS)
+// ============================================================================
+
+model RentSchedule {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenancyId      String    @map("tenancy_id") @db.Uuid
+  periodMonth    String    @map("period_month") @db.VarChar(20) // "2026-10"
+  dueRentAmount  Decimal   @map("due_rent_amount") @db.Decimal(12, 2)
+  dueDate        DateTime  @map("due_date") @db.Date
+  isGenerated    Boolean   @default(false) @map("is_generated")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  tenancy        Tenancy   @relation(fields: [tenancyId], references: [id], onDelete: Cascade)
+
+  @@unique([tenancyId, periodMonth])
+  @@index([tenancyId])
+  @@index([dueDate])
+  @@map("rent_schedules")
+}
+
+model Invoice {
+  id               String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  propertyId       String              @map("property_id") @db.Uuid
+  tenancyId        String?             @map("tenancy_id") @db.Uuid
+  invoiceNumber    String              @unique @map("invoice_number") @db.VarChar(50)
+  billingPeriod    String              @map("billing_period") @db.VarChar(30)
+  issueDate        DateTime            @default(now()) @map("issue_date") @db.Date
+  dueDate          DateTime            @map("due_date") @db.Date
+  subTotalAmount   Decimal             @map("sub_total_amount") @db.Decimal(12, 2)
+  taxAmount        Decimal             @default(0) @map("tax_amount") @db.Decimal(12, 2)
+  lateFeeAmount    Decimal             @default(0) @map("late_fee_amount") @db.Decimal(12, 2)
+  discountAmount   Decimal             @default(0) @map("discount_amount") @db.Decimal(12, 2)
+  totalAmount      Decimal             @map("total_amount") @db.Decimal(12, 2)
+  paidAmount       Decimal             @default(0) @map("paid_amount") @db.Decimal(12, 2)
+  status           InvoiceStatus       @default(PENDING)
+  notes            String?             @db.Text
+  createdAt        DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  property         Property            @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  tenancy          Tenancy?            @relation(fields: [tenancyId], references: [id], onDelete: SetNull)
+  lines            InvoiceLine[]
+  allocations      PaymentAllocation[]
+
+  @@index([propertyId])
+  @@index([tenancyId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("invoices")
+}
+
+model InvoiceLine {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  invoiceId   String   @map("invoice_id") @db.Uuid
+  description String   @db.VarChar(255)
+  category    String   @db.VarChar(50)
+  quantity    Decimal  @default(1) @db.Decimal(10, 2)
+  unitPrice   Decimal  @map("unit_price") @db.Decimal(12, 2)
+  amount      Decimal  @db.Decimal(12, 2)
+
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("invoice_lines")
+}
+
+model Payment {
+  id                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  paymentOrderReference String              @unique @map("payment_order_reference") @db.VarChar(100)
+  gatewayTransactionId  String?             @unique @map("gateway_transaction_id") @db.VarChar(100)
+  idempotencyKey        String              @unique @map("idempotency_key") @db.VarChar(128)
+  amount                Decimal             @db.Decimal(12, 2)
+  currency              String              @default("INR") @db.VarChar(3)
+  paymentMethod         PaymentMethod       @map("payment_method")
+  status                PaymentStatus       @default(INITIATED)
+  gatewayProvider       String              @default("RAZORPAY") @map("gateway_provider") @db.VarChar(50)
+  gatewaySignature      String?             @map("gateway_signature") @db.Text
+  failureReason         String?             @map("failure_reason") @db.Text
+  receiptNumber         String?             @unique @map("receipt_number") @db.VarChar(60)
+  paidAt                DateTime?           @map("paid_at") @db.Timestamptz(6)
+  createdAt             DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  allocations           PaymentAllocation[]
+  journalEntries        JournalEntry[]
+  refunds               Refund[]
+  settlementItems       Settlement[]
+
+  @@index([gatewayTransactionId])
+  @@index([idempotencyKey])
+  @@index([status])
+  @@map("payments")
+}
+
+model PaymentAllocation {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  paymentId       String   @map("payment_id") @db.Uuid
+  invoiceId       String   @map("invoice_id") @db.Uuid
+  allocatedAmount Decimal  @map("allocated_amount") @db.Decimal(12, 2)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  payment         Payment  @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  invoice         Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Restrict)
+
+  @@index([paymentId])
+  @@index([invoiceId])
+  @@map("payment_allocations")
+}
+
+// ============================================================================
+// MODULE 7: ACCOUNTING (ACCOUNTS, JOURNAL ENTRIES, LINES, SETTLEMENTS, REFUNDS)
+// ============================================================================
+
+model Account {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String          @map("organization_id") @db.Uuid
+  accountNumber  String          @map("account_number") @db.VarChar(50)
+  name           String          @db.VarChar(150)
+  category       AccountCategory
+  currency       String          @default("INR") @db.VarChar(3)
+  isLocked       Boolean         @default(false) @map("is_locked")
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  journalLines   JournalLine[]
+
+  @@unique([organizationId, accountNumber])
+  @@index([organizationId])
+  @@index([category])
+  @@map("accounts")
+}
+
+model JournalEntry {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String        @map("organization_id") @db.Uuid
+  entryNumber     String        @unique @map("entry_number") @db.VarChar(50)
+  paymentId       String?       @map("payment_id") @db.Uuid
+  description     String        @db.Text
+  postingDate     DateTime      @default(now()) @map("posting_date") @db.Date
+  isReversed      Boolean       @default(false) @map("is_reversed")
+  reversalOfId    String?       @unique @map("reversal_of_id") @db.Uuid
+  tamperProofHash String        @map("tamper_proof_hash") @db.VarChar(64)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  payment         Payment?      @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  reversalOf      JournalEntry? @relation("ReversalRel", fields: [reversalOfId], references: [id], onDelete: Restrict)
+  reversedBy      JournalEntry? @relation("ReversalRel")
+  lines           JournalLine[]
+
+  @@index([organizationId])
+  @@index([postingDate])
+  @@map("journal_entries")
+}
+
+model JournalLine {
+  id             String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  journalEntryId String          @map("journal_entry_id") @db.Uuid
+  accountId      String          @map("account_id") @db.Uuid
+  entryType      LedgerEntryType @map("entry_type")
+  amount         Decimal         @db.Decimal(12, 2)
+  memo           String?         @db.VarChar(255)
+
+  journalEntry   JournalEntry    @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  account        Account         @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@index([journalEntryId])
+  @@index([accountId])
+  @@map("journal_lines")
+}
+
+model Settlement {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  paymentId            String?   @map("payment_id") @db.Uuid
+  settlementReference  String    @unique @map("settlement_reference") @db.VarChar(100)
+  beneficiaryAccount   String    @map("beneficiary_account") @db.VarChar(50)
+  amountGross          Decimal   @map("amount_gross") @db.Decimal(12, 2)
+  feePlatform          Decimal   @default(0) @map("fee_platform") @db.Decimal(12, 2)
+  amountNet            Decimal   @map("amount_net") @db.Decimal(12, 2)
+  status               String    @default("PROCESSED") @db.VarChar(50) // "PENDING", "PROCESSED", "RECONCILED", "FAILED"
+  utrNumber            String?   @map("utr_number") @db.VarChar(100)
+  settledAt            DateTime  @default(now()) @map("settled_at") @db.Timestamptz(6)
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  payment              Payment?  @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  @@index([settlementReference])
+  @@index([status])
+  @@map("settlements")
+}
+
+model Refund {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  paymentId        String        @map("payment_id") @db.Uuid
+  refundReference  String        @unique @map("refund_reference") @db.VarChar(100)
+  amount           Decimal       @db.Decimal(12, 2)
+  reason           String        @db.Text
+  status           PaymentStatus @default(PROCESSING)
+  processedAt      DateTime?     @map("processed_at") @db.Timestamptz(6)
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  payment          Payment       @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+
+  @@index([paymentId])
+  @@index([refundReference])
+  @@map("refunds")
+}
+
+// ============================================================================
+// MODULE 8: DEPOSITS (SECURITY DEPOSITS, TRANSACTIONS, SETTLEMENTS, DISPUTES)
+// ============================================================================
+
+model SecurityDeposit {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenancyId          String               @map("tenancy_id") @db.Uuid
+  totalCollected     Decimal              @map("total_collected") @db.Decimal(12, 2)
+  deductionsTotal    Decimal              @default(0) @map("deductions_total") @db.Decimal(12, 2)
+  refundedAmount     Decimal              @default(0) @map("refunded_amount") @db.Decimal(12, 2)
+  isDisputed         Boolean              @default(false) @map("is_disputed")
+  settlementDate     DateTime?            @map("settlement_date") @db.Date
+  createdAt          DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  tenancy            Tenancy              @relation(fields: [tenancyId], references: [id], onDelete: Cascade)
+  transactions       DepositTransaction[]
+  settlements        DepositSettlement[]
+  disputes           DepositDispute[]
+
+  @@index([tenancyId])
+  @@map("security_deposits")
+}
+
+model DepositTransaction {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  securityDepositId String          @map("security_deposit_id") @db.Uuid
+  transactionType   String          @map("transaction_type") @db.VarChar(50) // "COLLECTION", "DEDUCTION_PAINTING", "DEDUCTION_REPAIR", "REFUND"
+  amount            Decimal         @db.Decimal(12, 2)
+  notes             String?         @db.Text
+  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  securityDeposit   SecurityDeposit @relation(fields: [securityDepositId], references: [id], onDelete: Cascade)
+
+  @@index([securityDepositId])
+  @@map("deposit_transactions")
+}
+
+model DepositSettlement {
+  id                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  securityDepositId  String          @map("security_deposit_id") @db.Uuid
+  originalDeposit    Decimal         @map("original_deposit") @db.Decimal(12, 2)
+  approvedDeductions Decimal         @map("approved_deductions") @db.Decimal(12, 2)
+  netRefundPayable   Decimal         @map("net_refund_payable") @db.Decimal(12, 2)
+  bankTransactionRef String?         @map("bank_transaction_ref") @db.VarChar(100)
+  signedOffByTenant  Boolean         @default(false) @map("signed_off_by_tenant")
+  settledAt          DateTime        @default(now()) @map("settled_at") @db.Timestamptz(6)
+  createdAt          DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  securityDeposit    SecurityDeposit @relation(fields: [securityDepositId], references: [id], onDelete: Cascade)
+
+  @@index([securityDepositId])
+  @@map("deposit_settlements")
+}
+
+model DepositDispute {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  securityDepositId String          @map("security_deposit_id") @db.Uuid
+  disputedAmount    Decimal         @map("disputed_amount") @db.Decimal(12, 2)
+  tenantClaimReason String          @map("tenant_claim_reason") @db.Text
+  ownerResponse     String?         @map("owner_response") @db.Text
+  resolutionStatus  String          @default("OPEN") @map("resolution_status") @db.VarChar(50)
+  settledAmount     Decimal?        @map("settled_amount") @db.Decimal(12, 2)
+  settledAt         DateTime?       @map("settled_at") @db.Timestamptz(6)
+  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  securityDeposit   SecurityDeposit @relation(fields: [securityDepositId], references: [id], onDelete: Cascade)
+
+  @@index([securityDepositId])
+  @@map("disputes")
+}
+
+// ============================================================================
+// MODULE 9: MAINTENANCE (WORK ORDERS, QUOTES, ASSIGNMENTS, APPROVALS, EVIDENCE)
+// ============================================================================
+
+model Vendor {
+  id             String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String             @map("organization_id") @db.Uuid
+  businessName   String             @map("business_name") @db.VarChar(200)
+  tradeCategory  String             @map("trade_category") @db.VarChar(100)
+  contactPerson  String             @map("contact_person") @db.VarChar(150)
+  phone          String             @db.VarChar(30)
+  email          String?            @db.VarChar(255)
+  bankAccountNo  String?            @map("bank_account_no") @db.VarChar(50)
+  bankIfsc       String?            @map("bank_ifsc") @db.VarChar(20)
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  workOrders     WorkOrder[]
+  quotes         Quote[]
+  assignments    VendorAssignment[]
+
+  @@index([organizationId])
+  @@map("vendors")
+}
+
+model WorkOrder {
+  id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  propertyId      String             @map("property_id") @db.Uuid
+  unitId          String?            @map("unit_id") @db.Uuid
+  vendorId        String?            @map("vendor_id") @db.Uuid
+  reporterId      String             @map("reporter_id") @db.Uuid
+  assigneeId      String?            @map("assignee_id") @db.Uuid
+  ticketCode      String             @unique @map("ticket_code") @db.VarChar(50)
+  title           String             @db.VarChar(255)
+  description     String             @db.Text
+  category        String             @db.VarChar(100)
+  priority        TicketPriority     @default(MEDIUM)
+  status          TicketStatus       @default(REPORTED)
+  estimatedCost   Decimal?           @map("estimated_cost") @db.Decimal(12, 2)
+  finalCost       Decimal?           @map("final_cost") @db.Decimal(12, 2)
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  property        Property           @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  unit            PropertyUnit?      @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  vendor          Vendor?            @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  reporter        User               @relation("TicketReporter", fields: [reporterId], references: [id], onDelete: Restrict)
+  assignee        User?              @relation("TicketAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  quotes          Quote[]
+  assignments     VendorAssignment[]
+  approvals       Approval[]
+  evidence        ServiceEvidence[]
+
+  @@index([propertyId])
+  @@index([vendorId])
+  @@index([status])
+  @@map("work_orders")
+}
+
+model Quote {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workOrderId String    @map("work_order_id") @db.Uuid
+  vendorId    String    @map("vendor_id") @db.Uuid
+  quoteNumber String    @map("quote_number") @db.VarChar(50)
+  laborCost   Decimal   @map("labor_cost") @db.Decimal(12, 2)
+  partsCost   Decimal   @default(0) @map("parts_cost") @db.Decimal(12, 2)
+  totalCost   Decimal   @map("total_cost") @db.Decimal(12, 2)
+  isApproved  Boolean   @default(false) @map("is_approved")
+  validUntil  DateTime? @map("valid_until") @db.Date
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  vendor      Vendor    @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+
+  @@index([workOrderId])
+  @@index([vendorId])
+  @@map("quotes")
+}
+
+model VendorAssignment {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workOrderId    String    @map("work_order_id") @db.Uuid
+  vendorId       String    @map("vendor_id") @db.Uuid
+  technicianId   String?   @map("technician_id") @db.Uuid
+  scheduledStart DateTime  @map("scheduled_start") @db.Timestamptz(6)
+  scheduledEnd   DateTime? @map("scheduled_end") @db.Timestamptz(6)
+  status         String    @default("ASSIGNED") @db.VarChar(50)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  workOrder      WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  vendor         Vendor    @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  technician     User?     @relation("VendorAssignee", fields: [technicianId], references: [id], onDelete: SetNull)
+
+  @@index([workOrderId])
+  @@index([vendorId])
+  @@map("vendor_assignments")
+}
+
+model Approval {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workOrderId String    @map("work_order_id") @db.Uuid
+  approverId  String    @map("approver_id") @db.Uuid
+  approvalType String   @map("approval_type") @db.VarChar(50) // "QUOTE_APPROVAL", "COMPLETION_SIGN_OFF"
+  isApproved  Boolean   @default(true) @map("is_approved")
+  amountLimit Decimal?  @map("amount_limit") @db.Decimal(12, 2)
+  comments    String?   @db.Text
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  workOrder   WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  approver    User      @relation("ApprovalUser", fields: [approverId], references: [id], onDelete: Restrict)
+
+  @@index([workOrderId])
+  @@map("approvals")
+}
+
+model ServiceEvidence {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  workOrderId  String    @map("work_order_id") @db.Uuid
+  evidenceType String    @map("evidence_type") @db.VarChar(50) // "BEFORE_PHOTO", "AFTER_PHOTO", "PARTS_INVOICE", "COMPLETION_SIGNATURE"
+  fileUrl      String    @map("file_url") @db.Text
+  caption      String?   @db.VarChar(255)
+  recordedAt   DateTime  @default(now()) @map("recorded_at") @db.Timestamptz(6)
+
+  workOrder    WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+
+  @@index([workOrderId])
+  @@map("service_evidence")
+}
+
+// ============================================================================
+// MODULE 10: FILES & DOCUMENTS (DOCUMENTS, VERSIONS, ACCESS LOGS)
+// ============================================================================
+
+model Document {
+  id              String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  propertyId      String?              @map("property_id") @db.Uuid
+  uploaderId      String               @map("uploader_id") @db.Uuid
+  fileName        String               @map("file_name") @db.VarChar(255)
+  category        DocumentCategory
+  accessLevel     DocumentAccessLevel  @default(CONFIDENTIAL_OWNER_ONLY) @map("access_level")
+  mimeType        String               @map("mime_type") @db.VarChar(100)
+  fileSizeBytes   Int                  @map("file_size_bytes")
+  storagePath     String               @map("storage_path") @db.Text
+  sha256Checksum  String               @map("sha256_checksum") @db.VarChar(64)
+  currentVersion  Int                  @default(1) @map("current_version")
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  property        Property?            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  versions        DocumentVersion[]
+  accessLogs      DocumentAccessLog[]
+
+  @@index([propertyId])
+  @@index([category])
+  @@index([sha256Checksum])
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentId    String    @map("document_id") @db.Uuid
+  versionNumber Int       @map("version_number")
+  storagePath   String    @map("storage_path") @db.Text
+  fileSizeBytes Int       @map("file_size_bytes")
+  sha256Hash    String    @map("sha256_hash") @db.VarChar(64)
+  changeSummary String?   @map("change_summary") @db.Text
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  document      Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, versionNumber])
+  @@index([documentId])
+  @@map("document_versions")
+}
+
+model DocumentAccessLog {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentId String   @map("document_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  action     String   @db.VarChar(50) // "SIGNED_URL_ISSUED", "VIEWED", "DOWNLOADED"
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  userAgent  String?  @map("user_agent") @db.Text
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([documentId])
+  @@index([userId])
+  @@map("document_access_logs")
+}
+
+// ============================================================================
+// MODULE 11: OPERATIONS (METER READINGS, UTILITY BILLS, INSPECTIONS, SCHEDULED TASKS)
+// ============================================================================
+
+model MeterReading {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  propertyId      String        @map("property_id") @db.Uuid
+  unitId          String?       @map("unit_id") @db.Uuid
+  meterType       String        @map("meter_type") @db.VarChar(50) // "ELECTRICITY", "WATER", "GAS"
+  meterNumber     String        @map("meter_number") @db.VarChar(100)
+  previousReading Decimal       @map("previous_reading") @db.Decimal(12, 2)
+  currentReading  Decimal       @map("current_reading") @db.Decimal(12, 2)
+  unitsConsumed   Decimal       @map("units_consumed") @db.Decimal(12, 2)
+  readingDate     DateTime      @map("reading_date") @db.Date
+  photoProofUrl   String?       @map("photo_proof_url") @db.Text
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  property        Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  unit            PropertyUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+
+  @@index([propertyId])
+  @@index([meterNumber])
+  @@map("meter_readings")
+}
+
+model UtilityBill {
+  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  propertyId   String        @map("property_id") @db.Uuid
+  unitId       String?       @map("unit_id") @db.Uuid
+  discomName   String        @map("discom_name") @db.VarChar(150)
+  billNumber   String        @map("bill_number") @db.VarChar(100)
+  billingMonth String        @map("billing_month") @db.VarChar(20)
+  totalAmount  Decimal       @map("total_amount") @db.Decimal(12, 2)
+  dueDate      DateTime      @map("due_date") @db.Date
+  status       String        @default("PENDING") @db.VarChar(50)
+  documentUrl  String?       @map("document_url") @db.Text
+  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  property     Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  unit         PropertyUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+
+  @@index([propertyId])
+  @@map("utility_bills")
+}
+
+model Inspection {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenancyId       String    @map("tenancy_id") @db.Uuid
+  inspectionType  String    @map("inspection_type") @db.VarChar(20) // "MOVE_IN", "ROUTINE", "MOVE_OUT"
+  conductedAt     DateTime  @default(now()) @map("conducted_at") @db.Timestamptz(6)
+  inspectorName   String    @map("inspector_name") @db.VarChar(150)
+  overallRating   Int       @default(5) @map("overall_rating")
+  checklistJson   Json      @map("checklist_json")
+  tenantSignature String?   @map("tenant_signature") @db.Text
+  signedAt        DateTime? @map("signed_at") @db.Timestamptz(6)
+
+  tenancy         Tenancy   @relation(fields: [tenancyId], references: [id], onDelete: Cascade)
+
+  @@index([tenancyId])
+  @@map("inspections")
+}
+
+model ScheduledTask {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String       @map("organization_id") @db.Uuid
+  propertyId     String?      @map("property_id") @db.Uuid
+  taskName       String       @map("task_name") @db.VarChar(150)
+  cronSchedule   String       @map("cron_schedule") @db.VarChar(50) // "0 0 1 * *"
+  handlerType    String       @map("handler_type") @db.VarChar(100) // "GENERATE_RENT_INVOICES", "SEND_LATE_FEE_REMINDERS", "AMC_INSPECTION_CHECK"
+  isActive       Boolean      @default(true) @map("is_active")
+  lastRunAt      DateTime?    @map("last_run_at") @db.Timestamptz(6)
+  nextRunAt      DateTime?    @map("next_run_at") @db.Timestamptz(6)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  property       Property?    @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([handlerType])
+  @@map("scheduled_tasks")
+}
+
+// ============================================================================
+// MODULE 12: PLATFORM (SUBSCRIPTIONS, PLANS, WEBHOOKS, NOTIFICATIONS, AUDIT LOGS)
+// ============================================================================
+
+model SubscriptionPlan {
+  id               String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code             String                    @unique @db.VarChar(50)
+  name             String                    @db.VarChar(100)
+  description      String?                   @db.Text
+  monthlyPrice     Decimal                   @map("monthly_price") @db.Decimal(12, 2)
+  annualPrice      Decimal                   @map("annual_price") @db.Decimal(12, 2)
+  maxUnitsIncluded Int                       @map("max_units_included")
+  extraUnitRate    Decimal                   @default(0) @map("extra_unit_rate") @db.Decimal(10, 2)
+  featuresJson     Json                      @map("features_json")
+  isActive         Boolean                   @default(true) @map("is_active")
+  createdAt        DateTime                  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  subscriptions    Subscription[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id                   String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId       String                    @map("organization_id") @db.Uuid
+  planId               String                    @map("plan_id") @db.Uuid
+  ownerId              String                    @map("owner_id") @db.Uuid
+  status               SubscriptionStatus        @default(TRIALING)
+  billingCycle         SubscriptionBillingCycle  @default(MONTHLY) @map("billing_cycle")
+  currentPeriodStart   DateTime                  @map("current_period_start") @db.Timestamptz(6)
+  currentPeriodEnd     DateTime                  @map("current_period_end") @db.Timestamptz(6)
+  trialEndsAt          DateTime?                 @map("trial_ends_at") @db.Timestamptz(6)
+  cancelledAt          DateTime?                 @map("cancelled_at") @db.Timestamptz(6)
+  maxAllowedUnits      Int                       @map("max_allowed_units")
+  activeUnitsCount     Int                       @default(0) @map("active_units_count")
+  tamperProofHash      String                    @map("tamper_proof_hash") @db.VarChar(64)
+  createdAt            DateTime                  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  organization         Organization              @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  plan                 SubscriptionPlan          @relation(fields: [planId], references: [id], onDelete: Restrict)
+  owner                User                      @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([planId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model WebhookEvent {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  gatewayProvider String    @map("gateway_provider") @db.VarChar(50)
+  eventId         String    @unique @map("event_id") @db.VarChar(150)
+  eventType       String    @map("event_type") @db.VarChar(100)
+  signature       String    @db.VarChar(255)
+  payloadJson     Json      @map("payload_json")
+  isProcessed     Boolean   @default(false) @map("is_processed")
+  processedAt     DateTime? @map("processed_at") @db.Timestamptz(6)
+  errorMessage    String?   @map("error_message") @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([eventId])
+  @@index([isProcessed])
+  @@map("webhook_events")
+}
+
+model Notification {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String?       @map("organization_id") @db.Uuid
+  userId         String        @map("user_id") @db.Uuid
+  title          String        @db.VarChar(200)
+  message        String        @db.Text
+  category       String        @db.VarChar(50) // "RENT_DUE", "TICKET_UPDATE", "LEASE_EXPIRY", "SYSTEM_ALERT"
+  channel        String        @default("IN_APP") @db.VarChar(50) // "IN_APP", "SMS", "WHATSAPP", "EMAIL"
+  isRead         Boolean       @default(false) @map("is_read")
+  readAt         DateTime?     @map("read_at") @db.Timestamptz(6)
+  actionUrl      String?       @map("action_url") @db.Text
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
+
+model AuditEvent {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String?       @map("organization_id") @db.Uuid
+  actorId        String?       @map("actor_id") @db.Uuid
+  actionType     String        @map("action_type") @db.VarChar(100)
+  resourceType   String        @map("resource_type") @db.VarChar(50)
+  resourceId     String        @map("resource_id") @db.VarChar(100)
+  previousState  Json?         @map("previous_state")
+  newState       Json?         @map("new_state")
+  ipAddress      String?       @map("ip_address") @db.VarChar(45)
+  userAgent      String?       @map("user_agent") @db.Text
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  actor          User?         @relation("ActorAuditEvents", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([actorId])
+  @@index([actionType])
+  @@index([resourceType, resourceId])
+  @@map("audit_logs")
+}

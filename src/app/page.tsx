@@ -26,6 +26,7 @@ import LiveActivityTicker from '../components/layout/LiveActivityTicker';
 // Dashboards
 import OwnerDashboard from '../components/dashboards/OwnerDashboard';
 import TenantDashboard from '../components/dashboards/TenantDashboard';
+import AdminDashboard from '../components/dashboards/AdminDashboard';
 
 // Modules
 import PropertyList from '../components/modules/properties/PropertyList';
@@ -40,6 +41,8 @@ import MaintenanceList from '../components/modules/maintenance/MaintenanceList';
 import CreateTicketModal from '../components/modules/maintenance/CreateTicketModal';
 import LeadsCRM from '../components/modules/leasing/LeadsCRM';
 import EstateHospitalityDashboard from '../components/dashboards/EstateHospitalityDashboard';
+import EstateSettingsView from '../components/modules/estate/EstateSettingsView';
+import TenantSettingsView from '../components/modules/tenant/TenantSettingsView';
 import StaywiseAIPanel from '../components/modules/ai/StaywiseAIPanel';
 import MarketplaceNRI from '../components/modules/services/MarketplaceNRI';
 
@@ -53,21 +56,73 @@ import PGBedManagementView from '../components/modules/pg/PGBedManagementView';
 import CommercialCAMView from '../components/modules/commercial/CommercialCAMView';
 import MoveFlowRetentionView from '../components/modules/moveflow/MoveFlowRetentionView';
 import FindHomeView from '../components/modules/discovery/FindHomeView';
+import LandingPageView from '../components/landing/LandingPageView';
+import StaywiseRewardsHub from '../components/modules/rewards/StaywiseRewardsHub';
+import DepositProtectHub from '../components/modules/deposit/DepositProtectHub';
 
 function MainAppShell() {
   const { 
     isAuthenticated, 
     activeRole, 
     activeView, 
+    setActiveView,
     isUploadBillModalOpen, 
     setIsUploadBillModalOpen, 
     preselectedUnitForUpload 
   } = useAppState();
 
-  // If not logged in, render the dedicated multi-role login screen with temporary credentials
+  const [unauthScreen, setUnauthScreen] = React.useState<'landing' | 'login'>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('login') === 'true' || urlParams.get('view') === 'login' || urlParams.get('logout') === 'true') {
+          return 'login';
+        }
+        const saved = sessionStorage.getItem('staywise_unauth_screen') || localStorage.getItem('staywise_unauth_screen');
+        if (saved === 'login') return 'login';
+      } catch (e) {}
+    }
+    return 'landing';
+  });
+
+  // Check URL query parameters (?login=true or ?view=login)
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('login') === 'true' || urlParams.get('view') === 'login' || urlParams.get('logout') === 'true') {
+        setUnauthScreen('login');
+      }
+    } catch (e) {}
+  }, []);
+
+  // If not logged in, render the modern high-converting Landing Page or LoginView
   if (!isAuthenticated) {
-    return <LoginView />;
+    if (unauthScreen === 'login') {
+      return (
+        <LoginView 
+          onBackToLanding={() => {
+            try {
+              sessionStorage.removeItem('staywise_unauth_screen');
+              localStorage.removeItem('staywise_unauth_screen');
+            } catch (e) {}
+            setUnauthScreen('landing');
+          }} 
+        />
+      );
+    }
+    return (
+      <LandingPageView 
+        onNavigateToLogin={() => {
+          try {
+            sessionStorage.setItem('staywise_unauth_screen', 'login');
+          } catch (e) {}
+          setUnauthScreen('login');
+        }} 
+      />
+    );
   }
+
 
   const renderActiveView = () => {
     // Strict Tenant Boundary - Only allow self views
@@ -76,9 +131,12 @@ function MainAppShell() {
         case 'find_home':
           return <FindHomeView />;
         case 'rentflow':
-        case 'rewards':
         case 'reports':
           return <RentFlowOverview />;
+        case 'rewards':
+          return <StaywiseRewardsHub />;
+        case 'deposit_protect':
+          return <DepositProtectHub />;
         case 'maintenance':
           return <MaintenanceList />;
         case 'ai':
@@ -86,6 +144,8 @@ function MainAppShell() {
         case 'moveflow':
         case 'referrals':
           return <MoveFlowRetentionView />;
+        case 'settings':
+          return <TenantSettingsView />;
         case 'dashboard':
         default:
           return <TenantDashboard />;
@@ -111,11 +171,40 @@ function MainAppShell() {
           return <EstateHospitalityDashboard initialTab="STAFF" />;
         case 'pricing':
           return <EstateHospitalityDashboard initialTab="PRICING" />;
+        case 'deposit_protect':
+          return <DepositProtectHub />;
+        case 'settings':
+          return <EstateSettingsView />;
         case 'overview':
         case 'estate':
         case 'dashboard':
         default:
           return <EstateHospitalityDashboard initialTab="OVERVIEW" />;
+      }
+    }
+
+    // Dedicated Super Admin Governance Center
+    if (activeRole === 'admin') {
+      switch (activeView) {
+        case 'deposit_protect':
+          return <DepositProtectHub />;
+        case 'properties':
+          return <PropertyList />;
+        case 'tenants':
+          return <TenantsDirectory />;
+        case 'rentflow':
+          return <RentFlowOverview />;
+        case 'reports':
+          return <FinancialAnalyticsView />;
+        case 'maintenance':
+          return <MaintenanceList />;
+        case 'ai':
+          return <StaywiseAIPanel />;
+        case 'settings':
+          return <SettingsView />;
+        case 'dashboard':
+        default:
+          return <AdminDashboard />;
       }
     }
 
@@ -138,8 +227,11 @@ function MainAppShell() {
       case 'referrals':
         return <MoveFlowRetentionView />;
       case 'rentflow':
-      case 'rewards':
         return <RentFlowOverview />;
+      case 'rewards':
+        return <StaywiseRewardsHub />;
+      case 'deposit_protect':
+        return <DepositProtectHub />;
       case 'maintenance':
         return <MaintenanceList />;
       case 'leads':
@@ -164,17 +256,17 @@ function MainAppShell() {
   };
 
   return (
-    <div className="min-h-screen bg-[#edece6] text-[#19251f] flex font-sans selection:bg-[#274235]/20 selection:text-[#274235] overflow-x-hidden">
-      {/* Floating Vertical Navigation Rail from reference image */}
+    <div className="min-h-screen bg-[#F7F8F6] text-[#171717] flex font-sans selection:bg-[#06110c] selection:text-white overflow-x-hidden">
+      {/* Left Sidebar Navigation matching reference design */}
       <FloatingNavRail />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 pr-0 sm:pr-4 overflow-x-hidden">
-        {/* Top Header matching reference image with floral logo, greeting & search */}
+      <div className="flex-1 flex flex-col min-w-0 bg-white lg:rounded-l-[2.5rem] my-0 lg:my-3 lg:mr-3 shadow-sm border-l-0 lg:border-l border-[#D2DDD7] overflow-hidden min-h-[calc(100vh-1.5rem)]">
+        {/* Top Header */}
         <TopHeader />
 
-        {/* Content Canvas with ample bottom padding on mobile/tablet for bottom nav bar */}
-        <main className="flex-1 p-3.5 sm:p-6 pb-28 lg:pb-8 max-w-7xl w-full mx-auto overflow-y-auto">
+        {/* Content Canvas */}
+        <main className="flex-1 p-3 sm:p-6 pb-28 lg:pb-8 w-full mx-auto overflow-y-auto">
           {renderActiveView()}
         </main>
       </div>

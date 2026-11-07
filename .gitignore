@@ -24,6 +24,8 @@
 .DS_Store
 *.pem
 cloudflared.exe
+*.db-shm
+*.db-wal
 
 # debug
 npm-debug.log*

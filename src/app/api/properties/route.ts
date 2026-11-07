@@ -1,14 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
+import { validatePropertyPayload } from '../../../lib/validation';
+import { getAuthenticatedUser } from '../../../lib/security/authorization';
+import { invalidateBootstrapCache } from '../../../lib/cache/apiCache';
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const portfolio = searchParams.get('portfolio') || undefined;
     const verificationStatus = searchParams.get('verificationStatus') || undefined;
+    const requestedOwnerId = searchParams.get('ownerId') || undefined;
 
-    const properties = await db.properties.findMany({ portfolio, verificationStatus });
-    return NextResponse.json({ success: true, count: properties.length, data: properties });
+    // Multi-tenant boundary check (P0.3)
+    const auth = await getAuthenticatedUser(req);
+    let effectiveOwnerId = requestedOwnerId;
+
+    if (auth && auth.user.role === 'owner') {
+      // If caller explicitly asked for another owner's portfolio, block cross-tenant access
+      if (requestedOwnerId && requestedOwnerId !== auth.user.id) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'FORBIDDEN: Cross-organization breach attempt blocked. You cannot view properties outside your authorized workspace.',
+            code: 'CROSS_TENANT_ACCESS_DENIED'
+          },
+          { status: 403 }
+        );
+      }
+      effectiveOwnerId = auth.user.id;
+    }
+
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '50', 10)));
+    const offset = (page - 1) * limit;
+
+    const properties = await db.properties.findMany({ 
+      portfolio, 
+      verificationStatus, 
+      ownerId: effectiveOwnerId,
+      limit,
+      offset
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      count: properties.length, 
+      pagination: {
+        page,
+        limit,
+        count: properties.length
+      },
+      data: properties 
+    }, {
+      headers: {
+        'Cache-Control': 'private, max-age=15, stale-while-revalidate=60'
+      }
+    });
   } catch (error) {
     console.error('[API /api/properties] GET Error:', error);
     return NextResponse.json({ success: false, error: 'Failed to fetch properties' }, { status: 500 });
@@ -17,20 +64,33 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const rawBody = await req.json();
 
-    if (!body.name || !body.address || !body.city) {
+    // 1. Rigorous input validation & sanitization
+    const validation = validatePropertyPayload(rawBody);
+    if (!validation.isValid) {
       return NextResponse.json(
-        { success: false, error: 'Missing required property details (name, address, city)' },
+        {
+          success: false,
+          error: validation.errors[0]?.message || 'Invalid property registration payload.',
+          validationErrors: validation.errors
+        },
         { status: 400 }
       );
     }
 
-    // Owner created property defaults to PENDING verification for admin audit
+    const payload = validation.sanitizedData!;
+    const auth = await getAuthenticatedUser(req);
+    const effectiveOwnerId = (auth && auth.user.role === 'owner')
+      ? auth.user.id
+      : (rawBody.ownerId || payload.ownerId || undefined);
+
+    // 2. Owner created property defaults to PENDING verification for admin audit
     const newProperty = await db.properties.create({
-      ...body,
+      ...payload,
+      ownerId: effectiveOwnerId,
       verificationStatus: 'PENDING',
-      submittedDocs: body.submittedDocs || [
+      submittedDocs: rawBody.submittedDocs || [
         'Title_Deed_Registry.pdf',
         'Municipal_Building_Permit_2026.pdf',
         'Fire_Safety_NOC.pdf',
@@ -38,7 +98,7 @@ export async function POST(req: NextRequest) {
       ]
     });
 
-    // Record audit event in ledger
+    // 3. Record audit event in ledger
     await db.ledger.create({
       description: `New property registered: "${newProperty.name}" submitted by owner [Pending Legal Audit]`,
       type: 'DEBIT',
@@ -48,6 +108,8 @@ export async function POST(req: NextRequest) {
       referenceId: newProperty.id,
       settlementStatus: 'CLEARED'
     });
+
+    invalidateBootstrapCache();
 
     return NextResponse.json({ success: true, data: newProperty }, { status: 201 });
   } catch (error) {
