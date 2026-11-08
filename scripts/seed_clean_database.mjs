@@ -224,7 +224,7 @@ insertProp.run(
   new Date().toISOString()
 );
 
-console.log('Seeding Property Units for Beach Road...');
+console.log('Seeding Property Units for All Portfolios...');
 const insertUnit = db.prepare(`
   INSERT INTO property_units (
     id, property_id, unit_number, floor, type, rent_amount, deposit_amount,
@@ -232,11 +232,28 @@ const insertUnit = db.prepare(`
   ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
+// Beach Road Units (Residential)
 insertUnit.run('unit-101', 'prop-beach-road', '101', 1, '2 BHK', 24000, 72000, 'OCCUPIED', 'tenant-101', 'Rahul Menon', '2027-03-31', 1250, 2, 2);
 insertUnit.run('unit-102', 'prop-beach-road', '102', 1, '2 BHK', 24000, 72000, 'OCCUPIED', 'tenant-102', 'Ananya Pillai', '2027-06-30', 1250, 2, 2);
 insertUnit.run('unit-201', 'prop-beach-road', '201', 2, '3 BHK Sea View', 38000, 114000, 'OCCUPIED', 'tenant-201', 'Dr. Faisal Ahmed', '2026-12-31', 1800, 3, 3);
 insertUnit.run('unit-302', 'prop-beach-road', '302', 3, '2 BHK Luxury', 25000, 75000, 'OCCUPIED', 'tenant-302', 'Kavita Nair', '2027-01-31', 1350, 2, 2);
 insertUnit.run('unit-304', 'prop-beach-road', '304', 3, '2 BHK Sea View', 26000, 78000, 'OCCUPIED', 'tenant-shyam', 'Shyam Sundar', '2026-12-31', 1300, 2, 2);
+insertUnit.run('unit-401', 'prop-beach-road', '401', 4, '3 BHK Penthouse', 45000, 135000, 'VACANT', null, null, null, 2100, 3, 3);
+
+// Infovision Commercial Units
+insertUnit.run('unit-info-101', 'prop-infovision', 'Tech Suite 101', 1, 'Commercial Office', 210000, 630000, 'OCCUPIED', 'comm-t-1', 'HexaLogix Software', '2028-04-30', 4200, 0, 4);
+insertUnit.run('unit-info-201', 'prop-infovision', 'FinSuite 201', 2, 'Financial Advisory Suite', 155000, 465000, 'OCCUPIED', 'comm-t-2', 'FinEdge Advisory', '2029-05-31', 3100, 0, 3);
+insertUnit.run('unit-info-301', 'prop-infovision', 'Cloud 301', 3, 'Data Center Shell', 250000, 750000, 'OCCUPIED', 'comm-t-3', 'CloudScale Networks', '2029-04-30', 5000, 0, 5);
+insertUnit.run('unit-info-401', 'prop-infovision', 'Suite 401', 4, 'Executive Suite', 205000, 615000, 'VACANT', null, null, null, 4000, 0, 4);
+
+// Urban PG Units
+insertUnit.run('unit-pg-101', 'prop-urban-pg', 'Wing A - Room 101', 1, 'Double Sharing', 26000, 52000, 'OCCUPIED', 'pg-t-1', 'Akash Verma & Rohan Sharma', '2026-12-31', 450, 1, 1);
+insertUnit.run('unit-pg-102', 'prop-urban-pg', 'Wing A - Room 102', 1, 'Triple Sharing', 33000, 66000, 'OCCUPIED', 'pg-t-2', 'PG Residents', '2027-01-31', 550, 1, 1);
+insertUnit.run('unit-pg-201', 'prop-urban-pg', 'Wing B - Room 201', 2, 'Single Luxury', 21000, 42000, 'OCCUPIED', 'pg-t-3', 'Nitin Gadgil', '2026-11-30', 350, 1, 1);
+insertUnit.run('unit-pg-202', 'prop-urban-pg', 'Wing B - Room 202', 2, 'Single Luxury', 21000, 42000, 'VACANT', null, null, null, 350, 1, 1);
+
+// Wayanad Villa Unit
+insertUnit.run('unit-wayanad-main', 'prop-wayanad-villa', 'Main Estate Villa', 1, 'Luxury Heritage Villa', 180000, 360000, 'OCCUPIED', 'guest-wayanad', 'Hospitality Bookings', '2027-03-31', 6500, 5, 6);
 
 console.log('Seeding Tenants...');
 const insertTenant = db.prepare(`
@@ -753,6 +770,439 @@ insertSub.run(
   'sha256-78e8b1c411b02b98218903cde89104fae891238910d8ab',
   new Date().toISOString()
 );
+
+console.log('Seeding Leads CRM...');
+const insertLead = db.prepare(`
+  INSERT INTO leads (
+    id, name, phone, email, preferred_area, budget_min, budget_max,
+    move_in_urgency, score_category, score_explanation, stage,
+    property_interest, source, created_at, assigned_agent, visit_date
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`);
+
+insertLead.run(
+  'lead-1',
+  'Meera Nambiar',
+  '+91 98450 66778',
+  'meera.nambiar@techholdings.com',
+  'Kozhikode Coastal',
+  25000,
+  30000,
+  'HIGH',
+  'HOT',
+  'Relocating from Bangalore for tech executive role, budget pre-approved by company, ready to execute digital lease.',
+  'KYC_PENDING',
+  'Beach Road Apartments (Sea View)',
+  'Organic Web / Direct Link',
+  new Date().toISOString(),
+  'Vikram Singhania',
+  '2026-05-12'
+);
+
+insertLead.run(
+  'lead-2',
+  'CyberSecure Systems India',
+  '+91 94470 88990',
+  'leasing@cybersecure.io',
+  'Kochi Kakkanad',
+  180000,
+  220000,
+  'MEDIUM',
+  'WARM',
+  'Expanding enterprise cybersecurity lab, requires 4,000 sq ft warm shell with dual fiber redundancy.',
+  'SITE_VISIT_SCHEDULED',
+  'Infovision Commercial Hub Suite 401',
+  'Commercial Broker Network',
+  new Date().toISOString(),
+  'Commercial Desk',
+  '2026-05-14'
+);
+
+insertLead.run(
+  'lead-3',
+  'Arjun Das',
+  '+91 98800 22119',
+  'arjun.das@fintech.co',
+  'HSR Layout Bangalore',
+  12000,
+  15000,
+  'IMMEDIATE',
+  'HOT',
+  'Joining HSR tech firm next week, looking for single/double room with 3 meals & high-speed Wi-Fi.',
+  'APPLICATION_SUBMITTED',
+  'Staywise Urban PG & Co-living',
+  'WisePoints Referral Network',
+  new Date().toISOString(),
+  'PG Warden',
+  '2026-05-10'
+);
+
+insertLead.run(
+  'lead-4',
+  'Deepa Krishnan',
+  '+91 99450 33441',
+  'deepa.k@luxurytravel.in',
+  'Wayanad Hill Station',
+  40000,
+  60000,
+  'LOW',
+  'WARM',
+  'Corporate retreat booking inquiry for Serene Mist Villa for team strategy week.',
+  'CONTACTED',
+  'Serene Mist Estate Villa',
+  'Instagram Campaign',
+  new Date().toISOString(),
+  'Manoj Kumar',
+  '2026-05-20'
+);
+
+console.log('Seeding Commercial Visitors...');
+const insertVisitor = db.prepare(`
+  INSERT INTO commercial_visitors (
+    id, visitor_name, host_company, purpose, vehicle_number, check_in_time, status, pass_code
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+`);
+
+insertVisitor.run('vis-1', 'Sandeep Varma', 'HexaLogix Software Pvt Ltd', 'Client Architecture Review', 'KL-07-CC-4912', '10:15 AM', 'CHECKED_IN', 'INF-4912');
+insertVisitor.run('vis-2', 'Priyanka Sen', 'FinEdge Advisory Partners', 'Statutory GST Audit', 'KL-07-BQ-1180', '11:00 AM', 'CHECKED_IN', 'INF-1180');
+insertVisitor.run('vis-3', 'Harish Babu', 'Facility Operations', 'HVAC Chiller Maintenance', 'KL-07-DE-9001', '09:30 AM', 'CHECKED_IN', 'INF-9001');
+
+console.log('Seeding AI Insights & Optimization Suggestions...');
+const insertInsight = db.prepare(`
+  INSERT INTO ai_insights (
+    id, category, title, description, impact_amount, action_text, action_payload, created_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+`);
+
+insertInsight.run(
+  'ins-1',
+  'CAM_OPTIMIZATION',
+  'Infovision CAM Expense Recovery Gap',
+  'Common area electricity bills increased by 14% last month due to chiller cycle timing. Adjusting nighttime chiller setpoints to 24°C can save ₹18,400/month.',
+  18400,
+  'Optimize HVAC Setpoints',
+  JSON.stringify({ propertyId: 'prop-infovision', recommendedTemp: 24 }),
+  new Date().toISOString()
+);
+
+insertInsight.run(
+  'ins-2',
+  'VACANCY_PREVENTION',
+  'Urban PG Room 202 Immediate Occupancy Recommendation',
+  'Single Luxury room 202 is currently vacant. 3 hot leads matching this budget are waiting in CRM. Auto-assigning lead Arjun Das can recover ₹21,000 monthly rent.',
+  21000,
+  'Send Digital Offer to Lead',
+  JSON.stringify({ leadId: 'lead-3', unitId: 'unit-pg-202' }),
+  new Date().toISOString()
+);
+
+insertInsight.run(
+  'ins-3',
+  'SOLAR_SAVINGS',
+  'Wayanad Villa Solar Microgrid Net Zero Efficiency',
+  '25 kVA solar microgrid generated 1,420 kWh this month, covering 92% of estate energy demands and reducing diesel generator runtime by 38 hours.',
+  14500,
+  'Download ESG & Energy Report',
+  JSON.stringify({ estateId: 'prop-wayanad-villa' }),
+  new Date().toISOString()
+);
+
+console.log('Seeding MoveFlow Handover Checklist...');
+const insertMoveFlow = db.prepare(`
+  INSERT INTO moveflow_checklist (
+    id, title, category, completed, due_date
+  ) VALUES (?, ?, ?, ?, ?)
+`);
+
+insertMoveFlow.run('mf-1', 'Digital Meter Reading & Water Inflow Verification', 'Check-in Audit', 1, '2026-05-01');
+insertMoveFlow.run('mf-2', 'Aadhaar / Biometric Municipal Police Intimation Form', 'Compliance', 1, '2026-05-02');
+insertMoveFlow.run('mf-3', 'High-Resolution Geotagged Move-in Photo Inventory', 'Zero-Deposit Condition', 1, '2026-05-03');
+insertMoveFlow.run('mf-4', 'Smart Door Lock RFID Card & Master PIN Provisioning', 'Access Control', 1, '2026-05-04');
+insertMoveFlow.run('mf-5', 'Tenant Handbook, Emergency Contacts & WiFi Onboarding', 'Welcome Kit', 1, '2026-05-05');
+
+console.log('Seeding Deposit Disputes & History...');
+const insertDispute = db.prepare(`
+  INSERT INTO deposit_disputes (
+    id, property_id, property_name, unit_or_bed, tenant_name,
+    deposit_paid, deductions_json, proposed_refund, disputed_amount,
+    tenant_notes, status, created_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`);
+
+insertDispute.run(
+  'dd-1',
+  'prop-beach-road',
+  'Beach Road Apartments',
+  'Unit 204',
+  'Aditya Kulkarni (Ex-Resident)',
+  75000,
+  JSON.stringify([
+    { reason: 'Deep cleaning & repaint per agreement clause 4.2', amount: 4500 },
+    { reason: 'Final KSEB electricity sub-meter reconciliation', amount: 1250 }
+  ]),
+  69250,
+  0,
+  'All deductions verified against move-out condition report. Agreed and signed off.',
+  'SETTLED_REFUNDED',
+  new Date().toISOString()
+);
+
+console.log('Seeding Referrals...');
+const insertReferral = db.prepare(`
+  INSERT INTO referrals (
+    id, referral_code, referred_name, property_type, reward_amount, status, date
+  ) VALUES (?, ?, ?, ?, ?, ?, ?)
+`);
+
+insertReferral.run('ref-1', 'VIKRAM-BEACH', 'Dr. Faisal Ahmed (Beach Road #201)', 'Apartment', 5000, 'PAID', '2026-01-15');
+insertReferral.run('ref-2', 'SHYAM-REF-304', 'Meera Nambiar (Incoming Beach Road #401)', 'Apartment', 2500, 'PENDING_MOVE_IN', '2026-05-02');
+
+console.log('Seeding Influencer Offers & Affiliate Network...');
+const insertInfluencer = db.prepare(`
+  INSERT INTO influencer_offers (
+    id, code, influencer_name, influencer_handle, commission_type,
+    commission_value, audience_offer, target_audience, signups_count,
+    total_commission_paid, status, created_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`);
+
+insertInfluencer.run(
+  'inf-1',
+  'KERALALUXURY',
+  'Rohit & Maya (Wanderlust Kerala)',
+  '@wanderlustkerala',
+  'PERCENTAGE',
+  10,
+  '10% off stay at Serene Mist Villa + complimentary organic tea tasting',
+  'Luxury Travel & Remote Work Couples',
+  14,
+  28000,
+  'ACTIVE',
+  new Date().toISOString()
+);
+
+insertInfluencer.run(
+  'inf-2',
+  'TECHPARKLIVING',
+  'Karthik TechLife',
+  '@karthik_techblr',
+  'FIXED',
+  1500,
+  '₹1,500 Amazon voucher on 6-month stay at Urban PG',
+  'Bangalore Tech Professionals & Interns',
+  26,
+  39000,
+  'ACTIVE',
+  new Date().toISOString()
+);
+
+console.log('Seeding WisePoints Merchant Offers...');
+const insertMerchantOffer = db.prepare(`
+  INSERT INTO merchant_offers (
+    id, partner_name, category, offer_title, discount_description,
+    points_required, voucher_code, image_url, terms, is_active, expiry_date
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`);
+
+insertMerchantOffer.run(
+  'mo-1',
+  'Starbucks Coffee India',
+  'Dining & Cafes',
+  '₹250 Off Any Handcrafted Beverage',
+  'Redeem 500 WisePoints for an instant ₹250 Starbucks e-gift card valid across all stores.',
+  500,
+  'STB-STAYWISE-250',
+  'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400',
+  'Valid on beverages of Tall size or above. Single use per redemption.',
+  1,
+  '2026-12-31'
+);
+
+insertMerchantOffer.run(
+  'mo-2',
+  'Swiggy Gourmet & Instamart',
+  'Food & Groceries',
+  '₹300 Swiggy Money Voucher',
+  'Redeem 600 WisePoints to load ₹300 directly to your Swiggy wallet for dining or groceries.',
+  600,
+  'SWIG-STAYWISE-300',
+  'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400',
+  'Valid on Swiggy Food, Instamart, and Dineout. No minimum order.',
+  1,
+  '2026-12-31'
+);
+
+insertMerchantOffer.run(
+  'mo-3',
+  'Uber Premier & Rides',
+  'Mobility & Travel',
+  '₹200 Uber Rides Voucher',
+  'Redeem 400 WisePoints for ₹200 off your next 2 Uber Premier or Go rides.',
+  400,
+  'UBER-STAYWISE-200',
+  'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400',
+  'Applicable in all Indian metro cities for verified Staywise residents.',
+  1,
+  '2026-12-31'
+);
+
+insertMerchantOffer.run(
+  'mo-4',
+  'Decathlon Sports India',
+  'Fitness & Lifestyle',
+  '₹500 Decathlon Gift Card',
+  'Redeem 1,000 WisePoints for ₹500 off sports gear, running shoes, or fitness accessories.',
+  1000,
+  'DECA-STAYWISE-500',
+  'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=400',
+  'Valid online and in all physical Decathlon stores across India.',
+  1,
+  '2026-12-31'
+);
+
+insertMerchantOffer.run(
+  'mo-5',
+  'IKEA India Home Living',
+  'Home & Decor',
+  '₹1,000 IKEA Furniture Voucher',
+  'Redeem 1,200 WisePoints for ₹1,000 off home organization, study desks, and furnishing.',
+  1200,
+  'IKEA-STAYWISE-1000',
+  'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400',
+  'Valid on IKEA app and stores with minimum purchase of ₹2,000.',
+  1,
+  '2026-12-31'
+);
+
+console.log('Seeding Property Condition Reports...');
+const insertConditionReport = db.prepare(`
+  INSERT INTO property_condition_reports (
+    id, contract_id, property_id, property_name, unit_number,
+    tenant_id, tenant_name, report_type, inspection_date,
+    overall_condition, items_json, photos_json, notes, verified_by, status, created_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`);
+
+insertConditionReport.run(
+  'pcr-304',
+  'prot-pol-shyam-304',
+  'prop-beach-road',
+  'Beach Road Apartments',
+  '304',
+  'user-tenant-shyam',
+  'Shyam Sundar',
+  'MOVE_IN_VERIFICATION',
+  '2026-01-01',
+  'EXCELLENT',
+  JSON.stringify([
+    { area: 'Living Room', item: 'Italian Marble Flooring', condition: 'Spotless, no cracks', status: 'PASS' },
+    { area: 'Master Bedroom', item: 'Daikin Inverter AC', condition: 'Fully operational, serviced', status: 'PASS' },
+    { area: 'Kitchen', item: 'Modular Cabinets & Chimney', condition: 'Clean, suction tested', status: 'PASS' },
+    { area: 'Balcony', item: 'Sea View Glass Railing & Powder Coating', condition: 'Intact, weather sealed', status: 'PASS' }
+  ]),
+  JSON.stringify([
+    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400',
+    'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=400',
+    'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400'
+  ]),
+  'Digital move-in audit completed and digitally signed by resident Shyam Sundar and owner Vikram Singhania.',
+  'Staywise Certified Inspector (Audit ID #INSP-KL-304)',
+  'VERIFIED',
+  '2026-01-01T10:00:00Z'
+);
+
+console.log('Seeding Institutional Protection Claims...');
+const insertProtectionClaim = db.prepare(`
+  INSERT INTO protection_claims (
+    id, contract_id, policy_number, property_id, property_name, unit_number,
+    owner_id, owner_name, tenant_id, tenant_name, claim_type,
+    claimed_amount, approved_amount, deductible, description,
+    evidence_urls_json, status, dispute_reason, settlement_date, settlement_txn_id, created_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`);
+
+insertProtectionClaim.run(
+  'pc-1',
+  'prot-pol-shyam-304',
+  'STW-DEP-2026-KL-304',
+  'prop-beach-road',
+  'Beach Road Apartments',
+  '304',
+  'user-owner-vikram',
+  'Vikram Singhania',
+  'user-tenant-shyam',
+  'Shyam Sundar',
+  'PLUMBING_MINOR_LEAK',
+  3200,
+  3200,
+  0,
+  'Under-sink water pressure valve replacement settled directly by Staywise Institutional Trust without touching tenant funds.',
+  JSON.stringify(['/images/claims/valve-repair-receipt.pdf']),
+  'SETTLED',
+  null,
+  '2026-02-14',
+  'TXN-TRUST-CLAIM-88219',
+  '2026-02-12T14:30:00Z'
+);
+
+console.log('Seeding Tenant Connection Requests...');
+const insertConnectionRequest = db.prepare(`
+  INSERT INTO tenant_connection_requests (
+    id, tenant_user_id, tenant_name, tenant_email, tenant_phone,
+    owner_id, owner_code, owner_email, owner_phone, property_id,
+    property_name, unit_number, monthly_rent, deposit_amount,
+    lease_start_date, status, tenancy_type, include_food_plan,
+    aadhaar_number, pan_number, ekyc_verified, documents_json,
+    agreement_url, co_tenant_name, co_tenant_phone, co_tenant_email,
+    move_out_date, move_out_reason, inspection_notes, deposit_settled_amount, created_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`);
+
+insertConnectionRequest.run(
+  'tcr-1',
+  'user-lead-meera',
+  'Meera Nambiar',
+  'meera.nambiar@techholdings.com',
+  '+91 98450 66778',
+  'user-owner-vikram',
+  'VIKRAM-BEACH',
+  'owner@staywise.com',
+  '+91 98450 11223',
+  'prop-beach-road',
+  'Beach Road Apartments',
+  '401',
+  45000,
+  135000,
+  '2026-06-01',
+  'PENDING_APPROVAL',
+  'RESIDENTIAL',
+  0,
+  '•••• •••• 6612',
+  '•••••7719Q',
+  1,
+  JSON.stringify(['Aadhaar_Front_Masked.pdf', 'Employment_Letter_TechHoldings.pdf']),
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  null,
+  new Date().toISOString()
+);
+
+console.log('Seeding Estate Utilities...');
+const insertUtility = db.prepare(`
+  INSERT INTO utilities (
+    id, utility_type, estate_name, meter_number, previous_reading,
+    current_reading, consumption_unit, bill_amount, reading_date
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+`);
+
+insertUtility.run('ut-1', 'SOLAR_GENERATION', 'Serene Mist Estate Villa', 'SOLAR-WY-25KVA', 14200, 15620, 'kWh Generated', 0, '2026-05-01');
+insertUtility.run('ut-2', 'WATER_RESERVOIR', 'Serene Mist Estate Villa', 'WTR-WY-NATURAL', 88500, 96800, 'Liters Consumed', 1850, '2026-05-01');
+insertUtility.run('ut-3', 'DIESEL_GENERATOR_BACKUP', 'Serene Mist Estate Villa', 'DG-CUMMINS-30KVA', 210, 218, 'Hours Run', 4200, '2026-05-01');
 
 console.log('Checkpointing SQLite WAL...');
 db.exec('PRAGMA foreign_keys = ON;');

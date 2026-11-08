@@ -310,7 +310,7 @@ export async function GET(req: NextRequest) {
         invoices: userInvoices,
         ledger: userLedger,
         depositDisputes: userDepositDisputes,
-        influencerOffers: [],
+        influencerOffers: (isSuperAdmin || userProperties.length > 0) ? allInfluencerOffers : [],
         tickets: userTickets,
         pgBeds: userPgBeds,
         pgRooms: userPgRooms,
@@ -322,11 +322,11 @@ export async function GET(req: NextRequest) {
         staff: userStaff,
         electricityBills: userBills,
         subscription: allSubscription,
-        leads: [],
+        leads: userProperties.length > 0 ? allLeads : [],
         utilities: userUtilities,
         aiInsights: userProperties.length > 0 ? allAiInsights : [],
         moveFlowChecklist: userMoveFlowChecklist,
-        referrals: [],
+        referrals: userProperties.length > 0 ? allReferrals : [],
         users: allUsers.map(({ password, ...u }) => u),
         tenantConnectionRequests: (userRole === 'tenant')
           ? allTenantConnections.filter(r => r.tenantUserId === targetUserId || (userEmail && r.tenantEmail?.toLowerCase() === userEmail.toLowerCase()))

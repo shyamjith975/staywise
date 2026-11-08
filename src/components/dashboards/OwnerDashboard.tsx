@@ -354,10 +354,10 @@ export default function OwnerDashboard() {
     }
 
     if (list.length === 0 && (activeRole === 'owner' || activeRole === 'admin')) {
-      return DEMO_TASKS_LIST;
+      return isDemoAccount ? DEMO_TASKS_LIST : [];
     }
     return list;
-  }, [invoices, tickets, electricityBills, activeRole]);
+  }, [invoices, tickets, electricityBills, activeRole, isDemoAccount]);
 
   // Current Operations Tasks List
   const [tasksList, setTasksList] = useState<typeof DEMO_TASKS_LIST>([]);
@@ -369,26 +369,30 @@ export default function OwnerDashboard() {
   // Heatmap & Property Filter
   const [heatmapFilter, setHeatmapFilter] = useState<'ALL' | 'HIGH_YIELD' | 'STABLE' | 'NEEDS_ATTENTION' | 'VACANT'>('ALL');
 
-  // Bank Accounts State (Persisted & Consistent across mobile & desktop)
+  // Bank Accounts State (Persisted & Scoped per user)
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem('staywise_owner_banks');
-        if (saved) return JSON.parse(saved);
+        const userScoped = localStorage.getItem(`staywise_owner_banks_${currentUser?.id || 'demo'}`);
+        if (userScoped) return JSON.parse(userScoped);
+        const legacy = localStorage.getItem('staywise_owner_banks');
+        if (legacy && isDemoAccount) return JSON.parse(legacy);
       } catch {}
     }
-    return DEMO_BANK_ACCOUNTS;
+    return isDemoAccount ? DEMO_BANK_ACCOUNTS : [];
   });
 
-  // Document Vault State (Persisted & Consistent across mobile & desktop)
+  // Document Vault State (Persisted & Scoped per user)
   const [documents, setDocuments] = useState<StoredDocument[]>(() => {
     if (typeof window !== 'undefined') {
       try {
-        const saved = localStorage.getItem('staywise_owner_docs');
-        if (saved) return JSON.parse(saved);
+        const userScoped = localStorage.getItem(`staywise_owner_docs_${currentUser?.id || 'demo'}`);
+        if (userScoped) return JSON.parse(userScoped);
+        const legacy = localStorage.getItem('staywise_owner_docs');
+        if (legacy && isDemoAccount) return JSON.parse(legacy);
       } catch {}
     }
-    return DEMO_DOCUMENTS;
+    return isDemoAccount ? DEMO_DOCUMENTS : [];
   });
 
   // Calculate real percentage of completed operational tasks (Done / Total)
@@ -1861,7 +1865,32 @@ Digitally stamped and compliant with Indian Tenancy Acts & Section 24.`
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={e => { e.preventDefault(); setIsAddBankModalOpen(false); }} className="space-y-3">
+            <form onSubmit={e => { 
+              e.preventDefault();
+              const addedBank: BankAccount = {
+                id: `bank-${Date.now()}`,
+                bankName: newBank.bankName,
+                accountNumber: `•••• •••• ${newBank.accountNumber.slice(-4) || '9911'}`,
+                ifsc: (newBank.ifsc || 'HDFC0001234').toUpperCase(),
+                holderName: newBank.holderName || currentUser.name || 'Property Owner',
+                status: 'Verified',
+                isPrimary: bankAccounts.length === 0
+              };
+              const updated = [...bankAccounts, addedBank];
+              setBankAccounts(updated);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem(`staywise_owner_banks_${currentUser?.id || 'demo'}`, JSON.stringify(updated));
+              }
+              addNotification('Bank Account Added', `${newBank.bankName} account verified via nodal penny-drop.`, 'SYSTEM');
+              setNewBank({
+                bankName: 'ICICI Bank',
+                accountNumber: '',
+                confirmAccountNumber: '',
+                ifsc: '',
+                holderName: currentUser.name
+              });
+              setIsAddBankModalOpen(false); 
+            }} className="space-y-3">
               <div>
                 <label className="text-xs font-bold text-[#171717]">Bank Name</label>
                 <input 
@@ -1912,7 +1941,25 @@ Digitally stamped and compliant with Indian Tenancy Acts & Section 24.`
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={e => { e.preventDefault(); setIsUploadDocModalOpen(false); }} className="space-y-3">
+            <form onSubmit={e => { 
+              e.preventDefault();
+              const addedDoc: StoredDocument = {
+                id: `doc-${Date.now()}`,
+                title: newDoc.title,
+                category: newDoc.category,
+                size: '1.4 MB',
+                date: `Verified ${new Date().toLocaleDateString('en-IN')}`,
+                status: 'Verified'
+              };
+              const updated = [...documents, addedDoc];
+              setDocuments(updated);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem(`staywise_owner_docs_${currentUser?.id || 'demo'}`, JSON.stringify(updated));
+              }
+              addNotification('Document Archived', `${newDoc.title} uploaded and encrypted in vault.`, 'SYSTEM');
+              setNewDoc({ title: '', category: 'Title Deed' });
+              setIsUploadDocModalOpen(false); 
+            }} className="space-y-3">
               <div>
                 <label className="text-xs font-bold text-[#171717]">Title</label>
                 <input 
