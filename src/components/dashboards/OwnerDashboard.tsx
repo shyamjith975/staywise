@@ -580,23 +580,18 @@ export default function OwnerDashboard() {
                     Your workspace starts with a clean slate. Click the + button above to register your first building, PG, flat, or commercial asset.
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+                <div className="flex flex-col items-center justify-center gap-2 pt-1">
                   <button
                     type="button"
                     onClick={() => setIsAddPropertyOpen(true)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#a31c1b] hover:bg-[#8e1817] text-white text-xs font-extrabold shadow-sm hover:shadow-md transition cursor-pointer"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#a31c1b] hover:bg-[#8e1817] text-white text-xs font-black shadow-md hover:shadow-lg transition cursor-pointer"
                   >
                     <Plus className="h-4 w-4" />
-                    <span>+ Add Property</span>
+                    <span>+ Add Your First Property</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsExistingTenantWizardOpen(true)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#171717] hover:bg-[#06110c] text-white text-xs font-bold shadow-xs hover:shadow-md transition cursor-pointer"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    <span>+ Onboard Tenant</span>
-                  </button>
+                  <p className="text-[11px] text-[#546E7A] font-medium">
+                    Tenant onboarding and lease creation unlock after adding at least 1 property.
+                  </p>
                 </div>
               </div>
             )}

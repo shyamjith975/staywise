@@ -27,6 +27,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Verify target property exists in the database
+    const targetProperty = await db.properties.findById(body.propertyId);
+    if (!targetProperty) {
+      return NextResponse.json(
+        { success: false, error: 'You must add at least one property before onboarding a tenant.' },
+        { status: 400 }
+      );
+    }
+
     // If unitNumber & monthlyRent provided, run full authoritative onboarding pipeline
     if (body.unitNumber && (body.monthlyRent !== undefined || body.deposit !== undefined)) {
       const onboardResult = await db.tenants.onboard({

@@ -19,6 +19,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Verify property exists before allowing onboarding
+    const targetProperty = await db.properties.findById(body.propertyId);
+    if (!targetProperty) {
+      return NextResponse.json(
+        { success: false, error: 'You must add at least one property before onboarding a tenant.' },
+        { status: 400 }
+      );
+    }
+
     const onboardResult = await db.tenants.onboard({
       name: body.name,
       phone: body.phone || '+91 98000 00000',

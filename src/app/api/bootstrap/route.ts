@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
           status: 304,
           headers: {
             'ETag': cached.etag,
-            'Cache-Control': 'private, max-age=15, stale-while-revalidate=45',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
             'X-Staywise-Cache': 'HIT_304'
           }
         });
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
       }, {
         headers: {
           'ETag': cached.etag,
-          'Cache-Control': 'private, max-age=15, stale-while-revalidate=45',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
           'X-Staywise-Cache': 'HIT_RAM'
         }
       });
@@ -113,7 +113,7 @@ export async function GET(req: NextRequest) {
           status: 304,
           headers: {
             'ETag': etag,
-            'Cache-Control': 'private, max-age=30, stale-while-revalidate=60',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
             'X-Staywise-Cache': 'REVALIDATED_304'
           }
         });
@@ -125,7 +125,7 @@ export async function GET(req: NextRequest) {
       }, {
         headers: {
           'ETag': etag,
-          'Cache-Control': 'private, max-age=30, stale-while-revalidate=60',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
           'X-Staywise-Cache': 'MISS_ANON'
         }
       });
@@ -368,7 +368,7 @@ export async function GET(req: NextRequest) {
         status: 304,
         headers: {
           'ETag': etag,
-          'Cache-Control': 'private, max-age=15, stale-while-revalidate=45',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
           'X-Staywise-Cache': 'REVALIDATED_304'
         }
       });
@@ -380,7 +380,7 @@ export async function GET(req: NextRequest) {
     }, {
       headers: {
         'ETag': etag,
-        'Cache-Control': 'private, max-age=15, stale-while-revalidate=45',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
         'X-Staywise-Cache': 'MISS_COMPUTED'
       }
     });

@@ -878,7 +878,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       if (inFlightPromiseRef.current) {
         return inFlightPromiseRef.current;
       }
-      if (Date.now() - lastLoadTimeRef.current < 5000) {
+      if (Date.now() - lastLoadTimeRef.current < 1500) {
         return;
       }
     }
@@ -977,7 +977,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         channel = new BroadcastChannel('staywise_db_sync');
         channel.onmessage = (event) => {
           if (event.data && event.data.type === 'DATA_UPDATED' && isAuthenticated) {
-            loadDatabaseData();
+            loadDatabaseData(undefined, true);
           }
         };
       }
@@ -986,18 +986,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     // 2. Window focus & visibility listener: pulls latest data when user returns to tab
     const handleFocusOrVisible = () => {
       if (typeof document !== 'undefined' && !document.hidden && isAuthenticated) {
-        loadDatabaseData();
+        loadDatabaseData(undefined, true);
       }
     };
     window.addEventListener('focus', handleFocusOrVisible);
     document.addEventListener('visibilitychange', handleFocusOrVisible);
 
-    // 3. Adaptive polling (60s): Pauses completely if tab is minimized/hidden or user is unauthenticated
+    // 3. Adaptive real-time polling (4s): Immediate live sync when tab is active
     const interval = setInterval(() => {
       if (typeof document !== 'undefined' && document.hidden) return; // Tab in background: 0 requests
       if (!isAuthenticated) return; // Unauthenticated visitors: 0 requests
-      loadDatabaseData();
-    }, 60000);
+      loadDatabaseData(undefined, false);
+    }, 4000);
 
     return () => {
       if (channel) channel.close();
@@ -1068,6 +1068,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify(newProp)
       });
       broadcastSync('PROPERTY_ADDED', newProp);
+      await loadDatabaseData(undefined, true);
     } catch (err) {
       console.error('[API /api/properties] Persist failed:', err);
     }
@@ -1090,6 +1091,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ status: 'APPROVED' })
       });
       broadcastSync('PROPERTY_APPROVED', { propertyId });
+      await loadDatabaseData(undefined, true);
     } catch (err) {
       console.error('[API /api/properties/[id]/verify] Verification failed:', err);
     }
@@ -1112,6 +1114,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify(updates)
       });
       broadcastSync('PROPERTY_UPDATED', { propertyId, updates });
+      await loadDatabaseData(undefined, true);
     } catch (err) {
       console.error('[API /api/properties/[id]] Update failed:', err);
     }
@@ -1132,6 +1135,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         }
       });
       broadcastSync('PROPERTY_DELETED', { propertyId });
+      await loadDatabaseData(undefined, true);
     } catch (err) {
       console.error('[API /api/properties/[id]] Delete failed:', err);
     }
@@ -1225,7 +1229,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const tenantId = generateTenantId();
     const coTenantId = isSharing ? generateTenantId() : undefined;
     const targetProp = properties.find(p => p.id === data.propertyId);
-    const propName = targetProp ? targetProp.name : 'Staywise Property';
+    if (!targetProp) {
+      addNotification('Property Required', 'You must add at least one property before onboarding a tenant.', 'SYSTEM');
+      setIsAddPropertyOpen(true);
+      return;
+    }
+    const propName = targetProp.name;
 
     const newTenant: Tenant = {
       id: tenantId,
@@ -1424,6 +1433,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         }
       }
       broadcastSync('TENANT_ONBOARDED', { tenantId });
+      await loadDatabaseData(undefined, true);
     } catch (err) {
       console.error('[API /api/tenants] Onboarding persist failed:', err);
     }
@@ -1486,6 +1496,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ paymentMethod: method })
       });
       broadcastSync('INVOICE_PAID', { invoiceId, method });
+      await loadDatabaseData(undefined, true);
     } catch (err) {
       console.error('[API /api/invoices/[id]/pay] Payment persist failed:', err);
     }
@@ -1521,6 +1532,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         })
       });
       broadcastSync('TICKET_APPROVED', { ticketId });
+      await loadDatabaseData(undefined, true);
     } catch (err) {
       console.error('[API /api/tickets/[id]] Approve failed:', err);
     }
@@ -1554,6 +1566,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify(newTkt)
       });
       broadcastSync('TICKET_CREATED', newTkt);
+      await loadDatabaseData(undefined, true);
     } catch (err) {
       console.error('[API /api/tickets] Create failed:', err);
     }
@@ -1736,6 +1749,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newReq)
       });
+      broadcastSync('CONNECTION_REQUEST_CREATED', newReq);
+      await loadDatabaseData(undefined, true);
     } catch (e) {
       console.warn('[TenantConnection] SQLite sync error:', e);
     }
@@ -1754,45 +1769,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
                      ownerProps.find(p => p.name?.toLowerCase() === req.propertyName?.toLowerCase()) || 
                      ownerProps[0];
 
-    // If this newly created owner hasn't created any property yet, auto-create an owned property for them
+    // An owner must have at least one property before approving or onboarding a tenant
     if (!targetProp) {
-      const autoPropId = req.propertyId || `prop-${Date.now()}`;
-      const autoPropName = req.propertyName || (currentUser.name ? `${currentUser.name}'s Residence` : 'Main Property');
-      const autoProp: Property = {
-        id: autoPropId,
-        ownerId: currentUser.id,
-        name: autoPropName,
-        type: (req.tenancyType === 'PG' ? 'PG' : req.tenancyType === 'Commercial' ? 'Commercial' : 'Apartment') as any,
-        portfolio: `${currentUser.name || 'Owner'}'s Portfolio`,
-        address: 'Main Boulevard',
-        city: 'Kozhikode',
-        state: 'Kerala',
-        pincode: '673001',
-        totalUnits: 10,
-        occupiedUnits: 1,
-        expectedMonthlyRent: req.monthlyRent || 25000,
-        collectedRent: 0,
-        pendingRent: 0,
-        imageUrl: '/images/properties/beach-road.jpg',
-        status: 'ACTIVE',
-        healthScore: 95,
-        verificationStatus: 'APPROVED',
-        amenities: ['Power Backup', 'Security', 'Water Supply'],
-        units: []
-      };
-
-      setProperties(prev => [autoProp, ...prev]);
-      targetProp = autoProp;
-
-      try {
-        await fetch('/api/properties', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(autoProp)
-        });
-      } catch (err) {
-        console.warn('Auto property persist warning:', err);
-      }
+      addNotification('Property Required', 'You must add at least one property to your portfolio before approving a tenant connection.', 'SYSTEM');
+      setIsAddPropertyOpen(true);
+      return;
     }
 
     const newTenant: Tenant = {
@@ -1879,7 +1860,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         })
       });
       broadcastSync('TENANT_APPROVED', { tenantId: newTenant.id, propertyId: targetProp.id });
-      await loadDatabaseData(currentUser);
+      await loadDatabaseData(currentUser, true);
     } catch (e) {
       console.warn('[TenantConnection] Approval sync error:', e);
     }

@@ -266,8 +266,8 @@ export default function DepositProtectHub() {
             {isTenant ? <User className="h-4 w-4 text-emerald-600" /> : <Building2 className="h-4 w-4 text-[#a31c1b]" />}
             <span>{currentUser?.name || 'Verified Member'}</span>
           </div>
-          <span className="text-[10px] font-mono text-[#546E7A]">
-            ID: {currentUser?.id || 'id-verified'}
+          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+            ✓ Zero-Deposit Eligible
           </span>
         </div>
       </div>

@@ -142,7 +142,78 @@ export default function ExistingTenantWizardModal() {
     }));
   };
 
+  const handleClose = () => {
+    setIsExistingTenantWizardOpen(false);
+    setValidationError(null);
+    setFieldErrors({});
+    setStep(1);
+    setFormData({
+      name: '',
+      phone: '',
+      email: '',
+      propertyId: properties[0]?.id || '',
+      unitNumber: '',
+      monthlyRent: '' as any,
+      deposit: '' as any,
+      leaseStart: '2026-10-01',
+      leaseEnd: '2027-09-30',
+      rentDueDate: 5,
+      tenancyType: 'PG',
+      roomSharing: 'Single',
+      includeFood: true,
+      coTenantName: '',
+      coTenantPhone: '',
+      coTenantEmail: '',
+      rentSharePercentage: 50
+    });
+  };
+
   if (!isExistingTenantWizardOpen) return null;
+
+  const isDemo = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || currentUser?.role === 'admin';
+  const ownerProperties = isDemo
+    ? properties
+    : (currentUser?.id ? properties.filter(p => p.ownerId === currentUser.id) : []);
+
+  if (ownerProperties.length === 0) {
+    return (
+      <div 
+        onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}
+        className="fixed inset-0 z-50 bg-[#171717]/60 backdrop-blur-md flex items-center justify-center p-4 font-sans"
+      >
+        <div className="w-full max-w-md bg-white border border-[#D2DDD7] rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-14 h-14 rounded-full bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto">
+            <Building className="h-7 w-7" />
+          </div>
+          <div className="space-y-1.5">
+            <h3 className="text-lg font-black text-[#171717]">Property Required First</h3>
+            <p className="text-xs text-[#666666] leading-relaxed">
+              You must register at least 1 property in your portfolio before you can onboard tenants, allocate units, or generate digital lease invite links.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={handleClose}
+              className="flex-1 py-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-[#171717] text-xs font-bold transition cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                handleClose();
+                setIsAddPropertyOpen(true);
+              }}
+              className="flex-1 py-2.5 rounded-full bg-[#a31c1b] hover:bg-[#8e1817] text-white text-xs font-black shadow-sm transition cursor-pointer"
+            >
+              + Add Property First
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const clearFieldError = (field: string) => {
     setFieldErrors(prev => {
@@ -257,32 +328,6 @@ export default function ExistingTenantWizardModal() {
       } : undefined
     });
     setStep(3);
-  };
-
-  const handleClose = () => {
-    setIsExistingTenantWizardOpen(false);
-    setValidationError(null);
-    setFieldErrors({});
-    setStep(1);
-    setFormData({
-      name: '',
-      phone: '',
-      email: '',
-      propertyId: properties[0]?.id || '',
-      unitNumber: '',
-      monthlyRent: '' as any,
-      deposit: '' as any,
-      leaseStart: '2026-10-01',
-      leaseEnd: '2027-09-30',
-      rentDueDate: 5,
-      tenancyType: 'PG',
-      roomSharing: 'Single',
-      includeFood: true,
-      coTenantName: '',
-      coTenantPhone: '',
-      coTenantEmail: '',
-      rentSharePercentage: 50
-    });
   };
 
   const targetProp = properties.find(p => p.id === formData.propertyId) || properties[0];
