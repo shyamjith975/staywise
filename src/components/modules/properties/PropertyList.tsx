@@ -32,11 +32,14 @@ export default function PropertyList() {
   } = useAppState();
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
-  const ownerProperties = (currentUser.id && currentUser.id !== 'user-owner-vikram' && activeRole === 'owner')
-    ? properties.filter(p => p.ownerId === currentUser.id)
-    : properties;
-
-  const baseProperties = ownerProperties;
+  // Strict multi-tenant data isolation:
+  // Owners only see properties added by or mapped to their user ID (ownerId).
+  // Only Admin can see all properties across the entire database!
+  const baseProperties = (activeRole === 'owner')
+    ? (currentUser?.id ? properties.filter(p => p.ownerId === currentUser.id) : [])
+    : (activeRole === 'admin')
+    ? properties
+    : (currentUser?.id ? properties.filter(p => p.ownerId === currentUser.id) : properties);
 
   // Derive all distinct portfolios belonging to this owner
   const availablePortfolios = Array.from(new Set(baseProperties.map(p => p.portfolio).filter(Boolean)));

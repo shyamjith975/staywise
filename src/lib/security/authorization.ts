@@ -44,15 +44,47 @@ export async function getAuthenticatedUser(req: NextRequest): Promise<AuthContex
 
   if (!token) return null;
 
-  // 3. Cryptographically verify HMAC-SHA256 token and expiration
-  const session = verifySessionToken(token);
-  if (!session) return null;
+  // 3. Cryptographically verify HMAC-SHA256 token and signature expiration
+  const tokenPayload = verifySessionToken(token);
+  if (!tokenPayload) return null;
 
-  // 4. Retrieve authoritative user record from persistent SQLite
-  const user = await db.users.findById(session.userId);
-  if (!user) return null;
+  // 4. Validate session record against SQLite store with anti-hijacking check
+  const userAgent = req.headers.get('user-agent') || '';
+  const forwardedFor = req.headers.get('x-forwarded-for') || '';
+  const ipAddress = forwardedFor.split(',')[0].trim() || req.headers.get('x-real-ip') || '127.0.0.1';
 
-  return { user, session };
+  try {
+    const sessionValidation = await db.sessions.validate(token, { userAgent, ipAddress });
+    if (!sessionValidation.valid) {
+      // If no session row in DB yet (e.g. legacy stateless token or mock unit test), fallback to user lookup
+      if (sessionValidation.reason === 'SESSION_NOT_FOUND') {
+        const legacyUser = await db.users.findById(tokenPayload.userId);
+        if (legacyUser) {
+          return { user: legacyUser, session: tokenPayload };
+        }
+      }
+      // Explicitly revoked on logout, expired, or session hijacking detected!
+      return null;
+    }
+
+    if (!sessionValidation.user) return null;
+
+    return {
+      user: sessionValidation.user,
+      session: {
+        userId: sessionValidation.user.id,
+        role: sessionValidation.user.role,
+        email: sessionValidation.user.email,
+        expiresAt: tokenPayload.expiresAt
+      }
+    };
+  } catch (err) {
+    console.error('[Staywise Auth] Session validation error:', err);
+    // Graceful fallback to user lookup if sessions table check fails
+    const user = await db.users.findById(tokenPayload.userId);
+    if (!user) return null;
+    return { user, session: tokenPayload };
+  }
 }
 
 /**

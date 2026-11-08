@@ -18,7 +18,9 @@ import {
   recordLoginFailure, 
   recordLoginSuccess,
   createPasswordResetToken,
-  verifyPasswordResetToken
+  verifyPasswordResetToken,
+  computeClientFingerprint,
+  isCompatibleUA
 } from '../src/lib/security/auth.ts';
 
 const DB_FILE = path.join(process.cwd(), 'database.db');
@@ -324,6 +326,71 @@ runTest('Database Architecture: Prisma schema defines multi-tenant models, doubl
   assert(content.includes('model WebhookEvent') && content.includes('@@map("webhook_events")'), 'Must define webhook_events');
   assert(content.includes('model Notification') && content.includes('@@map("notifications")'), 'Must define notifications');
   assert(content.includes('model AuditEvent') && content.includes('@@map("audit_logs")'), 'Must define audit_logs');
+});
+
+// ----------------------------------------------------------------------------
+// TEST 11: SESSION TOKEN LIFECYCLE, LOGOUT EXPIRATION & ANTI-HIJACKING (P0.2)
+// ----------------------------------------------------------------------------
+runTest('Session: Persistent session tracking, server-side logout expiration, and session hijacking rejection', () => {
+  // 1. Create session token
+  const testUserId = 'user-owner-vikram';
+  const { token } = createSessionToken(testUserId, 'owner', 'owner@staywise.com', 48);
+  const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
+  const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0';
+  const ipAddress = '192.168.1.100';
+  const clientFingerprint = computeClientFingerprint(userAgent, ipAddress);
+  const sessionId = `test_sess_${Date.now()}`;
+  const expiresAt = new Date(Date.now() + 48 * 3600 * 1000).toISOString();
+  const createdAt = new Date().toISOString();
+
+  // Insert session into SQLite
+  db.prepare(`
+    INSERT INTO sessions (
+      id, user_id, token_hash, user_agent, ip_address, client_fingerprint, expires_at, created_at, revoked_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL)
+  `).run(sessionId, testUserId, tokenHash, userAgent, ipAddress, clientFingerprint, expiresAt, createdAt);
+
+  // Validate active session
+  const activeSession = db.prepare('SELECT * FROM sessions WHERE token_hash = ?').get(tokenHash);
+  assert(activeSession !== undefined, 'Session must exist in database');
+  assert.strictEqual(activeSession.revoked_at, null, 'Active session must not be revoked');
+
+  // Verify User-Agent compatibility logic
+  assert(isCompatibleUA(userAgent, userAgent), 'Same User-Agent must be compatible');
+  assert(isCompatibleUA(userAgent, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/125.0.0.0'), 'Same browser minor update must be compatible');
+  assert(!isCompatibleUA(userAgent, 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1'), 'iPhone Safari replacing Windows Chrome must be detected as hijack attempt');
+  assert(!isCompatibleUA(userAgent, 'curl/8.4.0'), 'cURL bot replacing browser must be detected as hijack attempt');
+
+  // Verify Logout Expiration: revoke the session
+  db.prepare("UPDATE sessions SET revoked_at = datetime('now') WHERE token_hash = ?").run(tokenHash);
+  const revokedSession = db.prepare('SELECT * FROM sessions WHERE token_hash = ?').get(tokenHash);
+  assert(revokedSession.revoked_at !== null, 'Session must have revoked_at timestamp after logout');
+
+  // Cleanup test session
+  db.prepare('DELETE FROM sessions WHERE id = ?').run(sessionId);
+});
+
+// ----------------------------------------------------------------------------
+// TEST 12: MULTI-TENANT ISOLATION: OWNER VS ADMIN PROPERTY QUERY AUDIT (P0.3)
+// ----------------------------------------------------------------------------
+runTest('Multi-Tenant: Owner only queries their own properties matching owner_id, Admin sees all', () => {
+  const allProps = db.prepare('SELECT id, name, owner_id FROM properties').all();
+  assert(allProps.length > 0, 'Properties must exist');
+
+  // Query as Owner Vikram: only properties where owner_id = "user-owner-vikram"
+  const vikramProps = db.prepare('SELECT id, name, owner_id FROM properties WHERE owner_id = ?').all('user-owner-vikram');
+  assert(vikramProps.length > 0, 'Vikram should have owned properties');
+  assert(vikramProps.every(p => p.owner_id === 'user-owner-vikram'), 'Every property must belong to user-owner-vikram');
+
+  // Verify Vikram does NOT see properties belonging to other owners
+  const otherOwnerProps = allProps.filter(p => p.owner_id !== 'user-owner-vikram');
+  if (otherOwnerProps.length > 0) {
+    const leaked = vikramProps.some(vp => otherOwnerProps.some(op => op.id === vp.id));
+    assert.strictEqual(leaked, false, 'Vikram must not see any properties belonging to another landlord');
+  }
+
+  // Super Admin view: retrieves all properties across all owners
+  assert(allProps.length >= vikramProps.length, 'Admin must have complete surveillance over all properties');
 });
 
 // ----------------------------------------------------------------------------

@@ -358,25 +358,28 @@ export default function OwnerDashboard() {
   );
   const isManagerAuthorized = isDemoAccount || Boolean(managerDelegate);
 
-  const ownerProperties = isDemoAccount
+  // Strict multi-tenant data isolation:
+  // Owners only see their own properties matched by user ID (ownerId).
+  // Only Admin can see all properties across the entire database!
+  const ownerProperties = (activeRole === 'owner')
+    ? (currentUser?.id ? properties.filter(p => p.ownerId === currentUser.id) : [])
+    : (activeRole === 'admin')
     ? properties
-    : (activeRole === 'owner')
-    ? properties.filter(p => p.ownerId === currentUser.id)
     : (isManagerRole && managerDelegate)
     ? properties.filter(p => p.ownerId === managerDelegate.ownerId)
     : [];
   const activeProperties = ownerProperties;
-  const activeElectricityBills = isDemoAccount
+  const activeElectricityBills = (activeRole === 'admin')
     ? electricityBills
     : electricityBills.filter(b => activeProperties.some(p => p.id === b.propertyId));
   const ownerPropIds = activeProperties.map(p => p.id);
   const ownerPropNames = activeProperties.map(p => p.name.toLowerCase());
-  const pendingConnectionRequests = isDemoAccount
+  const pendingConnectionRequests = (activeRole === 'admin')
     ? tenantConnectionRequests.filter(r => r.status === 'PENDING_APPROVAL')
     : tenantConnectionRequests.filter(r => 
         r.status === 'PENDING_APPROVAL' && (
-          r.ownerId === currentUser.id ||
-          (currentUser.email && r.ownerEmail?.toLowerCase() === currentUser.email?.toLowerCase()) ||
+          (currentUser?.id && r.ownerId === currentUser.id) ||
+          (currentUser?.email && r.ownerEmail?.toLowerCase() === currentUser.email?.toLowerCase()) ||
           (r.propertyId && ownerPropIds.includes(r.propertyId)) ||
           (r.propertyName && ownerPropNames.includes(r.propertyName.toLowerCase()))
         )

@@ -229,7 +229,8 @@ export const DEMO_CREDENTIALS: Record<UserRole, DemoCredential> = {
 interface AppStateContextType {
   isAuthenticated: boolean;
   currentUser: DemoCredential;
-  login: (role: UserRole, customUser?: Partial<DemoCredential>) => void;
+  sessionToken: string | null;
+  login: (role: UserRole, customUser?: Partial<DemoCredential>, token?: string) => void;
   signupUser: (userData: {
     name: string;
     email: string;
@@ -441,6 +442,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [isHydrated, setIsHydrated] = useState<boolean>(false);
   const [activeRole, setActiveRole] = useState<UserRole>('owner');
   const [currentUser, setCurrentUser] = useState<DemoCredential>(DEMO_CREDENTIALS.owner);
+  const [sessionToken, setSessionToken] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return sessionStorage.getItem('staywise_token') || localStorage.getItem('staywise_token') || null;
+    } catch {
+      return null;
+    }
+  });
   const [activePortfolio, setActivePortfolio] = useState<string>('all');
   const [activeView, setActiveView] = useState<string>('dashboard');
   const [subscription, setSubscription] = useState<OwnerSubscription | null>(null);
@@ -547,7 +556,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setCurrentUser(DEMO_CREDENTIALS[role] || DEMO_CREDENTIALS.owner);
   };
 
-  const login = (role: UserRole, customUser?: Partial<DemoCredential>) => {
+  const login = (role: UserRole, customUser?: Partial<DemoCredential>, token?: string) => {
     setActiveRole(role);
     const userToSet: DemoCredential = customUser ? {
       id: customUser.id || DEMO_CREDENTIALS[role]?.id || `user-${role}`,
@@ -565,6 +574,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(true);
     setActiveView('dashboard');
 
+    if (token) {
+      setSessionToken(token);
+    }
+
     if (typeof window !== 'undefined') {
       try {
         // Tab-isolated storage
@@ -572,6 +585,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         sessionStorage.setItem('staywise_active_role', role);
         sessionStorage.setItem('staywise_active_view', 'dashboard');
         sessionStorage.setItem('staywise_current_user', JSON.stringify(userToSet));
+        if (token) {
+          sessionStorage.setItem('staywise_token', token);
+        }
 
         // Only persist normal user logins (owner, tenant, manager) to localStorage.
         // Admin logins remain in tab's sessionStorage to prevent hijacking client tabs.
@@ -580,13 +596,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem('staywise_active_role', role);
           localStorage.setItem('staywise_active_view', 'dashboard');
           localStorage.setItem('staywise_current_user', JSON.stringify(userToSet));
+          if (token) {
+            localStorage.setItem('staywise_token', token);
+          }
         }
       } catch (e) {}
     }
 
     // Immediately reload scoped database data for this user
-    const isDemo = userToSet.email === 'owner@staywise.com' || userToSet.id === 'user-owner-vikram' || role === 'admin';
-    setNotifications(isDemo ? DEMO_NOTIFICATIONS : []);
     loadDatabaseData(userToSet);
   };
 
@@ -625,7 +642,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         title: data.user.title,
         description: data.user.description
       };
-      login(userData.role, newCred);
+      login(userData.role, newCred, data.token);
 
       addNotification(
         'Clean Workspace Initialized!',
@@ -641,15 +658,24 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    const effectiveToken = sessionToken || (typeof window !== 'undefined' ? sessionStorage.getItem('staywise_token') || localStorage.getItem('staywise_token') : null);
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch('/api/auth/logout', { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(effectiveToken ? { 'Authorization': `Bearer ${effectiveToken}` } : {})
+        }
+      });
     } catch (e) {
       console.warn('[Staywise Auth] Server logout call notice:', e);
     }
+    setSessionToken(null);
     setIsAuthenticated(false);
     setActiveView('login');
     try {
       // Purge tab-isolated session storage
+      sessionStorage.removeItem('staywise_token');
       sessionStorage.removeItem('staywise_active_view');
       sessionStorage.removeItem('staywise_active_role');
       sessionStorage.removeItem('staywise_active_portfolio');
@@ -658,6 +684,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       sessionStorage.setItem('staywise_unauth_screen', 'login');
 
       // Purge cross-tab local storage
+      localStorage.removeItem('staywise_token');
       localStorage.removeItem('staywise_active_view');
       localStorage.removeItem('staywise_active_role');
       localStorage.removeItem('staywise_active_portfolio');
@@ -876,6 +903,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           headers['If-None-Match'] = lastEtagRef.current;
         }
 
+        const effectiveToken = sessionToken || (typeof window !== 'undefined' ? sessionStorage.getItem('staywise_token') || localStorage.getItem('staywise_token') : null);
+        if (effectiveToken) {
+          headers['Authorization'] = `Bearer ${effectiveToken}`;
+        }
+
         const res = await fetch(url, { headers });
         lastLoadTimeRef.current = Date.now();
 
@@ -1030,9 +1062,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     // Persist to database via API
     try {
+      const effectiveToken = sessionToken || (typeof window !== 'undefined' ? sessionStorage.getItem('staywise_token') || localStorage.getItem('staywise_token') : null);
       await fetch('/api/properties', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(effectiveToken ? { 'Authorization': `Bearer ${effectiveToken}` } : {})
+        },
         body: JSON.stringify(newProp)
       });
       broadcastSync('PROPERTY_ADDED', newProp);
@@ -1048,9 +1084,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     // Persist to database via API
     try {
+      const effectiveToken = sessionToken || (typeof window !== 'undefined' ? sessionStorage.getItem('staywise_token') || localStorage.getItem('staywise_token') : null);
       await fetch(`/api/properties/${propertyId}/verify`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(effectiveToken ? { 'Authorization': `Bearer ${effectiveToken}` } : {})
+        },
         body: JSON.stringify({ status: 'APPROVED' })
       });
       broadcastSync('PROPERTY_APPROVED', { propertyId });
@@ -1066,9 +1106,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     // Persist to database via API
     try {
+      const effectiveToken = sessionToken || (typeof window !== 'undefined' ? sessionStorage.getItem('staywise_token') || localStorage.getItem('staywise_token') : null);
       await fetch(`/api/properties/${propertyId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(effectiveToken ? { 'Authorization': `Bearer ${effectiveToken}` } : {})
+        },
         body: JSON.stringify(updates)
       });
       broadcastSync('PROPERTY_UPDATED', { propertyId, updates });
@@ -1084,8 +1128,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
     // Persist to database via API
     try {
+      const effectiveToken = sessionToken || (typeof window !== 'undefined' ? sessionStorage.getItem('staywise_token') || localStorage.getItem('staywise_token') : null);
       await fetch(`/api/properties/${propertyId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          ...(effectiveToken ? { 'Authorization': `Bearer ${effectiveToken}` } : {})
+        }
       });
       broadcastSync('PROPERTY_DELETED', { propertyId });
     } catch (err) {
@@ -2357,6 +2405,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     <AppStateContext.Provider value={{
       isAuthenticated,
       currentUser,
+      sessionToken,
       login,
       signupUser,
       logout,

@@ -37,10 +37,9 @@ export async function GET(req: NextRequest) {
     }
 
     const isSuperAdmin = userRole === 'admin';
-    const isDemoAccount = userEmail === 'owner@staywise.com' || targetUserId === 'user-owner-vikram' || targetUserId === 'demo-owner' || (targetUserId === null && req.nextUrl.searchParams.get('demo') === 'true');
 
     // Fast-path: Check in-memory cache and client ETag (HTTP 304)
-    const cacheKey = `${targetUserId || 'anon'}:${userRole || 'public'}:${isDemoAccount}`;
+    const cacheKey = `${targetUserId || 'anon'}:${userRole || 'public'}:${isSuperAdmin}`;
     const cached = getBootstrapCache(cacheKey);
     const clientEtag = req.headers.get('if-none-match');
 
@@ -68,8 +67,8 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Unauthenticated requests without demo flag receive clean empty dataset without burning DB queries
-    if (!targetUserId && !isDemoAccount) {
+    // Unauthenticated requests receive clean empty dataset without burning DB queries
+    if (!targetUserId) {
       const emptyData = {
         properties: [],
         tenants: [],
@@ -197,17 +196,16 @@ export async function GET(req: NextRequest) {
 
     const activeUserAccount = targetUserId 
       ? await db.rewards.getAccount(targetUserId)
-      : (isDemoAccount ? await db.rewards.getAccount('user-tenant-shyam') : null);
+      : null;
 
     const activeLedger = targetUserId 
       ? await db.rewards.getLedger(targetUserId)
-      : (isDemoAccount ? await db.rewards.getLedger() : []);
+      : [];
 
     let responseData: any;
 
-
-    // For Super Admin or Demo Account: return platform-wide catalog
-    if (isSuperAdmin || isDemoAccount) {
+    // For Super Admin: return platform-wide catalog. All other roles are strictly scoped by ID!
+    if (isSuperAdmin) {
       responseData = {
         properties: allProperties,
         tenants: allTenants,
@@ -261,7 +259,7 @@ export async function GET(req: NextRequest) {
     // For Tenants: supply verified platform properties catalog so tenants can discover homes, select properties to connect, and apply for Zero-Deposit Protect
     // For Owners: supply only properties owned by this owner
     const userProperties = (userRole === 'tenant')
-      ? allProperties
+      ? allProperties.filter(p => p.verificationStatus === 'APPROVED' || p.status === 'ACTIVE')
       : allProperties.filter(p => p.ownerId === targetUserId);
     const userPropIds = (userRole === 'tenant')
       ? userTenants.map(t => t.propertyId).filter(Boolean)

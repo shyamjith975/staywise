@@ -104,7 +104,24 @@ export async function POST(req: NextRequest) {
     // 4. Generate HMAC-SHA256 authenticated session token
     const session = createSessionToken(user.id, user.role, user.email);
 
-    // 5. Construct response with HTTP-only session cookie
+    // 5. Persist authoritative session in SQLite database with client fingerprinting
+    const userAgent = req.headers.get('user-agent') || '';
+    const forwardedFor = req.headers.get('x-forwarded-for') || '';
+    const ipAddress = forwardedFor.split(',')[0].trim() || req.headers.get('x-real-ip') || '127.0.0.1';
+
+    try {
+      await db.sessions.create({
+        userId: user.id,
+        token: session.token,
+        userAgent,
+        ipAddress,
+        expiresInHours: 48
+      });
+    } catch (sessionErr) {
+      console.warn('[Staywise Auth] Session persistence warning:', sessionErr);
+    }
+
+    // 6. Construct response with HTTP-only session cookie
     const response = NextResponse.json({
       success: true,
       user: {

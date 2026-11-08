@@ -37,6 +37,7 @@ import { color } from '../../../lib/colors';
 export default function SettingsView() {
   const { 
     currentUser, 
+    activeRole,
     properties,
     pgBeds,
     pgRooms,
@@ -99,8 +100,8 @@ export default function SettingsView() {
 
   const isDemoAccount = currentUser.email === 'vikram@staywise.in' || currentUser.email === 'owner@staywise.com' || currentUser.id === 'user-owner-vikram';
 
-  // Dynamic Real Database Quotas & Metrics Scoped to Current Owner
-  const userProperties = isDemoAccount
+  // Dynamic Real Database Quotas & Metrics Scoped to Current Owner. Admin sees all.
+  const userProperties = (activeRole === 'admin')
     ? properties
     : properties.filter(p => p.ownerId === currentUser?.id);
   const userPropIds = userProperties.map(p => p.id);
@@ -112,7 +113,7 @@ export default function SettingsView() {
   
   // Scoped PG Beds: only if the owner has added a PG property
   const hasPgProperty = userProperties.some(p => p.type === 'PG');
-  const scopedPgBeds = isDemoAccount
+  const scopedPgBeds = (activeRole === 'admin')
     ? pgBeds
     : pgBeds.filter(b => {
         const matchRoom = (pgRooms || []).find(r => r.id === b.roomId || r.roomNumber === b.roomNumber);
@@ -125,7 +126,7 @@ export default function SettingsView() {
 
   // Scoped Commercial Area: only if the owner has added a commercial property
   const hasCommercialProperty = userProperties.some(p => p.type === 'Commercial');
-  const scopedCommercialUnits = isDemoAccount
+  const scopedCommercialUnits = (activeRole === 'admin')
     ? commercialUnits
     : commercialUnits.filter(u => u.propertyId && userPropIds.includes(u.propertyId));
   const totalCommercialArea = hasCommercialProperty
@@ -133,7 +134,7 @@ export default function SettingsView() {
     : 0;
 
   // Scoped Estate Assets
-  const scopedAssets = isDemoAccount
+  const scopedAssets = (activeRole === 'admin')
     ? estateAssets
     : estateAssets.filter(a => userPropNames.includes(a.estateName.toLowerCase()));
   const totalAssetsCount = scopedAssets.length;

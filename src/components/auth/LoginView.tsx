@@ -253,7 +253,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
         avatar: u.avatar,
         title: u.title,
         description: u.description
-      });
+      }, data.token);
     } catch {
       // Offline / network failure fallback for canonical demo accounts
       const demoRole = (Object.keys(DEMO_CREDENTIALS) as UserRole[]).find(
@@ -316,7 +316,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
         avatar: u.avatar || '🛡️',
         title: u.title || 'Platform Governance & Risk',
         description: u.description || 'Statutory Double-Entry Ledger Surveillance'
-      });
+      }, data.token);
     } catch {
       // In case of network error, gracefully authenticate local admin credentials
       login('admin', DEMO_CREDENTIALS.admin);

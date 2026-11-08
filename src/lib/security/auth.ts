@@ -78,7 +78,8 @@ export function createSessionToken(
   expiresInHours: number = 48
 ): { token: string; expiresAt: string } {
   const expiresTimestamp = Date.now() + expiresInHours * 60 * 60 * 1000;
-  const payloadStr = `${userId}:${role}:${email.toLowerCase().trim()}:${expiresTimestamp}`;
+  const nonce = crypto.randomBytes(8).toString('hex');
+  const payloadStr = `${userId}:${role}:${email.toLowerCase().trim()}:${expiresTimestamp}:${nonce}`;
   const hmacSig = crypto
     .createHmac('sha256', SESSION_SECRET)
     .update(payloadStr, 'utf8')
@@ -118,7 +119,8 @@ export function verifySessionToken(token: string): SessionPayload | null {
     if (bufSig.length !== bufExpected.length) return null;
     if (!crypto.timingSafeEqual(bufSig, bufExpected)) return null;
 
-    const [userId, role, email, expiresStr] = payloadStr.split(':');
+    const tokens = payloadStr.split(':');
+    const [userId, role, email, expiresStr] = tokens;
     const expiresAt = Number(expiresStr);
 
     if (Date.now() > expiresAt) {
@@ -134,6 +136,62 @@ export function verifySessionToken(token: string): SessionPayload | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Computes a standardized client fingerprint for session hijacking defense.
+ */
+export function computeClientFingerprint(userAgent: string, ipAddress: string): string {
+  const cleanUA = (userAgent || 'unknown-client').trim().toLowerCase().replace(/\s+/g, ' ');
+  let normalizedIP = (ipAddress || '127.0.0.1').split(',')[0].trim();
+  if (normalizedIP.includes('.')) {
+    const octets = normalizedIP.split('.');
+    if (octets.length === 4) {
+      normalizedIP = `${octets[0]}.${octets[1]}.${octets[2]}.0`;
+    }
+  } else if (normalizedIP.includes(':')) {
+    const parts = normalizedIP.split(':').filter(Boolean);
+    normalizedIP = parts.slice(0, 3).join(':');
+  }
+  return crypto.createHash('sha256').update(`${cleanUA}|${normalizedIP}`).digest('hex');
+}
+
+/**
+ * Validates whether two User-Agent headers belong to the same browser/OS ecosystem.
+ */
+export function isCompatibleUA(sessionUA?: string, incomingUA?: string): boolean {
+  if (!sessionUA || !incomingUA) return true;
+  const cleanSession = sessionUA.trim().toLowerCase();
+  const cleanIncoming = incomingUA.trim().toLowerCase();
+  if (cleanSession === cleanIncoming) return true;
+
+  const getPlatform = (ua: string) => {
+    if (ua.includes('iphone') || ua.includes('ipad')) return 'ios';
+    if (ua.includes('android')) return 'android';
+    if (ua.includes('windows')) return 'windows';
+    if (ua.includes('macintosh') || ua.includes('mac os')) return 'mac';
+    if (ua.includes('linux')) return 'linux';
+    return 'other';
+  };
+
+  const getEngine = (ua: string) => {
+    if (ua.includes('edg/')) return 'edge';
+    if (ua.includes('chrome/') || ua.includes('crios/')) return 'chrome';
+    if (ua.includes('safari/') && !ua.includes('chrome')) return 'safari';
+    if (ua.includes('firefox/') || ua.includes('fxios/')) return 'firefox';
+    if (ua.includes('curl') || ua.includes('python') || ua.includes('postman')) return 'bot';
+    return 'other';
+  };
+
+  const plat1 = getPlatform(cleanSession);
+  const plat2 = getPlatform(cleanIncoming);
+  if (plat1 !== 'other' && plat2 !== 'other' && plat1 !== plat2) return false;
+
+  const eng1 = getEngine(cleanSession);
+  const eng2 = getEngine(cleanIncoming);
+  if (eng1 !== 'other' && eng2 !== 'other' && eng1 !== eng2) return false;
+
+  return true;
 }
 
 // ============================================================================

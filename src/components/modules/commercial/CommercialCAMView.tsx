@@ -48,21 +48,21 @@ export default function CommercialCAMView() {
   const [purpose, setPurpose] = useState('Business Consultation');
   const [vehicleNumber, setVehicleNumber] = useState('KL-07-');
 
-  const isDemoAccount = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
+  const isDemoAccount = activeRole === 'admin';
 
-  // Dynamic scoping: non-demo users only see commercial assets for properties they actually own
-  const activeCommercialUnits = isDemoAccount 
+  // Dynamic scoping: Owners only see commercial assets for properties they actually own. Admin sees all.
+  const activeCommercialUnits = (activeRole === 'admin')
     ? commercialUnits 
     : commercialUnits.filter(u => {
         const ownerProps = properties.filter(p => p.ownerId === currentUser?.id);
         return ownerProps.some(p => p.id === u.propertyId);
       });
 
-  const activeCamExpenses = isDemoAccount 
+  const activeCamExpenses = (activeRole === 'admin')
     ? camExpenses 
     : (activeCommercialUnits.length > 0 ? camExpenses : []);
 
-  const activeCommercialVisitors = isDemoAccount 
+  const activeCommercialVisitors = (activeRole === 'admin')
     ? commercialVisitors 
     : (activeCommercialUnits.length > 0 ? commercialVisitors : []);
 

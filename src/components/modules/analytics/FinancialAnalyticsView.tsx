@@ -284,7 +284,9 @@ Revenue Stamp Affixed & Digitally eSigned via Staywise.
   // ----------------------------------------------------
   // OWNER / LANDLORD FINANCIAL ANALYTICS VIEW
   // ----------------------------------------------------
-  const userProperties = isDemoAccount ? properties : properties.filter(p => p.ownerId === currentUser?.id);
+  const userProperties = (activeRole === 'admin')
+    ? properties
+    : properties.filter(p => p.ownerId === currentUser?.id);
 
   const DEMO_PERFORMANCES = [
     {
@@ -329,9 +331,8 @@ Revenue Stamp Affixed & Digitally eSigned via Staywise.
     }
   ];
 
-  const propertyPerformances = isDemoAccount 
-    ? DEMO_PERFORMANCES 
-    : userProperties.map(p => {
+  const propertyPerformances = userProperties.length > 0 
+    ? userProperties.map(p => {
         const inflow = (p.expectedMonthlyRent || (p as any).monthlyRent || 30000) * 12;
         const opex = Math.round(inflow * 0.12);
         const noi = inflow - opex;
@@ -347,7 +348,8 @@ Revenue Stamp Affixed & Digitally eSigned via Staywise.
           assetValue: capitalVal >= 10000000 ? `₹${(capitalVal / 10000000).toFixed(2)} Cr` : `₹${(capitalVal / 100000).toFixed(1)} L`,
           yieldRate: yieldCalc
         };
-      });
+      })
+    : (activeRole === 'admin' ? DEMO_PERFORMANCES : []);
 
   const hasProperties = propertyPerformances.length > 0;
   const totalAnnualNOI = hasProperties 

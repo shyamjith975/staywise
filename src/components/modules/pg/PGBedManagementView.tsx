@@ -135,13 +135,13 @@ export default function PGBedManagementView() {
     status: 'Inside Campus' as 'Inside Campus' | 'Checked Out'
   });
 
-  // For non-demo user, scope beds and rooms strictly to properties owned by currentUser
-  const userOwnedProperties = isDemoAccount ? properties : properties.filter(p => p.ownerId === currentUser?.id);
+  // Scope beds and rooms strictly to properties owned by currentUser. Admin sees all.
+  const userOwnedProperties = (activeRole === 'admin') ? properties : properties.filter(p => p.ownerId === currentUser?.id);
   const userOwnedPropIds = userOwnedProperties.map(p => p.id);
-  const activePgRooms = isDemoAccount ? pgRooms : pgRooms.filter(r => userOwnedPropIds.includes(r.propertyId));
+  const activePgRooms = (activeRole === 'admin') ? pgRooms : pgRooms.filter(r => userOwnedPropIds.includes(r.propertyId));
   const activePgRoomIds = activePgRooms.map(r => r.id);
   const activePgRoomNumbers = activePgRooms.map(r => r.roomNumber);
-  const activePgBeds = isDemoAccount 
+  const activePgBeds = (activeRole === 'admin') 
     ? pgBeds 
     : pgBeds.filter(b => activePgRoomIds.includes(b.roomId) || activePgRoomNumbers.includes(b.roomNumber));
 

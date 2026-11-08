@@ -16,6 +16,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { 
   UserRole,
@@ -133,6 +134,68 @@ export interface StaywiseDatabaseSchema {
   protectionContracts: ProtectionContract[];
   conditionReports: PropertyConditionReport[];
   protectionClaims: ProtectionClaim[];
+}
+
+export interface SessionRecord {
+  id: string;
+  userId: string;
+  tokenHash: string;
+  userAgent?: string;
+  ipAddress?: string;
+  clientFingerprint: string;
+  expiresAt: string;
+  createdAt: string;
+  revokedAt?: string | null;
+}
+
+export function computeClientFingerprint(userAgent: string, ipAddress: string): string {
+  const cleanUA = (userAgent || 'unknown-client').trim().toLowerCase().replace(/\s+/g, ' ');
+  let normalizedIP = (ipAddress || '127.0.0.1').split(',')[0].trim();
+  if (normalizedIP.includes('.')) {
+    const octets = normalizedIP.split('.');
+    if (octets.length === 4) {
+      normalizedIP = `${octets[0]}.${octets[1]}.${octets[2]}.0`;
+    }
+  } else if (normalizedIP.includes(':')) {
+    const parts = normalizedIP.split(':').filter(Boolean);
+    normalizedIP = parts.slice(0, 3).join(':');
+  }
+  return crypto.createHash('sha256').update(`${cleanUA}|${normalizedIP}`).digest('hex');
+}
+
+export function isCompatibleUA(sessionUA?: string, incomingUA?: string): boolean {
+  if (!sessionUA || !incomingUA) return true;
+  const cleanSession = sessionUA.trim().toLowerCase();
+  const cleanIncoming = incomingUA.trim().toLowerCase();
+  if (cleanSession === cleanIncoming) return true;
+
+  const getPlatform = (ua: string) => {
+    if (ua.includes('iphone') || ua.includes('ipad')) return 'ios';
+    if (ua.includes('android')) return 'android';
+    if (ua.includes('windows')) return 'windows';
+    if (ua.includes('macintosh') || ua.includes('mac os')) return 'mac';
+    if (ua.includes('linux')) return 'linux';
+    return 'other';
+  };
+
+  const getEngine = (ua: string) => {
+    if (ua.includes('edg/')) return 'edge';
+    if (ua.includes('chrome/') || ua.includes('crios/')) return 'chrome';
+    if (ua.includes('safari/') && !ua.includes('chrome')) return 'safari';
+    if (ua.includes('firefox/') || ua.includes('fxios/')) return 'firefox';
+    if (ua.includes('curl') || ua.includes('python') || ua.includes('postman')) return 'bot';
+    return 'other';
+  };
+
+  const plat1 = getPlatform(cleanSession);
+  const plat2 = getPlatform(cleanIncoming);
+  if (plat1 !== 'other' && plat2 !== 'other' && plat1 !== plat2) return false;
+
+  const eng1 = getEngine(cleanSession);
+  const eng2 = getEngine(cleanIncoming);
+  if (eng1 !== 'other' && eng2 !== 'other' && eng1 !== eng2) return false;
+
+  return true;
 }
 
 
@@ -793,6 +856,19 @@ class DatabaseEngine {
         settlement_txn_id TEXT,
         created_at TEXT NOT NULL
       );
+
+      CREATE TABLE IF NOT EXISTS sessions (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        token_hash TEXT NOT NULL UNIQUE,
+        user_agent TEXT,
+        ip_address TEXT,
+        client_fingerprint TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        revoked_at TEXT,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      );
     `);
 
     // Automatic non-destructive schema migrations
@@ -860,6 +936,8 @@ class DatabaseEngine {
       'CREATE INDEX IF NOT EXISTS idx_claims_owner ON protection_claims(owner_id);',
       'CREATE INDEX IF NOT EXISTS idx_claims_tenant ON protection_claims(tenant_id);',
       'CREATE INDEX IF NOT EXISTS idx_properties_owner_status ON properties(owner_id, status);',
+      'CREATE INDEX IF NOT EXISTS idx_sessions_token_hash ON sessions(token_hash);',
+      'CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);',
       'CREATE INDEX IF NOT EXISTS idx_invoices_tenant_status ON invoices(tenant_id, status);',
       'CREATE INDEX IF NOT EXISTS idx_invoices_prop_due ON invoices(property_id, due_date);',
       'CREATE INDEX IF NOT EXISTS idx_tickets_prop_status ON tickets(property_id, status);',
@@ -1219,6 +1297,152 @@ class DatabaseEngine {
       this.syncRootDb();
       DatabaseEngine.invalidateUserCache(userId, data.email);
       return (res as any).changes > 0;
+    }
+  };
+
+  // ==========================================
+  // SESSIONS REPOSITORY & ANTI-HIJACKING
+  // ==========================================
+  public sessions = {
+    create: async (data: {
+      userId: string;
+      token: string;
+      userAgent?: string;
+      ipAddress?: string;
+      expiresInHours?: number;
+    }): Promise<SessionRecord> => {
+      const sessionId = `sess_${Date.now()}_${crypto.randomBytes(8).toString('hex')}`;
+      const tokenHash = crypto.createHash('sha256').update(data.token.trim()).digest('hex');
+      const ua = data.userAgent || '';
+      const ip = data.ipAddress || '127.0.0.1';
+      const clientFingerprint = computeClientFingerprint(ua, ip);
+      const hours = data.expiresInHours || 48;
+      const expiresAt = new Date(Date.now() + hours * 3600 * 1000).toISOString();
+      const createdAt = new Date().toISOString();
+
+      this.sqlite.prepare(`
+        INSERT INTO sessions (
+          id, user_id, token_hash, user_agent, ip_address, client_fingerprint, expires_at, created_at, revoked_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL)
+      `).run(sessionId, data.userId, tokenHash, ua, ip, clientFingerprint, expiresAt, createdAt);
+
+      this.syncRootDb();
+
+      return {
+        id: sessionId,
+        userId: data.userId,
+        tokenHash,
+        userAgent: ua,
+        ipAddress: ip,
+        clientFingerprint,
+        expiresAt,
+        createdAt,
+        revokedAt: null
+      };
+    },
+
+    findByToken: async (token: string): Promise<SessionRecord | null> => {
+      if (!token) return null;
+      const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
+      const row = this.sqlite.prepare('SELECT * FROM sessions WHERE token_hash = ?').get(tokenHash) as any;
+      if (!row) return null;
+      return {
+        id: row.id,
+        userId: row.user_id,
+        tokenHash: row.token_hash,
+        userAgent: row.user_agent,
+        ipAddress: row.ip_address,
+        clientFingerprint: row.client_fingerprint,
+        expiresAt: row.expires_at,
+        createdAt: row.created_at,
+        revokedAt: row.revoked_at
+      };
+    },
+
+    validate: async (
+      token: string,
+      clientInfo?: { userAgent?: string; ipAddress?: string }
+    ): Promise<{
+      valid: boolean;
+      user?: UserAccount;
+      session?: SessionRecord;
+      reason?: string;
+    }> => {
+      if (!token) return { valid: false, reason: 'TOKEN_MISSING' };
+      const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
+      const row = this.sqlite.prepare('SELECT * FROM sessions WHERE token_hash = ?').get(tokenHash) as any;
+      if (!row) return { valid: false, reason: 'SESSION_NOT_FOUND' };
+
+      // 1. Check if session was revoked on logout
+      if (row.revoked_at) {
+        return { valid: false, reason: 'SESSION_REVOKED' };
+      }
+
+      // 2. Check if session has expired
+      if (new Date(row.expires_at).getTime() < Date.now()) {
+        this.sqlite.prepare("UPDATE sessions SET revoked_at = datetime('now') WHERE id = ?").run(row.id);
+        this.syncRootDb();
+        return { valid: false, reason: 'SESSION_EXPIRED' };
+      }
+
+      // 3. Anti-Session Hijacking Check
+      if (clientInfo && row.user_agent && clientInfo.userAgent) {
+        const uaCompatible = isCompatibleUA(row.user_agent, clientInfo.userAgent);
+        if (!uaCompatible) {
+          // Attacker detected with mismatched User-Agent / device!
+          // Revoke immediately to protect the victim account.
+          this.sqlite.prepare("UPDATE sessions SET revoked_at = datetime('now') WHERE id = ?").run(row.id);
+          this.syncRootDb();
+          console.warn(
+            `[SECURITY AUDIT] SESSION_HIJACK_DETECTED! Session ${row.id} revoked. ` +
+            `Origin UA: "${row.user_agent}", Incoming UA: "${clientInfo.userAgent}"`
+          );
+          return { valid: false, reason: 'SESSION_HIJACK_DETECTED' };
+        }
+      }
+
+      // 4. Retrieve authenticated user account
+      const user = await this.users.findById(row.user_id);
+      if (!user) {
+        return { valid: false, reason: 'USER_NOT_FOUND' };
+      }
+
+      return {
+        valid: true,
+        user,
+        session: {
+          id: row.id,
+          userId: row.user_id,
+          tokenHash: row.token_hash,
+          userAgent: row.user_agent,
+          ipAddress: row.ip_address,
+          clientFingerprint: row.client_fingerprint,
+          expiresAt: row.expires_at,
+          createdAt: row.created_at,
+          revokedAt: row.revoked_at
+        }
+      };
+    },
+
+    revoke: async (token: string): Promise<boolean> => {
+      if (!token) return false;
+      const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
+      const res = this.sqlite.prepare("UPDATE sessions SET revoked_at = datetime('now') WHERE token_hash = ? AND revoked_at IS NULL").run(tokenHash);
+      this.syncRootDb();
+      return (res.changes || 0) > 0;
+    },
+
+    revokeAllForUser: async (userId: string): Promise<boolean> => {
+      if (!userId) return false;
+      const res = this.sqlite.prepare("UPDATE sessions SET revoked_at = datetime('now') WHERE user_id = ? AND revoked_at IS NULL").run(userId);
+      this.syncRootDb();
+      return (res.changes || 0) > 0;
+    },
+
+    cleanupExpired: async (): Promise<number> => {
+      const res = this.sqlite.prepare("DELETE FROM sessions WHERE datetime(expires_at) < datetime('now') OR (revoked_at IS NOT NULL AND datetime(revoked_at) < datetime('now', '-7 days'))").run();
+      this.syncRootDb();
+      return res.changes || 0;
     }
   };
 

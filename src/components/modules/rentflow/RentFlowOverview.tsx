@@ -256,15 +256,20 @@ export default function RentFlowOverview() {
   const isDemoTenant = currentUser?.email === 'tenant@staywise.com' || currentUser?.id === 'user-tenant-shyam';
 
   // Dynamically map real invoices from SQLite database scoped to the active role
-  const scopedInvoices = (activeRole === 'owner')
-    ? (isDemoAccount ? invoices : invoices.filter(inv => {
-        const ownerProps = properties.filter(p => p.ownerId === currentUser.id);
-        const ownerPropIds = ownerProps.map(p => p.id);
-        const ownerPropNames = ownerProps.map(p => p.name.toLowerCase());
+  const ownerProps = (activeRole === 'admin')
+    ? properties
+    : properties.filter(p => p.ownerId === currentUser.id);
+  const ownerPropIds = ownerProps.map(p => p.id);
+  const ownerPropNames = ownerProps.map(p => p.name.toLowerCase());
+
+  const scopedInvoices = (activeRole === 'admin')
+    ? invoices
+    : (activeRole === 'owner')
+    ? invoices.filter(inv => {
         return ownerPropIds.includes(inv.propertyId) || (inv.propertyName && ownerPropNames.includes(inv.propertyName.toLowerCase()));
-      }))
+      })
     : (activeRole === 'tenant')
-    ? (isDemoTenant ? invoices : invoices.filter(inv => inv.tenantId === currentUser.id || (currentUser.name && inv.tenantName?.toLowerCase().includes(currentUser.name.toLowerCase()))))
+    ? invoices.filter(inv => inv.tenantId === currentUser.id || (currentUser.name && inv.tenantName?.toLowerCase().includes(currentUser.name.toLowerCase())))
     : invoices;
 
   const dynamicPaymentRows = scopedInvoices.length > 0 ? scopedInvoices.map(inv => ({
@@ -284,11 +289,13 @@ export default function RentFlowOverview() {
   
   const displayedLedger = (activeRole === 'tenant')
     ? (isDemoTenant ? tenantLedger : ledger.filter(l => (currentUser?.id && l.referenceId.includes(currentUser.id)) || (currentUser?.name && l.description.toLowerCase().includes(currentUser.name.toLowerCase()))))
-    : (isDemoAccount ? ledger : ledger.filter(l => {
+    : (activeRole === 'admin')
+    ? ledger
+    : ledger.filter(l => {
         const ownerProps = properties.filter(p => p.ownerId === currentUser?.id);
         const propIds = ownerProps.map(p => p.id);
         return propIds.some(pid => l.referenceId.includes(pid));
-      }));
+      });
 
   const userElectricityBills = (activeRole === 'tenant')
     ? (isDemoTenant

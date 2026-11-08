@@ -108,6 +108,23 @@ export async function POST(req: NextRequest) {
 
     const session = createSessionToken(user.id, user.role, user.email);
 
+    // Persist authoritative session in SQLite with client fingerprinting
+    const userAgent = req.headers.get('user-agent') || '';
+    const forwardedFor = req.headers.get('x-forwarded-for') || '';
+    const ipAddress = forwardedFor.split(',')[0].trim() || req.headers.get('x-real-ip') || '127.0.0.1';
+
+    try {
+      await db.sessions.create({
+        userId: user.id,
+        token: session.token,
+        userAgent,
+        ipAddress,
+        expiresInHours: 48
+      });
+    } catch (sessionErr) {
+      console.warn('[Staywise Auth] Session persistence warning:', sessionErr);
+    }
+
     const response = NextResponse.json({
       success: true,
       message: `Account created successfully for ${user.name} (${meta.roleLabel}) in SQLite database.`,
