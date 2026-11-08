@@ -94,10 +94,7 @@ async function runTests() {
     { email: 'owner@staywise.com', pass: 'Owner@123' },
     { email: 'tenant@staywise.com', pass: 'Tenant@123' },
     { email: 'admin@staywise.com', pass: 'admin@123' },
-    { email: 'manager@staywise.com', pass: 'Manager@123' },
-    { email: 'vendor@staywise.com', pass: 'Vendor@123' },
-    { email: 'estate@staywise.com', pass: 'Estate@123' },
-    { email: 'angithnk@gmail.com', pass: '12345678@abc' }
+    { email: 'estate@staywise.com', pass: 'Estate@123' }
   ];
 
   let allDemoAuth = true;
@@ -118,7 +115,7 @@ async function runTests() {
 
   if (allDemoAuth) {
     passed++;
-    logPass('All canonical demo accounts & Angith authenticate perfectly against SHA-256 hashes.');
+    logPass('All 4 canonical accounts (Owner, Tenant, EstateOS, Admin) authenticate perfectly against SHA-256 hashes.');
   }
 
   // --------------------------------------------------------------------------

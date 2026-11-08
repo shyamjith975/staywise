@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { db } from '../../../lib/db';
 import { getAuthenticatedUser } from '../../../lib/security/authorization';
+import { secureJsonResponse, maskSensitivePII } from '../../../lib/security/mitmProtection';
 
 import { 
   getBootstrapCache, 
@@ -55,7 +56,7 @@ export async function GET(req: NextRequest) {
         });
       }
 
-      return NextResponse.json({
+      return secureJsonResponse({
         success: true,
         data: cached.data
       }, {
@@ -369,7 +370,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({
+    return secureJsonResponse({
       success: true,
       data: responseData
     }, {

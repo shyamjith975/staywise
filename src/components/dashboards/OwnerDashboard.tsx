@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { 
   Building2, 
@@ -207,6 +207,7 @@ export default function OwnerDashboard() {
     invoices, 
     tickets, 
     leads, 
+    ledger,
     currentUser, 
     activeRole,
     setIsAddPropertyOpen,
@@ -244,7 +245,54 @@ export default function OwnerDashboard() {
 
   // Chat input state
   const [chatMessage, setChatMessage] = useState('');
-  const [activityFeed, setActivityFeed] = useState(() => isDemoAccount ? DEMO_ACTIVITY_FEED : []);
+
+  // Dynamically derive activity feed from real ledger & maintenance tickets
+  const derivedActivityFeed = useMemo(() => {
+    const feed: typeof DEMO_ACTIVITY_FEED = [];
+
+    // 1. From real database ledger records
+    if (ledger && ledger.length > 0) {
+      ledger.slice(0, 4).forEach((l) => {
+        feed.push({
+          id: `act-led-${l.id}`,
+          name: l.type === 'CREDIT' ? 'Rent Collection Engine' : 'Accounts & Escrow',
+          time: 'Today',
+          action: l.description,
+          avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
+          type: 'message',
+          text: `Statutory ledger entry cleared: ₹${l.amount.toLocaleString('en-IN')} via ${l.account}. Settlement status: ${l.settlementStatus}.`,
+          reaction: '✅'
+        });
+      });
+    }
+
+    // 2. From real database tickets
+    if (tickets && tickets.length > 0) {
+      tickets.slice(0, 2).forEach((t) => {
+        feed.push({
+          id: `act-tick-${t.id}`,
+          name: t.tenantName || 'Resident',
+          time: 'Recent',
+          action: `Logged maintenance ticket #${t.ticketNumber || t.id}`,
+          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
+          type: 'message',
+          text: `${t.title} - Priority: ${t.priority}. Status: ${t.status}.`,
+          reaction: '🔧'
+        });
+      });
+    }
+
+    if (feed.length === 0) {
+      return isDemoAccount ? DEMO_ACTIVITY_FEED : [];
+    }
+    return feed;
+  }, [ledger, tickets, isDemoAccount]);
+
+  const [activityFeed, setActivityFeed] = useState<typeof DEMO_ACTIVITY_FEED>([]);
+
+  useEffect(() => {
+    setActivityFeed(derivedActivityFeed);
+  }, [derivedActivityFeed]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,32 +311,85 @@ export default function OwnerDashboard() {
     setChatMessage('');
   };
 
+  // Dynamically derive live operational tasks from real database records (tickets, invoices, bills)
+  const derivedTasks = useMemo(() => {
+    const list: typeof DEMO_TASKS_LIST = [];
+    
+    // 1. Unpaid/Due rent tasks
+    const dueInvoices = invoices.filter(i => i.status === 'Due' || i.status === 'Overdue');
+    if (dueInvoices.length > 0) {
+      list.push({
+        id: 'tsk-rent-sync',
+        title: `Monthly Rent Verification & Autopay Sync (${dueInvoices[0].tenantName} #${dueInvoices[0].unitNumber} Due: ₹${dueInvoices[0].totalAmount.toLocaleString('en-IN')})`,
+        status: 'In progress',
+        statusColor: 'bg-[#06110c]',
+        hours: '4h',
+        icon: 'sparkles'
+      });
+    }
+
+    // 2. Real maintenance tickets from DB
+    tickets.forEach((t) => {
+      const isDone = t.status === 'Completed' || t.status === 'Closed' || (t.status as string) === 'RESOLVED';
+      list.push({
+        id: `tsk-tick-${t.id}`,
+        title: `${t.title} (${t.propertyName || 'Beach Road'} #${t.unitNumber || 'Unit'})`,
+        status: isDone ? 'Completed' : (t.status === 'In Progress' ? 'In progress' : 'On hold'),
+        statusColor: isDone ? 'bg-emerald-600' : 'bg-[#06110c]',
+        hours: t.priority === 'High' ? '2h' : '6h',
+        icon: 'wrench'
+      });
+    });
+
+    // 3. Electricity bill verification
+    if (electricityBills.length > 0) {
+      list.push({
+        id: 'tsk-elec-meter',
+        title: `Electricity Meter Sub-meter Scan (${electricityBills[0].propertyName || 'Beach Road'} #${electricityBills[0].unitNumber || '304'})`,
+        status: electricityBills[0].status === 'Paid' ? 'Completed' : 'In progress',
+        statusColor: electricityBills[0].status === 'Paid' ? 'bg-emerald-600' : 'bg-[#171717]',
+        hours: 'Done',
+        icon: 'zap'
+      });
+    }
+
+    if (list.length === 0 && (activeRole === 'owner' || activeRole === 'admin')) {
+      return DEMO_TASKS_LIST;
+    }
+    return list;
+  }, [invoices, tickets, electricityBills, activeRole]);
+
   // Current Operations Tasks List
-  const [tasksList, setTasksList] = useState(() => isDemoAccount ? DEMO_TASKS_LIST : []);
+  const [tasksList, setTasksList] = useState<typeof DEMO_TASKS_LIST>([]);
+
+  useEffect(() => {
+    setTasksList(derivedTasks);
+  }, [derivedTasks]);
 
   // Heatmap & Property Filter
   const [heatmapFilter, setHeatmapFilter] = useState<'ALL' | 'HIGH_YIELD' | 'STABLE' | 'NEEDS_ATTENTION' | 'VACANT'>('ALL');
 
-  // Bank Accounts State
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(() => isDemoAccount ? DEMO_BANK_ACCOUNTS : []);
-
-  // Document Vault State
-  const [documents, setDocuments] = useState<StoredDocument[]>(() => isDemoAccount ? DEMO_DOCUMENTS : []);
-
-  // Synchronize on user changes
-  useEffect(() => {
-    if (!isDemoAccount) {
-      setBankAccounts([]);
-      setDocuments([]);
-      setTasksList([]);
-      setActivityFeed([]);
-    } else {
-      setBankAccounts(DEMO_BANK_ACCOUNTS);
-      setDocuments(DEMO_DOCUMENTS);
-      setTasksList(DEMO_TASKS_LIST);
-      setActivityFeed(DEMO_ACTIVITY_FEED);
+  // Bank Accounts State (Persisted & Consistent across mobile & desktop)
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('staywise_owner_banks');
+        if (saved) return JSON.parse(saved);
+      } catch {}
     }
-  }, [currentUser?.id, currentUser?.email, isDemoAccount]);
+    return DEMO_BANK_ACCOUNTS;
+  });
+
+  // Document Vault State (Persisted & Consistent across mobile & desktop)
+  const [documents, setDocuments] = useState<StoredDocument[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('staywise_owner_docs');
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return DEMO_DOCUMENTS;
+  });
 
   // Calculate real percentage of completed operational tasks (Done / Total)
   const totalTasksCount = tasksList.length;

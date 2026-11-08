@@ -7,6 +7,7 @@ import {
   recordLoginFailure, 
   recordLoginSuccess 
 } from '../../../../lib/security/auth';
+import { secureJsonResponse } from '../../../../lib/security/mitmProtection';
 
 export async function POST(req: NextRequest) {
   try {
@@ -121,8 +122,8 @@ export async function POST(req: NextRequest) {
       console.warn('[Staywise Auth] Session persistence warning:', sessionErr);
     }
 
-    // 6. Construct response with HTTP-only session cookie
-    const response = NextResponse.json({
+    // 6. Construct response with HTTP-only session cookie & SHA-256 MITM protection
+    const response = secureJsonResponse({
       success: true,
       user: {
         id: user.id,

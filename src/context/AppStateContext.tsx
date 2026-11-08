@@ -603,8 +603,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {}
     }
 
-    // Immediately reload scoped database data for this user
-    loadDatabaseData(userToSet);
+    // Immediately reload scoped database data for this user with forced refresh
+    loadDatabaseData(userToSet, true);
   };
 
   const signupUser = async (userData: {
@@ -876,14 +876,17 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // 1. In-flight request deduplication: Reuse ongoing request rather than firing duplicate fetches
-    if (inFlightPromiseRef.current) {
-      return inFlightPromiseRef.current;
-    }
-
-    // 2. Micro-debounce: Skip if requested less than 5s ago unless explicitly forced by a mutation
-    if (!force && Date.now() - lastLoadTimeRef.current < 5000) {
-      return;
+    // 1. Bypass debounce & deduplication if explicitly forced or switching user persona
+    if (force || userParam) {
+      lastLoadTimeRef.current = 0;
+      lastEtagRef.current = '';
+    } else {
+      if (inFlightPromiseRef.current) {
+        return inFlightPromiseRef.current;
+      }
+      if (Date.now() - lastLoadTimeRef.current < 5000) {
+        return;
+      }
     }
 
     inFlightPromiseRef.current = (async () => {
