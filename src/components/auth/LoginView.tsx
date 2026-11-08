@@ -229,16 +229,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
       }
 
       if (!res.ok || !data || !data.success) {
-        // Fallback for default demo accounts (Owner, Tenant, Estate, Admin)
-        const demoRole = (Object.keys(DEMO_CREDENTIALS) as UserRole[]).find(
-          r => DEMO_CREDENTIALS[r].email.toLowerCase() === effectiveEmail.toLowerCase() && DEMO_CREDENTIALS[r].pass === effectivePass
-        );
-        if (demoRole) {
-          login(demoRole, DEMO_CREDENTIALS[demoRole]);
-          return;
-        }
-
-        setLoginError(data?.error || 'Invalid credentials. Please verify your email and password.');
+        setLoginError(data?.error || 'Invalid email or password. User is not registered in the database.');
         setLoginLoading(false);
         return;
       }
@@ -255,28 +246,54 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
         description: u.description
       }, data.token);
     } catch {
-      // Offline / network failure fallback for canonical demo accounts
-      const demoRole = (Object.keys(DEMO_CREDENTIALS) as UserRole[]).find(
-        r => DEMO_CREDENTIALS[r].email.toLowerCase() === effectiveEmail.toLowerCase() && DEMO_CREDENTIALS[r].pass === effectivePass
-      );
-      if (demoRole) {
-        login(demoRole, DEMO_CREDENTIALS[demoRole]);
-        return;
-      }
-
-      setLoginError('Network connection failed. Please check your credentials.');
+      setLoginError('Authentication server unreachable. Please check your connection.');
     } finally {
       setLoginLoading(false);
     }
   };
 
-  const handleQuickDemoLogin = (role: UserRole) => {
+  const handleQuickDemoLogin = async (role: UserRole) => {
     setLoginLoading(true);
     setLoginError(null);
+    const cred = DEMO_CREDENTIALS[role];
+    if (!cred) {
+      setLoginError('Invalid demo role selected.');
+      setLoginLoading(false);
+      return;
+    }
+
     try {
-      login(role, DEMO_CREDENTIALS[role]);
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ email: cred.email, password: cred.pass, role })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setLoginError(data?.error || `Account ${cred.email} is not listed in the database. Please seed the database or sign up.`);
+        setLoginLoading(false);
+        return;
+      }
+
+      const u = data.user;
+      login(u.role, {
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        role: u.role,
+        roleLabel: u.roleLabel,
+        avatar: u.avatar,
+        title: u.title,
+        description: u.description
+      }, data.token);
     } catch {
-      login(role);
+      setLoginError('Authentication server unreachable. Please verify database connectivity.');
+    } finally {
+      setLoginLoading(false);
     }
   };
 
@@ -301,8 +318,8 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
       try { data = JSON.parse(responseText); } catch {}
 
       if (!res.ok || !data || !data.success) {
-        // Fallback to local admin demo credential if offline/network restricted
-        login('admin', DEMO_CREDENTIALS.admin);
+        setLoginError(data?.error || 'Admin account is not registered in the database.');
+        setLoginLoading(false);
         return;
       }
 
@@ -318,8 +335,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
         description: u.description || 'Statutory Double-Entry Ledger Surveillance'
       }, data.token);
     } catch {
-      // In case of network error, gracefully authenticate local admin credentials
-      login('admin', DEMO_CREDENTIALS.admin);
+      setLoginError('Authentication server unreachable. Please verify database connectivity.');
     } finally {
       setLoginLoading(false);
     }

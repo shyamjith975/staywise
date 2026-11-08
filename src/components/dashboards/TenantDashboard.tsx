@@ -43,39 +43,6 @@ import { Roommate, TenancyType } from '../../types';
 import { color } from '../../lib/colors';
 import ViewElectricityBillDocumentModal from '../modules/rentflow/ViewElectricityBillDocumentModal';
 
-const DEMO_ROOMMATES: Roommate[] = [
-  {
-    id: 'rm-1',
-    name: 'Shyam Sundar (You)',
-    phone: '+91 98460 21980',
-    email: 'shyam.sundar@techpark.in',
-    splitPercentage: 50,
-    rentShare: 14350,
-    utilityShare: 968,
-    totalPayable: 15318,
-    status: 'Paid',
-    isPrimary: true
-  },
-  {
-    id: 'rm-2',
-    name: 'Rohan Verma',
-    phone: '+91 98112 40912',
-    email: 'rohan.verma@fintech.co',
-    splitPercentage: 50,
-    rentShare: 14350,
-    utilityShare: 968,
-    totalPayable: 15318,
-    status: 'Pending',
-    isPrimary: false
-  }
-];
-
-const DEMO_RESIDENT_DOCS = [
-  { id: 'rd-1', name: 'Digital Tenancy Agreement (Aadhaar eSigned)', size: '2.1 MB', date: 'Signed Oct 2026' },
-  { id: 'rd-2', name: 'Security Deposit Escrow Certificate (₹60,000)', size: '420 KB', date: 'Verified' },
-  { id: 'rd-3', name: 'Move-in Condition & Inventory Report', size: '1.8 MB', date: 'Attached 18 Photos' }
-];
-
 export default function TenantDashboard() {
   const { 
     tenants, 
@@ -97,7 +64,8 @@ export default function TenantDashboard() {
     requestTenantMoveOut,
     addNotification,
     rewardsAccount,
-    protectionContracts
+    protectionContracts,
+    conditionReports
   } = useAppState();
 
   const isDemoTenant = currentUser?.email === 'tenant@staywise.com' || currentUser?.id === 'user-tenant-shyam';
@@ -158,8 +126,8 @@ export default function TenantDashboard() {
     ? tickets.filter(t => t.propertyId === currentTenant.propertyId && t.unitNumber === currentTenant.unitNumber) 
     : [];
 
-  const [roommates, setRoommates] = useState<Roommate[]>(isDemoTenant ? DEMO_ROOMMATES : []);
-  const [residentDocs, setResidentDocs] = useState(isDemoTenant ? DEMO_RESIDENT_DOCS : []);
+  const [roommates, setRoommates] = useState<Roommate[]>([]);
+  const [residentDocs, setResidentDocs] = useState<any[]>([]);
   const [isAddRoommateModalOpen, setIsAddRoommateModalOpen] = useState(false);
   const [newRoommate, setNewRoommate] = useState({
     name: '',
@@ -168,38 +136,55 @@ export default function TenantDashboard() {
     splitPercentage: 50
   });
 
-  const [ekycStatus, setEkycStatus] = useState<'Verified' | 'Pending'>(isDemoTenant ? 'Verified' : 'Pending');
+  const [ekycStatus, setEkycStatus] = useState<'Verified' | 'Pending'>('Pending');
   const [isEKYCModalOpen, setIsEKYCModalOpen] = useState(false);
-  const [aadhaarNumber, setAadhaarNumber] = useState(isDemoTenant ? '5481 9028 1142' : '');
-  const [panNumber, setPanNumber] = useState(isDemoTenant ? 'BLRPS9912A' : '');
+  const [aadhaarNumber, setAadhaarNumber] = useState('');
+  const [panNumber, setPanNumber] = useState('');
 
-  // Reset demo states or populate from currentTenant and database
+  // Populate strictly from real currentTenant and database
   useEffect(() => {
-    if (isDemoTenant) {
-      setRoommates(DEMO_ROOMMATES);
-      setResidentDocs(DEMO_RESIDENT_DOCS);
-      setEkycStatus('Verified');
-      setAadhaarNumber('5481 9028 1142');
-      setPanNumber('BLRPS9912A');
-      setActiveTenancyType('PG');
-    } else if (currentTenant) {
+    if (currentTenant) {
       if (currentTenant.tenancyType) {
         setActiveTenancyType(currentTenant.tenancyType);
       }
       if (currentTenant.aadhaarNumber) {
         setAadhaarNumber(currentTenant.aadhaarNumber);
         setEkycStatus('Verified');
+      } else {
+        setAadhaarNumber('');
+        setEkycStatus(currentTenant.kycVerified ? 'Verified' : 'Pending');
       }
       if (currentTenant.panNumber) {
         setPanNumber(currentTenant.panNumber);
+      } else {
+        setPanNumber('');
       }
-      if (currentTenant.documents && Array.isArray(currentTenant.documents)) {
+      if (currentTenant.documents && Array.isArray(currentTenant.documents) && currentTenant.documents.length > 0) {
         setResidentDocs(currentTenant.documents.map(d => ({
           id: d.id,
           name: d.name,
           size: d.size || '1.0 MB',
           date: d.date || (d as any).uploadDate || '2026-10-16'
         })));
+      } else {
+        const docs: any[] = [];
+        if (protectionContracts && protectionContracts.length > 0) {
+          docs.push({
+            id: 'doc-prot-cert',
+            name: `Deposit Protect Certificate (${protectionContracts[0].policyNumber})`,
+            size: '420 KB',
+            date: 'Active'
+          });
+        }
+        if (conditionReports && conditionReports.length > 0) {
+          docs.push({
+            id: 'doc-cond-rep',
+            name: `Move-in Digital Condition Audit (${conditionReports[0].overallCondition})`,
+            size: '1.8 MB',
+            date: conditionReports[0].inspectionDate
+          });
+        }
+        setResidentDocs(docs);
       }
 
       // Automatically sync roommates from coTenant or roommates sharing same unit

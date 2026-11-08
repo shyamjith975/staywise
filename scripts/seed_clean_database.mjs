@@ -39,10 +39,10 @@ const tablesToClean = [
   'tickets', 'leads', 'estate_assets', 'staff', 'utilities', 'electricity_bills',
   'ai_insights', 'pg_beds', 'pg_rooms', 'pg_meals', 'commercial_units',
   'cam_expenses', 'commercial_visitors', 'moveflow_checklist', 'deposit_disputes',
-  'referrals', 'influencer_offers', 'subscriptions', 'tenant_connection_requests',
-  'rewards_accounts', 'rewards_ledger', 'reward_rules', 'merchant_offers',
-  'deposit_protection_applications', 'protection_contracts', 'property_condition_reports',
-  'protection_claims', 'sessions'
+  'referrals', 'influencer_offers', 'subscriptions', 'meta', 'platform_settings',
+  'tenant_connection_requests', 'rewards_accounts', 'rewards_ledger', 'reward_rules',
+  'merchant_offers', 'deposit_protection_applications', 'protection_contracts',
+  'property_condition_reports', 'protection_claims', 'sessions'
 ];
 
 for (const t of tablesToClean) {
@@ -1203,6 +1203,91 @@ const insertUtility = db.prepare(`
 insertUtility.run('ut-1', 'SOLAR_GENERATION', 'Serene Mist Estate Villa', 'SOLAR-WY-25KVA', 14200, 15620, 'kWh Generated', 0, '2026-05-01');
 insertUtility.run('ut-2', 'WATER_RESERVOIR', 'Serene Mist Estate Villa', 'WTR-WY-NATURAL', 88500, 96800, 'Liters Consumed', 1850, '2026-05-01');
 insertUtility.run('ut-3', 'DIESEL_GENERATOR_BACKUP', 'Serene Mist Estate Villa', 'DG-CUMMINS-30KVA', 210, 218, 'Hours Run', 4200, '2026-05-01');
+
+console.log('Seeding Platform Settings for Canonical Users...');
+const insertSettings = db.prepare(`
+  INSERT INTO platform_settings (
+    user_id, entity_name, owner_name, pan_number, gstin, bank_account, ifsc, bank_name, upi_id,
+    auto_sweep_cadence, rent_due_day, grace_period_days, late_fee_fixed, late_fee_daily_rate,
+    auto_whatsapp_reminder, allow_partial_payments, kseb_tariff_per_unit, dg_backup_rate_per_unit,
+    meter_reading_cycle, common_area_power_ratio, preferences_json, updated_at
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`);
+
+insertSettings.run(
+  'user-owner-vikram',
+  'Singhania Asset Holdings LLP',
+  'Vikram Singhania',
+  'AAACS1928K',
+  '29AAACS1928K1Z5',
+  '918020048192842',
+  'UTIB0000042',
+  'Axis Bank (Escrow Banking Division)',
+  'staywise.escrow@axisbank',
+  'Daily at 18:00 IST',
+  5,
+  3,
+  500,
+  50,
+  1,
+  0,
+  9.5,
+  24,
+  '1st to 5th of every month',
+  10,
+  JSON.stringify({ whatsappAlerts: true, smsAlerts: true, emailDigests: true, instantBookingNotifications: true }),
+  new Date().toISOString()
+);
+
+insertSettings.run(
+  'user-tenant-shyam',
+  'Resident Account',
+  'Shyam Sundar',
+  '•••••4419K',
+  '',
+  '601928472910',
+  'SBIN0001234',
+  'State Bank of India',
+  'shyam@oksbi',
+  'Daily at 18:00 IST',
+  5,
+  3,
+  500,
+  50,
+  1,
+  0,
+  9.5,
+  24,
+  '1st to 5th of every month',
+  10,
+  JSON.stringify({ whatsappAlerts: true, smsAlerts: true, societyAnnouncements: true, emergencyContact: 'Suresh Sundar (+91 98450 99880)' }),
+  new Date().toISOString()
+);
+
+insertSettings.run(
+  'user-estate-manoj',
+  'Serene Mist Estates & Retreats',
+  'Manoj Kumar',
+  'AAACS1928K',
+  '32AAACS1928K1Z3',
+  '918020048192899',
+  'UTIB0000042',
+  'Axis Bank Hospitality Escrow',
+  'serenemist.escrow@axisbank',
+  'Daily at 18:00 IST',
+  1,
+  0,
+  0,
+  0,
+  1,
+  0,
+  9.5,
+  24,
+  '1st of month',
+  0,
+  JSON.stringify({ whatsappAlerts: true, smsAlerts: true, instantBookingNotifications: true }),
+  new Date().toISOString()
+);
 
 console.log('Checkpointing SQLite WAL...');
 db.exec('PRAGMA foreign_keys = ON;');

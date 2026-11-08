@@ -58,84 +58,6 @@ interface EstateBooking {
   smartLockPin: string;
 }
 
-const DEMO_BOOKINGS: EstateBooking[] = [
-  {
-    id: 'bk-101',
-    guestName: 'Vikram & Maya Singhania',
-    phone: '+91 98450 11928',
-    email: 'vikram.singhania@staywise.com',
-    villaName: 'Serene Mist Master Villa (5BHK)',
-    campus: 'Wayanad Plantation Campus',
-    checkIn: '01 Oct 2026',
-    checkOut: '05 Oct 2026',
-    nights: 4,
-    guestsCount: 6,
-    channel: 'Direct VIP',
-    totalAmount: 140000,
-    depositStatus: 'Escrow Locked',
-    status: 'Checked-In',
-    smartLockPin: '4821#'
-  },
-  {
-    id: 'bk-102',
-    guestName: 'David & Sarah Jenkins',
-    phone: '+44 7911 123456',
-    email: 'd.jenkins@uktravel.co.uk',
-    villaName: 'Tea Valley Sunset Suite A',
-    campus: 'Wayanad Plantation Campus',
-    checkIn: '01 Oct 2026',
-    checkOut: '06 Oct 2026',
-    nights: 5,
-    guestsCount: 2,
-    channel: 'Airbnb',
-    totalAmount: 42500,
-    depositStatus: 'Escrow Locked',
-    status: 'Arriving Today',
-    smartLockPin: '9182#'
-  },
-  {
-    id: 'bk-103',
-    guestName: 'TechStar Founders Offsite (12 Pax)',
-    phone: '+91 98190 44211',
-    email: 'founder@techstar.io',
-    villaName: 'Beachfront Haven Luxury Villa',
-    campus: 'Alibaug Beachfront Haven',
-    checkIn: '06 Oct 2026',
-    checkOut: '10 Oct 2026',
-    nights: 4,
-    guestsCount: 12,
-    channel: 'Corporate',
-    totalAmount: 280000,
-    depositStatus: 'Escrow Locked',
-    status: 'Confirmed',
-    smartLockPin: '3310#'
-  },
-  {
-    id: 'bk-104',
-    guestName: 'Anya & Siddharth Malhotra',
-    phone: '+91 98200 55182',
-    email: 'anya.m@fashionhouse.com',
-    villaName: 'Goa Sunset Pool Villa 2',
-    campus: 'Goa Sunset Boutique Pool Villa',
-    checkIn: '30 Sep 2026',
-    checkOut: '04 Oct 2026',
-    nights: 4,
-    guestsCount: 4,
-    channel: 'Booking.com',
-    totalAmount: 64000,
-    depositStatus: 'Collected',
-    status: 'Checked-In',
-    smartLockPin: '7749#'
-  }
-];
-
-const DEMO_TURNOVERS = [
-  { id: 'hk-1', room: 'Suite A (Sunset Wing)', status: 'Cleaning In Progress', housekeeper: 'Sunita D.', eta: '14:30 IST', inspected: false },
-  { id: 'hk-2', room: 'Private Pool Villa 3', status: 'Inspected & Sanitized', housekeeper: 'Ramu K.', eta: 'Ready', inspected: true },
-  { id: 'hk-3', room: 'Tea Valley Cottage 2', status: 'Needs Turnover', housekeeper: 'Sunita D.', eta: '16:00 IST', inspected: false },
-  { id: 'hk-4', room: 'Alibaug Pool Villa A', status: 'Inspected & Sanitized', housekeeper: 'Shambhu', eta: 'Ready', inspected: true },
-];
-
 export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: { initialTab?: string }) {
   const { 
     currentUser, 
@@ -231,33 +153,23 @@ export default function EstateHospitalityDashboard({ initialTab = 'OVERVIEW' }: 
     }
   }, [activeView, initialTab]);
 
-  // Bookings state - strictly isolated for new/non-demo users
-  const [bookings, setBookings] = useState<EstateBooking[]>(() => isDemoEstate ? DEMO_BOOKINGS : []);
-  const [turnovers, setTurnovers] = useState(() => isDemoEstate ? DEMO_TURNOVERS : []);
-
-  React.useEffect(() => {
-    if (isDemoEstate) {
-      setBookings(DEMO_BOOKINGS);
-      setTurnovers(DEMO_TURNOVERS);
-    } else {
-      setBookings([]);
-      setTurnovers([]);
-    }
-  }, [currentUser?.id, currentUser?.email, isDemoEstate]);
+  // Bookings and Housekeeping state
+  const [bookings, setBookings] = useState<EstateBooking[]>([]);
+  const [turnovers, setTurnovers] = useState<any[]>([]);
 
   const userEstateNames = properties
-    .filter(p => p.ownerId === currentUser?.id || isDemoEstate)
+    .filter(p => p.ownerId === currentUser?.id || currentUser?.role === 'admin')
     .map(p => p.name.toLowerCase());
 
-  const activeEstateProperties = isDemoEstate
-    ? properties.filter(p => p.portfolio === 'Luxury Villas & Campuses' || p.type === 'Villa' || p.type === 'Estate')
+  const activeEstateProperties = (currentUser?.role === 'admin')
+    ? properties.filter(p => p.type === 'Villa' || p.type === 'Estate' || p.portfolio === 'Luxury Villas & Campuses')
     : properties.filter(p => p.ownerId === currentUser?.id);
 
-  const activeEstateAssets = isDemoEstate
+  const activeEstateAssets = (currentUser?.role === 'admin')
     ? estateAssets
     : estateAssets.filter(a => userEstateNames.includes(a.estateName.toLowerCase()) || (a as any).ownerId === currentUser?.id);
 
-  const activeStaffMembers = isDemoEstate
+  const activeStaffMembers = (currentUser?.role === 'admin')
     ? staff
     : staff.filter(s => userEstateNames.includes(s.estateName.toLowerCase()) || (s as any).ownerId === currentUser?.id);
 

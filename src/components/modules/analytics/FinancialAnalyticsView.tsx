@@ -288,49 +288,6 @@ Revenue Stamp Affixed & Digitally eSigned via Staywise.
     ? properties
     : properties.filter(p => p.ownerId === currentUser?.id);
 
-  const DEMO_PERFORMANCES = [
-    {
-      name: 'Beach Road Luxury Apartments',
-      location: 'Kozhikode, Kerala',
-      units: '12 Units',
-      inflow: 344400,
-      opex: 28000,
-      noi: 316400,
-      assetValue: '₹4.50 Cr',
-      yieldRate: '8.4%'
-    },
-    {
-      name: 'Koramangala Co-living Suite',
-      location: 'Bengaluru, Karnataka',
-      units: '6 Suites',
-      inflow: 180000,
-      opex: 18500,
-      noi: 161500,
-      assetValue: '₹2.10 Cr',
-      yieldRate: '9.2%'
-    },
-    {
-      name: 'Wayanad Plantation & Villa',
-      location: 'Wayanad, Kerala',
-      units: 'Estate Asset',
-      inflow: 450000,
-      opex: 52000,
-      noi: 398000,
-      assetValue: '₹4.20 Cr',
-      yieldRate: '11.4%'
-    },
-    {
-      name: 'Commercial Tech Park Unit 304',
-      location: 'Whitefield, Bengaluru',
-      units: 'Commercial',
-      inflow: 195000,
-      opex: 14000,
-      noi: 181000,
-      assetValue: '₹2.80 Cr',
-      yieldRate: '7.8%'
-    }
-  ];
-
   const propertyPerformances = userProperties.length > 0 
     ? userProperties.map(p => {
         const inflow = (p.expectedMonthlyRent || (p as any).monthlyRent || 30000) * 12;
@@ -349,7 +306,7 @@ Revenue Stamp Affixed & Digitally eSigned via Staywise.
           yieldRate: yieldCalc
         };
       })
-    : (activeRole === 'admin' ? DEMO_PERFORMANCES : []);
+    : [];
 
   const hasProperties = propertyPerformances.length > 0;
   const totalAnnualNOI = hasProperties 

@@ -64,142 +64,27 @@ interface StoredDocument {
   status: 'Verified' | 'Valid' | 'Active';
 }
 
-const DEMO_BANK_ACCOUNTS: BankAccount[] = [
-  {
-    id: 'bnk-1',
-    bankName: 'HDFC Bank',
-    accountNumber: '•••• •••• •••• 4910',
-    ifsc: 'HDFC0001842',
-    holderName: 'Vikram Singhania',
-    isPrimary: true,
-    status: 'Verified'
-  },
-  {
-    id: 'bnk-2',
-    bankName: 'Axis Bank Escrow Trust',
-    accountNumber: '•••• •••• •••• 9104',
-    ifsc: 'UTIB0000042',
-    holderName: 'Staywise Nodal / Escrow',
-    isPrimary: false,
-    status: 'Verified'
-  }
-];
+interface ActivityFeedItem {
+  id: string;
+  name: string;
+  time: string;
+  action: string;
+  avatar: string;
+  type: 'message' | 'file' | 'text_only';
+  text?: string;
+  reaction?: string;
+  fileName?: string;
+  fileSize?: string;
+}
 
-const DEMO_DOCUMENTS: StoredDocument[] = [
-  {
-    id: 'doc-1',
-    title: 'Title Deed (Beach Road Property)',
-    category: 'Ownership & Sale Deed',
-    size: '2.4 MB',
-    date: 'Verified Oct 2024',
-    status: 'Verified'
-  },
-  {
-    id: 'doc-2',
-    title: 'Municipal Property Tax 2025-26',
-    category: 'Tax & Assessment',
-    size: '480 KB',
-    date: 'Paid Aug 2026',
-    status: 'Valid'
-  },
-  {
-    id: 'doc-3',
-    title: 'Nil Encumbrance Certificate (EC)',
-    category: 'Statutory Registry',
-    size: '1.2 MB',
-    date: 'Valid till 2030',
-    status: 'Verified'
-  },
-  {
-    id: 'doc-4',
-    title: 'Comprehensive Building Insurance',
-    category: 'ICICI Lombard Policy',
-    size: '890 KB',
-    date: 'Active till Jun 2027',
-    status: 'Active'
-  }
-];
-
-const DEMO_DELEGATES: AuthorizedDelegate[] = [
-  {
-    id: 'del-1',
-    name: 'CA Rajesh K. (Kulkarni & Associates)',
-    email: 'rajesh.ca@auditfirm.in',
-    phone: '+91 98450 11928',
-    role: 'Accountant',
-    permissions: ['Financial Ledger', 'Bank Statements', 'Rent Invoices', 'Tax Reports (P&L)'],
-    addedDate: '15 Aug 2026',
-    status: 'Active'
-  },
-  {
-    id: 'del-2',
-    name: 'Arjun Das',
-    email: 'arjun.ops@staywise.com',
-    phone: '+91 94470 82910',
-    role: 'Property Manager',
-    permissions: ['Maintenance Work Orders', 'CRM Leads', 'Physical Visits', 'Tenant Handover'],
-    addedDate: '01 Sep 2026',
-    status: 'Active'
-  }
-];
-
-const DEMO_TASKS_LIST = [
-  {
-    id: 'tsk-1',
-    title: 'Monthly Rent Verification & Autopay Sync',
-    status: 'In progress',
-    statusColor: 'bg-[#06110c]',
-    hours: '4h',
-    icon: 'sparkles'
-  },
-  {
-    id: 'tsk-2',
-    title: 'BESCOM Electricity Meter OCR Scan (Unit 302)',
-    status: 'On hold',
-    statusColor: 'bg-[#171717]',
-    hours: '8h',
-    icon: 'search'
-  },
-  {
-    id: 'tsk-3',
-    title: 'Digital Tenancy Agreement (Aadhaar eSign)',
-    status: 'Done',
-    statusColor: 'bg-[#06110c]',
-    hours: '32h',
-    icon: 'code'
-  }
-];
-
-const DEMO_ACTIVITY_FEED = [
-  {
-    id: 'act-1',
-    name: 'Floyd Miles',
-    time: '10:15 AM',
-    action: 'Commented on Palm Grove Villa',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
-    type: 'message' as const,
-    text: "Hi! Rent for Unit 402 has been settled via UPI autopay. All meter readings verified.",
-    reaction: '👍'
-  },
-  {
-    id: 'act-2',
-    name: 'Guy Hawkins',
-    time: '10:15 AM',
-    action: 'Uploaded BESCOM Power Bill',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop',
-    type: 'file' as const,
-    fileName: 'BESCOM_Unit302_Oct.pdf',
-    fileSize: '420 Kb'
-  },
-  {
-    id: 'act-3',
-    name: 'Kristin Watson',
-    time: '10:15 AM',
-    action: 'Scheduled AC Inspection for Unit 108',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=200&auto=format&fit=crop',
-    type: 'text_only' as const
-  }
-];
+interface TaskItem {
+  id: string;
+  title: string;
+  status: string;
+  statusColor: string;
+  hours: string;
+  icon: string;
+}
 
 export default function OwnerDashboard() {
   const { 
@@ -248,7 +133,7 @@ export default function OwnerDashboard() {
 
   // Dynamically derive activity feed from real ledger & maintenance tickets
   const derivedActivityFeed = useMemo(() => {
-    const feed: typeof DEMO_ACTIVITY_FEED = [];
+    const feed: ActivityFeedItem[] = [];
 
     // 1. From real database ledger records
     if (ledger && ledger.length > 0) {
@@ -282,13 +167,10 @@ export default function OwnerDashboard() {
       });
     }
 
-    if (feed.length === 0) {
-      return isDemoAccount ? DEMO_ACTIVITY_FEED : [];
-    }
     return feed;
-  }, [ledger, tickets, isDemoAccount]);
+  }, [ledger, tickets]);
 
-  const [activityFeed, setActivityFeed] = useState<typeof DEMO_ACTIVITY_FEED>([]);
+  const [activityFeed, setActivityFeed] = useState<ActivityFeedItem[]>([]);
 
   useEffect(() => {
     setActivityFeed(derivedActivityFeed);
@@ -297,13 +179,13 @@ export default function OwnerDashboard() {
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatMessage.trim()) return;
-    const newEntry = {
+    const newEntry: ActivityFeedItem = {
       id: `act-${Date.now()}`,
       name: currentUser.name || 'Owner',
       time: 'Just now',
       action: 'Sent a note to property team',
       avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&auto=format&fit=crop',
-      type: 'message' as const,
+      type: 'message',
       text: chatMessage,
       reaction: ''
     };
@@ -313,7 +195,7 @@ export default function OwnerDashboard() {
 
   // Dynamically derive live operational tasks from real database records (tickets, invoices, bills)
   const derivedTasks = useMemo(() => {
-    const list: typeof DEMO_TASKS_LIST = [];
+    const list: TaskItem[] = [];
     
     // 1. Unpaid/Due rent tasks
     const dueInvoices = invoices.filter(i => i.status === 'Due' || i.status === 'Overdue');
@@ -353,14 +235,11 @@ export default function OwnerDashboard() {
       });
     }
 
-    if (list.length === 0 && (activeRole === 'owner' || activeRole === 'admin')) {
-      return isDemoAccount ? DEMO_TASKS_LIST : [];
-    }
     return list;
-  }, [invoices, tickets, electricityBills, activeRole, isDemoAccount]);
+  }, [invoices, tickets, electricityBills]);
 
   // Current Operations Tasks List
-  const [tasksList, setTasksList] = useState<typeof DEMO_TASKS_LIST>([]);
+  const [tasksList, setTasksList] = useState<TaskItem[]>([]);
 
   useEffect(() => {
     setTasksList(derivedTasks);
@@ -371,28 +250,24 @@ export default function OwnerDashboard() {
 
   // Bank Accounts State (Persisted & Scoped per user)
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && currentUser?.id) {
       try {
-        const userScoped = localStorage.getItem(`staywise_owner_banks_${currentUser?.id || 'demo'}`);
+        const userScoped = localStorage.getItem(`staywise_owner_banks_${currentUser.id}`);
         if (userScoped) return JSON.parse(userScoped);
-        const legacy = localStorage.getItem('staywise_owner_banks');
-        if (legacy && isDemoAccount) return JSON.parse(legacy);
       } catch {}
     }
-    return isDemoAccount ? DEMO_BANK_ACCOUNTS : [];
+    return [];
   });
 
   // Document Vault State (Persisted & Scoped per user)
   const [documents, setDocuments] = useState<StoredDocument[]>(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && currentUser?.id) {
       try {
-        const userScoped = localStorage.getItem(`staywise_owner_docs_${currentUser?.id || 'demo'}`);
+        const userScoped = localStorage.getItem(`staywise_owner_docs_${currentUser.id}`);
         if (userScoped) return JSON.parse(userScoped);
-        const legacy = localStorage.getItem('staywise_owner_docs');
-        if (legacy && isDemoAccount) return JSON.parse(legacy);
       } catch {}
     }
-    return isDemoAccount ? DEMO_DOCUMENTS : [];
+    return [];
   });
 
   // Calculate real percentage of completed operational tasks (Done / Total)
@@ -451,10 +326,8 @@ export default function OwnerDashboard() {
   });
 
   // Connect owner's user_id with properties
-  // Demo accounts see full catalog, real owners see their owned properties, and managers only see authorized portfolios
-  const activeDelegates: AuthorizedDelegate[] = isDemoAccount 
-    ? ((appDelegates && appDelegates.length > 0) ? appDelegates : DEMO_DELEGATES) 
-    : (appDelegates || []);
+  // Real owners see their owned properties, and managers only see authorized portfolios
+  const activeDelegates: AuthorizedDelegate[] = appDelegates || [];
 
   const isManagerRole = activeRole === 'manager';
   const managerDelegate = (appDelegates || []).find(d => 
