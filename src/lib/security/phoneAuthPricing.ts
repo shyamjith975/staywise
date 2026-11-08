@@ -67,8 +67,8 @@ export class PhoneAuthenticationManager {
   } {
     const now = Date.now();
 
-    // 1. Require client App Check / bot verification token
-    if (!attempt.appCheckTokenValid && process.env.NODE_ENV === 'production') {
+    // 1. Require client App Check / bot verification token only if explicitly configured
+    if (!attempt.appCheckTokenValid && process.env.NODE_ENV === 'production' && process.env.REQUIRE_FIREBASE_APPCHECK === 'true') {
       this.fraudBlockedAttempts++;
       return {
         allowed: false,

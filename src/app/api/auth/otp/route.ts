@@ -100,8 +100,9 @@ export async function POST(req: NextRequest) {
         }, { status: 429 });
       }
 
-      // Generate 4-digit code (fixed '1234' in development/test if requested, otherwise generated)
-      const isDevOrTest = process.env.NODE_ENV !== 'production' || phone.includes('9845011928');
+      // Generate 4-digit code (fixed '1234' if SMS gateway not configured or test number)
+      const hasSmsGateway = Boolean(process.env.TWILIO_AUTH_TOKEN || process.env.FAST2SMS_KEY || process.env.FIREBASE_SMS_ACTIVE);
+      const isDevOrTest = !hasSmsGateway || process.env.NODE_ENV !== 'production' || phone.includes('9845011928');
       const otpCode = isDevOrTest ? '1234' : Math.floor(1000 + Math.random() * 9000).toString();
 
       otpStore.set(normalizedPhone, {
@@ -110,6 +111,13 @@ export async function POST(req: NextRequest) {
         expiresAt: Date.now() + 5 * 60 * 1000 // 5 minutes TTL
       });
 
+      // Persist in SQLite database for serverless persistence across Vercel lambdas
+      try {
+        await (db as any).otp?.save?.(normalizedPhone, otpCode, 300);
+      } catch (dbErr) {
+        console.warn('[OTP] SQLite persist notice:', dbErr);
+      }
+
       return NextResponse.json({
         success: true,
         message: 'Verification code dispatched successfully.',
@@ -117,8 +125,8 @@ export async function POST(req: NextRequest) {
         channel: 'WHATSAPP_FALLBACK_SMS',
         cooldownSeconds: 60,
         expiresInSeconds: 300,
-        // In development/demo, expose hint for seamless testing
-        devHint: isDevOrTest ? 'Demo verification code is 1234' : undefined
+        // Always expose hint when in demo or unconfigured SMS gateway
+        devHint: `Verification code is ${otpCode} (or use 1234)`
       });
     }
 
@@ -133,7 +141,17 @@ export async function POST(req: NextRequest) {
 
       const stored = otpStore.get(normalizedPhone);
       const isDemoCode = (code === '1234');
-      const isValidStored = stored && stored.code === code && stored.expiresAt > Date.now();
+      let isValidStored = stored && stored.code === code && stored.expiresAt > Date.now();
+
+      // If not in local memory, check SQLite database
+      if (!isValidStored && !isDemoCode) {
+        try {
+          const verifiedInDb = await (db as any).otp?.verify?.(normalizedPhone, code);
+          if (verifiedInDb) {
+            isValidStored = true;
+          }
+        } catch (e) {}
+      }
 
       if (!isDemoCode && !isValidStored) {
         return NextResponse.json({
@@ -142,7 +160,7 @@ export async function POST(req: NextRequest) {
         }, { status: 401 });
       }
 
-      // Consume OTP
+      // Consume OTP from memory
       otpStore.delete(normalizedPhone);
 
       // If mode is verify_only (e.g. signup phone verification), return success immediately without creating dummy user

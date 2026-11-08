@@ -42,7 +42,11 @@ import {
   Crown,
   UserPlus,
   ShieldAlert,
-  Smartphone
+  Smartphone,
+  Lock,
+  Loader2,
+  AlertCircle,
+  ArrowRight
 } from 'lucide-react';
 import { color } from '../../lib/colors';
 import { AuthorizedDelegate } from '../../types';
@@ -118,10 +122,83 @@ export default function OwnerDashboard() {
     addDelegate,
     revokeDelegate,
     protectionContracts,
-    protectionClaims
+    protectionClaims,
+    subscription,
+    refreshSubscription,
+    upgradeSubscription
   } = useAppState();
 
   const isDemoAccount = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
+
+  // =========================================================================
+  // SUBSCRIPTION & 7-DAY FREE TRIAL PAYWALL SYSTEM
+  // =========================================================================
+  const isTrial = Boolean(subscription?.isTrial || subscription?.status === 'TRIAL' || (!subscription && !isDemoAccount));
+  
+  // Calculate remaining trial days dynamically from trialEndsAt or endDate
+  const trialEndDate = subscription?.trialEndsAt 
+    ? new Date(subscription.trialEndsAt) 
+    : (subscription?.endDate ? new Date(subscription.endDate) : null);
+
+  const trialDaysLeft = trialEndDate
+    ? Math.max(0, Math.ceil((trialEndDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : (subscription?.daysRemaining ?? (isTrial ? 7 : 0));
+
+  // Hard paywall triggers if trial has expired (0 days left) OR subscription is EXPIRED
+  const isTrialExpired = isTrial && trialDaysLeft <= 0;
+  const isSubscriptionExpired = subscription?.status === 'EXPIRED';
+  const isHardLocked = !isDemoAccount && (isTrialExpired || isSubscriptionExpired);
+
+  // Paywall checkout modal state
+  const [paywallPlan, setPaywallPlan] = useState<'starter' | 'growth_pro' | 'enterprise'>('growth_pro');
+  const [paywallBillingCycle, setPaywallBillingCycle] = useState<'monthly' | 'annual'>('annual');
+  const [paywallPaymentMethod, setPaywallPaymentMethod] = useState<'UPI_AUTOPAY' | 'NET_BANKING' | 'CARD'>('UPI_AUTOPAY');
+  const [paywallProcessing, setPaywallProcessing] = useState(false);
+  const [paywallError, setPaywallError] = useState<string | null>(null);
+
+  // Prevent keyboard escape key closing paywall
+  useEffect(() => {
+    if (isHardLocked) {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown, true);
+      return () => window.removeEventListener('keydown', handleKeyDown, true);
+    }
+  }, [isHardLocked]);
+
+  const handlePaywallCheckout = async () => {
+    setPaywallProcessing(true);
+    setPaywallError(null);
+    try {
+      const paymentMethodLabel = paywallPaymentMethod === 'UPI_AUTOPAY' 
+        ? 'Instant UPI Autopay (Razorpay Gateway Verified)'
+        : paywallPaymentMethod === 'CARD'
+        ? 'Encrypted Debit/Credit Card (Stripe Verified)'
+        : 'Corporate NetBanking Settlement (Cashfree Verified)';
+
+      const res = await upgradeSubscription(paywallPlan, paywallBillingCycle, paymentMethodLabel);
+      if (!res.success) {
+        setPaywallError(res.error || 'Payment aggregator settlement verification failed. Please try again.');
+        setPaywallProcessing(false);
+        return;
+      }
+
+      await refreshSubscription();
+      addNotification(
+        'Subscription Payment Verified',
+        `Payment verified by aggregator. Your ${paywallPlan.toUpperCase()} workspace is now fully unlocked!`,
+        'SYSTEM'
+      );
+      setPaywallProcessing(false);
+    } catch (err: any) {
+      setPaywallError(err.message || 'Payment gateway connection error');
+      setPaywallProcessing(false);
+    }
+  };
 
   // Navigation Filter Tabs
   const [activeTab, setActiveTab] = useState<'overview' | 'properties' | 'bank_accounts' | 'documents' | 'delegates' | 'utilities'>('overview');
@@ -434,29 +511,264 @@ export default function OwnerDashboard() {
   });
 
   return (
-    <div className="space-y-6 pb-12 font-sans text-[#171717]">
-      {/* Top Banner: Pending Tenant Connections */}
-      {pendingConnectionRequests.length > 0 && (
-        <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#06110c]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-          <div className="flex items-center gap-2.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-            <div>
-              <span className="font-extrabold text-xs text-[#171717]">
-                {pendingConnectionRequests.length} Tenant Connection Request(s) Pending Approval
+    <div className="relative">
+      {/* ========================================================================= */}
+      {/* UNCLOSABLE & UNBYPASSABLE HARD PAYWALL MODAL                              */}
+      {/* ========================================================================= */}
+      {isHardLocked && (
+        <div 
+          className="fixed inset-0 z-[99999999] bg-slate-950/95 backdrop-blur-2xl flex items-center justify-center p-4 overflow-y-auto"
+          role="alertdialog"
+          aria-modal="true"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div 
+            className="w-full max-w-2xl bg-[#081512] border-2 border-amber-500/60 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-amber-500/10 text-white relative animate-in fade-in zoom-in-95 my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header: Strictly NO Close button */}
+            <div className="text-center space-y-2.5 mb-6">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 mx-auto shadow-inner">
+                <ShieldAlert className="h-8 w-8" />
+              </div>
+              <div>
+                <span className="px-3 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-black border border-amber-500/40 uppercase tracking-widest inline-block mb-1">
+                  7-Day Free Trial Concluded
+                </span>
+                <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                  Choose a Subscription Plan to Unlock Your Dashboard
+                </h2>
+                <p className="text-xs text-slate-300 max-w-lg mx-auto mt-1.5 leading-relaxed">
+                  Your complimentary 7-day trial period has ended. To continue managing properties, collecting UPI rent payments, and viewing tenant records, please select and activate a platform subscription plan.
+                </p>
+              </div>
+            </div>
+
+            {/* Billing Cycle Pill */}
+            <div className="flex items-center justify-center mb-5">
+              <div className="flex items-center bg-black/60 p-1 rounded-full border border-[#23534B] text-xs">
+                <button
+                  type="button"
+                  onClick={() => setPaywallBillingCycle('monthly')}
+                  className={`px-4 py-1 rounded-full font-bold transition cursor-pointer ${
+                    paywallBillingCycle === 'monthly' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Monthly Billing
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaywallBillingCycle('annual')}
+                  className={`px-4 py-1 rounded-full font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    paywallBillingCycle === 'annual' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <span>Annual Billing</span>
+                  <span className="text-[10px] bg-amber-400 text-black px-1.5 py-0.2 rounded-full font-black">SAVE 20%</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Plan Options Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+              {[
+                { 
+                  id: 'starter', 
+                  name: 'Starter Plan', 
+                  price: paywallBillingCycle === 'annual' ? '₹599/yr' : '₹59/mo',
+                  calc: paywallBillingCycle === 'annual' ? '₹50/mo equivalent' : 'Billed monthly',
+                  units: '1 Property',
+                  features: ['Rent receipts & invoices', 'Direct UPI QR collection', 'WhatsApp reminders']
+                },
+                { 
+                  id: 'growth_pro', 
+                  name: 'Growth Pro', 
+                  price: paywallBillingCycle === 'annual' ? '₹1,499/yr' : '₹149/mo',
+                  calc: paywallBillingCycle === 'annual' ? '₹125/mo equivalent' : 'Billed monthly',
+                  units: 'Up to 10 Properties',
+                  popular: true,
+                  features: ['Sub-meter power splitting', 'Multi-room PG management', 'Move-in photo checklists']
+                },
+                { 
+                  id: 'enterprise', 
+                  name: 'Enterprise', 
+                  price: paywallBillingCycle === 'annual' ? '₹2,999/yr' : '₹299/mo',
+                  calc: paywallBillingCycle === 'annual' ? '₹250/mo equivalent' : 'Billed monthly',
+                  units: 'Unlimited Properties',
+                  features: ['CAM & GST tax invoices', 'Unlimited team delegates', 'Priority phone support']
+                }
+              ].map((p) => {
+                const isSelected = paywallPlan === p.id;
+                return (
+                  <div
+                    key={p.id}
+                    onClick={() => setPaywallPlan(p.id as any)}
+                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between relative ${
+                      isSelected
+                        ? 'border-emerald-400 bg-emerald-950/40 ring-2 ring-emerald-400/40 shadow-lg'
+                        : 'border-[#1D3D37] bg-black/40 hover:border-slate-500'
+                    }`}
+                  >
+                    {p.popular && (
+                      <span className="absolute -top-2.5 right-3 px-2 py-0.5 rounded-full bg-emerald-500 text-black text-[9px] font-black uppercase tracking-wider shadow-sm">
+                        Most Popular
+                      </span>
+                    )}
+                    <div>
+                      <span className="text-xs font-black text-white block">{p.name}</span>
+                      <span className="text-base font-black text-emerald-400 block mt-1">{p.price}</span>
+                      <span className="text-[10px] text-slate-400 block">{p.calc}</span>
+                      <span className="text-[11px] font-bold text-amber-300 block mt-2">{p.units}</span>
+                    </div>
+
+                    <ul className="mt-3 pt-3 border-t border-white/10 space-y-1 text-[10px] text-slate-300">
+                      {p.features.map((f, idx) => (
+                        <li key={idx} className="flex items-center gap-1.5">
+                          <Check className="h-3 w-3 text-emerald-400 shrink-0" />
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Payment Method Selector */}
+            <div className="p-3.5 rounded-2xl bg-black/50 border border-[#1D3D37] mb-5">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                Select Aggregator Payment Method (Encrypted RBI Escrow)
               </span>
-              <p className="text-[11px] text-[#546E7A]">
-                New residents have requested to connect to your properties.
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                {[
+                  { id: 'UPI_AUTOPAY', label: 'UPI / QR Code', icon: '📱' },
+                  { id: 'CARD', label: 'Credit / Debit Card', icon: '💳' },
+                  { id: 'NET_BANKING', label: 'Net Banking', icon: '🏦' }
+                ].map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setPaywallPaymentMethod(m.id as any)}
+                    className={`py-2 px-2.5 rounded-xl border text-center transition cursor-pointer flex items-center justify-center gap-1.5 font-bold ${
+                      paywallPaymentMethod === m.id
+                        ? 'bg-emerald-600 text-white border-emerald-400'
+                        : 'bg-white/5 text-slate-300 border-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    <span>{m.icon}</span>
+                    <span className="text-[11px]">{m.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Error Message */}
+            {paywallError && (
+              <div className="p-3 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2 mb-4">
+                <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+                <span>{paywallError}</span>
+              </div>
+            )}
+
+            {/* Action Button: Pay & Unlock */}
+            <div className="space-y-2">
+              <button
+                type="button"
+                disabled={paywallProcessing}
+                onClick={handlePaywallCheckout}
+                className="w-full py-3.5 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm transition cursor-pointer shadow-xl shadow-emerald-950/60 flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {paywallProcessing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Cross-checking settlement with payment aggregator...</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-4 w-4" />
+                    <span>Pay with Aggregator &amp; Unlock Dashboard Now</span>
+                  </>
+                )}
+              </button>
+              <p className="text-[10px] text-center text-slate-400">
+                🔒 Cryptographically signed payment • Razorpay &amp; Cashfree Aggregator Verified • Instant automatic renewal
               </p>
             </div>
           </div>
-          <button
-            onClick={() => setActiveView('tenants')}
-            className="px-4 py-1.5 rounded-xl bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs cursor-pointer self-start sm:self-auto"
-          >
-            Review &amp; Approve in Tenants Directory →
-          </button>
         </div>
       )}
+
+      {/* Main Dashboard Workspace (Obscured and locked when isHardLocked) */}
+      <div className={`space-y-6 pb-12 font-sans text-[#171717] ${isHardLocked ? 'pointer-events-none select-none filter blur-md opacity-20 max-h-[80vh] overflow-hidden' : ''}`}>
+        
+        {/* Top Header Banner: Account Tier & Free Trial Countdown */}
+        {isTrial ? (
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-amber-500/10 to-transparent border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-600 flex items-center justify-center text-lg font-black shrink-0">
+                ✨
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-extrabold text-sm text-[#171717]">
+                    7-Day Free Trial Active
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-800 text-[10px] font-black border border-amber-500/40 font-mono">
+                    {trialDaysLeft} {trialDaysLeft === 1 ? 'day' : 'days'} left
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#546E7A] mt-0.5">
+                  You have full unrestricted access to all properties, rent collections, and tenant tools. After {trialDaysLeft} days, choose an ongoing subscription plan.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveView('settings')}
+              className="px-4 py-2 rounded-xl bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs cursor-pointer shrink-0 self-start sm:self-auto flex items-center gap-1.5"
+            >
+              <span>Choose Subscription Plan</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ) : (
+          <div className="p-3.5 rounded-2xl bg-[#E8F0EC] border border-emerald-600/30 flex items-center justify-between gap-3 text-xs shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <Crown className="h-4 w-4 text-emerald-700" />
+              <span className="font-extrabold text-[#171717]">
+                Account Type: <b className="text-emerald-800">{subscription?.planName || 'Growth Pro'} Tier</b>
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black">
+                Active
+              </span>
+            </div>
+            <span className="text-[11px] text-[#546E7A] hidden sm:inline">
+              Days remaining: <b className="text-[#171717] font-mono">{subscription?.daysRemaining ?? 30} days</b>
+            </span>
+          </div>
+        )}
+
+        {/* Top Banner: Pending Tenant Connections */}
+        {pendingConnectionRequests.length > 0 && (
+          <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#06110c]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+              <div>
+                <span className="font-extrabold text-xs text-[#171717]">
+                  {pendingConnectionRequests.length} Tenant Connection Request(s) Pending Approval
+                </span>
+                <p className="text-[11px] text-[#546E7A]">
+                  New residents have requested to connect to your properties.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveView('tenants')}
+              className="px-4 py-1.5 rounded-xl bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs cursor-pointer self-start sm:self-auto"
+            >
+              Review &amp; Approve in Tenants Directory →
+            </button>
+          </div>
+        )}
       
       {/* ========================================================================= */}
       {/* 1. SUB-NAVIGATION TABS (Overview, Properties, Banks, Vault, Team, Power)  */}
@@ -2020,6 +2332,7 @@ Digitally stamped and compliant with Indian Tenancy Acts & Section 24.`
         </div>
       )}
 
+      </div>
     </div>
   );
 }

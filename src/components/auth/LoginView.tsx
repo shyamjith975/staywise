@@ -71,6 +71,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [signupLoading, setSignupLoading] = useState(false);
   const [signupError, setSignupError] = useState<string | null>(null);
+  const [signupStep, setSignupStep] = useState<1 | 2 | 3>(1);
 
   // Manual Asset Owner & Legal Entity Information
   const [signupEntityName, setSignupEntityName] = useState('');
@@ -433,9 +434,67 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
     }
   };
 
+  const validateStep1 = () => {
+    setSignupError(null);
+    const cleanFirst = firstName.trim();
+    const cleanLast = lastName.trim();
+    if (!cleanFirst || !cleanLast) {
+      setSignupError('Please provide both first name and last name.');
+      return false;
+    }
+    if (!signupEmail.trim() || !signupEmail.includes('@')) {
+      setSignupError('Please enter a valid email address.');
+      return false;
+    }
+    const cleanPhone = signupPhone.trim().replace(/\D/g, '');
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      setSignupError('Please enter a valid 10-digit mobile phone number (numbers only).');
+      return false;
+    }
+    if (!isSignupPhoneVerified) {
+      setSignupError('Please verify your mobile number with the 4-digit OTP before continuing.');
+      return false;
+    }
+    if (!isPasswordStrong) {
+      setSignupError('Password does not meet enterprise security requirements. Must be 8+ characters and contain uppercase, lowercase, numbers, and a special character.');
+      return false;
+    }
+    return true;
+  };
+
+  const handleNextToEntity = (e?: React.MouseEvent | React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (validateStep1()) {
+      if (!signupOwnerName.trim() && firstName) {
+        setSignupOwnerName(`${firstName.trim()} ${lastName.trim()}`);
+      }
+      setSignupStep(2);
+    }
+  };
+
+  const handleNextToSubscription = (e?: React.MouseEvent | React.FormEvent) => {
+    if (e) e.preventDefault();
+    setSignupError(null);
+    if (!signupEntityName.trim() && !signupOwnerName.trim()) {
+      setSignupError('Please provide either your legal entity name or primary landlord name.');
+      return;
+    }
+    setSignupStep(3);
+  };
+
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSignupError(null);
+
+    // If owner/estate is submitting on step 1 or 2, route to next step
+    if ((signupRole === 'owner' || signupRole === 'estate_manager') && signupStep === 1) {
+      handleNextToEntity(e);
+      return;
+    }
+    if ((signupRole === 'owner' || signupRole === 'estate_manager') && signupStep === 2) {
+      handleNextToSubscription(e);
+      return;
+    }
 
     const cleanFirst = firstName.trim();
     const cleanLast = lastName.trim();
@@ -705,10 +764,52 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
           </div>
 
           {/* ========================================================================= */}
-          {/* MODE 1: CREATE NEW ACCOUNT (SIGN UP)                                      */}
+          {/* MODE 1: CREATE NEW ACCOUNT (SIGN UP) — 3-STEP SEQUENTIAL ONBOARDING WIZARD */}
           {/* ========================================================================= */}
           {authMode === 'SIGNUP' && (
             <form onSubmit={handleSignupSubmit} className="space-y-3.5">
+              
+              {/* Multi-Step Onboarding Progress Indicator for Owners/Estates */}
+              {(signupRole === 'owner' || signupRole === 'estate_manager') && (
+                <div className="p-2.5 rounded-2xl bg-[#0a1f18] border border-[#1D3D37] mb-2">
+                  <div className="flex items-center justify-between text-[11px] font-bold">
+                    <div className="flex items-center gap-1.5">
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${signupStep === 1 ? 'bg-[#a31c1b] text-white' : signupStep > 1 ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
+                        {signupStep > 1 ? '✓' : '1'}
+                      </span>
+                      <span className={signupStep === 1 ? 'text-white font-black' : 'text-slate-400'}>
+                        Account
+                      </span>
+                    </div>
+
+                    <div className="h-0.5 w-6 bg-[#23534B]" />
+
+                    <div className="flex items-center gap-1.5">
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${signupStep === 2 ? 'bg-[#a31c1b] text-white' : signupStep > 2 ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
+                        {signupStep > 2 ? '✓' : '2'}
+                      </span>
+                      <span className={signupStep === 2 ? 'text-white font-black' : 'text-slate-400'}>
+                        Legal Entity
+                      </span>
+                    </div>
+
+                    <div className="h-0.5 w-6 bg-[#23534B]" />
+
+                    <div className="flex items-center gap-1.5">
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black ${signupStep === 3 ? 'bg-[#a31c1b] text-white' : 'bg-slate-700 text-slate-300'}`}>
+                        3
+                      </span>
+                      <span className={signupStep === 3 ? 'text-white font-black' : 'text-slate-400'}>
+                        Subscription
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 1: ACCOUNT CREDENTIALS */}
+              {signupStep === 1 && (
+                <>
               
               {/* Role Selection Tabs */}
               <div>
@@ -953,191 +1054,321 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                 </div>
               )}
 
-              {/* Owner Specific: Manual Asset Owner & Legal Entity Information */}
-              {(signupRole === 'owner' || signupRole === 'estate_manager') && (
-                <div className="p-3.5 rounded-2xl bg-[#0f241f] border border-[#23534B]/80 space-y-3 animate-in fade-in">
-                  <div className="flex items-center justify-between border-b border-[#23534B]/50 pb-2">
-                    <div>
-                      <h4 className="text-xs font-black text-white flex items-center gap-1.5">
-                        <Building2 className="h-3.5 w-3.5 text-emerald-400" />
-                        <span>Asset Owner &amp; Legal Entity Information</span>
-                      </h4>
-                      <p className="text-[10px] text-slate-400">
-                        Required for legal lease generation, rent receipts, and tax filings
-                      </p>
+                  {/* Error Alert */}
+                  {signupError && (
+                    <div className="p-3 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+                      <span>{signupError}</span>
                     </div>
-                    <span className="text-[9px] font-bold text-emerald-400 bg-emerald-950/70 border border-emerald-800 px-2 py-0.5 rounded-full">
-                      Custom Onboarding
-                    </span>
+                  )}
+
+                  {/* Step 1 Actions */}
+                  <div className="pt-2 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={toggleMethodDrawer}
+                      className="px-5 py-3 rounded-full bg-white/10 hover:bg-white/15 text-white/90 text-xs font-bold border border-[#1D3D37] transition cursor-pointer shrink-0"
+                    >
+                      Change method
+                    </button>
+
+                    {signupRole === 'tenant' ? (
+                      <button
+                        type="submit"
+                        disabled={signupLoading}
+                        className="flex-1 py-3 px-6 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-black border border-[#23534B] shadow-lg shadow-[#06110c]/50 transition cursor-pointer disabled:opacity-50 text-center"
+                      >
+                        {signupLoading ? 'Creating account...' : 'Create Resident Account'}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleNextToEntity}
+                        className="flex-1 py-3 px-6 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black border border-emerald-400 shadow-lg shadow-emerald-950/50 transition cursor-pointer text-center flex items-center justify-center gap-2"
+                      >
+                        <span>Next: Entity Information</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* ----------------------------------------------------------------- */}
+              {/* STEP 2: ASSET OWNER & LEGAL ENTITY INFORMATION                    */}
+              {/* ----------------------------------------------------------------- */}
+              {signupStep === 2 && (signupRole === 'owner' || signupRole === 'estate_manager') && (
+                <div className="space-y-3.5 animate-in fade-in slide-in-from-right-2">
+                  <div className="p-3.5 rounded-2xl bg-[#0f241f] border border-[#23534B]/80 space-y-3">
+                    <div className="flex items-center justify-between border-b border-[#23534B]/50 pb-2">
+                      <div>
+                        <h4 className="text-xs font-black text-white flex items-center gap-1.5">
+                          <Building2 className="h-3.5 w-3.5 text-emerald-400" />
+                          <span>Asset Owner &amp; Legal Entity Information</span>
+                        </h4>
+                        <p className="text-[10px] text-slate-400">
+                          Step 2 of 3 • Required for statutory lease generation, rent receipts, and tax records
+                        </p>
+                      </div>
+                      <span className="text-[9px] font-bold text-emerald-400 bg-emerald-950/70 border border-emerald-800 px-2 py-0.5 rounded-full">
+                        Legal Entity Setup
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-300 mb-1">
+                          Entity / Trading Legal Name
+                        </label>
+                        <input
+                          type="text"
+                          value={signupEntityName}
+                          onChange={(e) => setSignupEntityName(e.target.value)}
+                          placeholder="e.g. Skyline Asset Holdings LLP"
+                          className="w-full px-3 py-2 rounded-xl bg-black/40 border border-[#23534B] text-white text-xs placeholder-slate-500 outline-none focus:border-emerald-400 font-medium"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-300 mb-1">
+                          Primary Landlord / Signatory Name
+                        </label>
+                        <input
+                          type="text"
+                          value={signupOwnerName}
+                          onChange={(e) => setSignupOwnerName(e.target.value)}
+                          placeholder={firstName ? `${firstName} ${lastName}`.trim() : 'Full legal name'}
+                          className="w-full px-3 py-2 rounded-xl bg-black/40 border border-[#23534B] text-white text-xs placeholder-slate-500 outline-none focus:border-emerald-400 font-medium"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-300 mb-1">
+                          Income Tax PAN Number
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={10}
+                          value={signupPanNumber}
+                          onChange={(e) => setSignupPanNumber(e.target.value.toUpperCase())}
+                          placeholder="e.g. ABCDE1234F"
+                          className="w-full px-3 py-2 rounded-xl bg-black/40 border border-[#23534B] text-white text-xs placeholder-slate-500 outline-none focus:border-emerald-400 font-mono font-bold tracking-wider"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[10px] font-semibold text-slate-300 mb-1">
+                          GSTIN (Commercial, Optional)
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={15}
+                          value={signupGstin}
+                          onChange={(e) => setSignupGstin(e.target.value.toUpperCase())}
+                          placeholder="e.g. 29ABCDE1234F1Z5"
+                          className="w-full px-3 py-2 rounded-xl bg-black/40 border border-[#23534B] text-white text-xs placeholder-slate-500 outline-none focus:border-emerald-400 font-mono font-bold tracking-wider"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-[10px] font-semibold text-slate-300 mb-1">
+                          Registered Office / City Address
+                        </label>
+                        <input
+                          type="text"
+                          value={signupAddress}
+                          onChange={(e) => setSignupAddress(e.target.value)}
+                          placeholder="e.g. 102 Brigade Road, Indiranagar, Bengaluru, Karnataka 560038"
+                          className="w-full px-3 py-2 rounded-xl bg-black/40 border border-[#23534B] text-white text-xs placeholder-slate-500 outline-none focus:border-emerald-400 font-medium"
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-300 mb-1">
-                        Entity / Trading Legal Name
-                      </label>
-                      <input
-                        type="text"
-                        value={signupEntityName}
-                        onChange={(e) => setSignupEntityName(e.target.value)}
-                        placeholder="e.g. Skyline Asset Holdings LLP"
-                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-[#23534B] text-white text-xs placeholder-slate-500 outline-none focus:border-emerald-400 font-medium"
-                      />
+                  {/* Error Alert */}
+                  {signupError && (
+                    <div className="p-3 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+                      <span>{signupError}</span>
                     </div>
+                  )}
 
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-300 mb-1">
-                        Primary Landlord / Signatory Name
-                      </label>
-                      <input
-                        type="text"
-                        value={signupOwnerName}
-                        onChange={(e) => setSignupOwnerName(e.target.value)}
-                        placeholder={firstName ? `${firstName} ${lastName}`.trim() : 'Full legal name'}
-                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-[#23534B] text-white text-xs placeholder-slate-500 outline-none focus:border-emerald-400 font-medium"
-                      />
-                    </div>
+                  {/* Step 2 Actions */}
+                  <div className="pt-2 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => { setSignupError(null); setSignupStep(1); }}
+                      className="px-5 py-3 rounded-full bg-white/10 hover:bg-white/15 text-white/90 text-xs font-bold border border-[#1D3D37] transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      <span>Back</span>
+                    </button>
 
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-300 mb-1">
-                        Income Tax PAN Number
-                      </label>
-                      <input
-                        type="text"
-                        maxLength={10}
-                        value={signupPanNumber}
-                        onChange={(e) => setSignupPanNumber(e.target.value.toUpperCase())}
-                        placeholder="e.g. ABCDE1234F"
-                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-[#23534B] text-white text-xs placeholder-slate-500 outline-none focus:border-emerald-400 font-mono font-bold tracking-wider"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-300 mb-1">
-                        GSTIN (Commercial, Optional)
-                      </label>
-                      <input
-                        type="text"
-                        maxLength={15}
-                        value={signupGstin}
-                        onChange={(e) => setSignupGstin(e.target.value.toUpperCase())}
-                        placeholder="e.g. 29ABCDE1234F1Z5"
-                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-[#23534B] text-white text-xs placeholder-slate-500 outline-none focus:border-emerald-400 font-mono font-bold tracking-wider"
-                      />
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <label className="block text-[10px] font-semibold text-slate-300 mb-1">
-                        Registered Office / City Address
-                      </label>
-                      <input
-                        type="text"
-                        value={signupAddress}
-                        onChange={(e) => setSignupAddress(e.target.value)}
-                        placeholder="e.g. 102 Brigade Road, Indiranagar, Bengaluru, Karnataka 560038"
-                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-[#23534B] text-white text-xs placeholder-slate-500 outline-none focus:border-emerald-400 font-medium"
-                      />
-                    </div>
+                    <button
+                      type="button"
+                      onClick={handleNextToSubscription}
+                      className="flex-1 py-3 px-6 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black border border-emerald-400 shadow-lg shadow-emerald-950/50 transition cursor-pointer text-center flex items-center justify-center gap-2"
+                    >
+                      <span>Next: Select Subscription Plan</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               )}
 
-              {/* Owner Specific: Subscription Licensing Selection */}
-              {(signupRole === 'owner' || signupRole === 'estate_manager') && (
-                <div className="p-3.5 rounded-2xl bg-[#0f241f] border border-[#23534B]/80 space-y-3 animate-in fade-in">
-                  <div className="flex items-center justify-between border-b border-[#23534B]/50 pb-2">
-                    <div>
-                      <h4 className="text-xs font-black text-white flex items-center gap-1.5">
-                        <CreditCard className="h-3.5 w-3.5 text-emerald-400" />
-                        <span>Select Subscription Plan</span>
-                      </h4>
-                      <p className="text-[10px] text-slate-400">
-                        Choose your platform licensing tier for units and features
-                      </p>
-                    </div>
+              {/* ----------------------------------------------------------------- */}
+              {/* STEP 3: SELECT SUBSCRIPTION PLAN (7-DAY FREE TRIAL HIGHLIGHTED)   */}
+              {/* ----------------------------------------------------------------- */}
+              {signupStep === 3 && (signupRole === 'owner' || signupRole === 'estate_manager') && (
+                <div className="space-y-3.5 animate-in fade-in slide-in-from-right-2">
+                  <div className="p-3.5 rounded-2xl bg-[#0f241f] border border-[#23534B]/80 space-y-3">
+                    <div className="flex items-center justify-between border-b border-[#23534B]/50 pb-2">
+                      <div>
+                        <h4 className="text-xs font-black text-white flex items-center gap-1.5">
+                          <CreditCard className="h-3.5 w-3.5 text-emerald-400" />
+                          <span>Select Subscription Plan</span>
+                        </h4>
+                        <p className="text-[10px] text-slate-400">
+                          Step 3 of 3 • Choose your plan or start with the 7-day free trial (₹0 today)
+                        </p>
+                      </div>
 
-                    {/* Billing Cycle Pill */}
-                    <div className="flex items-center bg-black/50 p-0.5 rounded-full border border-[#23534B] text-[10px]">
-                      <button
-                        type="button"
-                        onClick={() => setSignupBillingCycle('monthly')}
-                        className={`px-2.5 py-0.5 rounded-full font-bold transition cursor-pointer ${
-                          signupBillingCycle === 'monthly' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        Monthly
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSignupBillingCycle('annual')}
-                        className={`px-2.5 py-0.5 rounded-full font-bold transition cursor-pointer flex items-center gap-1 ${
-                          signupBillingCycle === 'annual' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        <span>Annual</span>
-                        <span className="text-[9px] text-amber-300 font-black">-20%</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Plan Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                    {[
-                      { id: 'trial', name: 'Free Trial', price: '₹0', subtitle: '14 Days Full Access' },
-                      { id: 'starter', name: 'Starter', price: signupBillingCycle === 'annual' ? '₹1,199' : '₹1,499', subtitle: 'Up to 15 Units' },
-                      { id: 'growth_pro', name: 'Growth Pro', price: signupBillingCycle === 'annual' ? '₹3,199' : '₹3,999', subtitle: 'Up to 50 Units' },
-                      { id: 'enterprise', name: 'Enterprise', price: signupBillingCycle === 'annual' ? '₹7,999' : '₹9,999', subtitle: 'Unlimited Units' }
-                    ].map((plan) => {
-                      const isSelected = signupSubscriptionPlan === plan.id;
-                      return (
+                      {/* Billing Cycle Pill */}
+                      <div className="flex items-center bg-black/50 p-0.5 rounded-full border border-[#23534B] text-[10px]">
                         <button
-                          key={plan.id}
                           type="button"
-                          onClick={() => setSignupSubscriptionPlan(plan.id as any)}
-                          className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
-                            isSelected
-                              ? 'border-emerald-400 bg-emerald-950/50 ring-1 ring-emerald-400 shadow-sm'
-                              : 'border-[#23534B] bg-black/30 hover:border-slate-500'
+                          onClick={() => setSignupBillingCycle('monthly')}
+                          className={`px-2.5 py-0.5 rounded-full font-bold transition cursor-pointer ${
+                            signupBillingCycle === 'monthly' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
                           }`}
                         >
-                          <div>
-                            <span className="text-[11px] font-black text-white block">{plan.name}</span>
-                            <span className="text-[10px] font-bold text-emerald-400">{plan.price}</span>
-                          </div>
-                          <span className="text-[9px] text-slate-400 mt-1">{plan.subtitle}</span>
+                          Monthly
                         </button>
-                      );
-                    })}
+                        <button
+                          type="button"
+                          onClick={() => setSignupBillingCycle('annual')}
+                          className={`px-2.5 py-0.5 rounded-full font-bold transition cursor-pointer flex items-center gap-1 ${
+                            signupBillingCycle === 'annual' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          <span>Annual</span>
+                          <span className="text-[9px] text-amber-300 font-black">-20%</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Featured Free Trial Banner Card */}
+                    <div 
+                      onClick={() => setSignupSubscriptionPlan('trial')}
+                      className={`p-3 rounded-2xl border transition-all cursor-pointer ${
+                        signupSubscriptionPlan === 'trial'
+                          ? 'bg-amber-950/40 border-amber-400/80 ring-2 ring-amber-400/30'
+                          : 'bg-black/30 border-[#23534B] hover:border-slate-500'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-amber-400 text-sm">✨</span>
+                          <span className="text-xs font-black text-white">7-Day Free Trial (₹0 Today)</span>
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-black border border-amber-500/40">
+                            Recommended
+                          </span>
+                        </div>
+                        <span className="text-xs font-black text-amber-400 font-mono">₹0.00</span>
+                      </div>
+                      <p className="text-[10px] text-slate-300 leading-relaxed">
+                        Full access for 7 days to all property management, rent invoicing, and tenant onboarding. No payment required today. After 7 days, select an active plan to continue.
+                      </p>
+                    </div>
+
+                    {/* Paid Plans Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                      {[
+                        { 
+                          id: 'starter', 
+                          name: 'Starter Plan', 
+                          price: signupBillingCycle === 'annual' ? '₹599/yr' : '₹59/mo', 
+                          units: '1 Property',
+                          features: 'Rent Receipts, UPI'
+                        },
+                        { 
+                          id: 'growth_pro', 
+                          name: 'Growth Pro', 
+                          price: signupBillingCycle === 'annual' ? '₹1,499/yr' : '₹149/mo', 
+                          units: 'Up to 10 Properties',
+                          popular: true,
+                          features: 'Sub-meters, WhatsApp'
+                        },
+                        { 
+                          id: 'enterprise', 
+                          name: 'Enterprise', 
+                          price: signupBillingCycle === 'annual' ? '₹2,999/yr' : '₹299/mo', 
+                          units: 'Unlimited Properties',
+                          features: 'CAM, Multi-staff'
+                        }
+                      ].map((plan) => {
+                        const isSelected = signupSubscriptionPlan === plan.id;
+                        return (
+                          <button
+                            key={plan.id}
+                            type="button"
+                            onClick={() => setSignupSubscriptionPlan(plan.id as any)}
+                            className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                              isSelected
+                                ? 'border-emerald-400 bg-emerald-950/50 ring-1 ring-emerald-400 shadow-sm'
+                                : 'border-[#23534B] bg-black/30 hover:border-slate-500'
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-black text-white">{plan.name}</span>
+                                {plan.popular && (
+                                  <span className="text-[8px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded font-bold">
+                                    Popular
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[11px] font-extrabold text-emerald-400 block mt-0.5">{plan.price}</span>
+                            </div>
+                            <div className="mt-2 text-[9px] text-slate-400 space-y-0.5">
+                              <div>• {plan.units}</div>
+                              <div>• {plan.features}</div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Error Alert */}
+                  {signupError && (
+                    <div className="p-3 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+                      <span>{signupError}</span>
+                    </div>
+                  )}
+
+                  {/* Step 3 Actions */}
+                  <div className="pt-2 flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => { setSignupError(null); setSignupStep(2); }}
+                      className="px-5 py-3 rounded-full bg-white/10 hover:bg-white/15 text-white/90 text-xs font-bold border border-[#1D3D37] transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                      <span>Back</span>
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={signupLoading}
+                      className="flex-1 py-3 px-6 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-black border border-[#23534B] shadow-lg shadow-[#06110c]/50 transition cursor-pointer disabled:opacity-50 text-center"
+                    >
+                      {signupLoading ? 'Creating account...' : (signupSubscriptionPlan === 'trial' ? 'Start 7-Day Free Trial & Enter' : 'Complete Setup & Enter Dashboard')}
+                    </button>
                   </div>
                 </div>
               )}
-
-              {/* Signup Error Alert */}
-              {signupError && (
-                <div className="p-3 rounded-2xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
-                  <span>{signupError}</span>
-                </div>
-              )}
-
-              {/* Bottom Action Buttons Row */}
-              <div className="pt-2 flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={toggleMethodDrawer}
-                  className="px-5 py-3 rounded-full bg-white/10 hover:bg-white/15 text-white/90 text-xs font-bold border border-[#1D3D37] transition cursor-pointer shrink-0"
-                >
-                  Change method
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={signupLoading}
-                  className="flex-1 py-3 px-6 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-black border border-[#23534B] shadow-lg shadow-[#06110c]/50 transition cursor-pointer disabled:opacity-50 text-center"
-                >
-                  {signupLoading ? 'Creating account...' : 'Create account'}
-                </button>
-              </div>
             </form>
           )}
 

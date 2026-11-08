@@ -28,6 +28,9 @@ const nextConfig: NextConfig = {
     cpus: 1,
     workerThreads: false,
   },
+  outputFileTracingIncludes: {
+    '/**': ['./database.db'],
+  },
   serverExternalPackages: ["node:sqlite"],
   async headers() {
     const isHttpsProd = process.env.NODE_ENV === 'production' && process.env.ENABLE_HSTS === 'true';
