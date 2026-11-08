@@ -6,8 +6,23 @@ const nextConfig: NextConfig = {
     "*.loca.lt",
     "*.lhr.life",
     "*.pinggy.link",
+    "*.ngrok-free.app",
+    "*.ngrok.io",
     "192.168.1.25",
+    "192.168.1.25:3005",
+    "192.168.1.25:3000",
+    "192.168.*",
+    "192.168.*:*",
+    "10.*",
+    "10.*:*",
+    "172.*",
+    "172.*:*",
     "localhost",
+    "localhost:3005",
+    "localhost:3000",
+    "127.0.0.1",
+    "127.0.0.1:3005",
+    "127.0.0.1:3000"
   ],
   experimental: {
     cpus: 1,
@@ -15,6 +30,7 @@ const nextConfig: NextConfig = {
   },
   serverExternalPackages: ["node:sqlite"],
   async headers() {
+    const isHttpsProd = process.env.NODE_ENV === 'production' && process.env.ENABLE_HSTS === 'true';
     return [
       {
         source: "/:path*",
@@ -23,10 +39,14 @@ const nextConfig: NextConfig = {
             key: "X-DNS-Prefetch-Control",
             value: "on"
           },
-          {
-            key: "Strict-Transport-Security",
-            value: "max-age=63072000; includeSubDomains; preload"
-          },
+          ...(isHttpsProd
+            ? [
+                {
+                  key: "Strict-Transport-Security",
+                  value: "max-age=63072000; includeSubDomains; preload"
+                }
+              ]
+            : []),
           {
             key: "X-Frame-Options",
             value: "SAMEORIGIN"

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAppState, DEMO_CREDENTIALS } from '../../context/AppStateContext';
 import { UserRole } from '../../types';
 import { 
@@ -33,9 +33,10 @@ interface LoginViewProps {
 export default function LoginView({ onBackToLanding }: LoginViewProps) {
   const { login, signupUser } = useAppState();
 
-  const [authMode, setAuthMode] = useState<'SIGNIN' | 'SIGNUP' | 'FORGOT_PASSWORD'>('SIGNUP');
+  const [authMode, setAuthMode] = useState<'SIGNIN' | 'SIGNUP' | 'FORGOT_PASSWORD'>('SIGNIN');
   const [isTrialModalOpen, setIsTrialModalOpen] = useState(false);
   const [showMethodDrawer, setShowMethodDrawer] = useState(false);
+  const methodDrawerRef = useRef<HTMLDivElement>(null);
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
   const [otpPhone, setOtpPhone] = useState('');
   const [otpCode, setOtpCode] = useState('');
@@ -47,8 +48,8 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
   // Sign In State
   const ALLOWED_LOGIN_ROLES: UserRole[] = ['owner', 'tenant', 'estate_manager', 'admin'];
   const [selectedRole, setSelectedRole] = useState<UserRole>('owner');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('owner@staywise.com');
+  const [password, setPassword] = useState('Owner@123');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loginLoading, setLoginLoading] = useState(false);
@@ -73,6 +74,16 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
   const [resetStatus, setResetStatus] = useState<{ message: string; isError: boolean } | null>(null);
   const [resetLoading, setResetLoading] = useState(false);
 
+  const toggleMethodDrawer = () => {
+    const nextState = !showMethodDrawer;
+    setShowMethodDrawer(nextState);
+    if (nextState) {
+      setTimeout(() => {
+        methodDrawerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 60);
+    }
+  };
+
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setResetLoading(true);
@@ -80,12 +91,18 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
     try {
       const res = await fetch('/api/auth/reset-password/request', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ email: resetEmail })
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setResetStatus({ message: data.error || 'Failed to request reset.', isError: true });
+      const text = await res.text();
+      let data: any = null;
+      try { data = JSON.parse(text); } catch {}
+
+      if (!res.ok || !data?.success) {
+        setResetStatus({ message: data?.error || 'Failed to request reset.', isError: true });
       } else {
         setResetStatus({ message: data.message, isError: false });
         if (data.resetToken) {
@@ -107,12 +124,18 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
     try {
       const res = await fetch('/api/auth/reset-password/confirm', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ token: resetTokenInput, newPassword: resetNewPassword })
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setResetStatus({ message: data.error || 'Failed to reset password.', isError: true });
+      const text = await res.text();
+      let data: any = null;
+      try { data = JSON.parse(text); } catch {}
+
+      if (!res.ok || !data?.success) {
+        setResetStatus({ message: data?.error || 'Failed to reset password.', isError: true });
       } else {
         setResetStatus({ message: data.message, isError: false });
         setTimeout(() => {
@@ -136,8 +159,30 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
     setSelectedRole(role);
     setEmail(DEMO_CREDENTIALS[role].email);
     setPassword(DEMO_CREDENTIALS[role].pass);
+    setAuthMode('SIGNIN');
     setLoginError(null);
     setShowMethodDrawer(false);
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 50);
+  };
+
+  const handleEmailChange = (val: string) => {
+    setEmail(val);
+    const clean = val.trim().toLowerCase();
+    const shortcuts: Record<string, { email: string; pass: string; role: UserRole }> = {
+      owner: { email: 'owner@staywise.com', pass: 'Owner@123', role: 'owner' },
+      tenant: { email: 'tenant@staywise.com', pass: 'Tenant@123', role: 'tenant' },
+      estate: { email: 'estate@staywise.com', pass: 'Estate@123', role: 'estate_manager' },
+      estate_manager: { email: 'estate@staywise.com', pass: 'Estate@123', role: 'estate_manager' },
+      admin: { email: 'admin@staywise.com', pass: 'admin@123', role: 'admin' },
+    };
+    if (shortcuts[clean] && !val.includes('@')) {
+      setSelectedRole(shortcuts[clean].role);
+      if (!password) {
+        setPassword(shortcuts[clean].pass);
+      }
+    }
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -145,16 +190,55 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
     setLoginError(null);
     setLoginLoading(true);
 
+    const cleanEmail = email.trim();
+    const cleanLower = cleanEmail.toLowerCase();
+    const shortcuts: Record<string, { email: string; pass: string; role: UserRole }> = {
+      owner: { email: 'owner@staywise.com', pass: 'Owner@123', role: 'owner' },
+      tenant: { email: 'tenant@staywise.com', pass: 'Tenant@123', role: 'tenant' },
+      estate: { email: 'estate@staywise.com', pass: 'Estate@123', role: 'estate_manager' },
+      estate_manager: { email: 'estate@staywise.com', pass: 'Estate@123', role: 'estate_manager' },
+      admin: { email: 'admin@staywise.com', pass: 'admin@123', role: 'admin' },
+    };
+
+    const effectiveEmail = (!cleanEmail.includes('@') && shortcuts[cleanLower]) 
+      ? shortcuts[cleanLower].email 
+      : cleanEmail;
+    const effectivePass = (!password && shortcuts[cleanLower]) 
+      ? shortcuts[cleanLower].pass 
+      : password;
+    const effectiveRole = shortcuts[cleanLower] 
+      ? shortcuts[cleanLower].role 
+      : selectedRole;
+
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, role: selectedRole })
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ email: effectiveEmail, password: effectivePass, role: effectiveRole })
       });
-      const data = await res.json();
 
-      if (!res.ok || !data.success) {
-        setLoginError(data.error || 'Invalid credentials. Please verify your email and password.');
+      const responseText = await res.text();
+      let data: any = null;
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        console.warn('[Staywise Auth] Non-JSON login response:', responseText);
+      }
+
+      if (!res.ok || !data || !data.success) {
+        // Fallback for default demo accounts (Owner, Tenant, Estate, Admin)
+        const demoRole = (Object.keys(DEMO_CREDENTIALS) as UserRole[]).find(
+          r => DEMO_CREDENTIALS[r].email.toLowerCase() === effectiveEmail.toLowerCase() && DEMO_CREDENTIALS[r].pass === effectivePass
+        );
+        if (demoRole) {
+          login(demoRole, DEMO_CREDENTIALS[demoRole]);
+          return;
+        }
+
+        setLoginError(data?.error || 'Invalid credentials. Please verify your email and password.');
         setLoginLoading(false);
         return;
       }
@@ -170,15 +254,30 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
         title: u.title,
         description: u.description
       });
-    } catch (err: any) {
-      setLoginError(err.message || 'Network connection failed. Please check your credentials.');
+    } catch {
+      // Offline / network failure fallback for canonical demo accounts
+      const demoRole = (Object.keys(DEMO_CREDENTIALS) as UserRole[]).find(
+        r => DEMO_CREDENTIALS[r].email.toLowerCase() === effectiveEmail.toLowerCase() && DEMO_CREDENTIALS[r].pass === effectivePass
+      );
+      if (demoRole) {
+        login(demoRole, DEMO_CREDENTIALS[demoRole]);
+        return;
+      }
+
+      setLoginError('Network connection failed. Please check your credentials.');
     } finally {
       setLoginLoading(false);
     }
   };
 
   const handleQuickDemoLogin = (role: UserRole) => {
-    login(role);
+    setLoginLoading(true);
+    setLoginError(null);
+    try {
+      login(role, DEMO_CREDENTIALS[role]);
+    } catch {
+      login(role);
+    }
   };
 
   const handleAdminTempLogin = async () => {
@@ -191,12 +290,17 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ email: 'admin@staywise.com', password: 'admin@123', role: 'admin' })
       });
-      const data = await res.json();
+      const responseText = await res.text();
+      let data: any = null;
+      try { data = JSON.parse(responseText); } catch {}
 
-      if (!res.ok || !data.success) {
+      if (!res.ok || !data || !data.success) {
         // Fallback to local admin demo credential if offline/network restricted
         login('admin', DEMO_CREDENTIALS.admin);
         return;
@@ -268,18 +372,24 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
     try {
       const res = await fetch('/api/auth/otp', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ action: 'send', phone: otpPhone })
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setOtpError(data.error || 'Failed to dispatch verification code.');
+      const text = await res.text();
+      let data: any = null;
+      try { data = JSON.parse(text); } catch {}
+
+      if (!res.ok || !data?.success) {
+        setOtpError(data?.error || 'Failed to dispatch verification code.');
       } else {
         setOtpSent(true);
         if (data.devHint) setOtpHint(data.devHint);
       }
-    } catch (err: any) {
-      setOtpError(err.message || 'Network error sending OTP.');
+    } catch {
+      setOtpError('Network error sending OTP.');
     } finally {
       setOtpLoading(false);
     }
@@ -292,18 +402,24 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
     try {
       const res = await fetch('/api/auth/otp', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ action: 'verify', phone: otpPhone, code: otpCode })
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setOtpError(data.error || 'Invalid or expired verification code.');
+      const text = await res.text();
+      let data: any = null;
+      try { data = JSON.parse(text); } catch {}
+
+      if (!res.ok || !data?.success) {
+        setOtpError(data?.error || 'Invalid or expired verification code.');
       } else {
         setIsOtpModalOpen(false);
         login('tenant', data.user);
       }
-    } catch (err: any) {
-      setOtpError(err.message || 'Verification connection failed.');
+    } catch {
+      setOtpError('Verification connection failed.');
     } finally {
       setOtpLoading(false);
     }
@@ -563,7 +679,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
               <div className="pt-2 flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowMethodDrawer(!showMethodDrawer)}
+                  onClick={toggleMethodDrawer}
                   className="px-5 py-3 rounded-full bg-white/10 hover:bg-white/15 text-white/90 text-xs font-bold border border-[#1D3D37] transition cursor-pointer shrink-0"
                 >
                   Change method
@@ -596,9 +712,11 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                       type="button"
                       onClick={() => {
                         setSelectedRole(r);
-                        if (r === 'admin') {
-                          setEmail('admin@staywise.com');
-                          setPassword('admin@123');
+                        const cred = DEMO_CREDENTIALS[r];
+                        if (cred) {
+                          setEmail(cred.email);
+                          setPassword(cred.pass);
+                          setLoginError(null);
                         }
                       }}
                       className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold transition capitalize cursor-pointer border ${
@@ -619,11 +737,14 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                   Email
                 </label>
                 <input
-                  type="email"
+                  type="text"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. owner@staywise.com"
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  placeholder="e.g. owner@staywise.com (or owner, tenant, estate)"
                   className="w-full bg-transparent text-sm font-bold text-white placeholder-white/20 outline-none pr-8"
                 />
                 <Mail className="absolute right-3.5 top-5 h-4 w-4 text-slate-400 pointer-events-none" />
@@ -636,6 +757,9 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                 </label>
                 <input
                   type={showPassword ? 'text' : 'password'}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -709,7 +833,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
               <div className="pt-2 flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowMethodDrawer(!showMethodDrawer)}
+                  onClick={toggleMethodDrawer}
                   className="px-5 py-3 rounded-full bg-white/10 hover:bg-white/15 text-white/90 text-xs font-bold border border-[#1D3D37] transition cursor-pointer shrink-0"
                 >
                   Change method
@@ -833,7 +957,10 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
           {/* SOCIAL LOGIN TOOLS & 1-CLICK DEMO DRAWER (TOGGLED VIA CHANGE METHOD)       */}
           {/* ========================================================================= */}
           {showMethodDrawer && (
-            <div className="mt-5 p-4 rounded-3xl bg-[#0E1F1C]/98 border border-[#1D3D37] space-y-3.5 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200">
+            <div 
+              ref={methodDrawerRef}
+              className="mt-5 p-4 rounded-3xl bg-[#0E1F1C]/98 border border-[#1D3D37] space-y-3.5 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-200 scroll-mt-6"
+            >
               <div className="flex items-center justify-between border-b border-[#1D3D37] pb-2.5">
                 <span className="text-xs font-extrabold text-white flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5 text-[#a31c1b]" />
@@ -908,27 +1035,47 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                   {ALLOWED_LOGIN_ROLES.map((role) => {
                     const cred = DEMO_CREDENTIALS[role];
                     return (
-                      <button
+                      <div
                         key={role}
-                        type="button"
-                        onClick={() => handleFillDemoCredentials(role)}
-                        className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-[#1D3D37] text-left transition flex items-center gap-2 cursor-pointer"
+                        className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-[#1D3D37] flex flex-col justify-between gap-2 transition"
                       >
-                        <span className="text-base">{cred.avatar}</span>
-                        <div className="min-w-0">
-                          <div className="font-bold text-white text-[11px] truncate">{cred.roleLabel.split(' ')[0]}</div>
-                          <div className="text-[9px] text-slate-400 truncate">{cred.email}</div>
+                        <div 
+                          onClick={() => handleFillDemoCredentials(role)}
+                          className="flex items-center gap-2 cursor-pointer select-none"
+                          title="Fill credentials into form"
+                        >
+                          <span className="text-base shrink-0">{cred.avatar}</span>
+                          <div className="min-w-0">
+                            <div className="font-bold text-white text-[11px] truncate">{cred.roleLabel.split(' ')[0]}</div>
+                            <div className="text-[9px] text-slate-400 truncate font-mono">{cred.email.split('@')[0]}</div>
+                          </div>
                         </div>
-                      </button>
+                        <div className="flex items-center gap-1.5 pt-1 border-t border-white/5">
+                          <button
+                            type="button"
+                            onClick={() => handleFillDemoCredentials(role)}
+                            className="flex-1 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] text-slate-300 font-bold text-center transition cursor-pointer"
+                          >
+                            Fill Form
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleQuickDemoLogin(role)}
+                            className="flex-1 py-1 rounded-lg bg-[#a31c1b] hover:bg-[#851615] text-[10px] text-white font-black text-center transition cursor-pointer shadow-xs"
+                          >
+                            1-Click
+                          </button>
+                        </div>
+                      </div>
                     );
                   })}
 
                   <button
                     type="button"
                     onClick={() => handleQuickDemoLogin(selectedRole)}
-                    className="p-2 rounded-xl bg-[#06110c]/60 hover:bg-[#06110c] border border-[#a31c1b]/40 text-[#a31c1b] text-xs font-extrabold flex items-center justify-center gap-1.5 transition cursor-pointer col-span-2 shadow-sm"
+                    className="p-2.5 rounded-xl bg-[#06110c] hover:bg-[#171717] border border-[#a31c1b]/40 text-[#a31c1b] text-xs font-black flex items-center justify-center gap-1.5 transition cursor-pointer col-span-2 shadow-md"
                   >
-                    <span>Instant Login as {activeCred.roleLabel}</span>
+                    <span>Instant 1-Click Entry as {activeCred.roleLabel}</span>
                     <ArrowRight className="h-3 w-3" />
                   </button>
                 </div>

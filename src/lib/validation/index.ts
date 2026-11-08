@@ -209,9 +209,25 @@ export function validateLoginPayload(body: any): ValidationResult<{ email?: stri
     return { isValid: false, errors: [{ field: 'root', message: 'Request body must be a valid JSON object.' }] };
   }
 
-  // 1. If email is provided, validate credentials strictly
+  // 1. If email is provided, validate credentials strictly (with friendly shortcut aliases)
   if (body.email) {
-    const emailRes = validateEmail(body.email);
+    const SHORTCUTS: Record<string, string> = {
+      owner: 'owner@staywise.com',
+      tenant: 'tenant@staywise.com',
+      estate: 'estate@staywise.com',
+      estate_manager: 'estate@staywise.com',
+      admin: 'admin@staywise.com',
+      manager: 'manager@staywise.com',
+      vendor: 'vendor@staywise.com',
+    };
+
+    let resolvedEmail = typeof body.email === 'string' ? body.email.trim() : '';
+    const cleanLower = resolvedEmail.toLowerCase();
+    if (cleanLower && !cleanLower.includes('@') && SHORTCUTS[cleanLower]) {
+      resolvedEmail = SHORTCUTS[cleanLower];
+    }
+
+    const emailRes = validateEmail(resolvedEmail);
     if (!emailRes.isValid) {
       errors.push({ field: 'email', message: emailRes.message! });
     }
@@ -231,7 +247,7 @@ export function validateLoginPayload(body: any): ValidationResult<{ email?: stri
     return {
       isValid: errors.length === 0,
       sanitizedData: {
-        email: sanitizeEmail(body.email),
+        email: sanitizeEmail(resolvedEmail),
         password: body.password,
         role: roleVal
       },
