@@ -282,7 +282,11 @@ export async function GET(req: NextRequest) {
       : allBills.filter(b => userPropIds.includes(b.propertyId));
 
     const userLedger = (userRole === 'tenant')
-      ? allLedger.filter(l => (targetUserId && l.referenceId.includes(targetUserId)) || userTenantIds.some(tid => l.referenceId.includes(tid)))
+      ? allLedger.filter(l => 
+          (targetUserId && l.referenceId.includes(targetUserId)) || 
+          userTenantIds.some(tid => l.referenceId.includes(tid)) ||
+          userTenants.some(ut => ut.name && l.description.toLowerCase().includes(ut.name.toLowerCase()))
+        )
       : allLedger.filter(l => userPropIds.some(pid => l.referenceId.includes(pid)));
 
     const userEstateNames = userProperties.map(p => p.name);

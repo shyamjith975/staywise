@@ -32,6 +32,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (phone) {
+      const allUsers = await db.users.findMany();
+      const existingPhone = allUsers.find(u => u.phone === phone);
+      if (existingPhone) {
+        return NextResponse.json(
+          { success: false, error: 'An account with this mobile phone number already exists. Please sign in.' },
+          { status: 409 }
+        );
+      }
+    }
+
     // Role-specific presentation metadata
     const ROLE_METADATA: Record<UserRole, { roleLabel: string; avatar: string; title: string; desc: string }> = {
       owner: {

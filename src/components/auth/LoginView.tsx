@@ -61,10 +61,24 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
   const [lastName, setLastName] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPhone, setSignupPhone] = useState('');
+  const [isSignupPhoneVerified, setIsSignupPhoneVerified] = useState(false);
+  const [signupOtpSent, setSignupOtpSent] = useState(false);
+  const [signupOtpCode, setSignupOtpCode] = useState('');
+  const [signupOtpLoading, setSignupOtpLoading] = useState(false);
+  const [signupOtpHint, setSignupOtpHint] = useState<string | null>(null);
+  const [signupOtpError, setSignupOtpError] = useState<string | null>(null);
   const [signupPassword, setSignupPassword] = useState('');
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [signupLoading, setSignupLoading] = useState(false);
   const [signupError, setSignupError] = useState<string | null>(null);
+
+  // Password Security Checks
+  const isPassLengthValid = signupPassword.length >= 8;
+  const hasPassUpper = /[A-Z]/.test(signupPassword);
+  const hasPassLower = /[a-z]/.test(signupPassword);
+  const hasPassDigit = /[0-9]/.test(signupPassword);
+  const hasPassSpecial = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(signupPassword);
+  const isPasswordStrong = isPassLengthValid && hasPassUpper && hasPassLower && hasPassDigit && hasPassSpecial;
 
   // Password Recovery State
   const [resetEmail, setResetEmail] = useState('');
@@ -341,17 +355,111 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
     }
   };
 
+  const handleSendSignupOtp = async () => {
+    setSignupOtpError(null);
+    setSignupError(null);
+    const cleanPhone = signupPhone.trim().replace(/\D/g, '');
+    if (cleanPhone.length !== 10) {
+      setSignupOtpError('Please enter a valid 10-digit mobile number (numbers only).');
+      return;
+    }
+    setSignupOtpLoading(true);
+    try {
+      const res = await fetch('/api/auth/otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'send', phone: `+91${cleanPhone}` })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setSignupOtpError(data?.error || 'Failed to dispatch verification code.');
+      } else {
+        setSignupOtpSent(true);
+        if (data.devHint) {
+          setSignupOtpHint(data.devHint);
+        }
+      }
+    } catch {
+      setSignupOtpError('Network error while dispatching OTP.');
+    } finally {
+      setSignupOtpLoading(false);
+    }
+  };
+
+  const handleVerifySignupOtp = async () => {
+    setSignupOtpError(null);
+    const cleanPhone = signupPhone.trim().replace(/\D/g, '');
+    const cleanCode = signupOtpCode.trim();
+    if (cleanCode.length < 4) {
+      setSignupOtpError('Please enter the 4-digit verification code.');
+      return;
+    }
+    setSignupOtpLoading(true);
+    try {
+      const res = await fetch('/api/auth/otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'verify',
+          phone: `+91${cleanPhone}`,
+          code: cleanCode,
+          mode: 'verify_only'
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setSignupOtpError(data?.error || 'Invalid or expired verification code.');
+      } else {
+        setIsSignupPhoneVerified(true);
+        setSignupOtpSent(false);
+        setSignupOtpHint(null);
+      }
+    } catch {
+      setSignupOtpError('Network error while verifying OTP.');
+    } finally {
+      setSignupOtpLoading(false);
+    }
+  };
+
   const handleSignupSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSignupError(null);
-    setSignupLoading(true);
 
-    const fullName = `${firstName.trim()} ${lastName.trim()}`.trim() || 'New Member';
+    const cleanFirst = firstName.trim();
+    const cleanLast = lastName.trim();
+    if (!cleanFirst || !cleanLast) {
+      setSignupError('Please provide both first name and last name.');
+      return;
+    }
+
+    if (!signupEmail.trim()) {
+      setSignupError('Email address is required.');
+      return;
+    }
+
+    const cleanPhone = signupPhone.trim().replace(/\D/g, '');
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      setSignupError('Please enter a valid 10-digit mobile phone number (numbers only).');
+      return;
+    }
+
+    if (!isSignupPhoneVerified) {
+      setSignupError('Please verify your mobile number with the 4-digit OTP before creating an account.');
+      return;
+    }
+
+    if (!isPasswordStrong) {
+      setSignupError('Password does not meet enterprise security requirements. Must be 8+ characters and contain uppercase, lowercase, numbers, and a special character.');
+      return;
+    }
+
+    setSignupLoading(true);
+    const fullName = `${cleanFirst} ${cleanLast}`;
     const res = await signupUser({
       name: fullName,
-      email: signupEmail,
+      email: signupEmail.trim().toLowerCase(),
       password: signupPassword,
-      phone: signupPhone || '+91 98450 00000',
+      phone: `+91 ${cleanPhone}`,
       role: signupRole,
       portfolioName: `${fullName}'s Portfolio`,
       city: 'Bangalore',
@@ -661,17 +769,133 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                 <Mail className="absolute right-3.5 top-5 h-4 w-4 text-slate-400 pointer-events-none" />
               </div>
 
+              {/* Mobile Phone Number with Inline OTP Verification */}
+              <div className="space-y-2">
+                <div className={`rounded-2xl bg-[#112421]/90 border ${isSignupPhoneVerified ? 'border-emerald-500/50 ring-1 ring-emerald-500/30' : 'border-[#1D3D37] hover:border-[#2D5A51] focus-within:border-[#a31c1b] focus-within:ring-2 focus-within:ring-[#a31c1b]/30'} transition-all p-3 relative`}>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <label className="block text-[10px] font-semibold text-slate-400">
+                      Mobile Number (Numbers only)
+                    </label>
+                    {isSignupPhoneVerified && (
+                      <span className="text-[10px] font-black text-emerald-400 flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" />
+                        <span>OTP Verified</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-300 font-mono select-none px-2 py-0.5 rounded-lg bg-white/5 border border-white/10 shrink-0">
+                      +91
+                    </span>
+                    <input
+                      type="tel"
+                      required
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      disabled={isSignupPhoneVerified}
+                      value={signupPhone}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setSignupPhone(val);
+                        setIsSignupPhoneVerified(false);
+                        setSignupOtpSent(false);
+                        setSignupOtpError(null);
+                      }}
+                      placeholder="9876543210"
+                      className="w-full bg-transparent text-sm font-bold text-white placeholder-white/20 outline-none pr-8 font-mono disabled:opacity-75"
+                    />
+                    {!isSignupPhoneVerified && signupPhone.length === 10 && !signupOtpSent && (
+                      <button
+                        type="button"
+                        onClick={handleSendSignupOtp}
+                        disabled={signupOtpLoading}
+                        className="px-3 py-1 rounded-xl bg-[#a31c1b] hover:bg-[#851615] text-white text-[11px] font-black transition cursor-pointer shrink-0 disabled:opacity-50"
+                      >
+                        {signupOtpLoading ? 'Sending...' : 'Verify Phone'}
+                      </button>
+                    )}
+                    {isSignupPhoneVerified && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsSignupPhoneVerified(false);
+                          setSignupOtpSent(false);
+                          setSignupOtpCode('');
+                        }}
+                        className="text-[10px] text-slate-400 hover:text-white underline cursor-pointer shrink-0"
+                      >
+                        Change
+                      </button>
+                    )}
+                  </div>
+                  <Phone className="absolute right-3.5 top-5 h-4 w-4 text-slate-400 pointer-events-none" />
+                </div>
+
+                {/* Inline OTP Verification Box */}
+                {signupOtpSent && !isSignupPhoneVerified && (
+                  <div className="p-3 rounded-2xl bg-[#0a1f18] border border-[#23534B] space-y-2.5 animate-in fade-in slide-in-from-top-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-[11px] text-slate-300 font-medium">
+                        Enter 4-digit OTP sent to <b className="text-white font-mono">+91 {signupPhone}</b>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleSendSignupOtp}
+                        disabled={signupOtpLoading}
+                        className="text-[10px] text-[#a31c1b] hover:underline font-bold"
+                      >
+                        Resend
+                      </button>
+                    </div>
+
+                    {signupOtpHint && (
+                      <div className="text-emerald-400 text-[10px] bg-emerald-950/40 p-1.5 rounded-lg border border-emerald-900/50 flex items-center gap-1.5 font-mono">
+                        <span>🔑</span>
+                        <span>{signupOtpHint}</span>
+                      </div>
+                    )}
+
+                    {signupOtpError && (
+                      <div className="text-rose-400 text-[10px] bg-rose-950/40 p-1.5 rounded-lg border border-rose-900/50 flex items-center gap-1.5">
+                        <AlertCircle className="h-3 w-3 shrink-0" />
+                        <span>{signupOtpError}</span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={4}
+                        value={signupOtpCode}
+                        onChange={(e) => setSignupOtpCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                        placeholder="1 2 3 4"
+                        className="flex-1 bg-black/40 border border-[#1D3D37] rounded-xl px-3 py-2 text-center text-sm font-black font-mono tracking-widest text-[#a31c1b] outline-none focus:border-[#a31c1b]"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleVerifySignupOtp}
+                        disabled={signupOtpLoading || signupOtpCode.length < 4}
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold transition cursor-pointer shadow-sm"
+                      >
+                        {signupOtpLoading ? 'Verifying...' : 'Confirm OTP'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Password with Active Glow */}
               <div className="rounded-2xl bg-[#112421]/90 border border-[#1D3D37] hover:border-[#2D5A51] focus-within:border-[#a31c1b] focus-within:ring-2 focus-within:ring-[#a31c1b]/30 transition-all p-3 relative">
                 <label className="block text-[10px] font-semibold text-slate-400 mb-0.5">
-                  Password
+                  Password (Secure: min 8 chars, upper, lower, digit, symbol)
                 </label>
                 <input
                   type={showSignupPassword ? 'text' : 'password'}
                   required
                   value={signupPassword}
                   onChange={(e) => setSignupPassword(e.target.value)}
-                  placeholder="••••••••••••"
+                  placeholder="e.g. StayWise@2026"
                   className="w-full bg-transparent text-sm font-bold text-white placeholder-white/20 outline-none pr-8 font-mono"
                 />
                 <button
@@ -682,6 +906,35 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                   {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+
+              {/* Real-time Password Security Checklist */}
+              {signupPassword.length > 0 && (
+                <div className="p-2.5 rounded-2xl bg-[#0a1f18] border border-[#1D3D37] text-[10px] space-y-1">
+                  <span className="text-slate-400 font-semibold block mb-1">Password Requirements:</span>
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+                    <div className={`flex items-center gap-1.5 ${isPassLengthValid ? 'text-emerald-400 font-bold' : 'text-slate-400'}`}>
+                      <span>{isPassLengthValid ? '✓' : '○'}</span>
+                      <span>At least 8 characters</span>
+                    </div>
+                    <div className={`flex items-center gap-1.5 ${hasPassUpper ? 'text-emerald-400 font-bold' : 'text-slate-400'}`}>
+                      <span>{hasPassUpper ? '✓' : '○'}</span>
+                      <span>One uppercase (A-Z)</span>
+                    </div>
+                    <div className={`flex items-center gap-1.5 ${hasPassLower ? 'text-emerald-400 font-bold' : 'text-slate-400'}`}>
+                      <span>{hasPassLower ? '✓' : '○'}</span>
+                      <span>One lowercase (a-z)</span>
+                    </div>
+                    <div className={`flex items-center gap-1.5 ${hasPassDigit ? 'text-emerald-400 font-bold' : 'text-slate-400'}`}>
+                      <span>{hasPassDigit ? '✓' : '○'}</span>
+                      <span>One number (0-9)</span>
+                    </div>
+                    <div className={`flex items-center gap-1.5 col-span-2 ${hasPassSpecial ? 'text-emerald-400 font-bold' : 'text-slate-400'}`}>
+                      <span>{hasPassSpecial ? '✓' : '○'}</span>
+                      <span>One special symbol (!@#$%^&*...)</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Signup Error Alert */}
               {signupError && (

@@ -61,32 +61,56 @@ export function validateEmail(email: unknown): { isValid: boolean; message?: str
 }
 
 /**
- * Validates user password against security policies (min 6 chars)
+ * Validates user password against enterprise security policies:
+ * - Minimum 8 characters (rejects weak/short passwords like 5 numbers)
+ * - At least one uppercase letter (A-Z)
+ * - At least one lowercase letter (a-z)
+ * - At least one numeric digit (0-9)
+ * - At least one special symbol (!@#$%^&*...)
+ * - Maximum 128 characters
  */
 export function validatePassword(password: unknown): { isValid: boolean; message?: string } {
   if (typeof password !== 'string' || !password) {
     return { isValid: false, message: 'Password is required.' };
   }
-  if (password.length < 6) {
-    return { isValid: false, message: 'Password must be at least 6 characters long for statutory compliance.' };
+  if (password.length < 8) {
+    return { 
+      isValid: false, 
+      message: 'Password must be at least 8 characters long. Weak or short passwords (e.g. 5 numbers) are not permitted.' 
+    };
   }
   if (password.length > 128) {
     return { isValid: false, message: 'Password cannot exceed 128 characters.' };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { isValid: false, message: 'Password must contain at least one uppercase letter (A-Z).' };
+  }
+  if (!/[a-z]/.test(password)) {
+    return { isValid: false, message: 'Password must contain at least one lowercase letter (a-z).' };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { isValid: false, message: 'Password must contain at least one numeric digit (0-9).' };
+  }
+  if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
+    return { isValid: false, message: 'Password must contain at least one special character (!@#$%^&*).' };
   }
   return { isValid: true };
 }
 
 /**
- * Validates international / Indian phone format
+ * Validates mobile phone format:
+ * - Must contain only digits (optionally preceded by +91 or +)
+ * - 10 to 15 digits
+ * - Rejects any letters or invalid characters
  */
 export function validatePhone(phone: unknown): { isValid: boolean; message?: string } {
   if (typeof phone !== 'string' || !phone.trim()) {
     return { isValid: false, message: 'Phone number is required.' };
   }
-  // Accepts +91 9876543210, +1 555-555-5555, 9876543210, etc.
-  const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]{7,15}$/;
-  if (!phoneRegex.test(phone.trim())) {
-    return { isValid: false, message: 'Please provide a valid phone number (e.g. +91 98765 43210).' };
+  const cleanPhone = phone.trim().replace(/[\s-]/g, '');
+  const phoneRegex = /^\+?[0-9]{10,15}$/;
+  if (!phoneRegex.test(cleanPhone)) {
+    return { isValid: false, message: 'Phone number must contain only numbers (10 digits, e.g. 9876543210).' };
   }
   return { isValid: true };
 }
@@ -172,7 +196,9 @@ export function validateSignupPayload(body: any): ValidationResult<SignupPayload
     });
   }
 
-  if (body.phone) {
+  if (!body.phone || typeof body.phone !== 'string' || !body.phone.trim()) {
+    errors.push({ field: 'phone', message: 'Mobile phone number is required.' });
+  } else {
     const phoneRes = validatePhone(body.phone);
     if (!phoneRes.isValid) {
       errors.push({ field: 'phone', message: phoneRes.message! });

@@ -145,6 +145,16 @@ export async function POST(req: NextRequest) {
       // Consume OTP
       otpStore.delete(normalizedPhone);
 
+      // If mode is verify_only (e.g. signup phone verification), return success immediately without creating dummy user
+      if (body.mode === 'verify_only') {
+        return NextResponse.json({
+          success: true,
+          message: 'Mobile number verified successfully.',
+          verified: true,
+          phone: normalizedPhone
+        });
+      }
+
       // Find or create resident in user catalog
       const allUsers = await db.users.findMany();
       let user = allUsers.find(u => u.phone === normalizedPhone || u.email === `resident.${normalizedPhone.slice(-4)}@staywise.app`);
