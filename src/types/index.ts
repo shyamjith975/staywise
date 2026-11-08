@@ -155,6 +155,11 @@ export interface Property {
   amenities: string[];
   verificationStatus?: 'APPROVED' | 'PENDING' | 'REJECTED';
   submittedDocs?: string[];
+  electricityDiscom?: string;
+  electricityTariffPerUnit?: number;
+  electricityBillingMode?: 'Sub-meter OCR' | 'Equal Split' | 'Included in Rent' | 'Direct DISCOM Pass-through';
+  dgBackupRatePerUnit?: number;
+  consumerNumber?: string;
 }
 
 export interface Tenant {

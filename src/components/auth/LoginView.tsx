@@ -72,6 +72,18 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
   const [signupLoading, setSignupLoading] = useState(false);
   const [signupError, setSignupError] = useState<string | null>(null);
 
+  // Manual Asset Owner & Legal Entity Information
+  const [signupEntityName, setSignupEntityName] = useState('');
+  const [signupOwnerName, setSignupOwnerName] = useState('');
+  const [signupPanNumber, setSignupPanNumber] = useState('');
+  const [signupGstin, setSignupGstin] = useState('');
+  const [signupCity, setSignupCity] = useState('Bangalore');
+  const [signupAddress, setSignupAddress] = useState('');
+
+  // Subscription Plan Selection
+  const [signupSubscriptionPlan, setSignupSubscriptionPlan] = useState<'trial' | 'starter' | 'growth_pro' | 'enterprise'>('trial');
+  const [signupBillingCycle, setSignupBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+
   // Password Security Checks
   const isPassLengthValid = signupPassword.length >= 8;
   const hasPassUpper = /[A-Z]/.test(signupPassword);
@@ -461,10 +473,15 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
       password: signupPassword,
       phone: `+91 ${cleanPhone}`,
       role: signupRole,
-      portfolioName: `${fullName}'s Portfolio`,
-      city: 'Bangalore',
-      subscriptionPlan: 'growth_pro',
-      billingCycle: 'annual'
+      portfolioName: signupEntityName.trim() || `${fullName}'s Portfolio`,
+      city: signupCity.trim() || 'Bangalore',
+      subscriptionPlan: signupSubscriptionPlan,
+      billingCycle: signupBillingCycle,
+      entityName: signupEntityName.trim() || undefined,
+      ownerName: signupOwnerName.trim() || fullName,
+      panNumber: signupPanNumber.trim().toUpperCase() || undefined,
+      gstin: signupGstin.trim().toUpperCase() || undefined,
+      registeredAddress: signupAddress.trim() || undefined
     });
 
     setSignupLoading(false);
@@ -932,6 +949,165 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                       <span>{hasPassSpecial ? '✓' : '○'}</span>
                       <span>One special symbol (!@#$%^&*...)</span>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Owner Specific: Manual Asset Owner & Legal Entity Information */}
+              {(signupRole === 'owner' || signupRole === 'estate_manager') && (
+                <div className="p-3.5 rounded-2xl bg-[#0f241f] border border-[#23534B]/80 space-y-3 animate-in fade-in">
+                  <div className="flex items-center justify-between border-b border-[#23534B]/50 pb-2">
+                    <div>
+                      <h4 className="text-xs font-black text-white flex items-center gap-1.5">
+                        <Building2 className="h-3.5 w-3.5 text-emerald-400" />
+                        <span>Asset Owner &amp; Legal Entity Information</span>
+                      </h4>
+                      <p className="text-[10px] text-slate-400">
+                        Required for legal lease generation, rent receipts, and tax filings
+                      </p>
+                    </div>
+                    <span className="text-[9px] font-bold text-emerald-400 bg-emerald-950/70 border border-emerald-800 px-2 py-0.5 rounded-full">
+                      Custom Onboarding
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-300 mb-1">
+                        Entity / Trading Legal Name
+                      </label>
+                      <input
+                        type="text"
+                        value={signupEntityName}
+                        onChange={(e) => setSignupEntityName(e.target.value)}
+                        placeholder="e.g. Skyline Asset Holdings LLP"
+                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-[#23534B] text-white text-xs placeholder-slate-500 outline-none focus:border-emerald-400 font-medium"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-300 mb-1">
+                        Primary Landlord / Signatory Name
+                      </label>
+                      <input
+                        type="text"
+                        value={signupOwnerName}
+                        onChange={(e) => setSignupOwnerName(e.target.value)}
+                        placeholder={firstName ? `${firstName} ${lastName}`.trim() : 'Full legal name'}
+                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-[#23534B] text-white text-xs placeholder-slate-500 outline-none focus:border-emerald-400 font-medium"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-300 mb-1">
+                        Income Tax PAN Number
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={10}
+                        value={signupPanNumber}
+                        onChange={(e) => setSignupPanNumber(e.target.value.toUpperCase())}
+                        placeholder="e.g. ABCDE1234F"
+                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-[#23534B] text-white text-xs placeholder-slate-500 outline-none focus:border-emerald-400 font-mono font-bold tracking-wider"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-semibold text-slate-300 mb-1">
+                        GSTIN (Commercial, Optional)
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={15}
+                        value={signupGstin}
+                        onChange={(e) => setSignupGstin(e.target.value.toUpperCase())}
+                        placeholder="e.g. 29ABCDE1234F1Z5"
+                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-[#23534B] text-white text-xs placeholder-slate-500 outline-none focus:border-emerald-400 font-mono font-bold tracking-wider"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-[10px] font-semibold text-slate-300 mb-1">
+                        Registered Office / City Address
+                      </label>
+                      <input
+                        type="text"
+                        value={signupAddress}
+                        onChange={(e) => setSignupAddress(e.target.value)}
+                        placeholder="e.g. 102 Brigade Road, Indiranagar, Bengaluru, Karnataka 560038"
+                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-[#23534B] text-white text-xs placeholder-slate-500 outline-none focus:border-emerald-400 font-medium"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Owner Specific: Subscription Licensing Selection */}
+              {(signupRole === 'owner' || signupRole === 'estate_manager') && (
+                <div className="p-3.5 rounded-2xl bg-[#0f241f] border border-[#23534B]/80 space-y-3 animate-in fade-in">
+                  <div className="flex items-center justify-between border-b border-[#23534B]/50 pb-2">
+                    <div>
+                      <h4 className="text-xs font-black text-white flex items-center gap-1.5">
+                        <CreditCard className="h-3.5 w-3.5 text-emerald-400" />
+                        <span>Select Subscription Plan</span>
+                      </h4>
+                      <p className="text-[10px] text-slate-400">
+                        Choose your platform licensing tier for units and features
+                      </p>
+                    </div>
+
+                    {/* Billing Cycle Pill */}
+                    <div className="flex items-center bg-black/50 p-0.5 rounded-full border border-[#23534B] text-[10px]">
+                      <button
+                        type="button"
+                        onClick={() => setSignupBillingCycle('monthly')}
+                        className={`px-2.5 py-0.5 rounded-full font-bold transition cursor-pointer ${
+                          signupBillingCycle === 'monthly' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Monthly
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSignupBillingCycle('annual')}
+                        className={`px-2.5 py-0.5 rounded-full font-bold transition cursor-pointer flex items-center gap-1 ${
+                          signupBillingCycle === 'annual' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <span>Annual</span>
+                        <span className="text-[9px] text-amber-300 font-black">-20%</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Plan Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    {[
+                      { id: 'trial', name: 'Free Trial', price: '₹0', subtitle: '14 Days Full Access' },
+                      { id: 'starter', name: 'Starter', price: signupBillingCycle === 'annual' ? '₹1,199' : '₹1,499', subtitle: 'Up to 15 Units' },
+                      { id: 'growth_pro', name: 'Growth Pro', price: signupBillingCycle === 'annual' ? '₹3,199' : '₹3,999', subtitle: 'Up to 50 Units' },
+                      { id: 'enterprise', name: 'Enterprise', price: signupBillingCycle === 'annual' ? '₹7,999' : '₹9,999', subtitle: 'Unlimited Units' }
+                    ].map((plan) => {
+                      const isSelected = signupSubscriptionPlan === plan.id;
+                      return (
+                        <button
+                          key={plan.id}
+                          type="button"
+                          onClick={() => setSignupSubscriptionPlan(plan.id as any)}
+                          className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                            isSelected
+                              ? 'border-emerald-400 bg-emerald-950/50 ring-1 ring-emerald-400 shadow-sm'
+                              : 'border-[#23534B] bg-black/30 hover:border-slate-500'
+                          }`}
+                        >
+                          <div>
+                            <span className="text-[11px] font-black text-white block">{plan.name}</span>
+                            <span className="text-[10px] font-bold text-emerald-400">{plan.price}</span>
+                          </div>
+                          <span className="text-[9px] text-slate-400 mt-1">{plan.subtitle}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}

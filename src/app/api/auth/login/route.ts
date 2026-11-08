@@ -133,7 +133,8 @@ export async function POST(req: NextRequest) {
         roleLabel: user.roleLabel,
         avatar: user.avatar,
         title: user.title,
-        description: user.description
+        description: user.description,
+        twoFactorEnabled: user.twoFactorEnabled || false
       },
       token: session.token,
       expiresAt: session.expiresAt

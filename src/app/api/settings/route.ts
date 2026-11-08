@@ -37,19 +37,20 @@ export async function GET(req: NextRequest) {
 
     let settings = await db.settings.getForUser(userId);
 
-    // If not found in DB, populate default from user account
+    // If not found in DB, populate clean settings scoped to user
     if (!settings) {
       const user = await db.users.findById(userId);
+      const isDemoOwner = userId === 'user-owner-vikram' || user?.email === 'owner@staywise.com';
       settings = await db.settings.save({
         userId,
-        entityName: user?.role === 'tenant' ? 'Resident Account' : (user?.name ? `${user.name} Asset Portfolio` : 'Singhania Asset Holdings LLP'),
-        ownerName: user?.name || 'Authorized Member',
-        panNumber: user?.role === 'tenant' ? '' : 'AAACS1928K',
-        gstin: user?.role === 'tenant' ? '' : '29AAACS1928K1Z5',
-        bankAccount: user?.role === 'tenant' ? '' : '918020048192842',
-        ifsc: user?.role === 'tenant' ? '' : 'UTIB0000042',
-        bankName: user?.role === 'tenant' ? '' : 'Axis Bank (Escrow Banking Division)',
-        upiId: user?.role === 'tenant' ? '' : 'staywise.escrow@axisbank',
+        entityName: isDemoOwner ? 'Singhania Asset Holdings LLP' : (user?.name ? `${user.name} Properties` : ''),
+        ownerName: user?.name || (isDemoOwner ? 'Vikram Singhania' : ''),
+        panNumber: isDemoOwner ? 'AAACS1928K' : '',
+        gstin: isDemoOwner ? '29AAACS1928K1Z5' : '',
+        bankAccount: isDemoOwner ? '918020048192842' : '',
+        ifsc: isDemoOwner ? 'UTIB0000042' : '',
+        bankName: isDemoOwner ? 'Axis Bank (Escrow Banking Division)' : '',
+        upiId: isDemoOwner ? 'staywise.escrow@axisbank' : '',
         autoSweepCadence: 'Daily at 18:00 IST',
         rentDueDay: 5,
         gracePeriodDays: 3,
@@ -57,10 +58,11 @@ export async function GET(req: NextRequest) {
         lateFeeDailyRate: 50,
         autoWhatsAppReminder: true,
         allowPartialPayments: false,
-        ksebTariffPerUnit: 9.5,
-        dgBackupRatePerUnit: 24.0,
+        ksebTariffPerUnit: 8.5,
+        dgBackupRatePerUnit: 20.0,
         meterReadingCycle: '1st to 5th of every month',
         commonAreaPowerRatio: 10,
+        registeredAddress: isDemoOwner ? 'Level 8, Prestige Trade Tower, Palace Road, Bengaluru 560001' : '',
         preferences: {
           whatsappAlerts: true,
           smsAlerts: true,
@@ -112,6 +114,7 @@ export async function POST(req: NextRequest) {
       dgBackupRatePerUnit: typeof body.dgBackupRatePerUnit === 'number' ? body.dgBackupRatePerUnit : undefined,
       meterReadingCycle: body.meterReadingCycle,
       commonAreaPowerRatio: typeof body.commonAreaPowerRatio === 'number' ? body.commonAreaPowerRatio : undefined,
+      registeredAddress: body.registeredAddress,
       preferences: body.preferences
     });
 

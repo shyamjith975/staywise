@@ -25,7 +25,8 @@ import {
   Lock,
   RotateCcw,
   Save,
-  CheckCircle2
+  CheckCircle2,
+  Zap
 } from 'lucide-react';
 
 interface AssetTypeOption {
@@ -121,6 +122,13 @@ export default function AddPropertyModal() {
   const [pincode, setPincode] = useState('');
   const [addressProofFile1, setAddressProofFile1] = useState<string | null>(null);
   const [mapPinCoords, setMapPinCoords] = useState<{ x: number; y: number }>({ x: 50, y: 46 });
+
+  // Property-Specific Electricity & Utility Rules (Multi-State & Multi-City Support)
+  const [propElectricityDiscom, setPropElectricityDiscom] = useState('BESCOM Bangalore');
+  const [propElectricityTariff, setPropElectricityTariff] = useState<string | number>('8.5');
+  const [propElectricityBillingMode, setPropElectricityBillingMode] = useState<'Sub-meter OCR' | 'Equal Split' | 'Included in Rent' | 'Direct DISCOM Pass-through'>('Sub-meter OCR');
+  const [propDgBackupRate, setPropDgBackupRate] = useState<string | number>('24.0');
+  const [propConsumerNumber, setPropConsumerNumber] = useState('');
 
   // STEP 2 & BEYOND: ASSET-SPECIFIC FIELDS (All clean without default hardcoded values)
 
@@ -218,6 +226,11 @@ export default function AddPropertyModal() {
     setPincode('');
     setAddressProofFile1(null);
     setMapPinCoords({ x: 50, y: 46 });
+    setPropElectricityDiscom('BESCOM Bangalore');
+    setPropElectricityTariff('8.5');
+    setPropElectricityBillingMode('Sub-meter OCR');
+    setPropDgBackupRate('24.0');
+    setPropConsumerNumber('');
     setFieldErrors({});
     setValidationError(null);
 
@@ -614,7 +627,12 @@ export default function AddPropertyModal() {
         ? '/images/properties/tech-park.jpg'
         : selectedAsset.type === 'Independent House'
         ? '/images/properties/estate-villa.jpg'
-        : '/images/properties/beach-road.jpg'
+        : '/images/properties/beach-road.jpg',
+      electricityDiscom: propElectricityDiscom,
+      electricityTariffPerUnit: Number(propElectricityTariff) || 8.5,
+      electricityBillingMode: propElectricityBillingMode,
+      dgBackupRatePerUnit: Number(propDgBackupRate) || 24.0,
+      consumerNumber: propConsumerNumber.trim() || undefined
     });
 
     addNotification(
@@ -990,6 +1008,154 @@ export default function AddPropertyModal() {
                       />
                     </label>
                   )}
+                </div>
+
+                {/* Electricity & State DISCOM Configuration */}
+                <div className="pt-3 border-t border-[#E0E0E0] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-black text-[#171717] flex items-center gap-1.5">
+                        <Zap className="h-3.5 w-3.5 text-amber-600" />
+                        <span>Electricity &amp; State DISCOM Rules</span>
+                      </h4>
+                      <p className="text-[10px] text-[#666666]">
+                        Configured per property because DISCOM tariffs differ across states and cities
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                      Location-Specific Tariff
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#171717] mb-1">
+                        State / City DISCOM Board
+                      </label>
+                      <select
+                        value={propElectricityDiscom}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setPropElectricityDiscom(val);
+                          if (val.includes('BESCOM')) setPropElectricityTariff('8.5');
+                          else if (val.includes('MSEDCL') || val.includes('Tata Power') || val.includes('Adani')) setPropElectricityTariff('11.5');
+                          else if (val.includes('KSEB')) setPropElectricityTariff('9.5');
+                          else if (val.includes('TANGEDCO')) setPropElectricityTariff('8.0');
+                          else if (val.includes('BSES') || val.includes('TPDDL')) setPropElectricityTariff('7.5');
+                          else if (val.includes('TSSPDCL')) setPropElectricityTariff('9.0');
+                          else if (val.includes('UPPCL')) setPropElectricityTariff('7.5');
+                          else if (val.includes('CESC')) setPropElectricityTariff('8.5');
+                          else if (val.includes('Torrent') || val.includes('DGVCL')) setPropElectricityTariff('7.2');
+                        }}
+                        className="w-full px-3 py-2 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#171717] text-xs focus:outline-none focus:border-[#171717]"
+                      >
+                        <optgroup label="Karnataka">
+                          <option value="BESCOM Bangalore">BESCOM (Bengaluru &amp; Urban)</option>
+                          <option value="MESCOM Mangalore">MESCOM (Mangaluru &amp; Coastal)</option>
+                          <option value="HESCOM Hubli">HESCOM (Hubballi-Dharwad)</option>
+                          <option value="CHESCOM Mysore">CHESCOM (Mysuru &amp; Southern)</option>
+                        </optgroup>
+                        <optgroup label="Maharashtra">
+                          <option value="MSEDCL Mahavitaran">MSEDCL (Mahavitaran - Mumbai/Pune/State)</option>
+                          <option value="Tata Power Mumbai">Tata Power (Mumbai Suburban)</option>
+                          <option value="Adani Electricity Mumbai">Adani Electricity (Mumbai)</option>
+                          <option value="BEST Mumbai">BEST (Mumbai Island City)</option>
+                        </optgroup>
+                        <optgroup label="Delhi NCR">
+                          <option value="BSES Rajdhani Delhi">BSES Rajdhani (BRPL - South/West Delhi)</option>
+                          <option value="BSES Yamuna Delhi">BSES Yamuna (BYPL - East/Central Delhi)</option>
+                          <option value="Tata Power DDL Delhi">Tata Power DDL (North Delhi)</option>
+                          <option value="NPCL Noida">NPCL (Greater Noida)</option>
+                        </optgroup>
+                        <optgroup label="Kerala">
+                          <option value="KSEB Kerala">KSEB (Kerala State Electricity Board)</option>
+                        </optgroup>
+                        <optgroup label="Tamil Nadu">
+                          <option value="TANGEDCO Chennai">TANGEDCO (Chennai &amp; Tamil Nadu)</option>
+                        </optgroup>
+                        <optgroup label="Telangana &amp; Andhra Pradesh">
+                          <option value="TSSPDCL Hyderabad">TSSPDCL (Hyderabad &amp; Southern Telangana)</option>
+                          <option value="TSNPDCL Warangal">TSNPDCL (Northern Telangana)</option>
+                          <option value="APCPDCL Andhra">APCPDCL (Vijayawada &amp; Central AP)</option>
+                          <option value="APEPDCL Visakhapatnam">APEPDCL (Visakhapatnam &amp; Eastern AP)</option>
+                        </optgroup>
+                        <optgroup label="Gujarat">
+                          <option value="DGVCL Surat">DGVCL (Surat &amp; South Gujarat)</option>
+                          <option value="Torrent Power Ahmedabad">Torrent Power (Ahmedabad / Surat / Gandhinagar)</option>
+                          <option value="MGVCL Vadodara">MGVCL (Vadodara &amp; Central Gujarat)</option>
+                        </optgroup>
+                        <optgroup label="Uttar Pradesh &amp; Haryana">
+                          <option value="UPPCL Uttar Pradesh">UPPCL (MVVNL / PVVNL / DVVNL)</option>
+                          <option value="DHBVN Gurugram">DHBVN (Gurugram &amp; South Haryana)</option>
+                          <option value="UHBVN Panchkula">UHBVN (Panchkula &amp; North Haryana)</option>
+                        </optgroup>
+                        <optgroup label="West Bengal">
+                          <option value="CESC Kolkata">CESC (Kolkata &amp; Howrah)</option>
+                          <option value="WBSEDCL West Bengal">WBSEDCL (West Bengal State)</option>
+                        </optgroup>
+                        <optgroup label="Other State / Custom">
+                          <option value="Custom State DISCOM">Other State Board / Private Grid</option>
+                        </optgroup>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#171717] mb-1">
+                        Tariff Rate per kWh Unit (₹)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={propElectricityTariff}
+                        onChange={(e) => setPropElectricityTariff(e.target.value)}
+                        placeholder="e.g. 8.5"
+                        className="w-full px-3 py-2 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#171717] text-xs focus:outline-none focus:border-[#171717]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#171717] mb-1">
+                        Power Billing Method for Tenants
+                      </label>
+                      <select
+                        value={propElectricityBillingMode}
+                        onChange={(e) => setPropElectricityBillingMode(e.target.value as any)}
+                        className="w-full px-3 py-2 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#171717] text-xs focus:outline-none focus:border-[#171717]"
+                      >
+                        <option value="Sub-meter OCR">Sub-meter OCR / Digital Meter Reading</option>
+                        <option value="Equal Split">Equal Split Among Occupied Units</option>
+                        <option value="Direct DISCOM Pass-through">Direct DISCOM Bill Pass-through</option>
+                        <option value="Included in Rent">Included in Base Monthly Rent</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#171717] mb-1">
+                        DG Generator Backup Surcharge (₹ / Unit)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.5"
+                        value={propDgBackupRate}
+                        onChange={(e) => setPropDgBackupRate(e.target.value)}
+                        placeholder="e.g. 24.0"
+                        className="w-full px-3 py-2 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#171717] text-xs focus:outline-none focus:border-[#171717]"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-[11px] font-bold text-[#171717] mb-1">
+                        Consumer / CA / Service Connection Number (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={propConsumerNumber}
+                        onChange={(e) => setPropConsumerNumber(e.target.value)}
+                        placeholder="e.g. 1029481928 (Found on official electricity bill)"
+                        className="w-full px-3 py-2 rounded-xl border border-[#D2DDD7] bg-white font-mono text-[#171717] text-xs focus:outline-none focus:border-[#171717]"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

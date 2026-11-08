@@ -3,6 +3,7 @@ import { db } from '../../../../lib/db';
 import { validateSignupPayload } from '../../../../lib/validation';
 import { UserRole } from '../../../../types';
 import { createSessionToken } from '../../../../lib/security/auth';
+import { SUBSCRIPTION_PLANS } from '../../../../lib/security/subscriptionCatalog';
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,7 +22,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, email, password, phone, role, portfolioName, city, propertyId, unitNumber, subscriptionPlan, billingCycle } = validation.sanitizedData!;
+    const { 
+      name, email, password, phone, role, portfolioName, city, 
+      propertyId, unitNumber,
+      subscriptionPlan, billingCycle,
+      entityName, ownerName, panNumber, gstin, registeredAddress 
+    } = validation.sanitizedData!;
 
     // 2. Check if user already exists
     const existingUser = await db.users.findByEmail(email);
@@ -100,20 +106,85 @@ export async function POST(req: NextRequest) {
 
     // 4. Role specific onboarding workflows:
     // Newly onboarded users start with a clean slate (0 properties, 0 mock data).
-    // Initialize Trial Subscription for Owner if role is owner or estate_manager
+    // Initialize Platform Settings with manual details provided during registration
     if (role === 'owner' || role === 'estate_manager') {
       try {
-        await db.subscriptions.createTrial({
+        await db.settings.save({
           userId: user.id,
-          ownerName: user.name,
-          entityName: `${user.name} Asset Holdings`,
-          planId: subscriptionPlan || 'starter',
-          billingCycle: billingCycle || 'monthly',
-          autopayMethod: 'CARD',
-          autopayMaskedDetails: '•••• 4242'
+          entityName: entityName || `${name} Properties`,
+          ownerName: ownerName || name,
+          panNumber: panNumber || '',
+          gstin: gstin || '',
+          registeredAddress: registeredAddress || `${city || 'Bangalore'}, India`,
+          ksebTariffPerUnit: 8.5,
+          dgBackupRatePerUnit: 20.0
         });
+      } catch (settingsErr) {
+        console.warn('Settings init skipped:', settingsErr);
+      }
+
+      // Initialize Subscription according to user's manual selection
+      try {
+        const isTrialMode = subscriptionPlan === 'trial' || !subscriptionPlan;
+        const effectivePlan = isTrialMode ? 'starter' : subscriptionPlan;
+
+        if (isTrialMode) {
+          await db.subscriptions.createTrial({
+            userId: user.id,
+            ownerName: ownerName || user.name,
+            entityName: entityName || `${user.name} Asset Holdings`,
+            planId: 'starter',
+            billingCycle: billingCycle || 'monthly',
+            autopayMethod: 'CARD',
+            autopayMaskedDetails: '•••• 4242'
+          });
+        } else {
+          const planConfig = SUBSCRIPTION_PLANS[effectivePlan] || SUBSCRIPTION_PLANS.starter;
+          const authoritativeAmount = billingCycle === 'annual' ? planConfig.annualPrice : planConfig.monthlyPrice;
+          const startDate = new Date().toISOString().split('T')[0];
+          const endDate = new Date(Date.now() + (billingCycle === 'annual' ? 365 : 30) * 86400000).toISOString().split('T')[0];
+
+          await db.subscriptions.save({
+            id: `sub_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            userId: user.id,
+            ownerName: ownerName || user.name,
+            entityName: entityName || `${user.name} Asset Holdings`,
+            planId: effectivePlan,
+            planName: planConfig.name,
+            status: 'ACTIVE',
+            billingCycle: billingCycle || 'monthly',
+            startDate,
+            endDate,
+            daysRemaining: billingCycle === 'annual' ? 365 : 30,
+            amount: authoritativeAmount,
+            currency: 'INR',
+            maxUnits: planConfig.maxUnits,
+            currentUnits: 0,
+            paymentMethod: 'ONLINE',
+            lastPaymentTxnId: `txn_reg_${Date.now()}`,
+            lastPaymentDate: startDate,
+            autoRenew: true,
+            gstin: gstin || '',
+            tamperProofHash: `sha256_${Date.now()}`,
+            history: [{
+              invoiceId: `INV-SUB-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+              date: startDate,
+              amount: authoritativeAmount,
+              currency: 'INR',
+              planId: effectivePlan as any,
+              planName: planConfig.name,
+              billingCycle: billingCycle || 'monthly',
+              txnId: `txn_reg_${Date.now()}`,
+              paymentMethod: 'ONLINE',
+              status: 'PAID',
+              gstin: gstin || undefined,
+              taxAmount: Math.round(authoritativeAmount * 0.18),
+              downloadUrl: `/api/documents/invoice-sub-${Date.now()}`
+            }]
+          });
+        }
       } catch (subErr) {
-        console.warn('Subscription trial init skipped:', subErr);
+        console.warn('Subscription init skipped:', subErr);
       }
     }
 

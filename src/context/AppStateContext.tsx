@@ -149,6 +149,7 @@ export interface DemoCredential {
   avatar: string;
   title: string;
   description: string;
+  twoFactorEnabled?: boolean;
 }
 
 export const DEMO_CREDENTIALS: Record<UserRole, DemoCredential> = {
@@ -161,7 +162,8 @@ export const DEMO_CREDENTIALS: Record<UserRole, DemoCredential> = {
     name: 'Vikram Singhania',
     avatar: '👨‍💼',
     title: 'Asset Portfolio Owner',
-    description: '3 Portfolios • 21 Units • Escrow Account Active'
+    description: '3 Portfolios • 21 Units • Escrow Account Active',
+    twoFactorEnabled: false
   },
   tenant: {
     id: 'user-tenant-shyam',
@@ -235,9 +237,15 @@ interface AppStateContextType {
     city?: string;
     propertyId?: string;
     unitNumber?: string;
-    subscriptionPlan?: 'starter' | 'growth_pro' | 'enterprise';
+    subscriptionPlan?: 'trial' | 'starter' | 'growth_pro' | 'enterprise';
     billingCycle?: 'monthly' | 'annual';
+    entityName?: string;
+    ownerName?: string;
+    panNumber?: string;
+    gstin?: string;
+    registeredAddress?: string;
   }) => Promise<{ success: boolean; error?: string }>;
+  toggleTwoFactor: (enabled: boolean) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   activeRole: UserRole;
   setActiveRole: (role: UserRole) => void;
@@ -561,7 +569,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       roleLabel: customUser.roleLabel || DEMO_CREDENTIALS[role]?.roleLabel || 'Member',
       avatar: customUser.avatar || DEMO_CREDENTIALS[role]?.avatar || '👤',
       title: customUser.title || DEMO_CREDENTIALS[role]?.title || 'Portal Member',
-      description: customUser.description || DEMO_CREDENTIALS[role]?.description || 'Active Member'
+      description: customUser.description || DEMO_CREDENTIALS[role]?.description || 'Active Member',
+      twoFactorEnabled: customUser.twoFactorEnabled ?? (DEMO_CREDENTIALS[role]?.twoFactorEnabled ?? false)
     } : (DEMO_CREDENTIALS[role] || DEMO_CREDENTIALS.owner);
 
     setCurrentUser(userToSet);
@@ -611,8 +620,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     city?: string;
     propertyId?: string;
     unitNumber?: string;
-    subscriptionPlan?: 'starter' | 'growth_pro' | 'enterprise';
+    subscriptionPlan?: 'trial' | 'starter' | 'growth_pro' | 'enterprise';
     billingCycle?: 'monthly' | 'annual';
+    entityName?: string;
+    ownerName?: string;
+    panNumber?: string;
+    gstin?: string;
+    registeredAddress?: string;
   }): Promise<{ success: boolean; error?: string }> => {
     try {
       const res = await fetch('/api/auth/signup', {
@@ -634,7 +648,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         roleLabel: data.user.roleLabel,
         avatar: data.user.avatar,
         title: data.user.title,
-        description: data.user.description
+        description: data.user.description,
+        twoFactorEnabled: false
       };
       login(userData.role, newCred, data.token);
 
@@ -648,6 +663,46 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     } catch (err: any) {
       console.error('Signup error:', err);
       return { success: false, error: err.message || 'Connection failed' };
+    }
+  };
+
+  const toggleTwoFactor = async (enabled: boolean): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const userId = currentUser?.id;
+      if (!userId) return { success: false, error: 'User session not found.' };
+
+      const res = await fetch('/api/auth/2fa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, enabled })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Failed to update 2FA.' };
+      }
+
+      setCurrentUser(prev => {
+        const updated = { ...prev, twoFactorEnabled: enabled };
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('staywise_current_user', JSON.stringify(updated));
+          if (activeRole !== 'admin') {
+            localStorage.setItem('staywise_current_user', JSON.stringify(updated));
+          }
+        }
+        return updated;
+      });
+
+      addNotification(
+        enabled ? 'Two-Factor Authentication Active' : '2FA Protection Disabled',
+        enabled 
+          ? 'Two-Factor Authentication (2FA) is now enabled on your account. Payouts and lease records are verified.' 
+          : 'Two-Factor Authentication has been disabled on your account.',
+        'SYSTEM'
+      );
+
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Connection error while updating 2FA.' };
     }
   };
 
@@ -2385,6 +2440,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       sessionToken,
       login,
       signupUser,
+      toggleTwoFactor,
       logout,
       activeRole,
       setActiveRole: handleRoleChange,

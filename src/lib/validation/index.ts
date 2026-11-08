@@ -162,8 +162,13 @@ export interface SignupPayload {
   city?: string;
   propertyId?: string;
   unitNumber?: string;
-  subscriptionPlan?: 'starter' | 'growth_pro' | 'enterprise';
+  subscriptionPlan?: 'trial' | 'starter' | 'growth_pro' | 'enterprise';
   billingCycle?: 'monthly' | 'annual';
+  entityName?: string;
+  ownerName?: string;
+  panNumber?: string;
+  gstin?: string;
+  registeredAddress?: string;
 }
 
 export function validateSignupPayload(body: any): ValidationResult<SignupPayload> {
@@ -207,9 +212,15 @@ export function validateSignupPayload(body: any): ValidationResult<SignupPayload
 
   const portfolioName = sanitizeString(body.portfolioName || `${name}'s Portfolio`);
   const city = sanitizeString(body.city || 'Bangalore');
-  const validPlans = ['starter', 'growth_pro', 'enterprise'];
-  const subscriptionPlan = validPlans.includes(body.subscriptionPlan) ? body.subscriptionPlan : 'starter';
+  const validPlans = ['trial', 'starter', 'growth_pro', 'enterprise'];
+  const subscriptionPlan = validPlans.includes(body.subscriptionPlan) ? body.subscriptionPlan : 'trial';
   const billingCycle = body.billingCycle === 'annual' ? 'annual' : 'monthly';
+
+  const entityName = body.entityName ? sanitizeString(body.entityName) : undefined;
+  const ownerName = body.ownerName ? sanitizeString(body.ownerName) : undefined;
+  const panNumber = body.panNumber ? sanitizeString(body.panNumber).toUpperCase() : undefined;
+  const gstin = body.gstin ? sanitizeString(body.gstin).toUpperCase() : undefined;
+  const registeredAddress = body.registeredAddress ? sanitizeString(body.registeredAddress) : undefined;
 
   return {
     isValid: errors.length === 0,
@@ -221,8 +232,15 @@ export function validateSignupPayload(body: any): ValidationResult<SignupPayload
       role: body.role,
       portfolioName,
       city,
-      subscriptionPlan,
-      billingCycle
+      propertyId: body.propertyId ? sanitizeString(body.propertyId) : undefined,
+      unitNumber: body.unitNumber ? sanitizeString(body.unitNumber) : undefined,
+      subscriptionPlan: subscriptionPlan as any,
+      billingCycle,
+      entityName,
+      ownerName,
+      panNumber,
+      gstin,
+      registeredAddress
     },
     errors
   };

@@ -97,6 +97,7 @@ export interface UserAccount {
   title: string;
   description: string;
   phone?: string;
+  twoFactorEnabled?: boolean;
   createdAt: string;
 }
 
@@ -895,6 +896,13 @@ class DatabaseEngine {
     try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN co_tenant_name TEXT;'); } catch (e) {}
     try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN co_tenant_phone TEXT;'); } catch (e) {}
     try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN co_tenant_email TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE users ADD COLUMN two_factor_enabled INTEGER DEFAULT 0;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE properties ADD COLUMN electricity_discom TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE properties ADD COLUMN electricity_tariff_per_unit REAL;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE properties ADD COLUMN electricity_billing_mode TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE properties ADD COLUMN dg_backup_rate_per_unit REAL;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE properties ADD COLUMN consumer_number TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE platform_settings ADD COLUMN registered_address TEXT;'); } catch (e) {}
 
     // High-performance secondary indexes for sub-millisecond query execution
     const indexStatements = [
@@ -1152,6 +1160,7 @@ class DatabaseEngine {
         title: r.title,
         description: r.description,
         phone: r.phone || undefined,
+        twoFactorEnabled: Boolean(r.two_factor_enabled || 0),
         createdAt: r.created_at
       }));
     },
@@ -1175,6 +1184,7 @@ class DatabaseEngine {
         title: row.title,
         description: row.description,
         phone: row.phone || undefined,
+        twoFactorEnabled: Boolean(row.two_factor_enabled || 0),
         createdAt: row.created_at
       };
       DatabaseEngine.userEmailCache.set(cleanEmail, { user, cachedAt: now });
@@ -1200,6 +1210,7 @@ class DatabaseEngine {
         title: row.title,
         description: row.description,
         phone: row.phone || undefined,
+        twoFactorEnabled: Boolean(row.two_factor_enabled || 0),
         createdAt: row.created_at
       };
       DatabaseEngine.userCache.set(id, { user, cachedAt: now });
@@ -1235,8 +1246,15 @@ class DatabaseEngine {
         title: row.title,
         description: row.description,
         phone: row.phone || undefined,
+        twoFactorEnabled: Boolean(row.two_factor_enabled || 0),
         createdAt: row.created_at
       };
+    },
+    setTwoFactor: async (userId: string, enabled: boolean): Promise<boolean> => {
+      const res = this.sqlite.prepare('UPDATE users SET two_factor_enabled = ? WHERE id = ?').run(enabled ? 1 : 0, userId);
+      this.syncRootDb();
+      DatabaseEngine.invalidateUserCache(userId);
+      return (res as any).changes > 0;
     },
     create: async (payload: Omit<UserAccount, 'id' | 'createdAt'> & { id?: string }): Promise<UserAccount> => {
       const id = payload.id || generateUserId(payload.role);
@@ -1536,6 +1554,11 @@ class DatabaseEngine {
           status: r.status,
           healthScore: r.health_score,
           verificationStatus: r.verification_status,
+          electricityDiscom: r.electricity_discom || undefined,
+          electricityTariffPerUnit: r.electricity_tariff_per_unit != null ? r.electricity_tariff_per_unit : undefined,
+          electricityBillingMode: r.electricity_billing_mode || undefined,
+          dgBackupRatePerUnit: r.dg_backup_rate_per_unit != null ? r.dg_backup_rate_per_unit : undefined,
+          consumerNumber: r.consumer_number || undefined,
           submittedDocs,
           amenities,
           units
@@ -1589,6 +1612,11 @@ class DatabaseEngine {
         status: row.status,
         healthScore: row.health_score,
         verificationStatus: row.verification_status,
+        electricityDiscom: row.electricity_discom || undefined,
+        electricityTariffPerUnit: row.electricity_tariff_per_unit != null ? row.electricity_tariff_per_unit : undefined,
+        electricityBillingMode: row.electricity_billing_mode || undefined,
+        dgBackupRatePerUnit: row.dg_backup_rate_per_unit != null ? row.dg_backup_rate_per_unit : undefined,
+        consumerNumber: row.consumer_number || undefined,
         submittedDocs,
         amenities,
         units
@@ -1602,8 +1630,10 @@ class DatabaseEngine {
         INSERT OR REPLACE INTO properties (
           id, owner_id, name, type, portfolio, address, city, state, pincode,
           total_units, occupied_units, expected_monthly_rent, collected_rent, pending_rent,
-          image_url, status, health_score, verification_status, submitted_docs, amenities, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          image_url, status, health_score, verification_status, submitted_docs, amenities,
+          electricity_discom, electricity_tariff_per_unit, electricity_billing_mode, dg_backup_rate_per_unit, consumer_number,
+          created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       insert.run(
@@ -1627,6 +1657,11 @@ class DatabaseEngine {
         payload.verificationStatus || 'PENDING',
         JSON.stringify(payload.submittedDocs || []),
         JSON.stringify(payload.amenities || ['Parking', 'Security']),
+        sb(payload.electricityDiscom, null),
+        sb(payload.electricityTariffPerUnit, 8.5),
+        sb(payload.electricityBillingMode, 'Sub-meter OCR'),
+        sb(payload.dgBackupRatePerUnit, 24.0),
+        sb(payload.consumerNumber, null),
         createdAt
       );
 
@@ -3115,8 +3150,9 @@ class DatabaseEngine {
       if (userId) {
         const found = all.find(s => s.userId === userId);
         if (found) return found;
+        return null;
       }
-      return all.find(s => s.userId === 'user-owner-vikram') || all[0] || null;
+      return null;
     },
 
     getAll: async (): Promise<OwnerSubscription[]> => {
@@ -3433,6 +3469,7 @@ class DatabaseEngine {
         meterReadingCycle: row.meter_reading_cycle || '1st to 5th of every month',
         commonAreaPowerRatio: row.common_area_power_ratio ?? 10,
         preferences: JSON.parse(row.preferences_json || '{}'),
+        registeredAddress: row.registered_address || '',
         updatedAt: row.updated_at
       };
     },
@@ -3458,6 +3495,7 @@ class DatabaseEngine {
       meterReadingCycle?: string;
       commonAreaPowerRatio?: number;
       preferences?: Record<string, any>;
+      registeredAddress?: string;
     }) => {
       const now = new Date().toISOString();
       const existing = await this.settings.getForUser(data.userId);
@@ -3481,7 +3519,8 @@ class DatabaseEngine {
         dgBackupRatePerUnit: data.dgBackupRatePerUnit ?? existing?.dgBackupRatePerUnit ?? 24.0,
         meterReadingCycle: data.meterReadingCycle ?? existing?.meterReadingCycle ?? '1st to 5th of every month',
         commonAreaPowerRatio: data.commonAreaPowerRatio ?? existing?.commonAreaPowerRatio ?? 10,
-        preferences: data.preferences ?? existing?.preferences ?? {}
+        preferences: data.preferences ?? existing?.preferences ?? {},
+        registeredAddress: data.registeredAddress ?? existing?.registeredAddress ?? ''
       };
 
       this.sqlite.prepare(`
@@ -3491,8 +3530,8 @@ class DatabaseEngine {
           rent_due_day, grace_period_days, late_fee_fixed, late_fee_daily_rate,
           auto_whatsapp_reminder, allow_partial_payments,
           kseb_tariff_per_unit, dg_backup_rate_per_unit, meter_reading_cycle,
-          common_area_power_ratio, preferences_json, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          common_area_power_ratio, preferences_json, registered_address, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         data.userId,
         merged.entityName,
@@ -3515,6 +3554,7 @@ class DatabaseEngine {
         merged.meterReadingCycle,
         merged.commonAreaPowerRatio,
         JSON.stringify(merged.preferences),
+        merged.registeredAddress,
         now
       );
       this.syncRootDb();

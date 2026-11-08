@@ -48,6 +48,7 @@ export default function SettingsView() {
     upgradeSubscription, 
     refreshSubscription, 
     cancelTrial,
+    toggleTwoFactor,
     delegates: appDelegates,
     addDelegate,
     revokeDelegate
@@ -98,7 +99,7 @@ export default function SettingsView() {
     } catch (e) {}
   };
 
-  const isDemoAccount = currentUser.email === 'vikram@staywise.in' || currentUser.email === 'owner@staywise.com' || currentUser.id === 'user-owner-vikram';
+  const isDemoAccount = currentUser.email === 'owner@staywise.com' || currentUser.id === 'user-owner-vikram';
 
   // Dynamic Real Database Quotas & Metrics Scoped to Current Owner. Admin sees all.
   const userProperties = (activeRole === 'admin')
@@ -140,8 +141,8 @@ export default function SettingsView() {
   const totalAssetsCount = scopedAssets.length;
   const subscriptionInvoices = subscription?.history || [];
 
-  // Form State: Portfolio & Entity
-  const [entityName, setEntityName] = useState(isDemoAccount ? 'Singhania Asset Holdings LLP' : (currentUser.name ? `${currentUser.name} Properties` : ''));
+  // Form State: Portfolio & Entity (Clean slate for all new/registered users)
+  const [entityName, setEntityName] = useState(isDemoAccount ? 'Singhania Asset Holdings LLP' : '');
   const [ownerName, setOwnerName] = useState(isDemoAccount ? 'Vikram Singhania' : (currentUser.name || ''));
   const [panNumber, setPanNumber] = useState(isDemoAccount ? 'AAACS1928K' : '');
   const [gstin, setGstin] = useState(isDemoAccount ? '29AAACS1928K1Z5' : '');
@@ -161,13 +162,13 @@ export default function SettingsView() {
   const [autoReminderOverdue7Days, setAutoReminderOverdue7Days] = useState(true);
 
   // Form State: Utility & Electricity Defaults
-  const [defaultDiscom, setDefaultDiscom] = useState('BESCOM Bangalore');
+  const [defaultDiscom, setDefaultDiscom] = useState(isDemoAccount ? 'BESCOM Bangalore' : 'Local State DISCOM');
   const [defaultRatePerUnit, setDefaultRatePerUnit] = useState(8.5);
   const [defaultFixedCharges, setDefaultFixedCharges] = useState(150);
   const [meterReadingCycle, setMeterReadingCycle] = useState('1st to 5th of every month');
   const [commonAreaPowerRatio, setCommonAreaPowerRatio] = useState(10);
 
-  // Form State: Banking & UPI
+  // Form State: Banking & UPI (Clean slate for all new/registered users)
   const [bankAccount, setBankAccount] = useState(isDemoAccount ? '918020048192842' : '');
   const [ifsc, setIfsc] = useState(isDemoAccount ? 'UTIB0000042' : '');
   const [bankName, setBankName] = useState(isDemoAccount ? 'Axis Bank (Escrow Banking Division)' : '');
@@ -189,6 +190,7 @@ export default function SettingsView() {
           if (s.ownerName) setOwnerName(s.ownerName);
           if (s.panNumber) setPanNumber(s.panNumber);
           if (s.gstin) setGstin(s.gstin);
+          if (s.registeredAddress) setRegisteredAddress(s.registeredAddress);
           if (s.bankAccount) setBankAccount(s.bankAccount);
           if (s.ifsc) setIfsc(s.ifsc);
           if (s.bankName) setBankName(s.bankName);
@@ -222,6 +224,7 @@ export default function SettingsView() {
           ownerName,
           panNumber,
           gstin,
+          registeredAddress,
           bankAccount,
           ifsc,
           bankName,
@@ -492,8 +495,10 @@ export default function SettingsView() {
                     {subscription?.status === 'CANCELLED' 
                       ? 'Trial Cancelled • Autopay Revoked' 
                       : subscription?.status === 'TRIAL' 
-                        ? 'Trial Cancelled • Autopay Revoked' 
-                        : 'Active Plan • Auto-renew Active'}
+                        ? '14-Day Free Trial Active' 
+                        : subscription 
+                          ? 'Active Plan • Auto-renew Active'
+                          : 'No Active Subscription'}
                   </span>
                   <span className="px-3 py-1 rounded-full bg-[#2A3528] text-[#a31c1b] border border-[#a31c1b]/30 text-[11px] font-bold flex items-center gap-1.5">
                     <Crown className="h-3.5 w-3.5 text-[#a31c1b]" />
@@ -801,6 +806,7 @@ This is a computer-generated tax invoice verified by digital certificate.
                   type="text"
                   value={entityName}
                   onChange={(e) => setEntityName(e.target.value)}
+                  placeholder="e.g. Skyline Asset Holdings LLP"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-bold"
                 />
               </div>
@@ -811,6 +817,7 @@ This is a computer-generated tax invoice verified by digital certificate.
                   type="text"
                   value={ownerName}
                   onChange={(e) => setOwnerName(e.target.value)}
+                  placeholder="e.g. Full Legal Name"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-bold"
                 />
               </div>
@@ -820,7 +827,8 @@ This is a computer-generated tax invoice verified by digital certificate.
                 <input
                   type="text"
                   value={panNumber}
-                  onChange={(e) => setPanNumber(e.target.value)}
+                  onChange={(e) => setPanNumber(e.target.value.toUpperCase())}
+                  placeholder="e.g. ABCDE1234F"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-mono font-bold text-[#171717]"
                 />
               </div>
@@ -830,7 +838,8 @@ This is a computer-generated tax invoice verified by digital certificate.
                 <input
                   type="text"
                   value={gstin}
-                  onChange={(e) => setGstin(e.target.value)}
+                  onChange={(e) => setGstin(e.target.value.toUpperCase())}
+                  placeholder="e.g. 29ABCDE1234F1Z5"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-mono font-bold text-[#171717]"
                 />
               </div>
@@ -841,6 +850,7 @@ This is a computer-generated tax invoice verified by digital certificate.
                   type="text"
                   value={supportPhone}
                   onChange={(e) => setSupportPhone(e.target.value)}
+                  placeholder="e.g. +91 98450 11928"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#171717]"
                 />
               </div>
@@ -851,6 +861,7 @@ This is a computer-generated tax invoice verified by digital certificate.
                   type="email"
                   value={supportEmail}
                   onChange={(e) => setSupportEmail(e.target.value)}
+                  placeholder="e.g. contact@staywise.com"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-bold text-[#171717]"
                 />
               </div>
@@ -861,6 +872,7 @@ This is a computer-generated tax invoice verified by digital certificate.
                   type="text"
                   value={registeredAddress}
                   onChange={(e) => setRegisteredAddress(e.target.value)}
+                  placeholder="e.g. Level 8, Prestige Trade Tower, Palace Road, Bengaluru 560001"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717]"
                 />
               </div>
@@ -1050,11 +1062,36 @@ This is a computer-generated tax invoice verified by digital certificate.
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="organic-card p-6 space-y-4">
             <div>
-              <h3 className="text-base font-extrabold text-[#171717]">Electricity Board &amp; Sub-meter Defaults</h3>
-              <p className="text-xs text-[#666666]">
-                Applied when uploading or calculating monthly power bills for residential and commercial units
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-extrabold text-[#171717]">Electricity Board &amp; Sub-meter Defaults</h3>
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                  Multi-State Supported
+                </span>
+              </div>
+              <p className="text-xs text-[#666666] mt-0.5">
+                Each property sets its own state DISCOM and tariff. The values below serve as default portfolio fallbacks.
               </p>
             </div>
+
+            {userProperties.length > 0 && (
+              <div className="p-3.5 rounded-2xl bg-[#E8F0EC]/60 border border-[#D2DDD7] space-y-2">
+                <span className="text-[11px] font-bold text-[#171717] block">Your Properties &amp; State DISCOMs:</span>
+                <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                  {userProperties.map(p => (
+                    <div key={p.id} className="p-2 rounded-xl bg-white border border-[#D2DDD7] flex items-center justify-between text-[11px]">
+                      <div>
+                        <span className="font-bold text-[#171717] block">{p.name}</span>
+                        <span className="text-[10px] text-[#666666]">{p.city}, {p.state}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-bold text-[#171717]">{p.electricityDiscom || 'BESCOM Bangalore'}</span>
+                        <span className="text-[10px] text-emerald-700 block font-mono">₹{p.electricityTariffPerUnit ?? 8.5}/unit • {p.electricityBillingMode || 'Sub-meter OCR'}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="space-y-4 text-xs">
               <div>
@@ -1177,6 +1214,7 @@ This is a computer-generated tax invoice verified by digital certificate.
                   type="text"
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
+                  placeholder="e.g. HDFC Bank, Indiranagar Branch"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-bold"
                 />
               </div>
@@ -1188,6 +1226,7 @@ This is a computer-generated tax invoice verified by digital certificate.
                     type="text"
                     value={bankAccount}
                     onChange={(e) => setBankAccount(e.target.value)}
+                    placeholder="e.g. 50100294819284"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-mono font-bold text-[#171717]"
                   />
                 </div>
@@ -1197,7 +1236,8 @@ This is a computer-generated tax invoice verified by digital certificate.
                   <input
                     type="text"
                     value={ifsc}
-                    onChange={(e) => setIfsc(e.target.value)}
+                    onChange={(e) => setIfsc(e.target.value.toUpperCase())}
+                    placeholder="e.g. HDFC0000123"
                     className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-mono font-bold text-[#171717]"
                   />
                 </div>
@@ -1209,6 +1249,7 @@ This is a computer-generated tax invoice verified by digital certificate.
                   type="text"
                   value={upiId}
                   onChange={(e) => setUpiId(e.target.value)}
+                  placeholder="e.g. yourname@okhdfcbank"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white font-mono font-bold text-[#171717]"
                 />
               </div>
@@ -1374,17 +1415,40 @@ This is a computer-generated tax invoice verified by digital certificate.
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#171717]/20 flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#171717]/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <span className="font-extrabold text-[#171717] flex items-center gap-1.5">
                     <Smartphone className="h-4 w-4 text-[#171717]" />
                     <span>Two-Factor Authentication (2FA)</span>
                   </span>
-                  <span className="text-[11px] text-[#666666]">SMS OTP + Google Authenticator Active</span>
+                  <span className="text-[11px] text-[#666666]">
+                    {currentUser.twoFactorEnabled 
+                      ? 'SMS OTP & Authenticator active on your account' 
+                      : 'Protects payouts and lease agreements. Must be enabled by owner.'}
+                  </span>
                 </div>
-                <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full">
-                  Enabled
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                    currentUser.twoFactorEnabled 
+                      ? 'text-emerald-800 bg-emerald-100 border border-emerald-300' 
+                      : 'text-amber-800 bg-amber-100 border border-amber-300'
+                  }`}>
+                    {currentUser.twoFactorEnabled ? 'Enabled' : 'Disabled'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await toggleTwoFactor(!currentUser.twoFactorEnabled);
+                    }}
+                    className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
+                      currentUser.twoFactorEnabled
+                        ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                        : 'bg-[#06110c] hover:bg-[#171717] text-white shadow-xs'
+                    }`}
+                  >
+                    {currentUser.twoFactorEnabled ? 'Turn Off' : 'Enable 2FA'}
+                  </button>
+                </div>
               </div>
 
               <div className="p-4 rounded-2xl bg-[#E8F0EC] border border-[#D2DDD7] flex items-center justify-between">

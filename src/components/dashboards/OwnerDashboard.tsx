@@ -40,7 +40,9 @@ import {
   Laptop,
   AlertTriangle,
   Crown,
-  UserPlus
+  UserPlus,
+  ShieldAlert,
+  Smartphone
 } from 'lucide-react';
 import { color } from '../../lib/colors';
 import { AuthorizedDelegate } from '../../types';
@@ -561,6 +563,41 @@ export default function OwnerDashboard() {
                 </div>
               </div>
             </div>
+
+            {/* Two-Factor Authentication Security Reminder Banner */}
+            {currentUser.role === 'owner' && !currentUser.twoFactorEnabled && (
+              <div className="bg-amber-50/90 border border-amber-200/90 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs animate-in fade-in duration-200">
+                <div className="flex items-start sm:items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 border border-amber-300 flex items-center justify-center shrink-0">
+                    <ShieldAlert className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-black text-[#171717] flex items-center gap-1.5">
+                      <span>Two-Factor Authentication (2FA) is Not Enabled</span>
+                      <span className="text-[10px] font-bold text-amber-800 bg-amber-200/70 px-2 py-0.5 rounded-full">Security Reminder</span>
+                    </h4>
+                    <p className="text-[11px] text-[#666666] mt-0.5">
+                      Protect your rent payouts, tenant escrow account, and legal lease files with two-factor verification.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof window !== 'undefined') {
+                        localStorage.setItem('staywise_settings_tab', 'SECURITY');
+                      }
+                      setActiveView('settings');
+                    }}
+                    className="px-4 py-2 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-1.5"
+                  >
+                    <Smartphone className="h-3.5 w-3.5" />
+                    <span>Enable 2FA Now</span>
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Clean Slate Onboarding State for New Users */}
             {activeProperties.length === 0 && (
