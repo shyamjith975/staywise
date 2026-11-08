@@ -431,7 +431,7 @@ export default function OwnerDashboard() {
     : electricityBills.filter(b => activeProperties.some(p => p.id === b.propertyId));
   const ownerPropIds = activeProperties.map(p => p.id);
   const ownerPropNames = activeProperties.map(p => p.name.toLowerCase());
-  const pendingConnectionRequests = (activeRole === 'admin')
+  const pendingConnectionRequests = (activeRole === 'admin' || isDemoAccount)
     ? tenantConnectionRequests.filter(r => r.status === 'PENDING_APPROVAL')
     : tenantConnectionRequests.filter(r => 
         r.status === 'PENDING_APPROVAL' && (

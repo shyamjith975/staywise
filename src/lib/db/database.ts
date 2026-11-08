@@ -99,6 +99,9 @@ export interface UserAccount {
   description: string;
   phone?: string;
   twoFactorEnabled?: boolean;
+  ekycVerified?: boolean;
+  aadhaarNumber?: string;
+  panNumber?: string;
   createdAt: string;
 }
 
@@ -927,6 +930,9 @@ class DatabaseEngine {
     try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN co_tenant_phone TEXT;'); } catch (e) {}
     try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN co_tenant_email TEXT;'); } catch (e) {}
     try { this.sqlite.exec('ALTER TABLE users ADD COLUMN two_factor_enabled INTEGER DEFAULT 0;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE users ADD COLUMN ekyc_verified INTEGER DEFAULT 0;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE users ADD COLUMN aadhaar_number TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE users ADD COLUMN pan_number TEXT;'); } catch (e) {}
     try { this.sqlite.exec('ALTER TABLE properties ADD COLUMN electricity_discom TEXT;'); } catch (e) {}
     try { this.sqlite.exec('ALTER TABLE properties ADD COLUMN electricity_tariff_per_unit REAL;'); } catch (e) {}
     try { this.sqlite.exec('ALTER TABLE properties ADD COLUMN electricity_billing_mode TEXT;'); } catch (e) {}
@@ -1225,6 +1231,9 @@ class DatabaseEngine {
         description: r.description,
         phone: r.phone || undefined,
         twoFactorEnabled: Boolean(r.two_factor_enabled || 0),
+        ekycVerified: Boolean(r.ekyc_verified || 0),
+        aadhaarNumber: r.aadhaar_number || undefined,
+        panNumber: r.pan_number || undefined,
         createdAt: r.created_at
       }));
     },
@@ -1249,6 +1258,9 @@ class DatabaseEngine {
         description: row.description,
         phone: row.phone || undefined,
         twoFactorEnabled: Boolean(row.two_factor_enabled || 0),
+        ekycVerified: Boolean(row.ekyc_verified || 0),
+        aadhaarNumber: row.aadhaar_number || undefined,
+        panNumber: row.pan_number || undefined,
         createdAt: row.created_at
       };
       DatabaseEngine.userEmailCache.set(cleanEmail, { user, cachedAt: now });
@@ -1275,6 +1287,9 @@ class DatabaseEngine {
         description: row.description,
         phone: row.phone || undefined,
         twoFactorEnabled: Boolean(row.two_factor_enabled || 0),
+        ekycVerified: Boolean(row.ekyc_verified || 0),
+        aadhaarNumber: row.aadhaar_number || undefined,
+        panNumber: row.pan_number || undefined,
         createdAt: row.created_at
       };
       DatabaseEngine.userCache.set(id, { user, cachedAt: now });
@@ -1311,6 +1326,9 @@ class DatabaseEngine {
         description: row.description,
         phone: row.phone || undefined,
         twoFactorEnabled: Boolean(row.two_factor_enabled || 0),
+        ekycVerified: Boolean(row.ekyc_verified || 0),
+        aadhaarNumber: row.aadhaar_number || undefined,
+        panNumber: row.pan_number || undefined,
         createdAt: row.created_at
       };
     },
@@ -1319,6 +1337,30 @@ class DatabaseEngine {
       this.syncRootDb();
       DatabaseEngine.invalidateUserCache(userId);
       return (res as any).changes > 0;
+    },
+    updateEkyc: async (userIdOrEmail: string, data: { aadhaarNumber?: string; panNumber?: string; ekycVerified?: boolean }): Promise<boolean> => {
+      const ekycVal = data.ekycVerified !== false ? 1 : 0;
+      this.sqlite.prepare(`
+        UPDATE users SET 
+          ekyc_verified = ?,
+          aadhaar_number = COALESCE(?, aadhaar_number),
+          pan_number = COALESCE(?, pan_number)
+        WHERE id = ? OR LOWER(email) = LOWER(?)
+      `).run(ekycVal, data.aadhaarNumber || null, data.panNumber || null, userIdOrEmail, userIdOrEmail);
+
+      try {
+        this.sqlite.prepare(`
+          UPDATE tenants SET
+            kyc_verified = ?,
+            aadhaar_number = COALESCE(?, aadhaar_number),
+            pan_number = COALESCE(?, pan_number)
+          WHERE user_id = ? OR LOWER(email) = LOWER(?)
+        `).run(ekycVal, data.aadhaarNumber || null, data.panNumber || null, userIdOrEmail, userIdOrEmail);
+      } catch (e) {}
+
+      this.syncRootDb();
+      DatabaseEngine.invalidateUserCache(userIdOrEmail);
+      return true;
     },
     create: async (payload: Omit<UserAccount, 'id' | 'createdAt'> & { id?: string }): Promise<UserAccount> => {
       const id = payload.id || generateUserId(payload.role);
@@ -1978,6 +2020,7 @@ class DatabaseEngine {
      * 5. Enters security deposit in \`ledger\`
      */
     onboard: async (data: {
+      userId?: string;
       name: string;
       phone: string;
       email: string;
@@ -2042,7 +2085,10 @@ class DatabaseEngine {
         : 0;
 
       // 1. Ensure Primary Tenant User Account
-      let user = await this.users.findByEmail(data.email);
+      let user = data.userId ? await this.users.findById(data.userId) : null;
+      if (!user) {
+        user = await this.users.findByEmail(data.email);
+      }
       if (!user) {
         user = await this.users.create({
           id: generateUserId('tenant'),

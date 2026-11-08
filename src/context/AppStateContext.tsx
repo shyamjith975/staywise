@@ -1896,6 +1896,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId: req.tenantUserId,
           name: newTenant.name,
           phone: newTenant.phone,
           email: newTenant.email,

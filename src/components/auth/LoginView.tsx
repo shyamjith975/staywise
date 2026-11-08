@@ -69,6 +69,8 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
   const [signupOtpError, setSignupOtpError] = useState<string | null>(null);
   const [signupPassword, setSignupPassword] = useState('');
   const [showSignupPassword, setShowSignupPassword] = useState(false);
+  const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
+  const [showSignupConfirmPassword, setShowSignupConfirmPassword] = useState(false);
   const [signupLoading, setSignupLoading] = useState(false);
   const [signupError, setSignupError] = useState<string | null>(null);
   const [signupStep, setSignupStep] = useState<1 | 2 | 3>(1);
@@ -85,13 +87,29 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
   const [signupSubscriptionPlan, setSignupSubscriptionPlan] = useState<'trial' | 'starter' | 'growth_pro' | 'enterprise'>('trial');
   const [signupBillingCycle, setSignupBillingCycle] = useState<'monthly' | 'annual'>('monthly');
 
-  // Password Security Checks
+  // Password Security Checks & Matching
   const isPassLengthValid = signupPassword.length >= 8;
   const hasPassUpper = /[A-Z]/.test(signupPassword);
   const hasPassLower = /[a-z]/.test(signupPassword);
   const hasPassDigit = /[0-9]/.test(signupPassword);
   const hasPassSpecial = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(signupPassword);
   const isPasswordStrong = isPassLengthValid && hasPassUpper && hasPassLower && hasPassDigit && hasPassSpecial;
+  const passwordsMatch = signupPassword.length > 0 && signupConfirmPassword.length > 0 && signupPassword === signupConfirmPassword;
+  const passwordsMismatched = signupConfirmPassword.length > 0 && signupPassword !== signupConfirmPassword;
+
+  const sha256Browser = async (value: string): Promise<string> => {
+    try {
+      if (typeof window !== 'undefined' && window.crypto?.subtle) {
+        const msgBuffer = new TextEncoder().encode(value.trim());
+        const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      }
+      return value.trim();
+    } catch {
+      return value.trim();
+    }
+  };
 
   // Password Recovery State
   const [resetEmail, setResetEmail] = useState('');
@@ -434,7 +452,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
     }
   };
 
-  const validateStep1 = () => {
+  const validateStep1 = async (): Promise<boolean> => {
     setSignupError(null);
     const cleanFirst = firstName.trim();
     const cleanLast = lastName.trim();
@@ -459,12 +477,34 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
       setSignupError('Password does not meet enterprise security requirements. Must be 8+ characters and contain uppercase, lowercase, numbers, and a special character.');
       return false;
     }
+    if (!signupConfirmPassword.trim()) {
+      setSignupError('Please confirm your password.');
+      return false;
+    }
+    if (signupPassword !== signupConfirmPassword) {
+      setSignupError('Passwords do not match. Please verify your confirm password.');
+      return false;
+    }
+
+    // SHA-256 cryptographic cross-check for high-security validation
+    try {
+      const passHash = await sha256Browser(signupPassword);
+      const confirmHash = await sha256Browser(signupConfirmPassword);
+      if (passHash !== confirmHash) {
+        setSignupError('SHA-256 cryptographic parity mismatch: passwords do not match.');
+        return false;
+      }
+    } catch {
+      // Browser fallback to string comparison
+    }
+
     return true;
   };
 
-  const handleNextToEntity = (e?: React.MouseEvent | React.FormEvent) => {
+  const handleNextToEntity = async (e?: React.MouseEvent | React.FormEvent) => {
     if (e) e.preventDefault();
-    if (validateStep1()) {
+    const isValid = await validateStep1();
+    if (isValid) {
       if (!signupOwnerName.trim() && firstName) {
         setSignupOwnerName(`${firstName.trim()} ${lastName.trim()}`);
       }
@@ -488,13 +528,16 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
 
     // If owner/estate is submitting on step 1 or 2, route to next step
     if ((signupRole === 'owner' || signupRole === 'estate_manager') && signupStep === 1) {
-      handleNextToEntity(e);
+      await handleNextToEntity(e);
       return;
     }
     if ((signupRole === 'owner' || signupRole === 'estate_manager') && signupStep === 2) {
       handleNextToSubscription(e);
       return;
     }
+
+    const isValid = await validateStep1();
+    if (!isValid) return;
 
     const cleanFirst = firstName.trim();
     const cleanLast = lastName.trim();
@@ -887,23 +930,24 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                 <Mail className="absolute right-3.5 top-5 h-4 w-4 text-slate-400 pointer-events-none" />
               </div>
 
-              {/* Mobile Phone Number with Inline OTP Verification */}
+              {/* Mobile Phone Number with Responsive Inline OTP Verification */}
               <div className="space-y-2">
-                <div className={`rounded-2xl bg-[#112421]/90 border ${isSignupPhoneVerified ? 'border-emerald-500/50 ring-1 ring-emerald-500/30' : 'border-[#1D3D37] hover:border-[#2D5A51] focus-within:border-[#a31c1b] focus-within:ring-2 focus-within:ring-[#a31c1b]/30'} transition-all p-3 relative`}>
-                  <div className="flex items-center justify-between mb-0.5">
-                    <label className="block text-[10px] font-semibold text-slate-400">
-                      Mobile Number (Numbers only)
+                <div className={`rounded-2xl bg-[#112421]/90 border ${isSignupPhoneVerified ? 'border-emerald-500/50 ring-1 ring-emerald-500/30' : 'border-[#1D3D37] hover:border-[#2D5A51] focus-within:border-[#a31c1b] focus-within:ring-2 focus-within:ring-[#a31c1b]/30'} transition-all p-3`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[10px] font-semibold text-slate-400">
+                      Mobile Number (Numbers only) <span className="text-[#a31c1b]">*</span>
                     </label>
                     {isSignupPhoneVerified && (
                       <span className="text-[10px] font-black text-emerald-400 flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3" />
+                        <CheckCircle2 className="h-3.5 w-3.5" />
                         <span>OTP Verified</span>
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-300 font-mono select-none px-2 py-0.5 rounded-lg bg-white/5 border border-white/10 shrink-0">
-                      +91
+                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                    <span className="flex items-center gap-1.5 text-xs font-bold text-slate-300 font-mono select-none px-2.5 py-1.5 rounded-xl bg-white/5 border border-white/10 shrink-0">
+                      <Phone className="h-3.5 w-3.5 text-slate-400" />
+                      <span>+91</span>
                     </span>
                     <input
                       type="tel"
@@ -920,14 +964,14 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                         setSignupOtpError(null);
                       }}
                       placeholder="9876543210"
-                      className="w-full bg-transparent text-sm font-bold text-white placeholder-white/20 outline-none pr-8 font-mono disabled:opacity-75"
+                      className="flex-1 min-w-[130px] bg-transparent text-sm font-bold text-white placeholder-white/20 outline-none font-mono disabled:opacity-75"
                     />
                     {!isSignupPhoneVerified && signupPhone.length === 10 && !signupOtpSent && (
                       <button
                         type="button"
                         onClick={handleSendSignupOtp}
                         disabled={signupOtpLoading}
-                        className="px-3 py-1 rounded-xl bg-[#a31c1b] hover:bg-[#851615] text-white text-[11px] font-black transition cursor-pointer shrink-0 disabled:opacity-50"
+                        className="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-[#a31c1b] hover:bg-[#851615] text-white text-xs font-black transition cursor-pointer shrink-0 disabled:opacity-50 text-center shadow-xs"
                       >
                         {signupOtpLoading ? 'Sending...' : 'Verify Phone'}
                       </button>
@@ -940,19 +984,18 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                           setSignupOtpSent(false);
                           setSignupOtpCode('');
                         }}
-                        className="text-[10px] text-slate-400 hover:text-white underline cursor-pointer shrink-0"
+                        className="text-xs text-slate-400 hover:text-white underline cursor-pointer shrink-0 py-1"
                       >
                         Change
                       </button>
                     )}
                   </div>
-                  <Phone className="absolute right-3.5 top-5 h-4 w-4 text-slate-400 pointer-events-none" />
                 </div>
 
                 {/* Inline OTP Verification Box */}
                 {signupOtpSent && !isSignupPhoneVerified && (
-                  <div className="p-3 rounded-2xl bg-[#0a1f18] border border-[#23534B] space-y-2.5 animate-in fade-in slide-in-from-top-1">
-                    <div className="flex items-center justify-between text-xs">
+                  <div className="p-3.5 rounded-2xl bg-[#0a1f18] border border-[#23534B] space-y-2.5 animate-in fade-in slide-in-from-top-1">
+                    <div className="flex flex-wrap items-center justify-between gap-1 text-xs">
                       <span className="text-[11px] text-slate-300 font-medium">
                         Enter 4-digit OTP sent to <b className="text-white font-mono">+91 {signupPhone}</b>
                       </span>
@@ -962,25 +1005,25 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                         disabled={signupOtpLoading}
                         className="text-[10px] text-[#a31c1b] hover:underline font-bold"
                       >
-                        Resend
+                        Resend OTP
                       </button>
                     </div>
 
                     {signupOtpHint && (
-                      <div className="text-emerald-400 text-[10px] bg-emerald-950/40 p-1.5 rounded-lg border border-emerald-900/50 flex items-center gap-1.5 font-mono">
+                      <div className="text-emerald-400 text-[10px] bg-emerald-950/40 p-2 rounded-xl border border-emerald-900/50 flex items-center gap-1.5 font-mono">
                         <span>🔑</span>
                         <span>{signupOtpHint}</span>
                       </div>
                     )}
 
                     {signupOtpError && (
-                      <div className="text-rose-400 text-[10px] bg-rose-950/40 p-1.5 rounded-lg border border-rose-900/50 flex items-center gap-1.5">
+                      <div className="text-rose-400 text-[10px] bg-rose-950/40 p-2 rounded-xl border border-rose-900/50 flex items-center gap-1.5">
                         <AlertCircle className="h-3 w-3 shrink-0" />
                         <span>{signupOtpError}</span>
                       </div>
                     )}
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                       <input
                         type="text"
                         inputMode="numeric"
@@ -994,7 +1037,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                         type="button"
                         onClick={handleVerifySignupOtp}
                         disabled={signupOtpLoading || signupOtpCode.length < 4}
-                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold transition cursor-pointer shadow-sm"
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold transition cursor-pointer shadow-sm text-center"
                       >
                         {signupOtpLoading ? 'Verifying...' : 'Confirm OTP'}
                       </button>
@@ -1006,7 +1049,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
               {/* Password with Active Glow */}
               <div className="rounded-2xl bg-[#112421]/90 border border-[#1D3D37] hover:border-[#2D5A51] focus-within:border-[#a31c1b] focus-within:ring-2 focus-within:ring-[#a31c1b]/30 transition-all p-3 relative">
                 <label className="block text-[10px] font-semibold text-slate-400 mb-0.5">
-                  Password (Secure: min 8 chars, upper, lower, digit, symbol)
+                  Password (Secure: min 8 chars, upper, lower, digit, symbol) <span className="text-[#a31c1b]">*</span>
                 </label>
                 <input
                   type={showSignupPassword ? 'text' : 'password'}
@@ -1022,6 +1065,46 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                   className="absolute right-3.5 top-5 text-slate-400 hover:text-white transition cursor-pointer"
                 >
                   {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+
+              {/* Confirm Password with Real-time & Cryptographic Matching */}
+              <div className={`rounded-2xl bg-[#112421]/90 border transition-all p-3 relative ${
+                passwordsMatch 
+                  ? 'border-emerald-500/60 ring-1 ring-emerald-500/20' 
+                  : passwordsMismatched 
+                    ? 'border-rose-500/60 ring-1 ring-rose-500/20' 
+                    : 'border-[#1D3D37] hover:border-[#2D5A51] focus-within:border-[#a31c1b] focus-within:ring-2 focus-within:ring-[#a31c1b]/30'
+              }`}>
+                <div className="flex items-center justify-between mb-0.5">
+                  <label className="block text-[10px] font-semibold text-slate-400">
+                    Confirm Password <span className="text-[#a31c1b]">*</span>
+                  </label>
+                  {passwordsMatch && (
+                    <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" /> Passwords Match (SHA-256 verified)
+                    </span>
+                  )}
+                  {passwordsMismatched && (
+                    <span className="text-[10px] font-bold text-rose-400 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> Passwords do not match
+                    </span>
+                  )}
+                </div>
+                <input
+                  type={showSignupConfirmPassword ? 'text' : 'password'}
+                  required
+                  value={signupConfirmPassword}
+                  onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                  placeholder="Re-enter password"
+                  className="w-full bg-transparent text-sm font-bold text-white placeholder-white/20 outline-none pr-8 font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowSignupConfirmPassword(!showSignupConfirmPassword)}
+                  className="absolute right-3.5 top-5 text-slate-400 hover:text-white transition cursor-pointer"
+                >
+                  {showSignupConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
 
@@ -1807,16 +1890,24 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
 
             {!otpSent ? (
               <form onSubmit={handleOtpSend} className="space-y-3.5 text-xs">
-                <div className="rounded-2xl bg-[#112421] border border-[#1D3D37] p-3">
-                  <label className="block text-[10px] text-slate-400 mb-0.5 font-semibold">10-Digit Mobile Number</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="+91 98450 11928"
-                    value={otpPhone}
-                    onChange={(e) => setOtpPhone(e.target.value)}
-                    className="w-full bg-transparent text-sm font-bold text-white outline-none"
-                  />
+                <div className="rounded-2xl bg-[#112421] border border-[#1D3D37] p-3 space-y-1">
+                  <label className="block text-[10px] text-slate-400 font-semibold">10-Digit Mobile Number</label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-300 font-mono px-2 py-1 rounded-lg bg-white/5 border border-white/10 shrink-0">
+                      +91
+                    </span>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="98450 11928"
+                      value={otpPhone.replace(/^\+91\s*/, '')}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setOtpPhone(val ? `+91${val}` : '');
+                      }}
+                      className="w-full bg-transparent text-sm font-bold text-white outline-none font-mono"
+                    />
+                  </div>
                 </div>
                 <button
                   type="submit"

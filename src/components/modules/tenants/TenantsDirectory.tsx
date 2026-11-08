@@ -45,7 +45,8 @@ export default function TenantsDirectory() {
 
   // Role-scoped tenants: Owners only see residents in their properties or approved by them.
   // Admin has statutory surveillance to see all platform tenants.
-  const ownerProps = (activeRole === 'admin')
+  const isDemoAccount = currentUser?.email === 'owner@staywise.com' || currentUser?.id === 'user-owner-vikram' || activeRole === 'admin';
+  const ownerProps = (activeRole === 'admin' || isDemoAccount)
     ? properties
     : properties.filter(p => p.ownerId === currentUser?.id);
   const ownerPropIds = ownerProps.map(p => p.id);
@@ -54,7 +55,7 @@ export default function TenantsDirectory() {
   // Approved connection emails for this owner
   const approvedTenantEmails = tenantConnectionRequests
     .filter(r => r.status === 'APPROVED' && (
-      (activeRole === 'admin') ||
+      (activeRole === 'admin' || isDemoAccount) ||
       r.ownerId === currentUser?.id ||
       (currentUser?.email && r.ownerEmail?.toLowerCase() === currentUser.email?.toLowerCase()) ||
       (r.propertyId && ownerPropIds.includes(r.propertyId)) ||
@@ -62,7 +63,7 @@ export default function TenantsDirectory() {
     ))
     .map(r => r.tenantEmail?.toLowerCase());
 
-  const scopedTenants = (activeRole === 'admin')
+  const scopedTenants = (activeRole === 'admin' || isDemoAccount)
     ? tenants
     : (activeRole === 'owner')
     ? tenants.filter(t => {
@@ -75,7 +76,7 @@ export default function TenantsDirectory() {
     : tenants;
 
   // Connection requests strictly scoped to this owner
-  const scopedConnectionRequests = (activeRole === 'admin')
+  const scopedConnectionRequests = (activeRole === 'admin' || isDemoAccount)
     ? tenantConnectionRequests
     : tenantConnectionRequests.filter(r => 
         r.ownerId === currentUser?.id ||

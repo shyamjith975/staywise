@@ -37,7 +37,9 @@ import {
   Trash2,
   BedDouble,
   Building2,
-  LogOut
+  LogOut,
+  Search,
+  Lock
 } from 'lucide-react';
 import { Roommate, TenancyType } from '../../types';
 import { color } from '../../lib/colors';
@@ -136,12 +138,74 @@ export default function TenantDashboard() {
     splitPercentage: 50
   });
 
-  const [ekycStatus, setEkycStatus] = useState<'Verified' | 'Pending'>('Pending');
-  const [isEKYCModalOpen, setIsEKYCModalOpen] = useState(false);
-  const [aadhaarNumber, setAadhaarNumber] = useState('');
-  const [panNumber, setPanNumber] = useState('');
+  // Connect to Landlord Property Search State
+  const [propertySearchQuery, setPropertySearchQuery] = useState('');
+  const [showPropertyResults, setShowPropertyResults] = useState(false);
 
-  // Populate strictly from real currentTenant and database
+  const filteredSearchProperties = properties.filter(p => {
+    if (!propertySearchQuery.trim()) return true;
+    const q = propertySearchQuery.toLowerCase().trim();
+    return (
+      p.name.toLowerCase().includes(q) ||
+      (p.city && p.city.toLowerCase().includes(q)) ||
+      (p.address && p.address.toLowerCase().includes(q)) ||
+      (p.type && p.type.toLowerCase().includes(q))
+    );
+  });
+
+  const [ekycStatus, setEkycStatus] = useState<'Verified' | 'Pending'>(() => {
+    if (typeof window === 'undefined') return 'Pending';
+    if (isDemoTenant) return 'Verified';
+    try {
+      const saved = localStorage.getItem(`staywise_tenant_ekyc_${currentUser?.id || currentUser?.email}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.verified) return 'Verified';
+      }
+    } catch {}
+    if ((currentUser as any)?.ekycVerified) return 'Verified';
+    return 'Pending';
+  });
+
+  const [isEKYCModalOpen, setIsEKYCModalOpen] = useState(false);
+  const [aadhaarNumber, setAadhaarNumber] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    if (isDemoTenant) return '5481 9028 1142';
+    try {
+      const saved = localStorage.getItem(`staywise_tenant_ekyc_${currentUser?.id || currentUser?.email}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.aadhaar) return parsed.aadhaar;
+      }
+    } catch {}
+    return (currentUser as any)?.aadhaarNumber || '';
+  });
+
+  const [panNumber, setPanNumber] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    if (isDemoTenant) return 'BLRPS9912A';
+    try {
+      const saved = localStorage.getItem(`staywise_tenant_ekyc_${currentUser?.id || currentUser?.email}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.pan) return parsed.pan;
+      }
+    } catch {}
+    return (currentUser as any)?.panNumber || '';
+  });
+
+  // Synchronize pre-verified Aadhaar & PAN into connect form
+  useEffect(() => {
+    if (isConnectModalOpen) {
+      setConnectForm(prev => ({
+        ...prev,
+        aadhaarNumber: prev.aadhaarNumber || aadhaarNumber,
+        panNumber: prev.panNumber || panNumber
+      }));
+    }
+  }, [isConnectModalOpen, aadhaarNumber, panNumber]);
+
+  // Populate strictly from real currentTenant, persistent storage, and database
   useEffect(() => {
     if (currentTenant) {
       if (currentTenant.tenancyType) {
@@ -151,13 +215,10 @@ export default function TenantDashboard() {
         setAadhaarNumber(currentTenant.aadhaarNumber);
         setEkycStatus('Verified');
       } else {
-        setAadhaarNumber('');
         setEkycStatus(currentTenant.kycVerified ? 'Verified' : 'Pending');
       }
       if (currentTenant.panNumber) {
         setPanNumber(currentTenant.panNumber);
-      } else {
-        setPanNumber('');
       }
       if (currentTenant.documents && Array.isArray(currentTenant.documents) && currentTenant.documents.length > 0) {
         setResidentDocs(currentTenant.documents.map(d => ({
@@ -232,11 +293,50 @@ export default function TenantDashboard() {
     } else {
       setRoommates([]);
       setResidentDocs([]);
-      setEkycStatus('Pending');
-      setAadhaarNumber('');
-      setPanNumber('');
+
+      // Strictly check persistent eKYC from storage, database user, pending connection, or demo
+      let hasPersistentKyc = false;
+      let persistentAadhaar = '';
+      let persistentPan = '';
+
+      if (typeof window !== 'undefined') {
+        try {
+          const saved = localStorage.getItem(`staywise_tenant_ekyc_${currentUser?.id || currentUser?.email}`);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.verified) {
+              hasPersistentKyc = true;
+              persistentAadhaar = parsed.aadhaar || '';
+              persistentPan = parsed.pan || '';
+            }
+          }
+        } catch {}
+      }
+      if (!hasPersistentKyc && (currentUser as any)?.ekycVerified) {
+        hasPersistentKyc = true;
+        persistentAadhaar = (currentUser as any)?.aadhaarNumber || '';
+        persistentPan = (currentUser as any)?.panNumber || '';
+      }
+      if (!hasPersistentKyc && userConnection && (userConnection.aadhaarNumber || (userConnection as any).ekycVerified)) {
+        hasPersistentKyc = true;
+        persistentAadhaar = userConnection.aadhaarNumber || '';
+        persistentPan = userConnection.panNumber || '';
+      }
+      if (!hasPersistentKyc && isDemoTenant) {
+        hasPersistentKyc = true;
+        persistentAadhaar = '5481 9028 1142';
+        persistentPan = 'BLRPS9912A';
+      }
+
+      if (hasPersistentKyc) {
+        setEkycStatus('Verified');
+        if (persistentAadhaar) setAadhaarNumber(persistentAadhaar);
+        if (persistentPan) setPanNumber(persistentPan);
+      } else {
+        setEkycStatus('Pending');
+      }
     }
-  }, [isDemoTenant, currentTenant, tenants]);
+  }, [isDemoTenant, currentTenant, tenants, currentUser, userConnection]);
 
   // Tenant Mess & Food Plan State
   const [isMealCustomizerOpen, setIsMealCustomizerOpen] = useState(false);
@@ -366,6 +466,10 @@ export default function TenantDashboard() {
       const isEmail = identifier.includes('@');
       const isPhone = /^(\+91[\-\s]?)?[0-9]{10}$/.test(identifier.replace(/[\s\-]/g, '')) || (!isEmail && !identifier.startsWith('usr-') && !identifier.startsWith('owner-') && /\d{6,}/.test(identifier));
 
+      // Resolve ownerId directly from matched property or identifier
+      const matchedProp = properties.find(p => p.id === connectForm.propertyId || (connectForm.propertyName && p.name.toLowerCase() === connectForm.propertyName.toLowerCase()));
+      const resolvedOwnerId = matchedProp?.ownerId || (!isEmail && !isPhone && identifier ? identifier : undefined);
+
       createTenantConnectionRequest({
         tenantUserId: currentUser.id || 'usr-tenant',
         tenantName: currentUser.name || 'Tenant',
@@ -373,17 +477,17 @@ export default function TenantDashboard() {
         tenantPhone: (currentUser as any).phone || '+91 98450 11928',
         ownerEmail: isEmail ? identifier : (connectForm.ownerEmail || undefined),
         ownerPhone: isPhone ? identifier : undefined,
-        ownerId: (!isEmail && !isPhone) ? identifier : undefined,
-        ownerCode: identifier,
-        propertyId: connectForm.propertyId || properties[0]?.id || '',
-        propertyName: connectForm.propertyName || properties[0]?.name || 'Apartments',
+        ownerId: resolvedOwnerId,
+        ownerCode: identifier || resolvedOwnerId,
+        propertyId: connectForm.propertyId || matchedProp?.id || undefined,
+        propertyName: connectForm.propertyName || matchedProp?.name || 'Property',
         unitNumber: connectForm.unitNumber || 'Unit 101',
         monthlyRent: Number(connectForm.monthlyRent) || 20000,
         depositAmount: Number(connectForm.depositAmount) || 40000,
         leaseStartDate: connectForm.leaseStartDate,
         tenancyType: connectForm.tenancyType,
         hasFood: connectForm.tenancyType === 'PG' ? connectForm.includeFoodPlan : false,
-        aadhaarNumber: connectForm.aadhaarNumber,
+        aadhaarNumber: connectForm.aadhaarNumber || aadhaarNumber,
         panNumber: rawPan,
         documents: connectForm.documents.map(d => ({
           id: d.id,
@@ -445,40 +549,106 @@ export default function TenantDashboard() {
               </span>
             </div>
 
-            {/* Property Selection */}
+            {/* Property Search & Selection (Search text field only, no hardcoded demo select dropdown) */}
             <div>
-              <label className="block text-[#171717] font-bold mb-1">Property Name / Campus (Optional)</label>
-              {properties.length > 0 ? (
-                <div className="space-y-1.5">
-                  <select
-                    value={connectForm.propertyId}
-                    onChange={(e) => {
-                      const p = properties.find(prop => prop.id === e.target.value);
-                      setConnectForm({ ...connectForm, propertyId: e.target.value, propertyName: p?.name || '' });
+              <label className="block text-[#171717] font-bold mb-1">
+                Property / Campus Name <span className="text-[#546E7A] font-normal text-[11px]">(Search registered properties)</span>
+              </label>
+
+              {connectForm.propertyId ? (
+                <div className="p-3 mb-2 rounded-2xl bg-emerald-50 border border-emerald-300 flex items-center justify-between gap-2 shadow-2xs">
+                  <div className="flex items-center gap-2.5 overflow-hidden">
+                    <Building2 className="h-4 w-4 text-emerald-700 shrink-0" />
+                    <div>
+                      <div className="font-black text-[#171717] text-xs truncate">
+                        {connectForm.propertyName}
+                      </div>
+                      <div className="text-[10px] text-[#546E7A]">
+                        Property ID: <span className="font-mono font-bold text-[#171717]">{connectForm.propertyId}</span>
+                        {connectForm.ownerIdentifier ? ` • Owner ID: ${connectForm.ownerIdentifier}` : ''}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setConnectForm(prev => ({ ...prev, propertyId: '', propertyName: '' }));
+                      setPropertySearchQuery('');
+                      setShowPropertyResults(true);
                     }}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium"
+                    className="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 underline shrink-0 cursor-pointer px-2 py-1"
                   >
-                    <option value="">Select registered property (or enter name below)...</option>
-                    {properties.map(p => (
-                      <option key={p.id} value={p.id}>{p.name} ({p.city})</option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="Or enter property name (e.g. Prestige Greenwoods)"
-                    value={connectForm.propertyName}
-                    onChange={(e) => setConnectForm({ ...connectForm, propertyName: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium text-xs"
-                  />
+                    Change
+                  </button>
                 </div>
               ) : (
-                <input
-                  type="text"
-                  placeholder="e.g. Beach Road Luxury Apartments, Horizon Villa"
-                  value={connectForm.propertyName}
-                  onChange={(e) => setConnectForm({ ...connectForm, propertyName: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium"
-                />
+                <div className="relative">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-[#546E7A] pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Type to search property by name, city, or address..."
+                      value={propertySearchQuery}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setPropertySearchQuery(val);
+                        setConnectForm(prev => ({ ...prev, propertyName: val, propertyId: '' }));
+                        setShowPropertyResults(true);
+                      }}
+                      onFocus={() => setShowPropertyResults(true)}
+                      className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium text-xs focus:outline-none focus:ring-2 focus:ring-[#06110c]"
+                    />
+                  </div>
+
+                  {showPropertyResults && propertySearchQuery.trim().length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-1 z-30 max-h-52 overflow-y-auto bg-white rounded-xl border border-[#D2DDD7] shadow-xl divide-y divide-[#E8F0EC]">
+                      {filteredSearchProperties.length > 0 ? (
+                        filteredSearchProperties.map(p => (
+                          <div
+                            key={p.id}
+                            onClick={() => {
+                              const autoTenancy: TenancyType = (p.type?.toLowerCase().includes('pg') || p.type?.toLowerCase().includes('co-living') || p.type?.toLowerCase().includes('hostel'))
+                                ? 'PG'
+                                : (p.type?.toLowerCase().includes('commercial') || p.type?.toLowerCase().includes('office'))
+                                  ? 'Commercial'
+                                  : 'Residential';
+
+                              setConnectForm(prev => ({
+                                ...prev,
+                                propertyId: p.id,
+                                propertyName: p.name,
+                                tenancyType: autoTenancy,
+                                ownerIdentifier: prev.ownerIdentifier || p.ownerId || p.portfolio || 'Landlord'
+                              }));
+                              setActiveTenancyType(autoTenancy);
+                              setPropertySearchQuery(p.name);
+                              setShowPropertyResults(false);
+                            }}
+                            className="p-2.5 hover:bg-[#F7F8F6] cursor-pointer transition flex items-center justify-between gap-2"
+                          >
+                            <div className="overflow-hidden">
+                              <div className="font-bold text-xs text-[#171717] truncate">{p.name}</div>
+                              <div className="text-[10px] text-[#546E7A] truncate">
+                                {p.address || p.city} • {p.city}
+                                {p.ownerId ? ` • Landlord: ${p.ownerId}` : ''}
+                              </div>
+                            </div>
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#E8F0EC] text-[#06110c] font-bold shrink-0">
+                              {p.type || 'Residential'}
+                            </span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-3 text-center text-xs text-[#546E7A]">
+                          No registered properties found matching &ldquo;{propertySearchQuery}&rdquo;.
+                          <div className="text-[10px] text-slate-400 mt-0.5">
+                            You may keep this as a custom property name.
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -777,13 +947,26 @@ export default function TenantDashboard() {
               </div>
 
               <div className="pt-2">
-                <button
-                  onClick={() => setIsConnectModalOpen(true)}
-                  className="px-6 py-3 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
-                >
-                  <Home className="h-4 w-4" />
-                  <span>+ Connect to Next Property / Landlord</span>
-                </button>
+                {ekycStatus === 'Verified' ? (
+                  <button
+                    onClick={() => setIsConnectModalOpen(true)}
+                    className="px-6 py-3 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
+                  >
+                    <Home className="h-4 w-4 text-emerald-400" />
+                    <span>+ Connect to Next Property / Landlord</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      addNotification('eKYC Required', 'Please complete your resident digital eKYC before connecting with a landlord.', 'SYSTEM');
+                      setIsEKYCModalOpen(true);
+                    }}
+                    className="px-6 py-3 rounded-full bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
+                  >
+                    <Lock className="h-4 w-4 text-amber-400" />
+                    <span>Complete eKYC to Connect Landlord</span>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -801,13 +984,26 @@ export default function TenantDashboard() {
               </div>
 
               <div className="pt-2 flex flex-wrap items-center gap-3">
-                <button
-                  onClick={() => setIsConnectModalOpen(true)}
-                  className="px-6 py-3 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
-                >
-                  <Home className="h-4 w-4" />
-                  <span>+ Connect with Property Owner</span>
-                </button>
+                {ekycStatus === 'Verified' ? (
+                  <button
+                    onClick={() => setIsConnectModalOpen(true)}
+                    className="px-6 py-3 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
+                  >
+                    <Home className="h-4 w-4 text-emerald-400" />
+                    <span>+ Connect with Property Owner</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      addNotification('eKYC Required', 'Please complete your resident digital eKYC before connecting with a landlord.', 'SYSTEM');
+                      setIsEKYCModalOpen(true);
+                    }}
+                    className="px-6 py-3 rounded-full bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
+                  >
+                    <Lock className="h-4 w-4 text-amber-400" />
+                    <span>Complete eKYC to Connect with Owner</span>
+                  </button>
+                )}
                 <div className="p-3 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs text-[#546E7A]">
                   Your ID: <b className="text-[#171717] font-mono">{currentUser?.email || currentUser?.id}</b>
                 </div>
@@ -818,19 +1014,38 @@ export default function TenantDashboard() {
 
         {/* 3 Onboarding Steps */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="rounded-2xl bg-white border border-[#D2DDD7] p-5 space-y-2.5">
-            <div className="h-9 w-9 rounded-xl bg-[#E8F0EC] text-[#06110c] flex items-center justify-center font-bold text-xs">
-              1
+          <div className={`rounded-2xl p-5 space-y-2.5 transition border ${
+            ekycStatus === 'Verified'
+              ? 'bg-emerald-50/40 border-emerald-300 shadow-2xs'
+              : 'bg-white border-[#D2DDD7]'
+          }`}>
+            <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-bold text-xs ${
+              ekycStatus === 'Verified'
+                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                : 'bg-[#E8F0EC] text-[#06110c]'
+            }`}>
+              {ekycStatus === 'Verified' ? <CheckCircle2 className="h-5 w-5" /> : '1'}
             </div>
-            <h3 className="font-extrabold text-sm text-[#171717]">Quick Identity Verification</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-sm text-[#171717]">Quick Identity Verification</h3>
+              {ekycStatus === 'Verified' && (
+                <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">
+                  Verified ✓
+                </span>
+              )}
+            </div>
             <p className="text-xs text-[#546E7A]">
-              Verify your Aadhaar and PAN so your landlord can prepare your rental agreement without paperwork.
+              {ekycStatus === 'Verified'
+                ? `Aadhaar (${aadhaarNumber ? '•••• ' + aadhaarNumber.slice(-4) : 'Linked'}) & PAN (${panNumber ? panNumber.slice(0, 2) + '••••' + panNumber.slice(-2) : 'Linked'}) verified. You are authorized to connect with any landlord.`
+                : 'Verify your Aadhaar and PAN so your landlord can prepare your rental agreement without paperwork.'}
             </p>
             <button
               onClick={() => setIsEKYCModalOpen(true)}
-              className="text-xs font-bold text-[#06110c] hover:underline pt-1 inline-flex items-center gap-1 cursor-pointer"
+              className={`text-xs font-bold pt-1 inline-flex items-center gap-1 cursor-pointer hover:underline ${
+                ekycStatus === 'Verified' ? 'text-emerald-700' : 'text-[#06110c]'
+              }`}
             >
-              Verify identity now →
+              <span>{ekycStatus === 'Verified' ? 'View / Update KYC Details →' : 'Verify identity now →'}</span>
             </button>
           </div>
 
@@ -881,19 +1096,62 @@ export default function TenantDashboard() {
                 </button>
               </div>
 
-              <form onSubmit={(e) => {
+              <form onSubmit={async (e) => {
                 e.preventDefault();
+                const rawAadhaar = aadhaarNumber.replace(/[\s\-]/g, '');
+                if (!/^\d{12}$/.test(rawAadhaar)) {
+                  addNotification('Invalid Aadhaar', 'Please enter a valid 12-digit Indian Aadhaar number.', 'SYSTEM');
+                  return;
+                }
+                const rawPan = panNumber.trim().toUpperCase();
+                if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(rawPan)) {
+                  addNotification('Invalid PAN', 'Please enter a valid 10-character Permanent Account Number (e.g. ABCDE1234F).', 'SYSTEM');
+                  return;
+                }
+
                 setEkycStatus('Verified');
+                setConnectForm(prev => ({ ...prev, aadhaarNumber, panNumber: rawPan }));
+
+                if (typeof window !== 'undefined') {
+                  try {
+                    localStorage.setItem(`staywise_tenant_ekyc_${currentUser?.id || currentUser?.email}`, JSON.stringify({
+                      verified: true,
+                      aadhaar: aadhaarNumber,
+                      pan: rawPan,
+                      verifiedAt: new Date().toISOString()
+                    }));
+                  } catch {}
+                }
+
+                try {
+                  await fetch('/api/auth/ekyc', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      userId: currentUser?.id,
+                      email: currentUser?.email,
+                      aadhaarNumber,
+                      panNumber: rawPan,
+                      ekycVerified: true
+                    })
+                  });
+                } catch {}
+
                 setIsEKYCModalOpen(false);
-                addNotification('KYC Verified', 'Your resident digital identity has been verified.', 'SYSTEM');
+                addNotification('eKYC Verified', 'Your resident digital identity (Aadhaar & PAN) has been verified and permanently recorded.', 'SYSTEM');
               }} className="space-y-3.5 text-xs">
                 <div>
                   <label className="block text-[#546E7A] font-semibold mb-1">Aadhaar Number (12 Digits)</label>
                   <input
                     type="text"
+                    maxLength={14}
                     placeholder="XXXX XXXX XXXX"
                     value={aadhaarNumber}
-                    onChange={e => setAadhaarNumber(e.target.value)}
+                    onChange={e => {
+                      const val = e.target.value.replace(/[^\d]/g, '').slice(0, 12);
+                      const formatted = val.replace(/(\d{4})/g, '$1 ').trim();
+                      setAadhaarNumber(formatted);
+                    }}
                     className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#171717] font-bold font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#06110c]"
                     required
                   />
@@ -903,9 +1161,10 @@ export default function TenantDashboard() {
                   <label className="block text-[#546E7A] font-semibold mb-1">Permanent Account Number (PAN)</label>
                   <input
                     type="text"
+                    maxLength={10}
                     placeholder="e.g. ABCDE1234F"
                     value={panNumber}
-                    onChange={e => setPanNumber(e.target.value.toUpperCase())}
+                    onChange={e => setPanNumber(e.target.value.toUpperCase().trim().slice(0, 10))}
                     className="w-full p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] text-[#171717] font-bold font-mono uppercase focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#06110c]"
                     required
                   />

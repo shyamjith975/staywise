@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
     // If unitNumber & monthlyRent provided, run full authoritative onboarding pipeline
     if (body.unitNumber && (body.monthlyRent !== undefined || body.deposit !== undefined)) {
       const onboardResult = await db.tenants.onboard({
+        userId: body.userId,
         name: body.name,
         phone: body.phone || '+91 98000 00000',
         email: body.email,
