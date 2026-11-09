@@ -384,6 +384,7 @@ interface AppStateContextType {
   addDelegate: (delegate: Omit<AuthorizedDelegate, 'id' | 'invitedAt' | 'status'> & { status?: AuthorizedDelegate['status'] }) => void;
   updateDelegatePermissions: (id: string, permissions: string[]) => void;
   revokeDelegate: (id: string) => void;
+  removeDelegate: (id: string) => void;
 
   // Custom Food Menu (Zero stock data fallback)
   foodMenuItems: FoodMenuItem[];
@@ -2100,6 +2101,30 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return t;
     }));
 
+    // Update property occupied units automatically
+    if (target?.propertyId) {
+      setProperties(prev => prev.map(p => {
+        if (p.id === target.propertyId) {
+          return {
+            ...p,
+            occupiedUnits: Math.max(0, p.occupiedUnits - 1)
+          };
+        }
+        return p;
+      }));
+    }
+
+    // Cancel pending unpaid invoices for this vacated lease
+    setInvoices(prev => prev.map(inv => {
+      if (inv.tenantId === tenantId && inv.status !== 'Paid') {
+        return {
+          ...inv,
+          status: 'Cancelled' as any
+        };
+      }
+      return inv;
+    }));
+
     // Update any matching connection request
     setTenantConnectionRequests(prev => {
       const updated = prev.map(r => {
@@ -2138,12 +2163,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           moveOutReason: reason
         })
       });
+      broadcastSync('TENANT_VACATED', { tenantId, propertyId: target?.propertyId });
+      await loadDatabaseData(undefined, true);
     } catch (e) {}
   };
 
   const addDelegate = (delegateData: Omit<AuthorizedDelegate, 'id' | 'invitedAt' | 'status'> & { status?: AuthorizedDelegate['status'] }) => {
     const newDelegate: AuthorizedDelegate = {
       ...delegateData,
+      ownerId: delegateData.ownerId || currentUser?.id,
       id: `del-${Date.now()}`,
       status: delegateData.status || 'Active',
       invitedAt: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
@@ -2179,6 +2207,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
     addNotification('Access Revoked', 'Delegate permissions have been revoked.', 'SYSTEM');
+  };
+
+  const removeDelegate = (id: string) => {
+    setDelegates(prev => {
+      const updated = prev.filter(d => d.id !== id);
+      try { localStorage.setItem('staywise_delegates', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    addNotification('Team Member Removed', 'The member has been removed from your organization team.', 'SYSTEM');
   };
 
   const addFoodMenuItem = (itemData: Omit<FoodMenuItem, 'id'>) => {
@@ -2689,6 +2726,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       addDelegate,
       updateDelegatePermissions,
       revokeDelegate,
+      removeDelegate,
       foodMenuItems,
       addFoodMenuItem,
       deleteFoodMenuItem,

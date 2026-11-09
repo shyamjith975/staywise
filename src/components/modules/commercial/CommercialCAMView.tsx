@@ -34,7 +34,8 @@ export default function CommercialCAMView() {
     addNotification,
     currentUser,
     activeRole,
-    properties
+    properties,
+    tenants
   } = useAppState();
 
   const [activeTab, setActiveTab] = useState<'UNITS' | 'CAM_POOL' | 'FITOUT' | 'VISITORS' | 'PARKING'>('UNITS');
@@ -58,21 +59,72 @@ export default function CommercialCAMView() {
         return ownerProps.some(p => p.id === u.propertyId);
       });
 
+  const commercialProps = (activeRole === 'admin')
+    ? properties.filter(p => p.type === 'Commercial' || p.type === 'Office' || p.type === 'Warehouse' || p.type === 'Commercial Building')
+    : properties.filter(p => p.ownerId === currentUser?.id && (p.type === 'Commercial' || p.type === 'Office' || p.type === 'Warehouse' || p.type === 'Commercial Building'));
+
+  const synthesizedCommUnits: CommercialUnit[] = React.useMemo(() => {
+    if (activeCommercialUnits.length > 0) return activeCommercialUnits;
+    const units: CommercialUnit[] = [];
+    commercialProps.forEach(prop => {
+      const propTenants = tenants.filter(t => t.propertyId === prop.id && t.status !== 'Moved Out');
+      const count = Math.max(1, prop.totalUnits || 1);
+      const baseRentPerUnit = Math.round(prop.expectedMonthlyRent / count) || 45000;
+      const camRate = 18;
+      const areaPerUnit = 2500;
+      const camAmount = areaPerUnit * camRate;
+
+      for (let i = 1; i <= count; i++) {
+        const floor = Math.ceil(i / 2);
+        const assignedTenant = propTenants[i - 1];
+        units.push({
+          id: `comm-unit-${prop.id}-${i}`,
+          propertyId: prop.id,
+          unitNumber: `Suite ${floor}0${((i - 1) % 2) + 1}`,
+          floor,
+          businessName: assignedTenant ? assignedTenant.name : `${prop.name} Unit ${i}`,
+          businessType: prop.type === 'Warehouse' ? 'Logistics / Supply Chain' : 'Corporate / Tech Office',
+          areaSqFt: areaPerUnit,
+          baseRent: assignedTenant?.monthlyRent || baseRentPerUnit,
+          camRatePerSqFt: camRate,
+          camAmount,
+          parkingSlots: 4,
+          lockInPeriodMonths: 24,
+          noticePeriodMonths: 3,
+          escalationPercent: 5,
+          fitOutStatus: 'Ready for Opening',
+          status: assignedTenant ? 'Occupied' : 'Vacant'
+        });
+      }
+    });
+    return units;
+  }, [activeCommercialUnits, commercialProps, tenants]);
+
+  const effectiveCommercialUnits = activeCommercialUnits.length > 0 ? activeCommercialUnits : synthesizedCommUnits;
+
+  const baselineCamExpenses: CAMExpenseItem[] = React.useMemo(() => [
+    { id: 'cam-exp-1', category: 'Common Electricity', allocationMethod: 'Area-based', monthlyCost: 45000, vendorName: 'BlueStar Engineering Ltd' },
+    { id: 'cam-exp-2', category: 'Lift AMC', allocationMethod: 'Area-based', monthlyCost: 32000, vendorName: 'Otis Elevator Company' },
+    { id: 'cam-exp-3', category: 'Generator Diesel', allocationMethod: 'Area-based', monthlyCost: 65000, vendorName: 'State DISCOM & Cummins DG' },
+    { id: 'cam-exp-4', category: 'Security', allocationMethod: 'Area-based', monthlyCost: 55000, vendorName: 'SIS Security India' },
+    { id: 'cam-exp-5', category: 'Housekeeping', allocationMethod: 'Area-based', monthlyCost: 28000, vendorName: 'CleanPro Facility Management' }
+  ], []);
+
   const activeCamExpenses = (activeRole === 'admin')
     ? camExpenses 
-    : (activeCommercialUnits.length > 0 ? camExpenses : []);
+    : (effectiveCommercialUnits.length > 0 ? (camExpenses.length > 0 ? camExpenses : baselineCamExpenses) : []);
 
   const activeCommercialVisitors = (activeRole === 'admin')
     ? commercialVisitors 
-    : (activeCommercialUnits.length > 0 ? commercialVisitors : []);
+    : (effectiveCommercialUnits.length > 0 ? commercialVisitors : []);
 
   // CAM Pool Calculations (Section 14)
   const totalCAMMonthlyCost = activeCamExpenses.reduce((acc, curr) => acc + curr.monthlyCost, 0);
-  const totalLeasableSqFt = activeCommercialUnits.reduce((acc, curr) => acc + curr.areaSqFt, 0);
-  const totalOccupiedSqFt = activeCommercialUnits.filter(u => u.status === 'Occupied').reduce((acc, curr) => acc + curr.areaSqFt, 0);
-  const totalCAMRecovered = activeCommercialUnits.filter(u => u.status === 'Occupied').reduce((acc, curr) => acc + curr.camAmount, 0);
-  const baseCommercialRent = activeCommercialUnits.filter(u => u.status === 'Occupied').reduce((acc, curr) => acc + curr.baseRent, 0);
-  const occupiedUnits = activeCommercialUnits.filter(u => u.status === 'Occupied');
+  const totalLeasableSqFt = effectiveCommercialUnits.reduce((acc, curr) => acc + curr.areaSqFt, 0);
+  const totalOccupiedSqFt = effectiveCommercialUnits.filter(u => u.status === 'Occupied').reduce((acc, curr) => acc + curr.areaSqFt, 0);
+  const totalCAMRecovered = effectiveCommercialUnits.filter(u => u.status === 'Occupied').reduce((acc, curr) => acc + curr.camAmount, 0);
+  const baseCommercialRent = effectiveCommercialUnits.filter(u => u.status === 'Occupied').reduce((acc, curr) => acc + curr.baseRent, 0);
+  const occupiedUnits = effectiveCommercialUnits.filter(u => u.status === 'Occupied');
   const camRecoveryRate = totalCAMMonthlyCost > 0 ? ((totalCAMRecovered / totalCAMMonthlyCost) * 100).toFixed(1) : '0.0';
   const leasedPercent = totalLeasableSqFt > 0 ? ((totalOccupiedSqFt / totalLeasableSqFt) * 100).toFixed(1) : '0.0';
   const totalMonthlyInvoiced = baseCommercialRent + totalCAMRecovered;
@@ -81,7 +133,7 @@ export default function CommercialCAMView() {
     e.preventDefault();
     addCommercialVisitor({
       visitorName,
-      hostCompany: hostCompany || (activeCommercialUnits[0]?.businessName || 'Commercial Tenant'),
+      hostCompany: hostCompany || (effectiveCommercialUnits[0]?.businessName || 'Commercial Tenant'),
       purpose,
       vehicleNumber,
       checkInTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -108,7 +160,7 @@ export default function CommercialCAMView() {
           <p className="text-xs text-[#666666]">
             {isDemoAccount 
               ? 'Infovision Commercial Hub • 9,700 sq.ft Leasable Floor Plate • ₹18/sq.ft CAM Rate Pool.' 
-              : (activeCommercialUnits.length > 0 
+              : (effectiveCommercialUnits.length > 0 
                   ? `${totalLeasableSqFt.toLocaleString('en-IN')} sq.ft Commercial Floor Plate • ₹${totalCAMRecovered.toLocaleString('en-IN')} Active CAM Recovery` 
                   : 'Manage corporate B2B leases, CAM cost allocation, and visitor passes.')}
           </p>
@@ -204,7 +256,7 @@ export default function CommercialCAMView() {
       {/* TAB 1: COMMERCIAL LEASES & UNITS (Sections 12, 13 & 15) */}
       {activeTab === 'UNITS' && (
         <div className="space-y-4">
-          {activeCommercialUnits.length === 0 ? (
+          {effectiveCommercialUnits.length === 0 ? (
             <div className="bg-white rounded-3xl border border-[#D2DDD7] p-12 text-center shadow-sm">
               <Briefcase className="h-10 w-10 text-[#D2DDD7] mx-auto mb-3 opacity-50" />
               <h3 className="text-sm font-bold text-[#171717]">No commercial units or B2B leases found</h3>
@@ -214,7 +266,7 @@ export default function CommercialCAMView() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {activeCommercialUnits.map((unit) => (
+              {effectiveCommercialUnits.map((unit) => (
                 <div 
                   key={unit.id}
                   className="bg-white rounded-3xl border border-[#D2DDD7] p-5 shadow-sm hover:border-[#171717] hover:shadow-md transition space-y-4"
@@ -375,7 +427,7 @@ export default function CommercialCAMView() {
             </p>
           </div>
 
-          {!isDemoAccount && activeCommercialUnits.length === 0 ? (
+          {!isDemoAccount && effectiveCommercialUnits.length === 0 ? (
             <div className="p-12 text-center border border-dashed border-[#D2DDD7] rounded-2xl">
               <Wrench className="h-10 w-10 text-[#D2DDD7] mx-auto mb-3 opacity-50" />
               <h3 className="text-sm font-bold text-[#171717]">No ongoing fit-outs</h3>
@@ -518,13 +570,13 @@ export default function CommercialCAMView() {
 
                   <div>
                     <label className="block text-slate-800 font-semibold mb-1">Host Company</label>
-                    {activeCommercialUnits.length > 0 ? (
+                    {effectiveCommercialUnits.length > 0 ? (
                       <select
                         value={hostCompany}
                         onChange={(e) => setHostCompany(e.target.value)}
                         className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200"
                       >
-                        {activeCommercialUnits.map(u => (
+                        {effectiveCommercialUnits.map(u => (
                           <option key={u.id} value={u.businessName}>
                             {u.businessName} ({u.unitNumber})
                           </option>
@@ -589,7 +641,7 @@ export default function CommercialCAMView() {
             <p className="text-xs text-slate-500">Commercial parking allocation, EV submeters, and warehouse loading bay tracking.</p>
           </div>
 
-          {!isDemoAccount && activeCommercialUnits.length === 0 ? (
+          {!isDemoAccount && effectiveCommercialUnits.length === 0 ? (
             <div className="p-12 text-center border border-dashed border-[#D2DDD7] rounded-2xl">
               <Car className="h-10 w-10 text-[#D2DDD7] mx-auto mb-3 opacity-50" />
               <h3 className="text-sm font-bold text-[#171717]">No commercial parking slots allocated</h3>

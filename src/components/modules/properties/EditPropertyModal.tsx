@@ -33,12 +33,17 @@ export default function EditPropertyModal() {
     propertyToEdit,
     setPropertyToEdit,
     updateProperty,
-    deleteProperty
+    deleteProperty,
+    tenants
   } = useAppState();
 
   const [formData, setFormData] = useState<Partial<Property>>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const realOccupiedUnits = propertyToEdit 
+    ? tenants.filter(t => t.propertyId === propertyToEdit.id && t.status !== 'Moved Out').length
+    : 0;
 
   useEffect(() => {
     if (propertyToEdit) {
@@ -51,7 +56,7 @@ export default function EditPropertyModal() {
         state: propertyToEdit.state,
         pincode: propertyToEdit.pincode,
         totalUnits: propertyToEdit.totalUnits,
-        occupiedUnits: propertyToEdit.occupiedUnits,
+        occupiedUnits: realOccupiedUnits,
         expectedMonthlyRent: propertyToEdit.expectedMonthlyRent,
         status: propertyToEdit.status,
         healthScore: propertyToEdit.healthScore,
@@ -59,7 +64,7 @@ export default function EditPropertyModal() {
       });
       setConfirmDelete(false);
     }
-  }, [propertyToEdit]);
+  }, [propertyToEdit, realOccupiedUnits]);
 
   if (!isEditPropertyModalOpen || !propertyToEdit) return null;
 
@@ -84,10 +89,13 @@ export default function EditPropertyModal() {
     e.preventDefault();
     if (!formData.name?.trim()) return;
 
+    const safeTotalUnits = Number(formData.totalUnits) || 1;
+    const autoOccupiedUnits = Math.min(safeTotalUnits, realOccupiedUnits);
+
     updateProperty(propertyToEdit.id, {
       ...formData,
-      totalUnits: Number(formData.totalUnits) || 1,
-      occupiedUnits: Number(formData.occupiedUnits) || 0,
+      totalUnits: safeTotalUnits,
+      occupiedUnits: autoOccupiedUnits,
       expectedMonthlyRent: Number(formData.expectedMonthlyRent) || 0,
       healthScore: Number(formData.healthScore) || 90,
       imageUrl: formData.imageUrl || propertyToEdit.imageUrl
@@ -102,21 +110,24 @@ export default function EditPropertyModal() {
   };
 
   const propertyTypes: PropertyType[] = [
+    'Flat',
     'Apartment',
-    'Independent House',
-    'Villa',
-    'Duplex',
-    'Studio',
-    'Holiday Home',
     'PG',
     'Hostel',
     'Co-living',
+    'Commercial',
     'Commercial Building',
     'Office',
-    'Shop',
-    'Retail Space',
     'Warehouse',
     'Industrial Property',
+    'Farmhouse',
+    'Villa',
+    'Independent House',
+    'Studio',
+    'Duplex',
+    'Shop',
+    'Retail Space',
+    'Holiday Home',
     'Villa Estate'
   ];
 
@@ -391,22 +402,20 @@ export default function EditPropertyModal() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                  Occupied Units
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max={formData.totalUnits || 999}
-                  value={formData.occupiedUnits === 0 || formData.occupiedUnits === undefined ? '' : formData.occupiedUnits}
-                  onFocus={(e) => e.target.select()}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setFormData({ ...formData, occupiedUnits: v === '' ? 0 : Number(v) });
-                  }}
-                  placeholder="0"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#171717] bg-white"
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[10px] font-bold text-slate-500">
+                    Occupied Units
+                  </label>
+                  <span className="text-[9px] font-extrabold text-[#06110c] bg-[#E8F0EC] px-1.5 py-0.5 rounded border border-[#D2DDD7]">
+                    🔒 Auto-Calculated
+                  </span>
+                </div>
+                <div className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold bg-[#E8F0EC]/60 text-slate-800 flex items-center justify-between">
+                  <span>{realOccupiedUnits} of {formData.totalUnits || 1} Occupied</span>
+                  <span className="text-[10px] text-slate-500 font-medium">
+                    {realOccupiedUnits} active resident{realOccupiedUnits === 1 ? '' : 's'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

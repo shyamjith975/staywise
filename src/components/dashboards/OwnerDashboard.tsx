@@ -121,6 +121,8 @@ export default function OwnerDashboard() {
     rejectTenantConnectionRequest,
     addDelegate,
     revokeDelegate,
+    removeDelegate,
+    updateDelegatePermissions,
     protectionContracts,
     protectionClaims,
     subscription,
@@ -380,14 +382,21 @@ export default function OwnerDashboard() {
   const [isUploadDocModalOpen, setIsUploadDocModalOpen] = useState(false);
   const [isAddDelegateModalOpen, setIsAddDelegateModalOpen] = useState(false);
 
+  // Bank Account Modal States (2-Step Verification with OTP & Confirm Account Number)
+  const [bankStep, setBankStep] = useState<'details' | 'otp'>('details');
+  const [bankOtp, setBankOtp] = useState('');
+  const [bankOtpError, setBankOtpError] = useState('');
+  const [accountNumberError, setAccountNumberError] = useState('');
   const [newBank, setNewBank] = useState({
     bankName: 'ICICI Bank',
     accountNumber: '',
     confirmAccountNumber: '',
     ifsc: '',
-    holderName: currentUser.name
+    holderName: currentUser.name || 'Property Owner'
   });
 
+  // Document Vault Upload States
+  const [selectedDocFile, setSelectedDocFile] = useState<File | null>(null);
   const [newDoc, setNewDoc] = useState({
     title: '',
     category: 'Title Deed'
@@ -404,9 +413,11 @@ export default function OwnerDashboard() {
     allowBankPayouts: false
   });
 
-  // Connect owner's user_id with properties
-  // Real owners see their owned properties, and managers only see authorized portfolios
-  const activeDelegates: AuthorizedDelegate[] = appDelegates || [];
+  // Connect owner's user_id with properties & delegates
+  // Real owners see their own team delegates; admins see all
+  const activeDelegates: AuthorizedDelegate[] = (appDelegates || []).filter(d =>
+    activeRole === 'admin' || !d.ownerId || d.ownerId === currentUser?.id || (isDemoAccount && d.ownerId === 'user-owner-vikram')
+  );
 
   const isManagerRole = activeRole === 'manager';
   const managerDelegate = (appDelegates || []).find(d => 
@@ -1818,9 +1829,27 @@ This document is securely archived in the Staywise Immutable Ledger.`
                         <p className="text-xs text-[#666666] font-mono">{bank.accountNumber}</p>
                       </div>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full bg-[#06110c] text-white text-[10px] font-black border border-[#171717]/20">
-                      {bank.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full bg-[#06110c] text-white text-[10px] font-black border border-[#171717]/20">
+                        {bank.status}
+                      </span>
+                      <button
+                        onClick={() => {
+                          if (confirm(`Remove bank account ${bank.bankName} (${bank.accountNumber})?`)) {
+                            const updated = bankAccounts.filter(b => b.id !== bank.id);
+                            setBankAccounts(updated);
+                            if (typeof window !== 'undefined') {
+                              localStorage.setItem(`staywise_owner_banks_${currentUser?.id || 'demo'}`, JSON.stringify(updated));
+                            }
+                            addNotification('Bank Account Removed', `${bank.bankName} account removed successfully.`, 'SYSTEM');
+                          }
+                        }}
+                        className="p-1 rounded-full text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition cursor-pointer"
+                        title="Delete Bank Account"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-[#D1D5DB]">
@@ -1885,9 +1914,10 @@ This document is securely archived in the Staywise Immutable Ledger.`
                       <p className="text-[10px] text-[#666666]">{doc.category} • {doc.size}</p>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => {
-                      const blob = new Blob([
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button 
+                      onClick={() => {
+                        const blob = new Blob([
 `STAYWISE COMPLIANCE ARCHIVE
 TITLE: ${doc.title}
 CATEGORY: ${doc.category}
@@ -1896,21 +1926,39 @@ DATE ARCHIVED: ${new Date().toLocaleDateString('en-IN')}
 AUTHENTICITY: VERIFIED GOVERNMENT / BANK RECORD
 ------------------------------------------------------------------------
 Digitally stamped and compliant with Indian Tenancy Acts & Section 24.`
-                      ], { type: 'application/pdf' });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement('a');
-                      a.href = url;
-                      a.download = `${doc.title.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
-                      document.body.appendChild(a);
-                      a.click();
-                      document.body.removeChild(a);
-                      URL.revokeObjectURL(url);
-                      addNotification('Document Downloaded', `Downloaded ${doc.title}`, 'SYSTEM');
-                    }}
-                    className="p-2 rounded-full hover:bg-[#06110c] text-[#171717] hover:text-white transition cursor-pointer"
-                  >
-                    <Download className="h-4 w-4" />
-                  </button>
+                        ], { type: 'application/pdf' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${doc.title.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        addNotification('Document Downloaded', `Downloaded ${doc.title}`, 'SYSTEM');
+                      }}
+                      className="p-2 rounded-full hover:bg-[#06110c] text-[#171717] hover:text-white transition cursor-pointer"
+                      title="Download Document PDF"
+                    >
+                      <Download className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Are you sure you want to delete "${doc.title}" from the document vault?`)) {
+                          const updated = documents.filter(d => d.id !== doc.id);
+                          setDocuments(updated);
+                          if (typeof window !== 'undefined') {
+                            localStorage.setItem(`staywise_owner_docs_${currentUser?.id || 'demo'}`, JSON.stringify(updated));
+                          }
+                          addNotification('Document Deleted', `${doc.title} removed from vault.`, 'SYSTEM');
+                        }
+                      }}
+                      className="p-2 rounded-full hover:bg-rose-50 text-rose-500 hover:text-rose-700 transition cursor-pointer"
+                      title="Delete Document"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1963,16 +2011,43 @@ Digitally stamped and compliant with Indian Tenancy Acts & Section 24.`
                       <span className="px-2.5 py-0.5 rounded-full bg-[#06110c] text-white text-[10px] font-black border border-[#171717]/20">
                         {del.role}
                       </span>
-                      {!isDemoAccount && (
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${
+                        del.status === 'Active' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-800 border-rose-200'
+                      }`}>
+                        {del.status}
+                      </span>
+                      {del.status === 'Active' ? (
                         <button
                           onClick={() => {
-                            if (confirm(`Revoke delegate access for ${del.name}?`)) revokeDelegate(del.id);
+                            if (confirm(`Revoke team access for ${del.name}?`)) revokeDelegate(del.id);
                           }}
-                          className="px-2 py-0.5 rounded-md bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold border border-rose-200 transition"
+                          className="px-2 py-0.5 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-200 transition cursor-pointer"
+                          title="Suspend access"
                         >
                           Revoke
                         </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            updateDelegatePermissions(del.id, del.permissions);
+                          }}
+                          className="px-2 py-0.5 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-200 transition cursor-pointer"
+                          title="Restore access"
+                        >
+                          Activate
+                        </button>
                       )}
+                      <button
+                        onClick={() => {
+                          if (confirm(`Permanently remove ${del.name} from your team?`)) {
+                            removeDelegate(del.id);
+                          }
+                        }}
+                        className="p-1 rounded-full text-rose-500 hover:bg-rose-50 hover:text-rose-700 transition cursor-pointer"
+                        title="Remove Team Member"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[#D1D5DB]">
@@ -2079,71 +2154,211 @@ Digitally stamped and compliant with Indian Tenancy Acts & Section 24.`
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-base text-[#171717]">Add Bank Account</h3>
-              <button onClick={() => setIsAddBankModalOpen(false)} className="text-[#666666] hover:text-[#171717]">
+              <div>
+                <h3 className="font-extrabold text-base text-[#171717]">
+                  {bankStep === 'details' ? 'Add Bank Account' : 'Bank OTP Verification'}
+                </h3>
+                <p className="text-xs text-[#666666]">
+                  {bankStep === 'details' 
+                    ? 'Step 1 of 2: Enter Account Details' 
+                    : 'Step 2 of 2: Penny-Drop & Bank OTP Confirmation'}
+                </p>
+              </div>
+              <button 
+                onClick={() => {
+                  setIsAddBankModalOpen(false);
+                  setBankStep('details');
+                  setBankOtp('');
+                  setBankOtpError('');
+                  setAccountNumberError('');
+                }} 
+                className="text-[#666666] hover:text-[#171717]"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <form onSubmit={e => { 
-              e.preventDefault();
-              const addedBank: BankAccount = {
-                id: `bank-${Date.now()}`,
-                bankName: newBank.bankName,
-                accountNumber: `•••• •••• ${newBank.accountNumber.slice(-4) || '9911'}`,
-                ifsc: (newBank.ifsc || 'HDFC0001234').toUpperCase(),
-                holderName: newBank.holderName || currentUser.name || 'Property Owner',
-                status: 'Verified',
-                isPrimary: bankAccounts.length === 0
-              };
-              const updated = [...bankAccounts, addedBank];
-              setBankAccounts(updated);
-              if (typeof window !== 'undefined') {
-                localStorage.setItem(`staywise_owner_banks_${currentUser?.id || 'demo'}`, JSON.stringify(updated));
-              }
-              addNotification('Bank Account Added', `${newBank.bankName} account verified via nodal penny-drop.`, 'SYSTEM');
-              setNewBank({
-                bankName: 'ICICI Bank',
-                accountNumber: '',
-                confirmAccountNumber: '',
-                ifsc: '',
-                holderName: currentUser.name
-              });
-              setIsAddBankModalOpen(false); 
-            }} className="space-y-3">
-              <div>
-                <label className="text-xs font-bold text-[#171717]">Bank Name</label>
-                <input 
-                  type="text" 
-                  value={newBank.bankName}
-                  onChange={e => setNewBank({ ...newBank, bankName: e.target.value })}
-                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717]"
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-[#171717]">Account Number</label>
-                <input 
-                  type="password" 
-                  value={newBank.accountNumber}
-                  onChange={e => setNewBank({ ...newBank, accountNumber: e.target.value })}
-                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717]"
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-[#171717]">IFSC Code</label>
-                <input 
-                  type="text" 
-                  value={newBank.ifsc}
-                  onChange={e => setNewBank({ ...newBank, ifsc: e.target.value })}
-                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717]"
-                  required
-                />
-              </div>
-              <button type="submit" className="w-full py-2.5 rounded-full bg-[#06110c] text-white text-xs font-black hover:bg-[#06110c] transition shadow-xs">
-                Save &amp; Verify Bank Account
-              </button>
-            </form>
+
+            {bankStep === 'details' ? (
+              <form onSubmit={e => { 
+                e.preventDefault();
+                if (newBank.accountNumber !== newBank.confirmAccountNumber) {
+                  setAccountNumberError('Account number and Confirm account number do not match.');
+                  return;
+                }
+                if (newBank.accountNumber.trim().length < 8) {
+                  setAccountNumberError('Please enter a valid account number (minimum 8 digits).');
+                  return;
+                }
+                if (!newBank.ifsc.trim()) {
+                  setAccountNumberError('Please enter a valid IFSC code.');
+                  return;
+                }
+                setAccountNumberError('');
+                setBankStep('otp');
+              }} className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-[#171717]">Bank Name</label>
+                  <select
+                    value={newBank.bankName}
+                    onChange={e => setNewBank({ ...newBank, bankName: e.target.value })}
+                    className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717]"
+                  >
+                    <option value="HDFC Bank">HDFC Bank</option>
+                    <option value="ICICI Bank">ICICI Bank</option>
+                    <option value="State Bank of India">State Bank of India (SBI)</option>
+                    <option value="Axis Bank">Axis Bank</option>
+                    <option value="Kotak Mahindra Bank">Kotak Mahindra Bank</option>
+                    <option value="Punjab National Bank">Punjab National Bank</option>
+                    <option value="Bank of Baroda">Bank of Baroda</option>
+                    <option value="Other Bank">Other Scheduled Bank</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#171717]">Account Holder Name</label>
+                  <input 
+                    type="text" 
+                    value={newBank.holderName}
+                    onChange={e => setNewBank({ ...newBank, holderName: e.target.value })}
+                    className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717]"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#171717]">Account Number</label>
+                  <input 
+                    type="password" 
+                    value={newBank.accountNumber}
+                    onChange={e => {
+                      setNewBank({ ...newBank, accountNumber: e.target.value });
+                      setAccountNumberError('');
+                    }}
+                    placeholder="Enter account number"
+                    className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717]"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-[#171717]">Confirm Account Number</label>
+                  <input 
+                    type="password" 
+                    value={newBank.confirmAccountNumber}
+                    onChange={e => {
+                      setNewBank({ ...newBank, confirmAccountNumber: e.target.value });
+                      setAccountNumberError('');
+                    }}
+                    placeholder="Re-enter account number"
+                    className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717]"
+                    required
+                  />
+                </div>
+                {accountNumberError && (
+                  <p className="text-xs text-rose-600 font-bold bg-rose-50 p-2 rounded-lg border border-rose-200">
+                    ⚠ {accountNumberError}
+                  </p>
+                )}
+                <div>
+                  <label className="text-xs font-bold text-[#171717]">IFSC Code</label>
+                  <input 
+                    type="text" 
+                    value={newBank.ifsc}
+                    onChange={e => setNewBank({ ...newBank, ifsc: e.target.value.toUpperCase() })}
+                    placeholder="e.g. HDFC0001234"
+                    className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717] uppercase"
+                    required
+                  />
+                </div>
+                <button type="submit" className="w-full py-2.5 rounded-full bg-[#06110c] text-white text-xs font-black hover:bg-[#06110c]/90 transition shadow-xs">
+                  Proceed to Bank OTP Verification →
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={e => {
+                e.preventDefault();
+                if (bankOtp.trim().length < 6) {
+                  setBankOtpError('Please enter a valid 6-digit Bank OTP.');
+                  return;
+                }
+                const addedBank: BankAccount = {
+                  id: `bank-${Date.now()}`,
+                  bankName: newBank.bankName,
+                  accountNumber: `•••• •••• ${newBank.accountNumber.slice(-4) || '9911'}`,
+                  ifsc: (newBank.ifsc || 'HDFC0001234').toUpperCase(),
+                  holderName: newBank.holderName || currentUser.name || 'Property Owner',
+                  status: 'Verified',
+                  isPrimary: bankAccounts.length === 0
+                };
+                const updated = [...bankAccounts, addedBank];
+                setBankAccounts(updated);
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem(`staywise_owner_banks_${currentUser?.id || 'demo'}`, JSON.stringify(updated));
+                }
+                addNotification('Bank Account Verified', `${newBank.bankName} account verified via penny-drop and Bank OTP.`, 'SYSTEM');
+                setNewBank({
+                  bankName: 'ICICI Bank',
+                  accountNumber: '',
+                  confirmAccountNumber: '',
+                  ifsc: '',
+                  holderName: currentUser.name
+                });
+                setBankStep('details');
+                setBankOtp('');
+                setBankOtpError('');
+                setIsAddBankModalOpen(false);
+              }} className="space-y-4">
+                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs space-y-1.5">
+                  <div className="flex items-center gap-2 font-bold text-emerald-900">
+                    <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                    Penny-Drop Deposit Initiated (₹1.05)
+                  </div>
+                  <p className="text-[11px] text-emerald-700 leading-relaxed">
+                    A verification deposit and 6-digit security code have been sent to your registered mobile linked to <b>{newBank.bankName} (•••• {newBank.accountNumber.slice(-4)})</b>.
+                  </p>
+                  <div className="inline-block mt-1 px-2 py-0.5 rounded bg-emerald-100/80 text-[10px] font-mono font-bold text-emerald-800">
+                    💡 Hint: Enter <b>123456</b> or any 6-digit code
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-[#171717] block mb-1">Enter 6-Digit Bank OTP</label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={bankOtp}
+                    onChange={e => {
+                      setBankOtp(e.target.value.replace(/\D/g, ''));
+                      setBankOtpError('');
+                    }}
+                    placeholder="1 2 3 4 5 6"
+                    className="w-full p-3 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-center font-mono text-lg font-bold tracking-widest text-[#171717]"
+                    autoFocus
+                    required
+                  />
+                  {bankOtpError && (
+                    <p className="text-xs text-rose-600 font-bold mt-1.5">{bankOtpError}</p>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBankStep('details');
+                      setBankOtp('');
+                      setBankOtpError('');
+                    }}
+                    className="w-1/3 py-2.5 rounded-full border border-[#D2DDD7] text-xs font-bold text-[#171717] hover:bg-[#E8F0EC] transition"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    type="submit"
+                    className="w-2/3 py-2.5 rounded-full bg-[#06110c] text-white text-xs font-black hover:bg-[#06110c]/90 transition shadow-xs"
+                  >
+                    Verify &amp; Link Account
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
@@ -2155,18 +2370,31 @@ Digitally stamped and compliant with Indian Tenancy Acts & Section 24.`
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-2xl border border-[#D2DDD7] p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-extrabold text-base text-[#171717]">Upload Document</h3>
-              <button onClick={() => setIsUploadDocModalOpen(false)} className="text-[#171717]/70 hover:text-[#171717]">
+              <div>
+                <h3 className="font-extrabold text-base text-[#171717]">Upload Document</h3>
+                <p className="text-xs text-[#666666]">Legal deeds, municipal approvals &amp; compliance records</p>
+              </div>
+              <button 
+                onClick={() => {
+                  setIsUploadDocModalOpen(false);
+                  setSelectedDocFile(null);
+                  setNewDoc({ title: '', category: 'Title Deed' });
+                }} 
+                className="text-[#171717]/70 hover:text-[#171717]"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
             <form onSubmit={e => { 
               e.preventDefault();
+              const sizeStr = selectedDocFile
+                ? (selectedDocFile.size > 1024 * 1024 ? `${(selectedDocFile.size / (1024 * 1024)).toFixed(1)} MB` : `${Math.round(selectedDocFile.size / 1024)} KB`)
+                : '1.4 MB';
               const addedDoc: StoredDocument = {
                 id: `doc-${Date.now()}`,
-                title: newDoc.title,
+                title: newDoc.title.trim() || selectedDocFile?.name.replace(/\.[^/.]+$/, '') || `${newDoc.category} Verified`,
                 category: newDoc.category,
-                size: '1.4 MB',
+                size: sizeStr,
                 date: `Verified ${new Date().toLocaleDateString('en-IN')}`,
                 status: 'Verified'
               };
@@ -2175,22 +2403,83 @@ Digitally stamped and compliant with Indian Tenancy Acts & Section 24.`
               if (typeof window !== 'undefined') {
                 localStorage.setItem(`staywise_owner_docs_${currentUser?.id || 'demo'}`, JSON.stringify(updated));
               }
-              addNotification('Document Archived', `${newDoc.title} uploaded and encrypted in vault.`, 'SYSTEM');
+              addNotification('Document Archived', `${addedDoc.title} uploaded and encrypted in vault.`, 'SYSTEM');
               setNewDoc({ title: '', category: 'Title Deed' });
+              setSelectedDocFile(null);
               setIsUploadDocModalOpen(false); 
-            }} className="space-y-3">
+            }} className="space-y-3.5">
               <div>
-                <label className="text-xs font-bold text-[#171717]">Title</label>
+                <label className="text-xs font-bold text-[#171717]">Document Category</label>
+                <select
+                  value={newDoc.category}
+                  onChange={e => setNewDoc({ ...newDoc, category: e.target.value })}
+                  className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717]"
+                >
+                  <option value="Title Deed">Title Deed / Sale Deed</option>
+                  <option value="Municipal Building NOC">Municipal Building NOC / Sanction Plan</option>
+                  <option value="Property Tax Receipt">Property Tax Receipt</option>
+                  <option value="Fire Safety NOC">Fire Safety NOC</option>
+                  <option value="Electricity Sanction">Electricity Sanction &amp; Tariff Certificate</option>
+                  <option value="Encumbrance Certificate">Encumbrance Certificate (EC)</option>
+                  <option value="Building Insurance Policy">Building Insurance Policy</option>
+                  <option value="Lease Agreement Template">Lease Agreement Template</option>
+                  <option value="Other Legal Record">Other Legal Record</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-[#171717]">Document Title</label>
                 <input 
                   type="text" 
                   value={newDoc.title}
+                  placeholder="e.g. Registered Sale Deed 2024"
                   onChange={e => setNewDoc({ ...newDoc, title: e.target.value })}
                   className="w-full mt-1 p-2.5 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717]"
                   required
                 />
               </div>
-              <button type="submit" className="w-full py-2.5 rounded-full bg-[#06110c] text-white text-xs font-black hover:bg-[#06110c] transition shadow-xs">
-                Upload to Vault
+
+              <div>
+                <label className="text-xs font-bold text-[#171717] block mb-1">Select File</label>
+                <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[#D2DDD7] hover:border-[#171717] rounded-xl cursor-pointer bg-[#F8FAFC] transition">
+                  <input
+                    type="file"
+                    accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                    onChange={e => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setSelectedDocFile(file);
+                        if (!newDoc.title) {
+                          setNewDoc(prev => ({ ...prev, title: file.name.replace(/\.[^/.]+$/, '') }));
+                        }
+                      }
+                    }}
+                    className="hidden"
+                  />
+                  {selectedDocFile ? (
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-6 w-6 text-emerald-600" />
+                      <div className="text-left">
+                        <p className="text-xs font-bold text-[#171717]">{selectedDocFile.name}</p>
+                        <p className="text-[10px] text-[#666666]">
+                          {selectedDocFile.size > 1024 * 1024 
+                            ? `${(selectedDocFile.size / (1024 * 1024)).toFixed(1)} MB` 
+                            : `${Math.round(selectedDocFile.size / 1024)} KB`} • Click to change file
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center space-y-1">
+                      <Upload className="h-6 w-6 text-[#666666] mx-auto" />
+                      <p className="text-xs font-bold text-[#171717]">Click to select or drag &amp; drop file</p>
+                      <p className="text-[10px] text-[#666666]">PDF, DOCX, PNG, JPG (up to 25MB)</p>
+                    </div>
+                  )}
+                </label>
+              </div>
+
+              <button type="submit" className="w-full py-2.5 rounded-full bg-[#06110c] text-white text-xs font-black hover:bg-[#06110c]/90 transition shadow-xs cursor-pointer">
+                Upload &amp; Encrypt to Vault
               </button>
             </form>
           </div>
@@ -2221,6 +2510,7 @@ Digitally stamped and compliant with Indian Tenancy Acts & Section 24.`
               if (newDelegate.allowMaintenance) perms.push('Maintenance Work Orders', 'Tenant Handover');
 
               addDelegate({
+                ownerId: currentUser?.id || 'user-owner-vikram',
                 name: newDelegate.name,
                 email: newDelegate.email,
                 phone: newDelegate.phone,

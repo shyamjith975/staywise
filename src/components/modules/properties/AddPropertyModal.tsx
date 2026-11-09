@@ -26,7 +26,8 @@ import {
   RotateCcw,
   Save,
   CheckCircle2,
-  Zap
+  Zap,
+  Trees
 } from 'lucide-react';
 
 interface AssetTypeOption {
@@ -64,12 +65,20 @@ const ASSET_TYPES: AssetTypeOption[] = [
     icon: <Truck className="h-5 w-5 text-[#171717]" />
   },
   { 
-    type: 'Office', 
+    type: 'Commercial', 
     label: 'Commercial / Office', 
     category: 'commercial', 
     tagline: 'Offices, retail & tech parks', 
     description: 'Workstations, CAM charges, HVAC & corporate leases',
     icon: <Briefcase className="h-5 w-5 text-[#171717]" />
+  },
+  { 
+    type: 'Farmhouse', 
+    label: 'Farmhouse / Agri Estate', 
+    category: 'estate', 
+    tagline: 'Farm stays, land & weekend retreats', 
+    description: 'Acreage, farmhouses, event lawns, solar pumps & organic plantations',
+    icon: <Trees className="h-5 w-5 text-[#171717]" />
   },
   { 
     type: 'Independent House', 
@@ -444,9 +453,12 @@ export default function AddPropertyModal() {
     if (selectedAsset.type === 'Warehouse') {
       return Math.max(1, Number(whLoadingDocks) || 1);
     }
-    if (selectedAsset.type === 'Office') {
+    if (selectedAsset.type === 'Commercial' || selectedAsset.type === 'Office') {
       const carpet = Number(commCarpetSqFt) || 0;
-      return Math.max(1, Math.round(carpet / 1000));
+      return Math.max(1, Math.round(carpet / 1000) || 1);
+    }
+    if (selectedAsset.type === 'Farmhouse' || selectedAsset.type === 'Independent House' || selectedAsset.type === 'Villa') {
+      return Math.max(1, Number(villaBedrooms) || 1);
     }
     return 1;
   };
@@ -467,13 +479,13 @@ export default function AddPropertyModal() {
       const rate = Number(whBaseRentSqFt) || 35;
       return Math.max(1000, carpet * rate);
     }
-    if (selectedAsset.type === 'Office') {
+    if (selectedAsset.type === 'Commercial' || selectedAsset.type === 'Office') {
       const carpet = Number(commCarpetSqFt) || 1000;
       const base = Number(commBaseRentSqFt) || 65;
       const cam = Number(commCamSqFt) || 15;
       return Math.max(1000, (carpet * base) + (carpet * cam));
     }
-    if (selectedAsset.type === 'Independent House' || selectedAsset.type === 'Villa') {
+    if (selectedAsset.type === 'Farmhouse' || selectedAsset.type === 'Independent House' || selectedAsset.type === 'Villa') {
       return Math.max(1000, Number(villaMonthlyRent) || 45000);
     }
     return 25000;
@@ -531,7 +543,7 @@ export default function AddPropertyModal() {
         if (!whLoadingDocks || Number(whLoadingDocks) < 1) {
           errors.whLoadingDocks = 'Enter dock count';
         }
-      } else if (selectedAsset.type === 'Office') {
+      } else if (selectedAsset.type === 'Office' || selectedAsset.type === 'Commercial') {
         if (!commCarpetSqFt || Number(commCarpetSqFt) <= 0) {
           errors.commCarpetSqFt = 'Enter usable carpet area (sq.ft)';
         }
@@ -544,7 +556,7 @@ export default function AddPropertyModal() {
         if (!commWorkstations || Number(commWorkstations) < 1) {
           errors.commWorkstations = 'Enter workstation capacity';
         }
-      } else if (selectedAsset.type === 'Independent House' || selectedAsset.type === 'Villa') {
+      } else if (selectedAsset.type === 'Independent House' || selectedAsset.type === 'Villa' || selectedAsset.type === 'Farmhouse') {
         if (!villaBedrooms || Number(villaBedrooms) < 1) {
           errors.villaBedrooms = 'Enter bedroom count';
         }
@@ -606,7 +618,9 @@ export default function AddPropertyModal() {
       PG: [...pgRoomAmenities, ...pgBuildingAmenities],
       Flat: [...flatFittings, ...flatSocietyAmenities],
       Warehouse: [...whInfrastructure, ...whCampusAmenities],
+      Commercial: [...commFeatures, ...commCampusAmenities],
       Office: [...commFeatures, ...commCampusAmenities],
+      Farmhouse: [...villaLuxuryAmenities, ...villaServices],
       'Independent House': [...villaLuxuryAmenities, ...villaServices]
     };
 
@@ -628,11 +642,9 @@ export default function AddPropertyModal() {
       amenities: amenitiesMap[selectedAsset.type] || ['24/7 Security', 'Elevator', 'Power Backup'],
       imageUrl: selectedAsset.type === 'PG' || selectedAsset.type === 'Hostel'
         ? '/images/properties/beach-road.jpg'
-        : selectedAsset.type === 'Warehouse'
+        : selectedAsset.type === 'Warehouse' || selectedAsset.type === 'Commercial' || selectedAsset.type === 'Office'
         ? '/images/properties/tech-park.jpg'
-        : selectedAsset.type === 'Office'
-        ? '/images/properties/tech-park.jpg'
-        : selectedAsset.type === 'Independent House'
+        : selectedAsset.type === 'Independent House' || selectedAsset.type === 'Farmhouse'
         ? '/images/properties/estate-villa.jpg'
         : '/images/properties/beach-road.jpg',
       electricityDiscom: propElectricityDiscom,
@@ -681,10 +693,10 @@ export default function AddPropertyModal() {
               <span className="text-[10px] font-black uppercase tracking-wider text-[#171717] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#171717]/20">
                 Step {currentStep} of 6 · {
                   currentStep === 1 ? 'BASICS' :
-                  currentStep === 2 ? (selectedAsset.type === 'PG' ? 'BED INVENTORY' : selectedAsset.type === 'Warehouse' ? 'SPECS & AREA' : selectedAsset.type === 'Office' ? 'FLOOR TERMS' : 'UNIT LAYOUT') :
-                  currentStep === 3 ? (selectedAsset.type === 'Warehouse' ? 'INFRASTRUCTURE' : selectedAsset.type === 'Office' ? 'TECHNICAL SPECS' : 'IN-UNIT AMENITIES') :
-                  currentStep === 4 ? (selectedAsset.type === 'Warehouse' ? 'LOGISTICS CAMPUS' : selectedAsset.type === 'Office' ? 'CAMPUS FACILITIES' : 'BUILDING AMENITIES') :
-                  currentStep === 5 ? (selectedAsset.type === 'Warehouse' ? 'COMPLIANCE & CAM' : selectedAsset.type === 'Office' ? 'COMMERCIAL NORMS' : 'SERVICES & RULES') : 'PREVIEW & PUBLISH'
+                  currentStep === 2 ? (selectedAsset.type === 'PG' ? 'BED INVENTORY' : selectedAsset.type === 'Warehouse' ? 'SPECS & AREA' : (selectedAsset.type === 'Office' || selectedAsset.type === 'Commercial') ? 'FLOOR TERMS' : 'UNIT LAYOUT') :
+                  currentStep === 3 ? (selectedAsset.type === 'Warehouse' ? 'INFRASTRUCTURE' : (selectedAsset.type === 'Office' || selectedAsset.type === 'Commercial') ? 'TECHNICAL SPECS' : 'IN-UNIT AMENITIES') :
+                  currentStep === 4 ? (selectedAsset.type === 'Warehouse' ? 'LOGISTICS CAMPUS' : (selectedAsset.type === 'Office' || selectedAsset.type === 'Commercial') ? 'CAMPUS FACILITIES' : 'BUILDING AMENITIES') :
+                  currentStep === 5 ? (selectedAsset.type === 'Warehouse' ? 'COMPLIANCE & CAM' : (selectedAsset.type === 'Office' || selectedAsset.type === 'Commercial') ? 'COMMERCIAL NORMS' : 'SERVICES & RULES') : 'PREVIEW & PUBLISH'
                 }
               </span>
             </div>
@@ -1178,7 +1190,7 @@ export default function AddPropertyModal() {
                   {selectedAsset.type === 'PG' ? 'Bed Inventory & Rent Structure' :
                    selectedAsset.type === 'Flat' ? 'Flat Configuration & Financials' :
                    selectedAsset.type === 'Warehouse' ? 'Warehouse Specifications & Leases' :
-                   selectedAsset.type === 'Office' ? 'Office Floor Plate & Commercials' : 'Villa Specs & Tariffs'}
+                   (selectedAsset.type === 'Office' || selectedAsset.type === 'Commercial') ? 'Office Floor Plate & Commercials' : 'Villa / Farmhouse Specs & Tariffs'}
                 </h2>
                 <p className="text-xs text-[#666666] mt-0.5">
                   Enter the capacity and leasing metrics for your {selectedAsset.label}.
@@ -1671,7 +1683,7 @@ export default function AddPropertyModal() {
               )}
 
               {/* COMMERCIAL / OFFICE ONLY */}
-              {selectedAsset.type === 'Office' && (
+              {(selectedAsset.type === 'Office' || selectedAsset.type === 'Commercial') && (
                 <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#D2DDD7] space-y-4 shadow-2xs">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
@@ -1996,7 +2008,7 @@ export default function AddPropertyModal() {
                     'Roof Turbo Ventilators & Skylights',
                     '40ft Multi-Axle Truck Turning Apron',
                     'FM2 Laser Screed Floor (5T/sq.m)'
-                  ] : selectedAsset.type === 'Office' ? [
+                  ] : (selectedAsset.type === 'Office' || selectedAsset.type === 'Commercial') ? [
                     'Central HVAC (Mon-Sat 8AM-8PM)',
                     'Dual Leased Line Fiber Redundancy',
                     'RFID Turnstiles & Biometric Access',
@@ -2014,7 +2026,7 @@ export default function AddPropertyModal() {
                     const activeList = selectedAsset.type === 'PG' ? pgRoomAmenities :
                                        selectedAsset.type === 'Flat' ? flatFittings :
                                        selectedAsset.type === 'Warehouse' ? whInfrastructure :
-                                       selectedAsset.type === 'Office' ? commFeatures : villaLuxuryAmenities;
+                                       (selectedAsset.type === 'Office' || selectedAsset.type === 'Commercial') ? commFeatures : villaLuxuryAmenities;
                     const isChecked = activeList.includes(item);
 
                     return (
@@ -2028,7 +2040,7 @@ export default function AddPropertyModal() {
                             setFlatFittings(prev => prev.includes(item) ? prev.filter(x => x !== item) : [...prev, item]);
                           } else if (selectedAsset.type === 'Warehouse') {
                             setWhInfrastructure(prev => prev.includes(item) ? prev.filter(x => x !== item) : [...prev, item]);
-                          } else if (selectedAsset.type === 'Office') {
+                          } else if (selectedAsset.type === 'Office' || selectedAsset.type === 'Commercial') {
                             setCommFeatures(prev => prev.includes(item) ? prev.filter(x => x !== item) : [...prev, item]);
                           } else {
                             setVillaLuxuryAmenities(prev => prev.includes(item) ? prev.filter(x => x !== item) : [...prev, item]);
@@ -2098,7 +2110,7 @@ export default function AddPropertyModal() {
                     'Mezzanine Admin Office Space',
                     'Heavy Vehicle Parking Slots',
                     'Perimeter High-Mast Lighting'
-                  ] : selectedAsset.type === 'Office' ? [
+                  ] : (selectedAsset.type === 'Office' || selectedAsset.type === 'Commercial') ? [
                     'Food Court & Executive Cafeteria',
                     'Visitor Reception with Digital Passes',
                     'ATM & Retail Banking',
@@ -2115,7 +2127,7 @@ export default function AddPropertyModal() {
                     const activeList = selectedAsset.type === 'PG' ? pgBuildingAmenities :
                                        selectedAsset.type === 'Flat' ? flatSocietyAmenities :
                                        selectedAsset.type === 'Warehouse' ? whCampusAmenities :
-                                       selectedAsset.type === 'Office' ? commCampusAmenities : villaServices;
+                                       (selectedAsset.type === 'Office' || selectedAsset.type === 'Commercial') ? commCampusAmenities : villaServices;
                     const isChecked = activeList.includes(item);
 
                     return (
@@ -2129,7 +2141,7 @@ export default function AddPropertyModal() {
                             setFlatSocietyAmenities(prev => prev.includes(item) ? prev.filter(x => x !== item) : [...prev, item]);
                           } else if (selectedAsset.type === 'Warehouse') {
                             setWhCampusAmenities(prev => prev.includes(item) ? prev.filter(x => x !== item) : [...prev, item]);
-                          } else if (selectedAsset.type === 'Office') {
+                          } else if (selectedAsset.type === 'Office' || selectedAsset.type === 'Commercial') {
                             setCommCampusAmenities(prev => prev.includes(item) ? prev.filter(x => x !== item) : [...prev, item]);
                           } else {
                             setVillaServices(prev => prev.includes(item) ? prev.filter(x => x !== item) : [...prev, item]);
@@ -2372,7 +2384,7 @@ export default function AddPropertyModal() {
               )}
 
               {/* COMMERCIAL / OFFICE ONLY */}
-              {selectedAsset.type === 'Office' && (
+              {(selectedAsset.type === 'Office' || selectedAsset.type === 'Commercial') && (
                 <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#D2DDD7] space-y-4 shadow-2xs">
                   <div className="space-y-1">
                     <label className="text-[11px] font-bold text-[#171717]">Corporate Access Timings</label>

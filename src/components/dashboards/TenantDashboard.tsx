@@ -105,7 +105,7 @@ export default function TenantDashboard() {
   });
 
   // Check connection requests for this user (with persistent fallback for immediate render)
-  const userConnection = tenantConnectionRequests.find(r => 
+  const rawUserConnection = tenantConnectionRequests.find(r => 
     r.tenantUserId === currentUser?.id || 
     (currentUser?.email && r.tenantEmail?.toLowerCase() === currentUser.email?.toLowerCase()) ||
     ((currentUser as any)?.phone && r.tenantPhone && r.tenantPhone.replace(/\D/g, '') === (currentUser as any).phone?.replace(/\D/g, ''))
@@ -130,9 +130,28 @@ export default function TenantDashboard() {
   const currentTenant = isDemoTenant
     ? (tenants.find(t => t.id === 't-shyam') || tenants[0])
     : tenants.find(t => 
-        (currentUser?.email && t.email.toLowerCase() === currentUser.email.toLowerCase()) ||
-        (currentUser?.id && (t.userId === currentUser.id || t.id === currentUser.id))
+        ((currentUser?.email && t.email.toLowerCase() === currentUser.email.toLowerCase()) ||
+        (currentUser?.id && (t.userId === currentUser.id || t.id === currentUser.id))) &&
+        t.status !== 'Moved Out'
       );
+
+  const pastTenant = !currentTenant
+    ? tenants.find(t => 
+        ((currentUser?.email && t.email.toLowerCase() === currentUser.email.toLowerCase()) ||
+        (currentUser?.id && (t.userId === currentUser.id || t.id === currentUser.id))) &&
+        t.status === 'Moved Out'
+      )
+    : null;
+
+  const userConnection = (!currentTenant && pastTenant && rawUserConnection?.status === 'APPROVED')
+    ? { 
+        ...rawUserConnection, 
+        status: 'MOVED_OUT' as const, 
+        propertyName: rawUserConnection.propertyName || pastTenant.propertyName, 
+        unitNumber: rawUserConnection.unitNumber || pastTenant.unitNumber,
+        depositSettledAmount: rawUserConnection.depositSettledAmount ?? pastTenant.depositPaid
+      }
+    : rawUserConnection;
 
   const pendingInvoice = currentTenant 
     ? invoices.find(i => (i.tenantId === currentTenant.id || (currentTenant.name && i.tenantName?.toLowerCase().includes(currentTenant.name.toLowerCase()))) && (i.status === 'Due' || i.status === 'Overdue'))

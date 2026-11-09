@@ -1645,6 +1645,23 @@ class DatabaseEngine {
         try { submittedDocs = JSON.parse(r.submitted_docs || '[]'); } catch(e) {}
         try { amenities = JSON.parse(r.amenities || '[]'); } catch(e) {}
 
+        // Dynamically cross-check occupied units with active tenants
+        let dynamicOccupied = r.occupied_units;
+        let invoiceCollected = 0;
+        try {
+          const occRow = this.sqlite.prepare("SELECT count(id) as c FROM tenants WHERE property_id = ? AND (status IS NULL OR status != 'Moved Out')").get(r.id) as any;
+          if (occRow && typeof occRow.c === 'number') {
+            dynamicOccupied = occRow.c;
+          }
+          const collRow = this.sqlite.prepare("SELECT COALESCE(SUM(paid_amount), 0) as s FROM invoices WHERE property_id = ? AND status = 'Paid'").get(r.id) as any;
+          if (collRow && typeof collRow.s === 'number') {
+            invoiceCollected = collRow.s;
+          }
+        } catch {}
+
+        const finalCollected = Math.max(r.collected_rent || 0, invoiceCollected);
+        const finalPending = Math.max(0, (r.expected_monthly_rent || 0) - finalCollected);
+
         return {
           id: r.id,
           ownerId: r.owner_id || undefined,
@@ -1656,10 +1673,10 @@ class DatabaseEngine {
           state: r.state,
           pincode: r.pincode,
           totalUnits: r.total_units,
-          occupiedUnits: r.occupied_units,
+          occupiedUnits: dynamicOccupied,
           expectedMonthlyRent: r.expected_monthly_rent,
-          collectedRent: r.collected_rent,
-          pendingRent: r.pending_rent,
+          collectedRent: finalCollected,
+          pendingRent: finalPending,
           imageUrl: r.image_url,
           status: r.status,
           healthScore: r.health_score,
@@ -1775,30 +1792,116 @@ class DatabaseEngine {
         createdAt
       );
 
-      if (Array.isArray(payload.units)) {
-        const insertUnit = this.sqlite.prepare(`
-          INSERT OR REPLACE INTO property_units (
-            id, property_id, unit_number, floor, type, rent_amount, deposit_amount,
-            status, current_tenant_id, current_tenant_name, lease_end, area_sq_ft, bedrooms, bathrooms
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-        for (const u of payload.units) {
-          insertUnit.run(
-            u.id || generateUnitId(id, u.unitNumber),
-            id,
-            u.unitNumber,
-            sb(u.floor, 1),
-            u.type || 'Standard',
-            sb(u.rentAmount, 0),
-            sb(u.depositAmount, 0),
-            u.status || 'VACANT',
-            sb(u.currentTenantId, null),
-            sb(u.currentTenantName, null),
-            sb(u.leaseEnd, null),
-            sb(u.areaSqFt, 0),
-            sb(u.bedrooms, 1),
-            sb(u.bathrooms, 1)
-          );
+      const unitCount = Math.max(1, payload.totalUnits || 1);
+      const rentPerUnit = Math.round((payload.expectedMonthlyRent || 25000) / unitCount);
+      
+      const unitsToCreate = (Array.isArray(payload.units) && payload.units.length > 0)
+        ? payload.units
+        : Array.from({ length: unitCount }, (_, idx) => {
+            const floor = Math.ceil((idx + 1) / 4);
+            const unitNumber = `${floor}0${(idx % 4) + 1}`;
+            return {
+              id: generateUnitId(id, unitNumber),
+              propertyId: id,
+              unitNumber,
+              floor,
+              type: payload.type || 'Standard',
+              rentAmount: rentPerUnit,
+              depositAmount: rentPerUnit * 2,
+              status: 'VACANT',
+              areaSqFt: 1000,
+              bedrooms: 2,
+              bathrooms: 2
+            };
+          });
+
+      const insertUnit = this.sqlite.prepare(`
+        INSERT OR REPLACE INTO property_units (
+          id, property_id, unit_number, floor, type, rent_amount, deposit_amount,
+          status, current_tenant_id, current_tenant_name, lease_end, area_sq_ft, bedrooms, bathrooms
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      for (const u of unitsToCreate) {
+        insertUnit.run(
+          u.id || generateUnitId(id, u.unitNumber),
+          id,
+          u.unitNumber,
+          sb(u.floor, 1),
+          u.type || 'Standard',
+          sb(u.rentAmount, rentPerUnit),
+          sb(u.depositAmount, rentPerUnit * 2),
+          u.status || 'VACANT',
+          sb((u as any).currentTenantId, null),
+          sb((u as any).currentTenantName, null),
+          sb((u as any).leaseEnd, null),
+          sb(u.areaSqFt, 1000),
+          sb(u.bedrooms, 2),
+          sb(u.bathrooms, 2)
+        );
+      }
+
+      // Auto-generate PG rooms and beds if property is PG/Hostel
+      if (payload.type === 'PG' || payload.type === 'Hostel' || payload.type === 'Co-living') {
+        try {
+          const insertPgRoom = this.sqlite.prepare(`
+            INSERT OR REPLACE INTO pg_rooms (id, property_id, room_number, floor, sharing_type, room_rent_total)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `);
+          const insertPgBed = this.sqlite.prepare(`
+            INSERT OR REPLACE INTO pg_beds (
+              id, bed_code, room_id, room_number, floor, sharing_type, status,
+              monthly_rent, deposit, ac, attached_bath, food_included, wifi_included, laundry_included
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `);
+
+          const roomsCount = Math.max(1, Math.ceil(unitCount / 2));
+          for (let rIdx = 1; rIdx <= roomsCount; rIdx++) {
+            const floor = Math.ceil(rIdx / 4);
+            const roomNum = `${floor}0${((rIdx - 1) % 4) + 1}`;
+            const roomId = `pg-r-${id}-${roomNum}`;
+            insertPgRoom.run(roomId, id, roomNum, floor, 'Double Sharing', rentPerUnit * 2);
+
+            for (let bIdx = 0; bIdx < 2; bIdx++) {
+              const bedCode = `${roomNum}-${String.fromCharCode(65 + bIdx)}`;
+              const bedId = `bed-${id}-${bedCode.toLowerCase()}`;
+              insertPgBed.run(
+                bedId, bedCode, roomId, roomNum, floor, 'Double Sharing', 'Available',
+                rentPerUnit, rentPerUnit * 2, 1, 1, 1, 1, 1
+              );
+            }
+          }
+        } catch (e) {
+          console.warn('[DB] Failed to auto-generate PG beds:', e);
+        }
+      }
+
+      // Auto-generate Commercial Units if Commercial/Office/Warehouse
+      if (payload.type === 'Commercial' || payload.type === 'Office' || payload.type === 'Warehouse' || payload.type === 'Commercial Building') {
+        try {
+          const insertComm = this.sqlite.prepare(`
+            INSERT OR REPLACE INTO commercial_units (
+              id, property_id, unit_number, floor, business_name, business_type,
+              area_sq_ft, base_rent, cam_rate_per_sqft, cam_amount, parking_slots,
+              lock_in_period_months, notice_period_months, escalation_percent, fit_out_status, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `);
+
+          for (let cIdx = 1; cIdx <= unitCount; cIdx++) {
+            const floor = Math.ceil(cIdx / 2);
+            const unitNumber = `Suite ${floor}0${((cIdx - 1) % 2) + 1}`;
+            const commId = `comm-${id}-${cIdx}`;
+            const area = 2500;
+            const camRate = 18;
+            insertComm.run(
+              commId, id, unitNumber, floor,
+              `${payload.name} Suite ${cIdx}`,
+              payload.type === 'Warehouse' ? 'Logistics / Supply Chain' : 'Corporate / Tech Office',
+              area, rentPerUnit, camRate, area * camRate, 4,
+              24, 3, 5, 'Warm Shell Completed', 'Vacant'
+            );
+          }
+        } catch (e) {
+          console.warn('[DB] Failed to auto-generate commercial units:', e);
         }
       }
 
@@ -1925,6 +2028,9 @@ class DatabaseEngine {
         rentSharePercentage: r.rent_share_percentage ?? 100,
         aadhaarNumber: r.aadhaar_number || undefined,
         panNumber: r.pan_number || undefined,
+        status: (r.status as any) || 'Active',
+        vacatedAt: r.vacated_at || undefined,
+        depositScheme: (r.deposit_scheme as any) || undefined,
         documents: r.documents_json ? (typeof r.documents_json === 'string' ? JSON.parse(r.documents_json) : r.documents_json) : []
       }));
     },
@@ -1962,6 +2068,9 @@ class DatabaseEngine {
         rentSharePercentage: row.rent_share_percentage ?? 100,
         aadhaarNumber: row.aadhaar_number || undefined,
         panNumber: row.pan_number || undefined,
+        status: (row.status as any) || 'Active',
+        vacatedAt: row.vacated_at || undefined,
+        depositScheme: (row.deposit_scheme as any) || undefined,
         documents: row.documents_json ? (typeof row.documents_json === 'string' ? JSON.parse(row.documents_json) : row.documents_json) : []
       };
     },
@@ -1974,8 +2083,8 @@ class DatabaseEngine {
           monthly_rent, deposit_paid, lease_start, lease_end, rent_due_date, salary_date,
           autopay_active, reliability_score, kyc_verified, rewards_balance, emergency_contact,
           tenancy_type, has_food, room_sharing, co_tenant_id, co_tenant_name, co_tenant_phone,
-          co_tenant_email, rent_share_percentage, aadhaar_number, pan_number, documents_json, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          co_tenant_email, rent_share_percentage, aadhaar_number, pan_number, status, vacated_at, deposit_scheme, documents_json, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       insert.run(
@@ -2008,6 +2117,9 @@ class DatabaseEngine {
         tenant.rentSharePercentage ?? 100,
         sb(tenant.aadhaarNumber, null),
         sb(tenant.panNumber, null),
+        tenant.status || 'Active',
+        sb((tenant as any).vacatedAt, null),
+        sb(tenant.depositScheme, null),
         tenant.documents ? JSON.stringify(tenant.documents) : '[]',
         new Date().toISOString()
       );
@@ -2527,6 +2639,19 @@ class DatabaseEngine {
           transaction_id = ?
         WHERE id = ?
       `).run(paymentMethod, paidDate, txnId, id);
+
+      if (inv.propertyId) {
+        try {
+          this.sqlite.prepare(`
+            UPDATE properties SET
+              collected_rent = COALESCE(collected_rent, 0) + ?,
+              pending_rent = MAX(0, COALESCE(pending_rent, 0) - ?)
+            WHERE id = ?
+          `).run(payAmount, payAmount, inv.propertyId);
+        } catch (e) {
+          console.warn('[DB] Failed to update property rent totals:', e);
+        }
+      }
 
       const ledgerEntry = await this.ledger.create({
         description: `Rent payment received for ${inv.propertyName} (${inv.unitNumber}) via ${paymentMethod} [SQLite Verified Settlement]`,
