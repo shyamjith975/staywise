@@ -3,14 +3,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppState } from '../../../context/AppStateContext';
 import { Property, PropertyType, PropertyStatus } from '../../../types';
-import { 
-  X, 
-  Building2, 
-  MapPin, 
-  Layers, 
-  IndianRupee, 
-  Trash2, 
-  Save, 
+import {
+  X,
+  Building2,
+  MapPin,
+  Layers,
+  IndianRupee,
+  Trash2,
+  Save,
   AlertTriangle,
   Upload,
   Image as ImageIcon,
@@ -27,13 +27,13 @@ const PRESET_PROPERTY_IMAGES = [
 ];
 
 export default function EditPropertyModal() {
-  const { 
-    isEditPropertyModalOpen, 
-    setIsEditPropertyModalOpen, 
-    propertyToEdit, 
+  const {
+    isEditPropertyModalOpen,
+    setIsEditPropertyModalOpen,
+    propertyToEdit,
     setPropertyToEdit,
-    updateProperty, 
-    deleteProperty 
+    updateProperty,
+    deleteProperty
   } = useAppState();
 
   const [formData, setFormData] = useState<Partial<Property>>({});
@@ -131,8 +131,8 @@ export default function EditPropertyModal() {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto font-sans">
-      <div 
-        onClick={(e) => e.stopPropagation()} 
+      <div
+        onClick={(e) => e.stopPropagation()}
         className="bg-white rounded-3xl border border-[#D2DDD7] shadow-2xl max-w-2xl w-full overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150"
       >
         {/* Header */}
@@ -164,7 +164,7 @@ export default function EditPropertyModal() {
 
         {/* Form Body */}
         <form onSubmit={handleSave} className="p-5 sm:p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-          
+
           {/* Property Picture & Cover Section */}
           <div className="p-3.5 rounded-2xl bg-[#ffffff] border border-[#D2DDD7] space-y-3">
             <div className="flex items-center justify-between">
@@ -213,7 +213,7 @@ export default function EditPropertyModal() {
                   placeholder="Or paste an image URL..."
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#171717] bg-white"
                 />
-                
+
                 {/* Preset image pills */}
                 <div className="flex flex-wrap gap-1.5 items-center">
                   <span className="text-[10px] text-slate-400 font-bold">Presets:</span>
@@ -222,11 +222,10 @@ export default function EditPropertyModal() {
                       key={img.label}
                       type="button"
                       onClick={() => setFormData({ ...formData, imageUrl: img.url })}
-                      className={`text-[10px] px-2 py-0.5 rounded-lg border font-semibold transition ${
-                        formData.imageUrl === img.url 
-                          ? 'bg-[#171717] text-white border-[#171717]' 
+                      className={`text-[10px] px-2 py-0.5 rounded-lg border font-semibold transition ${formData.imageUrl === img.url
+                          ? 'bg-[#171717] text-white border-[#171717]'
                           : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
-                      }`}
+                        }`}
                     >
                       {img.label}
                     </button>
@@ -361,8 +360,13 @@ export default function EditPropertyModal() {
                   <input
                     type="number"
                     min="0"
-                    value={formData.expectedMonthlyRent ?? 0}
-                    onChange={(e) => setFormData({ ...formData, expectedMonthlyRent: Number(e.target.value) })}
+                    value={formData.expectedMonthlyRent === 0 || formData.expectedMonthlyRent === undefined ? '' : formData.expectedMonthlyRent}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setFormData({ ...formData, expectedMonthlyRent: v === '' ? 0 : Number(v) });
+                    }}
+                    placeholder="e.g. 25000"
                     className="w-full pl-7 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-black focus:outline-none focus:border-[#171717] bg-white"
                   />
                 </div>
@@ -375,8 +379,13 @@ export default function EditPropertyModal() {
                 <input
                   type="number"
                   min="1"
-                  value={formData.totalUnits ?? 1}
-                  onChange={(e) => setFormData({ ...formData, totalUnits: Number(e.target.value) })}
+                  value={formData.totalUnits === 0 || formData.totalUnits === undefined ? '' : formData.totalUnits}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFormData({ ...formData, totalUnits: v === '' ? 1 : Number(v) });
+                  }}
+                  placeholder="e.g. 1"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#171717] bg-white"
                 />
               </div>
@@ -389,8 +398,13 @@ export default function EditPropertyModal() {
                   type="number"
                   min="0"
                   max={formData.totalUnits || 999}
-                  value={formData.occupiedUnits ?? 0}
-                  onChange={(e) => setFormData({ ...formData, occupiedUnits: Number(e.target.value) })}
+                  value={formData.occupiedUnits === 0 || formData.occupiedUnits === undefined ? '' : formData.occupiedUnits}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFormData({ ...formData, occupiedUnits: v === '' ? 0 : Number(v) });
+                  }}
+                  placeholder="0"
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#171717] bg-white"
                 />
               </div>

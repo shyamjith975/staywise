@@ -220,7 +220,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
       tenant: { email: 'tenant@staywise.com', pass: 'Tenant@123', role: 'tenant' },
       estate: { email: 'estate@staywise.com', pass: 'Estate@123', role: 'estate_manager' },
       estate_manager: { email: 'estate@staywise.com', pass: 'Estate@123', role: 'estate_manager' },
-      admin: { email: 'admin@staywise.com', pass: 'admin@123', role: 'admin' },
+      admin: { email: 'admin@staywise.com', pass: 'Admin@123', role: 'admin' },
     };
     if (shortcuts[clean] && !val.includes('@')) {
       setSelectedRole(shortcuts[clean].role);
@@ -242,7 +242,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
       tenant: { email: 'tenant@staywise.com', pass: 'Tenant@123', role: 'tenant' },
       estate: { email: 'estate@staywise.com', pass: 'Estate@123', role: 'estate_manager' },
       estate_manager: { email: 'estate@staywise.com', pass: 'Estate@123', role: 'estate_manager' },
-      admin: { email: 'admin@staywise.com', pass: 'admin@123', role: 'admin' },
+      admin: { email: 'admin@staywise.com', pass: 'Admin@123', role: 'admin' },
     };
 
     const effectiveEmail = (!cleanEmail.includes('@') && shortcuts[cleanLower]) 
@@ -347,7 +347,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
     setLoginError(null);
     setSelectedRole('admin');
     setEmail('admin@staywise.com');
-    setPassword('admin@123');
+    setPassword('Admin@123');
 
     try {
       const res = await fetch('/api/auth/login', {
@@ -356,7 +356,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ email: 'admin@staywise.com', password: 'admin@123', role: 'admin' })
+        body: JSON.stringify({ email: 'admin@staywise.com', password: 'Admin@123', role: 'admin' })
       });
       const responseText = await res.text();
       let data: any = null;
@@ -1566,7 +1566,7 @@ export default function LoginView({ onBackToLanding }: LoginViewProps) {
                     <span>Admin Temp Pass Option</span>
                   </div>
                   <div className="text-[10px] text-slate-400 truncate">
-                    <span className="text-white/80 font-mono">admin@staywise.com</span> • pass: <span className="text-white/80 font-mono">admin@123</span>
+                    <span className="text-white/80 font-mono">admin@staywise.com</span> • pass: <span className="text-white/80 font-mono">Admin@123</span>
                   </div>
                 </div>
                 <button

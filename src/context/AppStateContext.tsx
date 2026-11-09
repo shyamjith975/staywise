@@ -203,7 +203,7 @@ export const DEMO_CREDENTIALS: Record<UserRole, DemoCredential> = {
     role: 'admin',
     roleLabel: 'Super Admin',
     email: 'admin@staywise.com',
-    pass: 'admin@123',
+    pass: 'Admin@123',
     name: 'Chief Admin',
     avatar: '🛡️',
     title: 'Platform Governance & Risk',
@@ -377,6 +377,7 @@ interface AppStateContextType {
   rejectTenantConnectionRequest: (id: string) => void;
   requestTenantMoveOut: (requestId: string, details: { moveOutDate: string; moveOutReason: string }) => void;
   verifyAndSettleMoveOut: (requestId: string, details: { inspectionNotes?: string; depositSettledAmount?: number }) => void;
+  disconnectTenant: (tenantId: string, reason?: string) => Promise<void>;
 
   // Authorized Delegates (Manager & CA with strict withdrawal restrictions)
   delegates: AuthorizedDelegate[];
@@ -1191,7 +1192,22 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const updateProperty = async (propertyId: string, updates: Partial<Property>) => {
     // Optimistic UI update
     setProperties(prev => prev.map(p => p.id === propertyId ? { ...p, ...updates } : p));
-    addNotification('Property Updated', `Property details updated successfully.`, 'SYSTEM');
+
+    // Synchronize linked tenant rent & dues if expectedMonthlyRent changes
+    if (updates.expectedMonthlyRent && updates.expectedMonthlyRent > 0) {
+      setTenants(prev => prev.map(t => t.propertyId === propertyId ? { ...t, monthlyRent: updates.expectedMonthlyRent! } : t));
+      setInvoices(prev => prev.map(inv => (inv.propertyId === propertyId && inv.status !== 'Paid') ? { 
+        ...inv, 
+        baseRent: updates.expectedMonthlyRent!, 
+        totalAmount: updates.expectedMonthlyRent! + (inv.camCharges || 0) + (inv.utilityCharges || 0) 
+      } : inv));
+    }
+    if (updates.name) {
+      setTenants(prev => prev.map(t => t.propertyId === propertyId ? { ...t, propertyName: updates.name! } : t));
+      setInvoices(prev => prev.map(inv => inv.propertyId === propertyId ? { ...inv, propertyName: updates.name! } : inv));
+    }
+
+    addNotification('Property Updated', `Property details updated and linked tenant dues synchronized.`, 'SYSTEM');
 
     // Persist to database via API
     try {
@@ -1875,6 +1891,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Property must be verified by Platform Admin
+    if (targetProp.verificationStatus !== 'APPROVED') {
+      addNotification('Admin Verification Required', `"${targetProp.name}" is pending Platform Admin verification. You can only connect tenants to admin-approved properties.`, 'SYSTEM');
+      return;
+    }
+
+    // Mandatory eKYC verification
+    if (!req.aadhaarNumber || !req.panNumber) {
+      addNotification('eKYC Required', `${req.tenantName} has not completed digital eKYC (Aadhaar & PAN). Verification is required before lease execution.`, 'SYSTEM');
+      return;
+    }
+
     const newTenant: Tenant = {
       id: `tenant-${Date.now()}`,
       userId: req.tenantUserId,
@@ -1885,7 +1913,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       propertyName: targetProp.name,
       unitNumber: req.unitNumber,
       monthlyRent: req.monthlyRent,
-      depositPaid: req.depositAmount,
+      depositPaid: req.depositScheme === 'ZERO_DEPOSIT_PROTECT' ? 0 : (req.depositAmount || 0),
+      depositScheme: req.depositScheme || 'ZERO_DEPOSIT_PROTECT',
       leaseStart: req.leaseStartDate || '01 Oct 2026',
       leaseEnd: '30 Sep 2027',
       rentDueDate: 5,
@@ -1894,11 +1923,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       kycVerified: true,
       rewardsBalance: 500,
       emergencyContact: '+91 98450 11928',
-      tenancyType: req.tenancyType || 'PG',
-      hasFood: req.includeFoodPlan !== false,
+      tenancyType: req.tenancyType || 'Residential',
+      hasFood: req.tenancyType === 'PG' && Boolean(req.includeFoodPlan),
       aadhaarNumber: req.aadhaarNumber,
       panNumber: req.panNumber,
-      documents: req.documents || []
+      documents: req.documents || [],
+      status: 'Active'
     };
 
     setTenants(prev => [newTenant, ...prev.filter(t => t.email?.toLowerCase() !== req.tenantEmail.toLowerCase())]);
@@ -2012,20 +2042,33 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const req = tenantConnectionRequests.find(r => r.id === requestId);
     if (!req) return;
 
-    setTenants(prev => prev.filter(t => t.userId !== req.tenantUserId && t.email?.toLowerCase() !== req.tenantEmail.toLowerCase()));
+    const today = new Date().toISOString().split('T')[0];
+
+    // Mark as past tenant instead of deleting
+    setTenants(prev => prev.map(t => {
+      if (t.userId === req.tenantUserId || (t.email && req.tenantEmail && t.email.toLowerCase() === req.tenantEmail.toLowerCase())) {
+        return {
+          ...t,
+          status: 'Moved Out' as const,
+          vacatedAt: today
+        };
+      }
+      return t;
+    }));
 
     setTenantConnectionRequests(prev => {
       const updated = prev.map(r => r.id === requestId ? {
         ...r,
         status: 'MOVED_OUT' as const,
         inspectionNotes: details.inspectionNotes || 'MoveFlow inspection completed. Deposit balance settled.',
-        depositSettledAmount: details.depositSettledAmount ?? req.depositAmount
+        depositSettledAmount: details.depositSettledAmount ?? req.depositAmount,
+        moveOutDate: today
       } : r);
       try { localStorage.setItem('staywise_tenant_connections', JSON.stringify(updated)); } catch {}
       return updated;
     });
 
-    addNotification('Move-Out Verified', `Move-out verified for ${req.tenantName}. Unit ${req.unitNumber} is now marked vacant.`, 'RENT');
+    addNotification('Move-Out Verified', `Move-out verified for ${req.tenantName}. Tenant moved to Past Residents archive.`, 'RENT');
     try {
       await fetch('/api/tenant-connections', {
         method: 'PATCH',
@@ -2035,6 +2078,64 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           status: 'MOVED_OUT',
           inspectionNotes: details.inspectionNotes,
           depositSettledAmount: details.depositSettledAmount ?? req.depositAmount
+        })
+      });
+    } catch (e) {}
+  };
+
+  const disconnectTenant = async (tenantId: string, reason: string = 'Moved Out / Lease Completed') => {
+    const today = new Date().toISOString().split('T')[0];
+    const target = tenants.find(t => t.id === tenantId);
+    const tenantName = target?.name || 'Resident';
+
+    // Update in-memory tenants state
+    setTenants(prev => prev.map(t => {
+      if (t.id === tenantId) {
+        return {
+          ...t,
+          status: 'Moved Out' as const,
+          vacatedAt: today
+        };
+      }
+      return t;
+    }));
+
+    // Update any matching connection request
+    setTenantConnectionRequests(prev => {
+      const updated = prev.map(r => {
+        if ((target?.email && r.tenantEmail?.toLowerCase() === target.email.toLowerCase()) || (target?.userId && r.tenantUserId === target.userId)) {
+          return {
+            ...r,
+            status: 'MOVED_OUT' as const,
+            moveOutDate: today,
+            moveOutReason: reason
+          };
+        }
+        return r;
+      });
+      try { localStorage.setItem('staywise_tenant_connections', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+
+    addNotification(
+      'Tenant Disconnected / Moved Out',
+      `${tenantName} has been disconnected and archived under Past Tenants.`,
+      'SYSTEM'
+    );
+
+    try {
+      const effectiveToken = sessionToken || (typeof window !== 'undefined' ? sessionStorage.getItem('staywise_token') || localStorage.getItem('staywise_token') : null);
+      await fetch('/api/tenants', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(effectiveToken ? { 'Authorization': `Bearer ${effectiveToken}` } : {})
+        },
+        body: JSON.stringify({
+          id: tenantId,
+          status: 'Moved Out',
+          vacatedAt: today,
+          moveOutReason: reason
         })
       });
     } catch (e) {}
@@ -2583,6 +2684,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       rejectTenantConnectionRequest,
       requestTenantMoveOut,
       verifyAndSettleMoveOut,
+      disconnectTenant,
       delegates,
       addDelegate,
       updateDelegatePermissions,

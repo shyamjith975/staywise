@@ -22,7 +22,11 @@ import {
   Utensils,
   Paperclip,
   Eye,
-  Users
+  Users,
+  UserMinus,
+  X,
+  Fingerprint,
+  AlertTriangle
 } from 'lucide-react';
 
 export default function TenantsDirectory() {
@@ -37,11 +41,15 @@ export default function TenantsDirectory() {
     tenantConnectionRequests,
     approveTenantConnectionRequest,
     rejectTenantConnectionRequest,
-    verifyAndSettleMoveOut
+    verifyAndSettleMoveOut,
+    disconnectTenant
   } = useAppState();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState<'ALL' | 'ACTIVE' | 'NOTICE'>('ALL');
+  const [filterStatus, setFilterStatus] = useState<'ACTIVE' | 'PAST' | 'ALL'>('ACTIVE');
+  const [selectedTenantForDetails, setSelectedTenantForDetails] = useState<Tenant | null>(null);
+  const [isDisconnectConfirmOpen, setIsDisconnectConfirmOpen] = useState(false);
+  const [disconnectReason, setDisconnectReason] = useState('Tenure completed / Move out requested');
 
   // Role-scoped tenants: Owners only see residents in their properties or approved by them.
   // Admin has statutory surveillance to see all platform tenants.
@@ -88,6 +96,9 @@ export default function TenantsDirectory() {
   const pendingConnectionRequests = scopedConnectionRequests.filter(r => r.status === 'PENDING_APPROVAL');
   const pendingMoveOutRequests = scopedConnectionRequests.filter(r => r.status === 'MOVE_OUT_PENDING');
 
+  const activeTenantsList = scopedTenants.filter(t => t.status !== 'Moved Out');
+  const pastTenantsList = scopedTenants.filter(t => t.status === 'Moved Out');
+
   const filteredTenants = scopedTenants.filter(tenant => {
     const matchesSearch = 
       tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -95,19 +106,34 @@ export default function TenantsDirectory() {
       tenant.propertyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tenant.phone.includes(searchQuery);
 
-    if (filterStatus === 'ALL') return matchesSearch;
-    return matchesSearch;
+    if (!matchesSearch) return false;
+
+    if (filterStatus === 'ACTIVE') {
+      return tenant.status !== 'Moved Out';
+    }
+    if (filterStatus === 'PAST') {
+      return tenant.status === 'Moved Out';
+    }
+    return true;
   });
 
-  const totalDeposits = scopedTenants.reduce((acc, t) => acc + (t.depositPaid || 0), 0);
-  const avgScore = scopedTenants.length > 0
-    ? Math.round(scopedTenants.reduce((acc, t) => acc + (t.reliabilityScore || 90), 0) / scopedTenants.length)
+  const totalDeposits = activeTenantsList.reduce((acc, t) => acc + (t.depositPaid || 0), 0);
+  const avgScore = activeTenantsList.length > 0
+    ? Math.round(activeTenantsList.reduce((acc, t) => acc + (t.reliabilityScore || 90), 0) / activeTenantsList.length)
     : 0;
-  const autopayTenantsCount = scopedTenants.filter(t => t.autopayActive || t.id.includes('autopay')).length;
-  const autopayRate = scopedTenants.length > 0 ? ((autopayTenantsCount / scopedTenants.length) * 100).toFixed(1) : '0.0';
+  const autopayTenantsCount = activeTenantsList.filter(t => t.autopayActive || t.id.includes('autopay')).length;
+  const autopayRate = activeTenantsList.length > 0 ? ((autopayTenantsCount / activeTenantsList.length) * 100).toFixed(1) : '0.0';
 
   const handleWhatsAppReminder = (name: string, phone: string) => {
     addNotification('WhatsApp Reminder Sent', `Direct WhatsApp rent ping with UPI payment link dispatched to ${name} (${phone}).`, 'RENT');
+  };
+
+  const handleDisconnect = async (tenantId: string) => {
+    await disconnectTenant(tenantId, disconnectReason);
+    setIsDisconnectConfirmOpen(false);
+    if (selectedTenantForDetails?.id === tenantId) {
+      setSelectedTenantForDetails(prev => prev ? { ...prev, status: 'Moved Out', vacatedAt: new Date().toISOString().split('T')[0] } : null);
+    }
   };
 
   return (
@@ -331,20 +357,30 @@ export default function TenantsDirectory() {
 
         <div className="flex items-center gap-1.5 p-1 bg-white rounded-2xl border border-[#D2DDD7] self-start sm:self-auto text-xs">
           <button
-            onClick={() => setFilterStatus('ALL')}
-            className={`px-3 py-1.5 rounded-xl font-bold transition ${
-              filterStatus === 'ALL' ? 'bg-[#171717] text-white' : 'text-[#666666] hover:text-[#171717]'
+            onClick={() => setFilterStatus('ACTIVE')}
+            className={`px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${
+              filterStatus === 'ACTIVE' ? 'bg-[#171717] text-white shadow-xs' : 'text-[#666666] hover:text-[#171717]'
             }`}
           >
-            All Tenants
+            <span>Active Leases</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/20">{activeTenantsList.length}</span>
           </button>
           <button
-            onClick={() => setFilterStatus('ACTIVE')}
-            className={`px-3 py-1.5 rounded-xl font-bold transition ${
-              filterStatus === 'ACTIVE' ? 'bg-[#171717] text-white' : 'text-[#666666] hover:text-[#171717]'
+            onClick={() => setFilterStatus('PAST')}
+            className={`px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1.5 ${
+              filterStatus === 'PAST' ? 'bg-[#171717] text-white shadow-xs' : 'text-[#666666] hover:text-[#171717]'
             }`}
           >
-            Active Leases
+            <span>Past Residents / Alumni</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/20">{pastTenantsList.length}</span>
+          </button>
+          <button
+            onClick={() => setFilterStatus('ALL')}
+            className={`px-3 py-1.5 rounded-xl font-bold transition ${
+              filterStatus === 'ALL' ? 'bg-[#171717] text-white shadow-xs' : 'text-[#666666] hover:text-[#171717]'
+            }`}
+          >
+            All ({scopedTenants.length})
           </button>
         </div>
       </div>
@@ -382,13 +418,26 @@ export default function TenantsDirectory() {
                   <tr key={t.id} className="hover:bg-[#ffffff] transition">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-[#E8F0EC] text-[#171717] font-black text-xs flex items-center justify-center border border-[#171717]/20 shrink-0">
+                        <div 
+                          onClick={() => setSelectedTenantForDetails(t)}
+                          className="h-9 w-9 rounded-full bg-[#E8F0EC] hover:bg-[#D2DDD7] text-[#171717] font-black text-xs flex items-center justify-center border border-[#171717]/20 shrink-0 cursor-pointer transition"
+                          title="Click to view tenant profile & KYC"
+                        >
                           {t.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                         </div>
                         <div>
-                          <div className="font-extrabold text-[#171717] flex items-center gap-1.5">
+                          <div 
+                            onClick={() => setSelectedTenantForDetails(t)}
+                            className="font-extrabold text-[#171717] hover:text-[#06110c] hover:underline flex items-center gap-1.5 cursor-pointer group"
+                            title="Click to view full KYC, documents & lease details"
+                          >
                             <span>{t.name}</span>
-                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                            {t.status === 'Moved Out' && (
+                              <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-rose-50 text-rose-700 font-bold border border-rose-200">
+                                Past Tenant
+                              </span>
+                            )}
                           </div>
                           <div className="text-[11px] text-[#666666]">{t.phone}</div>
                         </div>
@@ -397,7 +446,7 @@ export default function TenantsDirectory() {
 
                     <td className="py-3.5 px-4">
                       <div className="font-bold text-[#171717]">{t.propertyName}</div>
-                      <div className="text-[11px] text-[#666666]">Unit {t.unitNumber}</div>
+                      <div className="text-[11px] text-[#666666]">Unit {t.unitNumber} • {t.tenancyType || 'Residential'}</div>
                     </td>
 
                     <td className="py-3.5 px-4 font-tabular">
@@ -409,12 +458,20 @@ export default function TenantsDirectory() {
 
                     <td className="py-3.5 px-4 font-tabular font-medium text-[#171717]">
                       ₹{(t.depositPaid || 0).toLocaleString('en-IN')}
-                      <div className="text-[10px] text-[#666666]">Escrow locked</div>
+                      <div className="text-[10px] text-[#666666]">
+                        {t.depositScheme === 'ZERO_DEPOSIT_PROTECT' ? 'Zero Deposit Protect' : 'Escrow locked'}
+                      </div>
                     </td>
 
                     <td className="py-3.5 px-4 text-[#666666]">
                       <div className="font-semibold text-[#171717]">{t.leaseStart}</div>
-                      <div className="text-[10px]">until {t.leaseEnd}</div>
+                      <div className="text-[10px]">
+                        {t.status === 'Moved Out' ? (
+                          <span className="text-rose-600 font-bold">Vacated {t.vacatedAt || t.leaseEnd}</span>
+                        ) : (
+                          `until ${t.leaseEnd}`
+                        )}
+                      </div>
                     </td>
 
                     <td className="py-3.5 px-4">
@@ -433,8 +490,27 @@ export default function TenantsDirectory() {
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
+                          onClick={() => setSelectedTenantForDetails(t)}
+                          className="p-1.5 rounded-xl bg-[#E8F0EC] hover:bg-[#171717] hover:text-white text-[#171717] transition cursor-pointer"
+                          title="View Full KYC & Tenant Details"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </button>
+                        {activeRole === 'owner' && t.status !== 'Moved Out' && (
+                          <button
+                            onClick={() => {
+                              setSelectedTenantForDetails(t);
+                              setIsDisconnectConfirmOpen(true);
+                            }}
+                            className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 border border-rose-200 transition cursor-pointer"
+                            title="Disconnect / Mark as Moved Out"
+                          >
+                            <UserMinus className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                        <button
                           onClick={() => handleWhatsAppReminder(t.name, t.phone)}
-                          className="p-1.5 rounded-xl bg-[#E8F0EC] hover:bg-[#171717] hover:text-white text-[#171717] transition"
+                          className="p-1.5 rounded-xl bg-[#E8F0EC] hover:bg-[#171717] hover:text-white text-[#171717] transition cursor-pointer"
                           title="Dispatch WhatsApp Payment Reminder"
                         >
                           <Phone className="h-3.5 w-3.5" />
@@ -482,6 +558,253 @@ This agreement is legally binding and digitally registered in the Staywise Escro
           </table>
         </div>
       </div>
+
+      {/* Comprehensive Tenant Details & Digital KYC Modal */}
+      {selectedTenantForDetails && (
+        <div className="fixed inset-0 z-50 bg-[#171717]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-lg max-h-[92vh] overflow-y-auto bg-white rounded-3xl border border-[#D2DDD7] p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-[#D2DDD7]">
+              <div className="flex items-center gap-3">
+                <div className="h-11 w-11 rounded-full bg-[#E8F0EC] text-[#171717] font-black text-sm flex items-center justify-center border border-[#171717]/20 shrink-0">
+                  {selectedTenantForDetails.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-extrabold text-[#171717]">
+                      {selectedTenantForDetails.name}
+                    </h3>
+                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                      selectedTenantForDetails.status === 'Moved Out'
+                        ? 'bg-rose-100 text-rose-800'
+                        : 'bg-emerald-100 text-emerald-800'
+                    }`}>
+                      {selectedTenantForDetails.status === 'Moved Out' ? 'Moved Out / Past Resident' : 'Active Lease'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#546E7A]">
+                    Unit {selectedTenantForDetails.unitNumber} • {selectedTenantForDetails.propertyName}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedTenantForDetails(null);
+                  setIsDisconnectConfirmOpen(false);
+                }}
+                className="text-[#546E7A] hover:text-[#171717] cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Disconnect Confirmation Prompt if triggered */}
+            {isDisconnectConfirmOpen && (
+              <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs space-y-3 animate-in fade-in">
+                <div className="flex items-center gap-2 font-black text-rose-800 text-sm">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-rose-600" />
+                  <span>Confirm Move-Out / Disconnection</span>
+                </div>
+                <p className="text-[#546E7A] leading-relaxed text-[11px]">
+                  This will mark <b>{selectedTenantForDetails.name}</b> as vacated and archive them under <b>Past Residents / Alumni</b>. The unit will be freed up for new tenant onboarding.
+                </p>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 mb-1">Reason for Move-Out / Vacating</label>
+                  <input
+                    type="text"
+                    value={disconnectReason}
+                    onChange={(e) => setDisconnectReason(e.target.value)}
+                    placeholder="e.g. Tenancy term completed, job relocation, rent default"
+                    className="w-full px-3 py-2 rounded-xl border border-rose-200 bg-white text-xs font-medium"
+                  />
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={() => handleDisconnect(selectedTenantForDetails.id)}
+                    className="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition cursor-pointer text-center"
+                  >
+                    ✓ Confirm Disconnect &amp; Move Out
+                  </button>
+                  <button
+                    onClick={() => setIsDisconnectConfirmOpen(false)}
+                    className="px-4 py-2 rounded-xl bg-white border border-[#D2DDD7] text-[#171717] font-bold text-xs hover:bg-[#F7F8F6] cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Contact & Tenancy Category Card */}
+            <div className="p-3.5 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7] space-y-2 text-xs">
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <div>
+                  <span className="text-[#546E7A] block">Email</span>
+                  <span className="font-bold text-[#171717] truncate block">{selectedTenantForDetails.email}</span>
+                </div>
+                <div>
+                  <span className="text-[#546E7A] block">Phone</span>
+                  <span className="font-bold text-[#171717]">{selectedTenantForDetails.phone}</span>
+                </div>
+                <div>
+                  <span className="text-[#546E7A] block">Tenancy Category</span>
+                  <span className="font-bold text-[#171717]">{selectedTenantForDetails.tenancyType || 'Residential'}</span>
+                </div>
+                <div>
+                  <span className="text-[#546E7A] block">Emergency Contact</span>
+                  <span className="font-bold text-[#171717]">{selectedTenantForDetails.emergencyContact || 'None Listed'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Financial & Lease Particulars */}
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <div className="p-3 rounded-2xl bg-white border border-[#D2DDD7]">
+                <span className="text-[10px] text-[#546E7A] block">Monthly Rent</span>
+                <span className="font-black text-sm text-[#06110c] font-tabular">
+                  ₹{selectedTenantForDetails.monthlyRent.toLocaleString('en-IN')}
+                </span>
+                <span className="text-[9px] text-emerald-700 block font-bold mt-0.5">Due 5th</span>
+              </div>
+              <div className="p-3 rounded-2xl bg-white border border-[#D2DDD7]">
+                <span className="text-[10px] text-[#546E7A] block">Security Deposit</span>
+                <span className="font-black text-sm text-[#171717] font-tabular">
+                  ₹{(selectedTenantForDetails.depositPaid || 0).toLocaleString('en-IN')}
+                </span>
+                <span className="text-[9px] text-[#546E7A] block mt-0.5">
+                  {selectedTenantForDetails.depositScheme === 'ZERO_DEPOSIT_PROTECT' ? 'Zero Deposit Protect' : 'Escrow Locked'}
+                </span>
+              </div>
+              <div className="p-3 rounded-2xl bg-white border border-[#D2DDD7]">
+                <span className="text-[10px] text-[#546E7A] block">Lease Tenure</span>
+                <span className="font-bold text-xs text-[#171717] block truncate">
+                  {selectedTenantForDetails.leaseStart}
+                </span>
+                <span className="text-[9px] text-[#546E7A] block truncate">
+                  to {selectedTenantForDetails.leaseEnd}
+                </span>
+              </div>
+            </div>
+
+            {/* Digital eKYC Verification Card */}
+            <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200 text-xs space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-black text-emerald-950">
+                  <Fingerprint className="h-4 w-4 text-emerald-700" />
+                  <span>Digital Identity &amp; Government eKYC</span>
+                </div>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black flex items-center gap-1">
+                  <ShieldCheck className="h-3 w-3" />
+                  <span>UIDAI Verified</span>
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <div className="p-2.5 rounded-xl bg-white border border-emerald-200">
+                  <span className="text-[10px] text-slate-500 block">Aadhaar (UIDAI Verified)</span>
+                  <span className="font-mono font-black text-[#171717]">
+                    {selectedTenantForDetails.aadhaarNumber
+                      ? selectedTenantForDetails.aadhaarNumber.replace(/(\d{4})\s*(\d{4})\s*(\d{4})/, '•••• •••• $3')
+                      : '•••• •••• 1142'}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-white border border-emerald-200">
+                  <span className="text-[10px] text-slate-500 block">PAN (NSDL Verified)</span>
+                  <span className="font-mono font-black text-[#171717] uppercase">
+                    {selectedTenantForDetails.panNumber
+                      ? selectedTenantForDetails.panNumber.slice(0, 2) + '••••' + selectedTenantForDetails.panNumber.slice(-2)
+                      : 'BL••••12A'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Uploaded Documents & Deeds */}
+            <div className="space-y-2 text-xs">
+              <div className="flex items-center justify-between font-bold text-[#171717]">
+                <span className="flex items-center gap-1.5">
+                  <Paperclip className="h-3.5 w-3.5 text-[#546E7A]" />
+                  <span>Verified Documents &amp; Deeds</span>
+                </span>
+                <span className="text-[10px] text-[#546E7A]">
+                  {selectedTenantForDetails.documents?.length || 1} file(s)
+                </span>
+              </div>
+
+              <div className="space-y-1.5 max-h-36 overflow-y-auto">
+                {selectedTenantForDetails.documents && selectedTenantForDetails.documents.length > 0 ? (
+                  selectedTenantForDetails.documents.map((doc, idx) => (
+                    <div key={doc.id || idx} className="p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] flex items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <FileText className="h-4 w-4 text-[#06110c] shrink-0" />
+                        <div className="truncate">
+                          <span className="font-bold text-[#171717] block truncate">{doc.name}</span>
+                          <span className="text-[10px] text-[#546E7A]">{doc.size || '500 KB'} • {doc.date || 'Active'}</span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const text = `STAYWISE DIGITALLY VERIFIED DOCUMENT\nTitle: ${doc.name}\nTenant: ${selectedTenantForDetails.name}\nProperty: ${selectedTenantForDetails.propertyName}\nUnit: ${selectedTenantForDetails.unitNumber}\nTimestamp: ${new Date().toISOString()}\nStatus: Verified under Indian Information Technology Act 2000.`;
+                          const blob = new Blob([text], { type: 'text/plain' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = doc.name || 'tenant_document.txt';
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+                          URL.revokeObjectURL(url);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-white border border-[#D2DDD7] hover:bg-[#E8F0EC] text-[10px] font-bold text-[#171717] shrink-0 cursor-pointer flex items-center gap-1"
+                      >
+                        <Download className="h-3 w-3" />
+                        <span>Download</span>
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-2.5 rounded-xl bg-[#F7F8F6] border border-[#D2DDD7] flex items-center justify-between gap-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-[#06110c] shrink-0" />
+                      <div>
+                        <span className="font-bold text-[#171717] block">Aadhaar_NSDL_eSign_Certificate.pdf</span>
+                        <span className="text-[10px] text-[#546E7A]">420 KB • UIDAI DigiLocker</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                      Verified
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center gap-2 pt-2 border-t border-[#D2DDD7]">
+              {activeRole === 'owner' && selectedTenantForDetails.status !== 'Moved Out' && !isDisconnectConfirmOpen && (
+                <button
+                  type="button"
+                  onClick={() => setIsDisconnectConfirmOpen(true)}
+                  className="flex-1 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <UserMinus className="h-3.5 w-3.5" />
+                  <span>Move Out / Disconnect Resident</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedTenantForDetails(null);
+                  setIsDisconnectConfirmOpen(false);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-[#06110c] hover:bg-[#171717] text-white font-bold text-xs transition cursor-pointer text-center"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

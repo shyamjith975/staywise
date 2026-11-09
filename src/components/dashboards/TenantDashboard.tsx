@@ -84,11 +84,12 @@ export default function TenantDashboard() {
     propertyId: '',
     propertyName: '',
     unitNumber: '',
-    monthlyRent: 25000,
-    depositAmount: 50000,
+    monthlyRent: 15000,
+    depositAmount: 30000,
     leaseStartDate: '2026-11-01',
-    tenancyType: 'PG' as TenancyType,
-    includeFoodPlan: true,
+    tenancyType: 'Residential' as TenancyType,
+    includeFoodPlan: false,
+    depositScheme: 'ZERO_DEPOSIT_PROTECT' as 'ZERO_DEPOSIT_PROTECT' | 'STANDARD_ADVANCE',
     aadhaarNumber: '',
     panNumber: '',
     documents: [] as Array<{ id: string; name: string; size: string; type: string; uploadDate: string; dataUrl?: string }>
@@ -159,16 +160,18 @@ export default function TenantDashboard() {
   const [propertySearchQuery, setPropertySearchQuery] = useState('');
   const [showPropertyResults, setShowPropertyResults] = useState(false);
 
-  const filteredSearchProperties = properties.filter(p => {
-    if (!propertySearchQuery.trim()) return true;
-    const q = propertySearchQuery.toLowerCase().trim();
-    return (
-      p.name.toLowerCase().includes(q) ||
-      (p.city && p.city.toLowerCase().includes(q)) ||
-      (p.address && p.address.toLowerCase().includes(q)) ||
-      (p.type && p.type.toLowerCase().includes(q))
-    );
-  });
+  const filteredSearchProperties = properties
+    .filter(p => p.verificationStatus === 'APPROVED')
+    .filter(p => {
+      if (!propertySearchQuery.trim()) return true;
+      const q = propertySearchQuery.toLowerCase().trim();
+      return (
+        p.name.toLowerCase().includes(q) ||
+        (p.city && p.city.toLowerCase().includes(q)) ||
+        (p.address && p.address.toLowerCase().includes(q)) ||
+        (p.type && p.type.toLowerCase().includes(q))
+      );
+    });
 
   const [ekycStatus, setEkycStatus] = useState<'Verified' | 'Pending'>(() => {
     if (typeof window === 'undefined') return 'Pending';
@@ -376,6 +379,51 @@ export default function TenantDashboard() {
     }
   }, [currentTenant?.id]);
 
+  const handleSaveEkyc = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const rawAadhaar = aadhaarNumber.replace(/[\s\-]/g, '');
+    if (!/^\d{12}$/.test(rawAadhaar)) {
+      addNotification('Invalid Aadhaar', 'Please enter a valid 12-digit Indian Aadhaar number.', 'SYSTEM');
+      return;
+    }
+    const rawPan = panNumber.trim().toUpperCase();
+    if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(rawPan)) {
+      addNotification('Invalid PAN', 'Please enter a valid 10-character Permanent Account Number (e.g. ABCDE1234F).', 'SYSTEM');
+      return;
+    }
+
+    // Immediately close modal and update UI state without awaiting network lag
+    setIsEKYCModalOpen(false);
+    setEkycStatus('Verified');
+    setConnectForm(prev => ({ ...prev, aadhaarNumber, panNumber: rawPan }));
+    addNotification('eKYC Verified', 'Your resident digital identity (Aadhaar & PAN) has been verified and permanently recorded.', 'SYSTEM');
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(`staywise_tenant_ekyc_${currentUser?.id || currentUser?.email}`, JSON.stringify({
+          verified: true,
+          aadhaar: aadhaarNumber,
+          pan: rawPan,
+          verifiedAt: new Date().toISOString()
+        }));
+      } catch {}
+    }
+
+    try {
+      fetch('/api/auth/ekyc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: currentUser?.id,
+          email: currentUser?.email,
+          aadhaarNumber,
+          panNumber: rawPan,
+          ekycVerified: true
+        })
+      }).catch(() => {});
+    } catch {}
+  };
+
   const toggleMealOption = (mealKey: 'breakfast' | 'lunch' | 'dinner') => {
     const next = { ...subscribedMeals, [mealKey]: !subscribedMeals[mealKey] };
     setSubscribedMeals(next);
@@ -462,13 +510,16 @@ export default function TenantDashboard() {
       e.preventDefault();
       setConnectValidationError('');
 
-      const rawAadhaar = connectForm.aadhaarNumber.replace(/[\s\-]/g, '');
+      const effectiveAadhaar = connectForm.aadhaarNumber || aadhaarNumber;
+      const effectivePan = connectForm.panNumber || panNumber;
+
+      const rawAadhaar = effectiveAadhaar.replace(/[\s\-]/g, '');
       if (!/^\d{12}$/.test(rawAadhaar)) {
-        setConnectValidationError('Mandatory eKYC: Please enter a valid 12-digit Aadhaar number.');
+        setConnectValidationError('Mandatory eKYC: Please enter a valid 12-digit Aadhaar number or complete Digital KYC verification first.');
         return;
       }
 
-      const rawPan = connectForm.panNumber.trim().toUpperCase();
+      const rawPan = effectivePan.trim().toUpperCase();
       if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(rawPan)) {
         setConnectValidationError('Mandatory eKYC: Please enter a valid 10-character PAN (e.g. ABCDE1234F).');
         return;
@@ -499,12 +550,14 @@ export default function TenantDashboard() {
         propertyId: connectForm.propertyId || matchedProp?.id || undefined,
         propertyName: connectForm.propertyName || matchedProp?.name || 'Property',
         unitNumber: connectForm.unitNumber || 'Unit 101',
-        monthlyRent: Number(connectForm.monthlyRent) || 20000,
-        depositAmount: Number(connectForm.depositAmount) || 40000,
+        monthlyRent: Number(connectForm.monthlyRent) || 15000,
+        depositAmount: Number(connectForm.depositAmount) || 30000,
         leaseStartDate: connectForm.leaseStartDate,
         tenancyType: connectForm.tenancyType,
-        hasFood: connectForm.tenancyType === 'PG' ? connectForm.includeFoodPlan : false,
-        aadhaarNumber: connectForm.aadhaarNumber || aadhaarNumber,
+        depositScheme: connectForm.depositScheme || 'ZERO_DEPOSIT_PROTECT',
+        hasFood: connectForm.tenancyType === 'PG' ? Boolean(connectForm.includeFoodPlan) : false,
+        includeFoodPlan: connectForm.tenancyType === 'PG' ? Boolean(connectForm.includeFoodPlan) : false,
+        aadhaarNumber: effectiveAadhaar,
         panNumber: rawPan,
         documents: connectForm.documents.map(d => ({
           id: d.id,
@@ -516,7 +569,7 @@ export default function TenantDashboard() {
       });
 
       setEkycStatus('Verified');
-      setAadhaarNumber(connectForm.aadhaarNumber);
+      setAadhaarNumber(effectiveAadhaar);
       setPanNumber(rawPan);
       setIsConnectModalOpen(false);
 
@@ -630,11 +683,17 @@ export default function TenantDashboard() {
                                   ? 'Commercial'
                                   : 'Residential';
 
+                              const propRent = Number(p.expectedMonthlyRent) || (p.units && p.units.length > 0 && Number(p.units[0].rentAmount)) || 10000;
+                              const propDeposit = propRent * 2;
+
                               setConnectForm(prev => ({
                                 ...prev,
                                 propertyId: p.id,
                                 propertyName: p.name,
                                 tenancyType: autoTenancy,
+                                monthlyRent: propRent,
+                                depositAmount: propDeposit,
+                                includeFoodPlan: false,
                                 ownerIdentifier: prev.ownerIdentifier || p.ownerId || p.portfolio || 'Landlord'
                               }));
                               setActiveTenancyType(autoTenancy);
@@ -731,26 +790,84 @@ export default function TenantDashboard() {
               </div>
             </div>
 
+            {/* Deposit Scheme Choice: Zero Deposit Protect vs Standard Advance */}
+            <div className="space-y-2">
+              <label className="block text-[#171717] font-bold">
+                Security Deposit Scheme <span className="text-rose-500">*</span>
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div
+                  onClick={() => setConnectForm(prev => ({ ...prev, depositScheme: 'ZERO_DEPOSIT_PROTECT' }))}
+                  className={`p-3 rounded-2xl border cursor-pointer transition ${
+                    connectForm.depositScheme === 'ZERO_DEPOSIT_PROTECT'
+                      ? 'bg-emerald-50/90 border-emerald-500 ring-2 ring-emerald-500/30'
+                      : 'bg-white border-[#D2DDD7] hover:bg-[#F7F8F6]'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 font-black text-xs text-[#171717]">
+                    <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                    <span>Zero Deposit Protect</span>
+                  </div>
+                  <p className="text-[10px] text-[#546E7A] mt-1 leading-normal">
+                    Move-in with <b>₹0 upfront security lockup</b>. Backed by Staywise Digital Surety Trust (₹299/mo).
+                  </p>
+                  <span className="text-[10px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full inline-block mt-1.5">
+                    100% Cash-Free Move-in
+                  </span>
+                </div>
+
+                <div
+                  onClick={() => setConnectForm(prev => ({ ...prev, depositScheme: 'STANDARD_ADVANCE' }))}
+                  className={`p-3 rounded-2xl border cursor-pointer transition ${
+                    connectForm.depositScheme === 'STANDARD_ADVANCE'
+                      ? 'bg-[#E8F0EC] border-[#06110c] ring-2 ring-[#06110c]/20'
+                      : 'bg-white border-[#D2DDD7] hover:bg-[#F7F8F6]'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 font-black text-xs text-[#171717]">
+                    <CreditCard className="h-4 w-4 text-[#06110c]" />
+                    <span>Standard Advance Deposit</span>
+                  </div>
+                  <p className="text-[10px] text-[#546E7A] mt-1 leading-normal">
+                    Pay upfront deposit of <b>₹{Number(connectForm.depositAmount || connectForm.monthlyRent * 2).toLocaleString('en-IN')}</b> held in Axis Escrow.
+                  </p>
+                  <span className="text-[10px] font-black text-[#171717] bg-[#D2DDD7] px-2 py-0.5 rounded-full inline-block mt-1.5">
+                    Refundable at Move-out
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* Rent & Deposit */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[#171717] font-bold mb-1">Monthly Rent (₹)</label>
                 <input
                   type="number"
-                  value={connectForm.monthlyRent}
-                  onChange={(e) => setConnectForm({ ...connectForm, monthlyRent: Number(e.target.value) })}
+                  value={connectForm.monthlyRent || ''}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => {
+                    const val = Number(e.target.value) || 0;
+                    setConnectForm(prev => ({ ...prev, monthlyRent: val, depositAmount: val * 2 }));
+                  }}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium font-tabular"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-bold font-tabular"
                 />
               </div>
               <div>
-                <label className="block text-[#171717] font-bold mb-1">Security Deposit (₹)</label>
+                <label className="block text-[#171717] font-bold mb-1">
+                  {connectForm.depositScheme === 'ZERO_DEPOSIT_PROTECT' ? 'Security Deposit (₹0 Under Protect)' : 'Security Deposit (₹)'}
+                </label>
                 <input
                   type="number"
-                  value={connectForm.depositAmount}
-                  onChange={(e) => setConnectForm({ ...connectForm, depositAmount: Number(e.target.value) })}
+                  value={connectForm.depositScheme === 'ZERO_DEPOSIT_PROTECT' ? 0 : (connectForm.depositAmount || '')}
+                  disabled={connectForm.depositScheme === 'ZERO_DEPOSIT_PROTECT'}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => setConnectForm({ ...connectForm, depositAmount: Number(e.target.value) || 0 })}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium font-tabular"
+                  className={`w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] font-bold font-tabular ${
+                    connectForm.depositScheme === 'ZERO_DEPOSIT_PROTECT' ? 'bg-[#F7F8F6] text-emerald-800' : 'bg-white text-[#171717]'
+                  }`}
                 />
               </div>
             </div>
@@ -1117,50 +1234,7 @@ export default function TenantDashboard() {
                 </button>
               </div>
 
-              <form onSubmit={async (e) => {
-                e.preventDefault();
-                const rawAadhaar = aadhaarNumber.replace(/[\s\-]/g, '');
-                if (!/^\d{12}$/.test(rawAadhaar)) {
-                  addNotification('Invalid Aadhaar', 'Please enter a valid 12-digit Indian Aadhaar number.', 'SYSTEM');
-                  return;
-                }
-                const rawPan = panNumber.trim().toUpperCase();
-                if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(rawPan)) {
-                  addNotification('Invalid PAN', 'Please enter a valid 10-character Permanent Account Number (e.g. ABCDE1234F).', 'SYSTEM');
-                  return;
-                }
-
-                setEkycStatus('Verified');
-                setConnectForm(prev => ({ ...prev, aadhaarNumber, panNumber: rawPan }));
-
-                if (typeof window !== 'undefined') {
-                  try {
-                    localStorage.setItem(`staywise_tenant_ekyc_${currentUser?.id || currentUser?.email}`, JSON.stringify({
-                      verified: true,
-                      aadhaar: aadhaarNumber,
-                      pan: rawPan,
-                      verifiedAt: new Date().toISOString()
-                    }));
-                  } catch {}
-                }
-
-                try {
-                  await fetch('/api/auth/ekyc', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      userId: currentUser?.id,
-                      email: currentUser?.email,
-                      aadhaarNumber,
-                      panNumber: rawPan,
-                      ekycVerified: true
-                    })
-                  });
-                } catch {}
-
-                setIsEKYCModalOpen(false);
-                addNotification('eKYC Verified', 'Your resident digital identity (Aadhaar & PAN) has been verified and permanently recorded.', 'SYSTEM');
-              }} className="space-y-3.5 text-xs">
+              <form onSubmit={handleSaveEkyc} className="space-y-3.5 text-xs">
                 <div>
                   <label className="block text-[#546E7A] font-semibold mb-1">Aadhaar Number (12 Digits)</label>
                   <input
@@ -2000,12 +2074,7 @@ Official copy registered in the Staywise Tenancy Portal.`
               </button>
             </div>
 
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              setEkycStatus('Verified');
-              setIsEKYCModalOpen(false);
-              addNotification('KYC Verified', 'Your resident digital identity has been verified.', 'SYSTEM');
-            }} className="space-y-3.5 text-xs">
+            <form onSubmit={handleSaveEkyc} className="space-y-3.5 text-xs">
               <div>
                 <label className="block text-[#546E7A] font-semibold mb-1">Aadhaar Number (12 Digits)</label>
                 <input

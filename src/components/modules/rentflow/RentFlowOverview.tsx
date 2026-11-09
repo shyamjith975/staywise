@@ -40,6 +40,7 @@ export default function RentFlowOverview() {
     setIsPayRentOpen, 
     setSelectedReceiptInvoice, 
     addNotification,
+    payInvoice,
     electricityBills,
     updateElectricityBill,
     addElectricityBill,
@@ -636,10 +637,11 @@ export default function RentFlowOverview() {
                                 <span className="hidden sm:inline">WhatsApp</span>
                               </button>
                               <button
-                                onClick={() => {
-                                  addNotification('Payment Recorded', `Marked ₹${row.amount.toLocaleString('en-IN')} as collected offline for ${row.name}.`, 'RENT');
+                                onClick={async () => {
+                                  await payInvoice(row.id, 'Bank Transfer');
+                                  addNotification('Offline Payment Recorded', `Marked ₹${row.amount.toLocaleString('en-IN')} as collected offline for ${row.name}. Invoice settled and credited to double-entry ledger.`, 'RENT');
                                 }}
-                                className="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[#E8F0EC] hover:bg-[#171717] hover:text-white text-[#171717] text-xs font-bold border border-[#D2DDD7] flex items-center gap-1 transition shrink-0"
+                                className="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[#E8F0EC] hover:bg-[#171717] hover:text-white text-[#171717] text-xs font-bold border border-[#D2DDD7] flex items-center gap-1 transition shrink-0 cursor-pointer"
                                 title="Record cash or direct bank transfer"
                               >
                                 <span className="hidden sm:inline">Record Offline</span>

@@ -929,6 +929,10 @@ class DatabaseEngine {
     try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN co_tenant_name TEXT;'); } catch (e) {}
     try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN co_tenant_phone TEXT;'); } catch (e) {}
     try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN co_tenant_email TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenants ADD COLUMN status TEXT DEFAULT "Active";'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenants ADD COLUMN vacated_at TEXT;'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenants ADD COLUMN deposit_scheme TEXT DEFAULT "ZERO_DEPOSIT_PROTECT";'); } catch (e) {}
+    try { this.sqlite.exec('ALTER TABLE tenant_connection_requests ADD COLUMN deposit_scheme TEXT DEFAULT "ZERO_DEPOSIT_PROTECT";'); } catch (e) {}
     try { this.sqlite.exec('ALTER TABLE users ADD COLUMN two_factor_enabled INTEGER DEFAULT 0;'); } catch (e) {}
     try { this.sqlite.exec('ALTER TABLE users ADD COLUMN ekyc_verified INTEGER DEFAULT 0;'); } catch (e) {}
     try { this.sqlite.exec('ALTER TABLE users ADD COLUMN aadhaar_number TEXT;'); } catch (e) {}
@@ -2317,28 +2321,56 @@ class DatabaseEngine {
       const existing = await this.tenants.findById(id);
       if (!existing) return null;
       const merged = { ...existing, ...updates };
-      this.sqlite.prepare(`
-        UPDATE tenants SET
-          name = ?, email = ?, phone = ?,
-          monthly_rent = ?, deposit_paid = ?,
-          lease_start = ?, lease_end = ?,
-          rent_due_date = ?, salary_date = ?,
-          autopay_active = ?, emergency_contact = ?
-        WHERE id = ?
-      `).run(
-        merged.name,
-        merged.email,
-        merged.phone,
-        merged.monthlyRent,
-        merged.depositPaid,
-        merged.leaseStart,
-        merged.leaseEnd,
-        merged.rentDueDate,
-        sb(merged.salaryDate, null),
-        merged.autopayActive ? 1 : 0,
-        merged.emergencyContact,
-        id
-      );
+      try {
+        this.sqlite.prepare(`
+          UPDATE tenants SET
+            name = ?, email = ?, phone = ?,
+            monthly_rent = ?, deposit_paid = ?,
+            lease_start = ?, lease_end = ?,
+            rent_due_date = ?, salary_date = ?,
+            autopay_active = ?, emergency_contact = ?,
+            status = ?, vacated_at = ?
+          WHERE id = ?
+        `).run(
+          merged.name,
+          merged.email,
+          merged.phone,
+          merged.monthlyRent,
+          merged.depositPaid,
+          merged.leaseStart,
+          merged.leaseEnd,
+          merged.rentDueDate,
+          sb(merged.salaryDate, null),
+          merged.autopayActive ? 1 : 0,
+          merged.emergencyContact,
+          merged.status || 'Active',
+          sb((merged as any).vacatedAt, null),
+          id
+        );
+      } catch {
+        this.sqlite.prepare(`
+          UPDATE tenants SET
+            name = ?, email = ?, phone = ?,
+            monthly_rent = ?, deposit_paid = ?,
+            lease_start = ?, lease_end = ?,
+            rent_due_date = ?, salary_date = ?,
+            autopay_active = ?, emergency_contact = ?
+          WHERE id = ?
+        `).run(
+          merged.name,
+          merged.email,
+          merged.phone,
+          merged.monthlyRent,
+          merged.depositPaid,
+          merged.leaseStart,
+          merged.leaseEnd,
+          merged.rentDueDate,
+          sb(merged.salaryDate, null),
+          merged.autopayActive ? 1 : 0,
+          merged.emergencyContact,
+          id
+        );
+      }
       this.syncRootDb();
       return this.tenants.findById(id);
     }

@@ -185,6 +185,8 @@ export interface Tenant {
   status?: 'Active' | 'Pending' | 'Moved Out' | 'Notice';
   tenancyType?: TenancyType;
   hasFood?: boolean;
+  depositScheme?: 'ZERO_DEPOSIT_PROTECT' | 'STANDARD_ADVANCE';
+  vacatedAt?: string;
   roomSharing?: 'Single' | '2_Sharing' | '3_Sharing';
   coTenantId?: string;
   coTenantName?: string;
@@ -724,6 +726,7 @@ export interface TenantConnectionRequest {
   inspectionNotes?: string;
   depositSettledAmount?: number;
   tenancyType?: TenancyType;
+  depositScheme?: 'ZERO_DEPOSIT_PROTECT' | 'STANDARD_ADVANCE';
   includeFoodPlan?: boolean;
   hasFood?: boolean;
   aadhaarNumber?: string;

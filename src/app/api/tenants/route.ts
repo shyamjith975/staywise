@@ -83,3 +83,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'Failed to onboard tenant' }, { status: 500 });
   }
 }
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    if (!body.id) {
+      return NextResponse.json({ success: false, error: 'Tenant ID is required' }, { status: 400 });
+    }
+    const updated = await db.tenants.update(body.id, body);
+    invalidateBootstrapCache();
+    return NextResponse.json({ success: true, updated, message: 'Tenant record updated in SQLite database.' });
+  } catch (error) {
+    console.error('[API /api/tenants] PATCH Error:', error);
+    return NextResponse.json({ success: false, error: 'Failed to update tenant' }, { status: 500 });
+  }
+}
