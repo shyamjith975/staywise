@@ -19,19 +19,21 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await getAuthenticatedUser(req);
     const queryUserId = req.nextUrl.searchParams.get('userId');
-    const targetUserId = queryUserId || auth?.user.id || null;
+    let targetUserId = queryUserId || auth?.user.id || null;
 
     let userRole = auth?.user.role;
     let userEmail = auth?.user.email;
     if (queryUserId) {
-      const u = await db.users.findById(queryUserId);
+      const u = (await db.users.findById(queryUserId)) || (await db.users.findByEmail(queryUserId));
       if (u) {
+        targetUserId = u.id;
         userRole = u.role;
         userEmail = u.email;
       }
     } else if (!userRole && targetUserId) {
-      const u = await db.users.findById(targetUserId);
+      const u = (await db.users.findById(targetUserId)) || (await db.users.findByEmail(targetUserId));
       if (u) {
+        targetUserId = u.id;
         userRole = u.role;
         userEmail = u.email;
       }
@@ -259,9 +261,10 @@ export async function GET(req: NextRequest) {
 
     // For Tenants: supply verified platform properties catalog so tenants can discover homes, select properties to connect, and apply for Zero-Deposit Protect
     // For Owners: supply only properties owned by this owner
+    const isDemoOwner = targetUserId === 'user-owner-vikram' || userEmail?.toLowerCase() === 'owner@staywise.com';
     const userProperties = (userRole === 'tenant')
       ? allProperties.filter(p => p.verificationStatus === 'APPROVED' || p.status === 'ACTIVE')
-      : allProperties.filter(p => p.ownerId === targetUserId);
+      : allProperties.filter(p => p.ownerId === targetUserId || (isDemoOwner && p.ownerId === 'user-owner-vikram'));
     const userPropIds = (userRole === 'tenant')
       ? userTenants.map(t => t.propertyId).filter(Boolean)
       : userProperties.map(p => p.id);
@@ -332,14 +335,14 @@ export async function GET(req: NextRequest) {
         moveFlowChecklist: userMoveFlowChecklist,
         referrals: userProperties.length > 0 ? allReferrals : [],
         users: allUsers.map(({ password, ...u }) => u),
-        tenantConnectionRequests: (userRole === 'tenant')
-          ? allTenantConnections.filter(r => r.tenantUserId === targetUserId || (userEmail && r.tenantEmail?.toLowerCase() === userEmail.toLowerCase()))
-          : allTenantConnections.filter(r => 
-              (r.ownerId && r.ownerId === targetUserId) || 
-              (userEmail && r.ownerEmail && r.ownerEmail.toLowerCase() === userEmail.toLowerCase()) || 
-              (r.propertyId && userPropIds.includes(r.propertyId)) ||
-              (r.propertyName && userPropNames.includes(r.propertyName.toLowerCase()))
-            ),
+        tenantConnectionRequests: allTenantConnections.filter(r => 
+          r.tenantUserId === targetUserId || 
+          (userEmail && r.tenantEmail?.toLowerCase() === userEmail.toLowerCase()) ||
+          (r.ownerId && r.ownerId === targetUserId) || 
+          (userEmail && r.ownerEmail && r.ownerEmail.toLowerCase() === userEmail.toLowerCase()) || 
+          (r.propertyId && userPropIds.includes(r.propertyId)) ||
+          (r.propertyName && userPropNames.includes(r.propertyName.toLowerCase()))
+        ),
         rewardsAccount: activeUserAccount,
         rewardsLedger: activeLedger,
         rewardRules: allRewardRules,

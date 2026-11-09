@@ -489,6 +489,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       if (savedPortfolio) {
         setActivePortfolio(savedPortfolio);
       }
+      const savedConns = getTabSessionItem('staywise_tenant_connections') || (typeof window !== 'undefined' ? localStorage.getItem('staywise_tenant_connections') : null);
+      if (savedConns) {
+        try {
+          const parsedConns = JSON.parse(savedConns);
+          if (Array.isArray(parsedConns) && parsedConns.length > 0) {
+            setTenantConnectionRequests(parsedConns);
+          }
+        } catch {}
+      }
     } catch (e) {
       console.warn('[Staywise State] Failed to hydrate tab session:', e);
     } finally {
@@ -974,7 +983,18 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         const json = await res.json();
         if (json.success && json.data) {
           const d = json.data;
-          if (Array.isArray(d.properties)) setProperties(d.properties);
+          if (Array.isArray(d.properties)) {
+            setProperties(prev => {
+              const serverMap = new Map(d.properties.map((p: any) => [p.id, p]));
+              const merged = [...d.properties];
+              for (const p of prev) {
+                if (!serverMap.has(p.id)) {
+                  merged.push(p);
+                }
+              }
+              return merged;
+            });
+          }
           if (Array.isArray(d.tenants)) setTenants(d.tenants);
           if (Array.isArray(d.invoices)) setInvoices(d.invoices);
           if (Array.isArray(d.ledger)) setLedger(d.ledger);
@@ -996,7 +1016,19 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           if (Array.isArray(d.moveFlowChecklist)) setMoveFlowChecklist(d.moveFlowChecklist);
           if (Array.isArray(d.referrals)) setReferrals(d.referrals);
           if (Array.isArray(d.users)) setUsers(d.users);
-          if (Array.isArray(d.tenantConnectionRequests)) setTenantConnectionRequests(d.tenantConnectionRequests);
+          if (Array.isArray(d.tenantConnectionRequests)) {
+            setTenantConnectionRequests(prev => {
+              const serverMap = new Map(d.tenantConnectionRequests.map((r: any) => [r.id, r]));
+              const merged = [...d.tenantConnectionRequests];
+              for (const r of prev) {
+                if (!serverMap.has(r.id)) {
+                  merged.push(r);
+                }
+              }
+              try { localStorage.setItem('staywise_tenant_connections', JSON.stringify(merged)); } catch {}
+              return merged;
+            });
+          }
           if (d.subscription) setSubscription(d.subscription);
           if (d.rewardsAccount) setRewardsAccount(d.rewardsAccount);
           if (Array.isArray(d.rewardsLedger)) setRewardsLedger(d.rewardsLedger);
@@ -1084,16 +1116,16 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const newProp: Property = {
       id: newPropId,
       ownerId: assignedOwnerId,
-      name: newPropData.name || 'New Property',
+      name: (newPropData.name || '').trim() || 'New Property',
       type: newPropData.type || 'Apartment',
       portfolio: newPropData.portfolio || (currentUser.name && currentUser.name !== 'Member' ? `${currentUser.name}'s Portfolio` : 'Kozhikode Coastal'),
-      address: newPropData.address || 'Address',
-      city: newPropData.city || 'Kozhikode',
-      state: newPropData.state || 'Kerala',
-      pincode: newPropData.pincode || '673001',
-      totalUnits: newPropData.totalUnits || 1,
-      occupiedUnits: newPropData.occupiedUnits || 0,
-      expectedMonthlyRent: newPropData.expectedMonthlyRent || 25000,
+      address: (newPropData.address || '').trim() || 'Central City Area',
+      city: (newPropData.city || '').trim() || 'Kozhikode',
+      state: (newPropData.state || '').trim() || 'Kerala',
+      pincode: (newPropData.pincode || '').trim() || '673001',
+      totalUnits: Math.max(1, Number(newPropData.totalUnits) || 1),
+      occupiedUnits: Math.max(0, Number(newPropData.occupiedUnits) || 0),
+      expectedMonthlyRent: Math.max(1000, Number(newPropData.expectedMonthlyRent) || 25000),
       collectedRent: 0,
       pendingRent: 0,
       imageUrl: newPropData.imageUrl || '/images/properties/beach-road.jpg',
@@ -1106,7 +1138,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     };
     
     // Optimistic UI update
-    setProperties(prev => [newProp, ...prev]);
+    setProperties(prev => [newProp, ...prev.filter(p => p.id !== newProp.id)]);
     // CRITICAL: Reset activePortfolio to 'all' so new property is immediately visible in owner view
     setActivePortfolio('all');
     addNotification('Property Submitted for Verification', `${newProp.name} has been added. Pending Admin document audit and approval.`, 'SYSTEM');
@@ -1114,7 +1146,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     // Persist to database via API
     try {
       const effectiveToken = sessionToken || (typeof window !== 'undefined' ? sessionStorage.getItem('staywise_token') || localStorage.getItem('staywise_token') : null);
-      await fetch('/api/properties', {
+      const res = await fetch('/api/properties', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -1122,6 +1154,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         },
         body: JSON.stringify(newProp)
       });
+      const data = await res.json();
+      if (data?.success && data?.data) {
+        setProperties(prev => [data.data, ...prev.filter(p => p.id !== newProp.id && p.id !== data.data.id)]);
+      }
       broadcastSync('PROPERTY_ADDED', newProp);
       await loadDatabaseData(undefined, true);
     } catch (err) {
@@ -1799,11 +1835,19 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     addNotification('Connection Request Sent', `Your connection request for Unit ${reqData.unitNumber} with mandatory eKYC & verified docs was submitted. Awaiting owner approval.`, 'SYSTEM');
 
     try {
-      await fetch('/api/tenant-connections', {
+      const res = await fetch('/api/tenant-connections', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newReq)
       });
+      const data = await res.json();
+      if (data?.success && data?.data) {
+        setTenantConnectionRequests(prev => {
+          const updated = [data.data, ...prev.filter(r => r.id !== newReq.id && r.id !== data.data.id)];
+          try { localStorage.setItem('staywise_tenant_connections', JSON.stringify(updated)); } catch {}
+          return updated;
+        });
+      }
       broadcastSync('CONNECTION_REQUEST_CREATED', newReq);
       await loadDatabaseData(undefined, true);
     } catch (e) {

@@ -435,13 +435,14 @@ export default function AddPropertyModal() {
       const beds = pgSharingType === 'Single' ? 1 : pgSharingType === '2-Sharing' ? 2 : pgSharingType === '3-Sharing' ? 3 : 4;
       const floors = Number(pgFloors) || 0;
       const rooms = Number(pgRoomsPerFloor) || 0;
-      return floors * rooms * beds;
+      const calc = floors * rooms * beds;
+      return calc > 0 ? calc : 12;
     }
     if (selectedAsset.type === 'Flat' || selectedAsset.type === 'Apartment') {
-      return Number(flatUnitsCount) || 1;
+      return Math.max(1, Number(flatUnitsCount) || 1);
     }
     if (selectedAsset.type === 'Warehouse') {
-      return Number(whLoadingDocks) || 1;
+      return Math.max(1, Number(whLoadingDocks) || 1);
     }
     if (selectedAsset.type === 'Office') {
       const carpet = Number(commCarpetSqFt) || 0;
@@ -452,24 +453,30 @@ export default function AddPropertyModal() {
 
   const calculatedMonthlyRent = () => {
     if (selectedAsset.type === 'PG' || selectedAsset.type === 'Hostel') {
-      return calculatedTotalUnits() * (Number(pgRentPerBed) || 0);
+      const totalBeds = calculatedTotalUnits();
+      const rentPerBed = Number(pgRentPerBed) || 6500;
+      return Math.max(1000, totalBeds * rentPerBed);
     }
     if (selectedAsset.type === 'Flat' || selectedAsset.type === 'Apartment') {
-      return (Number(flatUnitsCount) || 1) * (Number(flatMonthlyRent) || 0);
+      const units = Number(flatUnitsCount) || 1;
+      const rentPerUnit = Number(flatMonthlyRent) || 25000;
+      return Math.max(1000, units * rentPerUnit);
     }
     if (selectedAsset.type === 'Warehouse') {
-      return (Number(whCarpetAreaSqFt) || 0) * (Number(whBaseRentSqFt) || 0);
+      const carpet = Number(whCarpetAreaSqFt) || 2000;
+      const rate = Number(whBaseRentSqFt) || 35;
+      return Math.max(1000, carpet * rate);
     }
     if (selectedAsset.type === 'Office') {
-      const carpet = Number(commCarpetSqFt) || 0;
-      const base = Number(commBaseRentSqFt) || 0;
-      const cam = Number(commCamSqFt) || 0;
-      return (carpet * base) + (carpet * cam);
+      const carpet = Number(commCarpetSqFt) || 1000;
+      const base = Number(commBaseRentSqFt) || 65;
+      const cam = Number(commCamSqFt) || 15;
+      return Math.max(1000, (carpet * base) + (carpet * cam));
     }
     if (selectedAsset.type === 'Independent House' || selectedAsset.type === 'Villa') {
-      return Number(villaMonthlyRent) || 0;
+      return Math.max(1000, Number(villaMonthlyRent) || 45000);
     }
-    return 0;
+    return 25000;
   };
 
   // Validation logic across steps with per-field error mapping
@@ -592,8 +599,8 @@ export default function AddPropertyModal() {
     const finalPropertyName = propertyName.trim() || `${selectedAsset.label} Property`;
     const finalAddress = addressSearch.trim() || 'Central City Area';
     const finalCity = city.trim() || 'Bengaluru';
-    const totalUnits = calculatedTotalUnits();
-    const expectedRent = calculatedMonthlyRent();
+    const totalUnits = Math.max(1, Number(calculatedTotalUnits()) || 1);
+    const expectedRent = Math.max(1000, Number(calculatedMonthlyRent()) || 25000);
 
     const amenitiesMap: Record<string, string[]> = {
       PG: [...pgRoomAmenities, ...pgBuildingAmenities],

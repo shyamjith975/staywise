@@ -67,7 +67,8 @@ export default function TenantDashboard() {
     addNotification,
     rewardsAccount,
     protectionContracts,
-    conditionReports
+    conditionReports,
+    users
   } = useAppState();
 
   const isDemoTenant = currentUser?.email === 'tenant@staywise.com' || currentUser?.id === 'user-tenant-shyam';
@@ -102,11 +103,27 @@ export default function TenantDashboard() {
     forwardingUpi: currentUser.email || ''
   });
 
-  // Check connection requests for this user
+  // Check connection requests for this user (with persistent fallback for immediate render)
   const userConnection = tenantConnectionRequests.find(r => 
-    r.tenantUserId === currentUser.id || 
-    (currentUser.email && r.tenantEmail?.toLowerCase() === currentUser.email?.toLowerCase())
-  );
+    r.tenantUserId === currentUser?.id || 
+    (currentUser?.email && r.tenantEmail?.toLowerCase() === currentUser.email?.toLowerCase()) ||
+    ((currentUser as any)?.phone && r.tenantPhone && r.tenantPhone.replace(/\D/g, '') === (currentUser as any).phone?.replace(/\D/g, ''))
+  ) || (() => {
+    if (typeof window === 'undefined') return undefined;
+    try {
+      const saved = localStorage.getItem('staywise_tenant_connections');
+      if (!saved) return undefined;
+      const list = JSON.parse(saved);
+      if (Array.isArray(list)) {
+        return list.find((r: any) => 
+          r.tenantUserId === currentUser?.id || 
+          (currentUser?.email && r.tenantEmail?.toLowerCase() === currentUser.email?.toLowerCase()) ||
+          ((currentUser as any)?.phone && r.tenantPhone && r.tenantPhone.replace(/\D/g, '') === (currentUser as any).phone?.replace(/\D/g, ''))
+        );
+      }
+    } catch { return undefined; }
+    return undefined;
+  })();
 
   // Strict tenant scoping: demo account maps to Shyam Sundar, new accounts ONLY match their own records
   const currentTenant = isDemoTenant
@@ -1004,8 +1021,12 @@ export default function TenantDashboard() {
                     <span>Complete eKYC to Connect with Owner</span>
                   </button>
                 )}
-                <div className="p-3 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs text-[#546E7A]">
-                  Your ID: <b className="text-[#171717] font-mono">{currentUser?.email || currentUser?.id}</b>
+                <div className="p-3 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs text-[#171717] font-bold flex items-center gap-1.5">
+                  <Users className="h-4 w-4 text-[#06110c]" />
+                  <span className="text-[#546E7A] font-normal">Resident:</span>
+                  <span className="font-black text-[#171717]">
+                    {currentUser?.name || users?.find(u => u.id === currentUser?.id || (currentUser?.email && u.email?.toLowerCase() === currentUser?.email?.toLowerCase()))?.name || 'Resident'}
+                  </span>
                 </div>
               </div>
             </div>

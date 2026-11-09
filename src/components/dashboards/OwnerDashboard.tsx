@@ -419,7 +419,9 @@ export default function OwnerDashboard() {
   // Owners only see their own properties matched by user ID (ownerId).
   // Only Admin can see all properties across the entire database!
   const ownerProperties = (activeRole === 'owner')
-    ? (currentUser?.id ? properties.filter(p => p.ownerId === currentUser.id) : [])
+    ? (currentUser?.id 
+        ? properties.filter(p => p.ownerId === currentUser.id || (isDemoAccount && p.ownerId === 'user-owner-vikram'))
+        : [])
     : (activeRole === 'admin')
     ? properties
     : (isManagerRole && managerDelegate)

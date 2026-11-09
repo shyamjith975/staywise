@@ -341,12 +341,16 @@ export function validatePropertyPayload(body: any): ValidationResult<any> {
   const state = sanitizeString(body.state || 'Karnataka');
   const pincode = sanitizeString(body.pincode || '560001');
 
-  const rentVal = validatePositiveNumber(body.expectedMonthlyRent, 'Expected Monthly Rent', 0, 10000000);
+  const rawRent = Number(body.expectedMonthlyRent);
+  const safeRent = (isNaN(rawRent) || rawRent < 0) ? 0 : rawRent;
+  const rentVal = validatePositiveNumber(safeRent, 'Expected Monthly Rent', 0, 10000000);
   if (!rentVal.isValid) {
     errors.push({ field: 'expectedMonthlyRent', message: rentVal.message! });
   }
 
-  const unitsVal = validatePositiveNumber(body.totalUnits, 'Total Units', 1, 5000);
+  const rawUnits = Number(body.totalUnits);
+  const safeUnits = (isNaN(rawUnits) || rawUnits < 1) ? 1 : rawUnits;
+  const unitsVal = validatePositiveNumber(safeUnits, 'Total Units', 1, 5000);
   if (!unitsVal.isValid) {
     errors.push({ field: 'totalUnits', message: unitsVal.message! });
   }

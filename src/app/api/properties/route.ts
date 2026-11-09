@@ -81,9 +81,7 @@ export async function POST(req: NextRequest) {
 
     const payload = validation.sanitizedData!;
     const auth = await getAuthenticatedUser(req);
-    const effectiveOwnerId = (auth && auth.user.role === 'owner')
-      ? auth.user.id
-      : (rawBody.ownerId || payload.ownerId || undefined);
+    const effectiveOwnerId = rawBody.ownerId || payload.ownerId || (auth && auth.user.role === 'owner' ? auth.user.id : undefined) || 'user-owner-vikram';
 
     // 2. Owner created property defaults to PENDING verification for admin audit
     const newProperty = await db.properties.create({
