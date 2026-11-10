@@ -3,14 +3,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppState } from '../../../context/AppStateContext';
 import { Property, PropertyType, PropertyStatus } from '../../../types';
-import { 
-  X, 
-  Building2, 
-  MapPin, 
-  Layers, 
-  IndianRupee, 
-  Trash2, 
-  Save, 
+import {
+  X,
+  Building2,
+  MapPin,
+  Layers,
+  IndianRupee,
+  Trash2,
+  Save,
   AlertTriangle,
   Upload,
   Image as ImageIcon,
@@ -27,18 +27,23 @@ const PRESET_PROPERTY_IMAGES = [
 ];
 
 export default function EditPropertyModal() {
-  const { 
-    isEditPropertyModalOpen, 
-    setIsEditPropertyModalOpen, 
-    propertyToEdit, 
+  const {
+    isEditPropertyModalOpen,
+    setIsEditPropertyModalOpen,
+    propertyToEdit,
     setPropertyToEdit,
-    updateProperty, 
-    deleteProperty 
+    updateProperty,
+    deleteProperty,
+    tenants
   } = useAppState();
 
   const [formData, setFormData] = useState<Partial<Property>>({});
   const [confirmDelete, setConfirmDelete] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const realOccupiedUnits = propertyToEdit 
+    ? tenants.filter(t => t.propertyId === propertyToEdit.id && t.status !== 'Moved Out').length
+    : 0;
 
   useEffect(() => {
     if (propertyToEdit) {
@@ -51,7 +56,7 @@ export default function EditPropertyModal() {
         state: propertyToEdit.state,
         pincode: propertyToEdit.pincode,
         totalUnits: propertyToEdit.totalUnits,
-        occupiedUnits: propertyToEdit.occupiedUnits,
+        occupiedUnits: realOccupiedUnits,
         expectedMonthlyRent: propertyToEdit.expectedMonthlyRent,
         status: propertyToEdit.status,
         healthScore: propertyToEdit.healthScore,
@@ -59,7 +64,7 @@ export default function EditPropertyModal() {
       });
       setConfirmDelete(false);
     }
-  }, [propertyToEdit]);
+  }, [propertyToEdit, realOccupiedUnits]);
 
   if (!isEditPropertyModalOpen || !propertyToEdit) return null;
 
@@ -84,10 +89,13 @@ export default function EditPropertyModal() {
     e.preventDefault();
     if (!formData.name?.trim()) return;
 
+    const safeTotalUnits = Number(formData.totalUnits) || 1;
+    const autoOccupiedUnits = Math.min(safeTotalUnits, realOccupiedUnits);
+
     updateProperty(propertyToEdit.id, {
       ...formData,
-      totalUnits: Number(formData.totalUnits) || 1,
-      occupiedUnits: Number(formData.occupiedUnits) || 0,
+      totalUnits: safeTotalUnits,
+      occupiedUnits: autoOccupiedUnits,
       expectedMonthlyRent: Number(formData.expectedMonthlyRent) || 0,
       healthScore: Number(formData.healthScore) || 90,
       imageUrl: formData.imageUrl || propertyToEdit.imageUrl
@@ -102,21 +110,24 @@ export default function EditPropertyModal() {
   };
 
   const propertyTypes: PropertyType[] = [
+    'Flat',
     'Apartment',
-    'Independent House',
-    'Villa',
-    'Duplex',
-    'Studio',
-    'Holiday Home',
     'PG',
     'Hostel',
     'Co-living',
+    'Commercial',
     'Commercial Building',
     'Office',
-    'Shop',
-    'Retail Space',
     'Warehouse',
     'Industrial Property',
+    'Farmhouse',
+    'Villa',
+    'Independent House',
+    'Studio',
+    'Duplex',
+    'Shop',
+    'Retail Space',
+    'Holiday Home',
     'Villa Estate'
   ];
 
@@ -131,12 +142,12 @@ export default function EditPropertyModal() {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto font-sans">
-      <div 
-        onClick={(e) => e.stopPropagation()} 
-        className="bg-white rounded-3xl border border-[#e3e1d8] shadow-2xl max-w-2xl w-full overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150"
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-3xl border border-[#D2DDD7] shadow-2xl max-w-2xl w-full overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150"
       >
         {/* Header */}
-        <div className="p-5 sm:p-6 bg-gradient-to-r from-[#19251f] to-[#274235] text-white flex items-center justify-between">
+        <div className="p-5 sm:p-6 bg-gradient-to-r from-[#171717] to-[#171717] text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-2xl bg-white/10 flex items-center justify-center text-teal-300">
               <Building2 className="h-5 w-5" />
@@ -164,20 +175,20 @@ export default function EditPropertyModal() {
 
         {/* Form Body */}
         <form onSubmit={handleSave} className="p-5 sm:p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-          
+
           {/* Property Picture & Cover Section */}
-          <div className="p-3.5 rounded-2xl bg-[#fbfbfa] border border-[#e8e6de] space-y-3">
+          <div className="p-3.5 rounded-2xl bg-[#ffffff] border border-[#D2DDD7] space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-extrabold text-[#274235] flex items-center gap-1.5 uppercase tracking-wider">
+              <span className="text-[11px] font-extrabold text-[#171717] flex items-center gap-1.5 uppercase tracking-wider">
                 <ImageIcon className="h-3.5 w-3.5 text-emerald-600" />
                 <span>Property Cover Picture</span>
               </span>
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="px-3 py-1 rounded-xl bg-white border border-slate-300 hover:border-[#274235] text-slate-700 font-bold text-xs flex items-center gap-1.5 transition shadow-sm"
+                className="px-3 py-1 rounded-xl bg-white border border-slate-300 hover:border-[#171717] text-slate-700 font-bold text-xs flex items-center gap-1.5 transition shadow-sm"
               >
-                <Upload className="h-3.5 w-3.5 text-[#274235]" />
+                <Upload className="h-3.5 w-3.5 text-[#171717]" />
                 <span>Upload New Photo</span>
               </button>
               <input
@@ -193,8 +204,14 @@ export default function EditPropertyModal() {
               <div className="relative h-20 w-32 rounded-xl overflow-hidden border border-slate-300 bg-slate-100 shrink-0 shadow-inner">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={formData.imageUrl || propertyToEdit.imageUrl}
+                  src={formData.imageUrl || propertyToEdit.imageUrl || '/images/properties/beach-road.jpg'}
                   alt={formData.name || 'Property'}
+                  onError={(e) => {
+                    const target = e.currentTarget as HTMLImageElement;
+                    if (!target.src.includes('/images/properties/beach-road.jpg')) {
+                      target.src = '/images/properties/beach-road.jpg';
+                    }
+                  }}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -205,9 +222,9 @@ export default function EditPropertyModal() {
                   value={formData.imageUrl || ''}
                   onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
                   placeholder="Or paste an image URL..."
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#274235] bg-white"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#171717] bg-white"
                 />
-                
+
                 {/* Preset image pills */}
                 <div className="flex flex-wrap gap-1.5 items-center">
                   <span className="text-[10px] text-slate-400 font-bold">Presets:</span>
@@ -216,11 +233,10 @@ export default function EditPropertyModal() {
                       key={img.label}
                       type="button"
                       onClick={() => setFormData({ ...formData, imageUrl: img.url })}
-                      className={`text-[10px] px-2 py-0.5 rounded-lg border font-semibold transition ${
-                        formData.imageUrl === img.url 
-                          ? 'bg-[#19251f] text-white border-[#19251f]' 
+                      className={`text-[10px] px-2 py-0.5 rounded-lg border font-semibold transition ${formData.imageUrl === img.url
+                          ? 'bg-[#171717] text-white border-[#171717]'
                           : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
-                      }`}
+                        }`}
                     >
                       {img.label}
                     </button>
@@ -241,7 +257,7 @@ export default function EditPropertyModal() {
                 required
                 value={formData.name || ''}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:border-[#274235] focus:ring-1 focus:ring-[#274235]"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:border-[#171717] focus:ring-1 focus:ring-[#06110c]"
                 placeholder="e.g. Beach Road Luxury Apartments"
               />
             </div>
@@ -253,7 +269,7 @@ export default function EditPropertyModal() {
               <select
                 value={formData.type || 'Apartment'}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value as PropertyType })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:border-[#274235] focus:ring-1 focus:ring-[#274235] bg-white"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:border-[#171717] focus:ring-1 focus:ring-[#06110c] bg-white"
               >
                 {propertyTypes.map((t) => (
                   <option key={t} value={t}>{t}</option>
@@ -272,7 +288,7 @@ export default function EditPropertyModal() {
                 type="text"
                 value={formData.portfolio || ''}
                 onChange={(e) => setFormData({ ...formData, portfolio: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:border-[#274235] focus:ring-1 focus:ring-[#274235]"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:border-[#171717] focus:ring-1 focus:ring-[#06110c]"
                 placeholder="e.g. Kozhikode Coastal"
               />
             </div>
@@ -284,7 +300,7 @@ export default function EditPropertyModal() {
               <select
                 value={formData.status || 'ACTIVE'}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value as PropertyStatus })}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:border-[#274235] focus:ring-1 focus:ring-[#274235] bg-white"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold focus:outline-none focus:border-[#171717] focus:ring-1 focus:ring-[#06110c] bg-white"
               >
                 {propertyStatuses.map((s) => (
                   <option key={s} value={s}>{s}</option>
@@ -294,8 +310,8 @@ export default function EditPropertyModal() {
           </div>
 
           {/* Location Fields */}
-          <div className="p-3.5 rounded-2xl bg-[#fbfbfa] border border-[#e8e6de] space-y-3">
-            <span className="text-[11px] font-extrabold text-[#274235] flex items-center gap-1.5 uppercase tracking-wider">
+          <div className="p-3.5 rounded-2xl bg-[#ffffff] border border-[#D2DDD7] space-y-3">
+            <span className="text-[11px] font-extrabold text-[#171717] flex items-center gap-1.5 uppercase tracking-wider">
               <MapPin className="h-3.5 w-3.5 text-emerald-600" />
               <span>Location Details</span>
             </span>
@@ -305,7 +321,7 @@ export default function EditPropertyModal() {
                   type="text"
                   value={formData.address || ''}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#274235] bg-white"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#171717] bg-white"
                   placeholder="Street / Area Address"
                 />
               </div>
@@ -314,7 +330,7 @@ export default function EditPropertyModal() {
                   type="text"
                   value={formData.city || ''}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#274235] bg-white"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#171717] bg-white"
                   placeholder="City"
                 />
               </div>
@@ -323,7 +339,7 @@ export default function EditPropertyModal() {
                   type="text"
                   value={formData.state || ''}
                   onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#274235] bg-white"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#171717] bg-white"
                   placeholder="State"
                 />
               </div>
@@ -332,7 +348,7 @@ export default function EditPropertyModal() {
                   type="text"
                   value={formData.pincode || ''}
                   onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#274235] bg-white"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#171717] bg-white"
                   placeholder="Pincode"
                 />
               </div>
@@ -340,8 +356,8 @@ export default function EditPropertyModal() {
           </div>
 
           {/* Financials & Capacity */}
-          <div className="p-3.5 rounded-2xl bg-[#fbfbfa] border border-[#e8e6de] space-y-3">
-            <span className="text-[11px] font-extrabold text-[#274235] flex items-center gap-1.5 uppercase tracking-wider">
+          <div className="p-3.5 rounded-2xl bg-[#ffffff] border border-[#D2DDD7] space-y-3">
+            <span className="text-[11px] font-extrabold text-[#171717] flex items-center gap-1.5 uppercase tracking-wider">
               <Layers className="h-3.5 w-3.5 text-teal-600" />
               <span>Units &amp; Revenue Metrics</span>
             </span>
@@ -355,9 +371,14 @@ export default function EditPropertyModal() {
                   <input
                     type="number"
                     min="0"
-                    value={formData.expectedMonthlyRent ?? 0}
-                    onChange={(e) => setFormData({ ...formData, expectedMonthlyRent: Number(e.target.value) })}
-                    className="w-full pl-7 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-black focus:outline-none focus:border-[#274235] bg-white"
+                    value={formData.expectedMonthlyRent === 0 || formData.expectedMonthlyRent === undefined ? '' : formData.expectedMonthlyRent}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setFormData({ ...formData, expectedMonthlyRent: v === '' ? 0 : Number(v) });
+                    }}
+                    placeholder="e.g. 25000"
+                    className="w-full pl-7 pr-3 py-2 rounded-xl border border-slate-200 text-xs font-black focus:outline-none focus:border-[#171717] bg-white"
                   />
                 </div>
               </div>
@@ -369,24 +390,32 @@ export default function EditPropertyModal() {
                 <input
                   type="number"
                   min="1"
-                  value={formData.totalUnits ?? 1}
-                  onChange={(e) => setFormData({ ...formData, totalUnits: Number(e.target.value) })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#274235] bg-white"
+                  value={formData.totalUnits === 0 || formData.totalUnits === undefined ? '' : formData.totalUnits}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setFormData({ ...formData, totalUnits: v === '' ? 1 : Number(v) });
+                  }}
+                  placeholder="e.g. 1"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#171717] bg-white"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 mb-1">
-                  Occupied Units
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  max={formData.totalUnits || 999}
-                  value={formData.occupiedUnits ?? 0}
-                  onChange={(e) => setFormData({ ...formData, occupiedUnits: Number(e.target.value) })}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold focus:outline-none focus:border-[#274235] bg-white"
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[10px] font-bold text-slate-500">
+                    Occupied Units
+                  </label>
+                  <span className="text-[9px] font-extrabold text-[#06110c] bg-[#E8F0EC] px-1.5 py-0.5 rounded border border-[#D2DDD7]">
+                    🔒 Auto-Calculated
+                  </span>
+                </div>
+                <div className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold bg-[#E8F0EC]/60 text-slate-800 flex items-center justify-between">
+                  <span>{realOccupiedUnits} of {formData.totalUnits || 1} Occupied</span>
+                  <span className="text-[10px] text-slate-500 font-medium">
+                    {realOccupiedUnits} active resident{realOccupiedUnits === 1 ? '' : 's'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -442,7 +471,7 @@ export default function EditPropertyModal() {
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl bg-[#274235] hover:bg-[#19251f] text-white text-xs font-black shadow-lg shadow-[#274235]/20 flex items-center gap-2 transition hover:scale-[1.02] active:scale-95"
+              className="px-5 py-2.5 rounded-xl bg-[#171717] hover:bg-[#171717] text-white text-xs font-black shadow-lg shadow-[#171717]/20 flex items-center gap-2 transition hover:scale-[1.02] active:scale-95"
             >
               <Save className="h-3.5 w-3.5" />
               <span>Save Changes</span>

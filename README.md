@@ -40,8 +40,9 @@
 | **Frontend Framework** | **Next.js 16.3 (App Router)** | High-performance React 19 architecture with Turbopack. |
 | **Styling** | **Tailwind CSS v4** | Warm architectural parchment design system (`#fcfbf7`, `#19251f`, emerald accents). |
 | **Icons** | **Lucide React** | Scalable vector icons. |
-| **State Management** | **React Context (`AppStateContext`)** | Centralized, reactive state store with optimistic updates and event dispatchers. |
-| **Database Readiness** | **PostgreSQL / Supabase / Prisma** | Schema-ready interfaces in `src/types/index.ts` for instant ORM mapping. |
+| **State & Sync** | **Multi-Tab Sync Engine** | Centralized reactive store with `BroadcastChannel` real-time sync across open tabs and `/api/bootstrap`. |
+| **Persistent Database** | **SQLite 3 (ACID Relational)** | Persistent SQL database (`database.db`) with 17+ tables for Users, Properties, Units, Invoices, and Ledger. |
+| **Security & Cryptography** | **SHA-256 Encryption & HMAC** | Passwords stored as 64-character SHA-256 hashes, constant-time verification, HMAC session tokens, and Layer 7 proxy rate limiting. |
 
 For deep technical details, see the complete [Architecture & Developer Guide (ARCHITECTURE.md)](./ARCHITECTURE.md).
 

@@ -13,8 +13,9 @@ Welcome to the **Staywise** codebase! This document serves as the comprehensive 
 | **Styling & Design System** | **Tailwind CSS v4 + Vanilla CSS** | Bespoke luxury aesthetic: parchment background (`#fcfbf7`), obsidian typography (`#19251f`), subtle emerald metrics, and responsive flex/grid layouts. |
 | **Icons & Visuals** | **Lucide React** | Ultra-crisp, tree-shakable SVG icon suite. |
 | **Micro-Interactions** | **Canvas-Confetti** | Rewarding visual feedback upon rent payment completions and tenant actions. |
-| **Current Data & State Layer** | **React Context API (`AppStateContext`)** | Decoupled in-memory reactive data layer simulating real-time backend state, optimistic UI updates, and double-entry ledger bookkeeping. |
-| **Backend / DB Readiness** | **Next.js Server Actions & API Routes Ready** | Direct plug-in points to PostgreSQL, Supabase, Prisma ORM, or MongoDB. |
+| **Persistent Data & Storage** | **SQLite 3 (ACID Relational Engine)** | Fully persistent relational database (`database.db`) with 17+ SQL tables for Users, Properties, Units, Tenants, Invoices, Ledger, Tickets, and Subscriptions. Multi-tab synchronization via `BroadcastChannel` and `/api/bootstrap`. |
+| **Security & Authentication** | **SHA-256 Encryption & HMAC-SHA256 Tokens** | Passwords stored as 64-character SHA-256 cryptographic hashes with constant-time verification. Stateless HMAC-SHA256 signed session tokens. Layer 7 Token-Bucket rate limiting and OWASP Top 10 security headers enforced in `src/proxy.ts`. |
+| **Backend & API Architecture** | **Next.js 16 Route Handlers (REST)** | Authoritative server endpoints under `src/app/api/*` with anti-tampering validations, double-entry ledger settlement, and PostgreSQL/Prisma-ready repository abstraction in `src/lib/db/database.ts`. |
 
 ---
 
@@ -135,24 +136,25 @@ All monetary transactions (rent, security deposits, vendor payouts, influencer c
 
 ---
 
-## 5. Guide for Human Developers: Plugging in a Real Database & Backend
+## 5. Production Database Engine & Security Architecture
 
-When transitioning from the current reactive state layer to a persistent production database (e.g. PostgreSQL + Prisma / Supabase):
+Staywise utilizes a persistent relational engine (`database.db`) paired with authoritative Next.js 16 REST endpoints:
 
-1. **Database Schema Setup**:
-   - The interfaces in `src/types/index.ts` directly map to relational tables:
-     - `Property` -> `properties` table
-     - `Tenant` -> `tenants` table
-     - `RentInvoice` -> `invoices` table
-     - `LedgerEntry` -> `ledger_entries` table
-     - `InfluencerOffer` -> `influencer_offers` table
-2. **API Routes / Server Actions**:
-   - Create Next.js route handlers under `src/app/api/properties/route.ts`, `src/app/api/invoices/route.ts`, etc.
-   - Replace the in-memory array operations in `AppStateContext.tsx` with standard `fetch('/api/...')` or React Query / SWR hooks.
-3. **Authentication**:
-   - Replace `DEMO_CREDENTIALS` in `AppStateContext.tsx` with NextAuth.js, Clerk, or Supabase Auth.
-4. **File / Image Uploads**:
-   - `AddPropertyModal.tsx` and `EditPropertyModal.tsx` currently handle images via file-reading base64 previews and direct URLs. Connect them to AWS S3, Cloudinary, or Supabase Storage for production asset hosting.
+1. **Persistent Relational Database**:
+   - The engine is implemented in `src/lib/db/database.ts` using Node.js 22's ACID-compliant `node:sqlite` binary interface (`DatabaseSync`), matching the schema defined in `DATABASE_ARCHITECTURE.md`.
+   - SQL tables include `users`, `properties`, `property_units`, `tenants`, `invoices`, `ledger`, `tickets`, `subscriptions`, and asset engine tables.
+   - For PostgreSQL/Supabase production deployment, the repository methods in `src/lib/db/database.ts` provide an isolated data access layer that swaps out SQL drivers without altering UI modules.
+2. **SHA-256 Cryptographic Authentication**:
+   - Passwords are encrypted as 64-character SHA-256 hashes (`src/lib/security/auth.ts`) with constant-time verification (`crypto.timingSafeEqual`) to prevent timing attacks.
+   - User creation, tenant onboarding, and password reset (`/api/auth/change-password`) automatically encrypt passwords.
+   - Session authentication uses cryptographically signed HMAC-SHA256 tokens (`createSessionToken`).
+3. **Layer 7 Rate Limiter & OWASP Security Headers**:
+   - Enforced natively via Next.js 16's `src/proxy.ts`.
+   - Rate limiting: 15 req/min on `/api/auth/*` endpoints and 120 req/min on standard endpoints.
+   - Security headers: X-Frame-Options (SAMEORIGIN), X-Content-Type-Options (nosniff), Referrer-Policy, Permissions-Policy.
+4. **Anti-Tampering Financial Controls**:
+   - Rent settlement (`POST /api/invoices/[id]/pay`) looks up the authoritative balance directly from the database and detects Burp Suite price-tampering attacks.
+   - Subscriptions are verified with HMAC-SHA256 tamper-proof seals (`subscriptionCatalog.ts`).
 
 ---
 

@@ -3,72 +3,141 @@
 import React, { useState } from 'react';
 import { useAppState } from '../../../context/AppStateContext';
 import { Property, PropertyUnit } from '../../../types';
+import { objectStorage } from '../../../lib/storage/objectStorage';
 import { 
   Building, 
   MapPin, 
   Layers, 
   CheckCircle, 
   Clock, 
-  Plus, 
-  UserPlus, 
   ArrowRight,
   ShieldCheck,
   ChevronDown,
   Pencil,
-  Trash2
+  Trash2,
+  Plus
 } from 'lucide-react';
 
 export default function PropertyList() {
   const { 
     properties, 
     activePortfolio, 
-    setIsAddPropertyOpen, 
-    setIsExistingTenantWizardOpen,
+    setActivePortfolio,
     setIsEditPropertyModalOpen,
     setPropertyToEdit,
-    deleteProperty
+    deleteProperty,
+    activeRole,
+    currentUser,
+    setIsAddPropertyOpen
   } = useAppState();
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
-  const displayedProperties = activePortfolio === 'all'
+  // Strict multi-tenant data isolation:
+  // Owners only see properties added by or mapped to their user ID (ownerId).
+  // Only Admin can see all properties across the entire database!
+  const baseProperties = (activeRole === 'owner')
+    ? (currentUser?.id ? properties.filter(p => p.ownerId === currentUser.id) : [])
+    : (activeRole === 'admin')
     ? properties
-    : properties.filter(p => p.portfolio.toLowerCase().includes(activePortfolio.toLowerCase()));
+    : (currentUser?.id ? properties.filter(p => p.ownerId === currentUser.id) : properties);
+
+  // Derive all distinct portfolios belonging to this owner
+  const availablePortfolios = Array.from(new Set(baseProperties.map(p => p.portfolio).filter(Boolean)));
+
+  // Filter properties by portfolio if selected, or fall back to all if no match
+  const filteredProperties = (activePortfolio === 'all' || !activePortfolio)
+    ? baseProperties
+    : baseProperties.filter(p => p.portfolio && p.portfolio.toLowerCase().includes(activePortfolio.toLowerCase()));
+
+  // Fallback: If portfolio filter yielded 0 results but owner has properties, show all properties so newly added assets are never hidden!
+  const displayedProperties = (filteredProperties.length === 0 && baseProperties.length > 0)
+    ? baseProperties
+    : filteredProperties;
 
   return (
     <div className="space-y-6 pb-12 font-sans">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#e3e1d8]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#D2DDD7]">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#19251f]">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#171717]">
               Properties & Unit Hierarchy
             </h1>
-            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#eef3f0] text-[#274235] font-bold border border-[#274235]/20">
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#171717] font-bold border border-[#171717]/20">
               {displayedProperties.length} Properties
             </span>
           </div>
-          <p className="text-xs text-[#6e7972] mt-0.5">
+          <p className="text-xs text-[#666666] mt-0.5">
             Multi-tier Asset Hierarchy: Portfolio → Property → Building → Floor → Unit
           </p>
         </div>
-
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => setIsExistingTenantWizardOpen(true)}
-            className="px-4 py-2.5 rounded-2xl bg-white hover:bg-[#f4f3ef] text-[#19251f] text-xs font-bold border border-[#e3e1d8] transition flex items-center gap-1.5 shadow-sm"
-          >
-            <UserPlus className="h-4 w-4 text-[#274235]" />
-            <span>Onboard Tenant</span>
-          </button>
-          <button
-            onClick={() => setIsAddPropertyOpen(true)}
-            className="px-4 py-2.5 rounded-2xl bg-[#274235] hover:bg-[#1e352a] text-white font-bold text-xs shadow-md shadow-[#274235]/20 transition flex items-center gap-1.5"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Add Property</span>
-          </button>
-        </div>
       </div>
+
+      {/* Portfolio Filter Pills */}
+      {availablePortfolios.length > 1 && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+          <button
+            type="button"
+            onClick={() => setActivePortfolio('all')}
+            className={`px-3 py-1.5 rounded-full font-bold transition shrink-0 ${
+              activePortfolio === 'all'
+                ? 'bg-[#171717] text-white shadow-xs'
+                : 'bg-white hover:bg-[#E8F0EC] text-[#666666] border border-[#D2DDD7]'
+            }`}
+          >
+            All Portfolios ({baseProperties.length})
+          </button>
+          {availablePortfolios.map(port => {
+            const count = baseProperties.filter(p => p.portfolio === port).length;
+            const isSelected = activePortfolio.toLowerCase() === port.toLowerCase();
+            return (
+              <button
+                key={port}
+                type="button"
+                onClick={() => setActivePortfolio(port)}
+                className={`px-3 py-1.5 rounded-full font-bold transition shrink-0 ${
+                  isSelected
+                    ? 'bg-[#171717] text-white shadow-xs'
+                    : 'bg-white hover:bg-[#E8F0EC] text-[#666666] border border-[#D2DDD7]'
+                }`}
+              >
+                {port} ({count})
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Empty State when no properties found */}
+      {displayedProperties.length === 0 && (
+        <div className="bg-white rounded-3xl border border-[#D2DDD7] p-8 sm:p-12 text-center space-y-4 animate-in fade-in duration-200">
+          <button
+            type="button"
+            onClick={() => setIsAddPropertyOpen(true)}
+            className="h-16 w-16 mx-auto rounded-full bg-[#E8F0EC] hover:bg-[#DCE8E1] border border-[#D2DDD7] hover:border-[#171717] flex items-center justify-center text-[#06110c] hover:scale-105 transition-all shadow-xs cursor-pointer group"
+            title="Add Property"
+            aria-label="Add Property"
+          >
+            <Plus className="h-8 w-8 group-hover:rotate-90 transition-transform duration-200" />
+          </button>
+          <div className="space-y-1">
+            <h3 className="text-base sm:text-lg font-bold text-[#171717]">No Properties in This Portfolio Yet</h3>
+            <p className="text-xs text-[#666666] max-w-sm mx-auto">
+              Click the <span className="font-semibold text-[#06110c]">+ button</span> above or use the button below to register your first building, flat, co-living PG, or commercial unit.
+            </p>
+          </div>
+          <div>
+            <button
+              type="button"
+              onClick={() => setIsAddPropertyOpen(true)}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#171717] hover:bg-[#06110c] text-white text-xs font-bold shadow-xs hover:shadow-md transition cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Add Property</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Property Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -81,21 +150,29 @@ export default function PropertyList() {
             >
               <div>
                 {/* Property Image Header with Badges */}
-                <div className="relative h-44 w-full bg-[#e3e1d8] overflow-hidden">
+                <div className="relative h-44 w-full bg-[#D2DDD7] overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={prop.imageUrl}
+                    src={objectStorage.getThumbnailUrl(prop.imageUrl, 480)}
                     alt={prop.name}
+                    loading="lazy"
+                    decoding="async"
+                    onError={(e) => {
+                      const target = e.currentTarget as HTMLImageElement;
+                      if (!target.src.includes('/images/properties/beach-road.jpg')) {
+                        target.src = '/images/properties/beach-road.jpg';
+                      }
+                    }}
                     className="w-full h-full object-cover transition hover:scale-105 duration-300"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
                   
                   {/* Status Tag */}
                   <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-md text-[#19251f] border border-white/40">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/90 backdrop-blur-md text-[#171717] border border-white/40">
                       {prop.type}
                     </span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#274235] text-white">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#171717] text-white">
                       {prop.status}
                     </span>
                     {prop.verificationStatus === 'PENDING' ? (
@@ -126,28 +203,28 @@ export default function PropertyList() {
 
                 {/* Details Body */}
                 <div className="p-5 space-y-3 text-xs">
-                  <div className="flex justify-between items-center text-[#6e7972]">
+                  <div className="flex justify-between items-center text-[#666666]">
                     <span>Portfolio</span>
-                    <span className="font-bold text-[#19251f]">{prop.portfolio}</span>
+                    <span className="font-bold text-[#171717]">{prop.portfolio}</span>
                   </div>
-                  <div className="flex justify-between items-center text-[#6e7972]">
+                  <div className="flex justify-between items-center text-[#666666]">
                     <span>Units</span>
-                    <span className="font-bold text-[#19251f]">{prop.occupiedUnits} / {prop.totalUnits} Occupied</span>
+                    <span className="font-bold text-[#171717]">{prop.occupiedUnits} / {prop.totalUnits} Occupied</span>
                   </div>
-                  <div className="flex justify-between items-center text-[#6e7972]">
+                  <div className="flex justify-between items-center text-[#666666]">
                     <span>Expected Monthly Rent</span>
-                    <span className="font-black text-[#19251f] font-tabular">₹{(prop.expectedMonthlyRent / 1000).toFixed(0)}K</span>
+                    <span className="font-black text-[#171717] font-tabular">₹{(prop.expectedMonthlyRent / 1000).toFixed(0)}K</span>
                   </div>
 
                   {/* Amenities Chips */}
                   <div className="pt-2 flex flex-wrap gap-1.5">
                     {prop.amenities.slice(0, 3).map((amenity, idx) => (
-                      <span key={idx} className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#f4f3ef] text-[#6e7972] border border-[#e3e1d8] font-medium">
+                      <span key={idx} className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#666666] border border-[#D2DDD7] font-medium">
                         {amenity}
                       </span>
                     ))}
                     {prop.amenities.length > 3 && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#f4f3ef] text-[#6e7972]">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#E8F0EC] text-[#666666]">
                         +{prop.amenities.length - 3} more
                       </span>
                     )}
@@ -164,7 +241,7 @@ export default function PropertyList() {
                       setPropertyToEdit(prop);
                       setIsEditPropertyModalOpen(true);
                     }}
-                    className="py-2 px-3 rounded-xl bg-slate-100 hover:bg-[#274235] hover:text-white text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1.5"
+                    className="py-2 px-3 rounded-xl bg-slate-100 hover:bg-[#171717] hover:text-white text-slate-700 font-bold text-xs transition flex items-center justify-center gap-1.5"
                   >
                     <Pencil className="h-3.5 w-3.5" />
                     <span>Edit</span>
@@ -185,7 +262,7 @@ export default function PropertyList() {
 
                 <button
                   onClick={() => setSelectedProperty(selectedProperty?.id === prop.id ? null : prop)}
-                  className="w-full py-2.5 rounded-2xl bg-[#f7f6f2] hover:bg-[#274235] hover:text-white border border-[#e3e1d8] text-[#19251f] font-bold text-xs transition flex items-center justify-center gap-1.5"
+                  className="w-full py-2.5 rounded-2xl bg-[#E8F0EC] hover:bg-[#171717] hover:text-white border border-[#D2DDD7] text-[#171717] font-bold text-xs transition flex items-center justify-center gap-1.5"
                 >
                   <Layers className="h-3.5 w-3.5" />
                   <span>{selectedProperty?.id === prop.id ? 'Hide Units Breakdown' : `Explore ${prop.units.length} Units`}</span>
@@ -195,22 +272,22 @@ export default function PropertyList() {
 
               {/* Unit Hierarchy Breakdown Accordion */}
               {selectedProperty?.id === prop.id && (
-                <div className="p-4 bg-[#fbfbfa] border-t border-[#eeece5] space-y-2.5 text-xs">
-                  <div className="font-bold text-[#6e7972] text-[11px] uppercase tracking-wider">
+                <div className="p-4 bg-[#ffffff] border-t border-[#E0E0E0] space-y-2.5 text-xs">
+                  <div className="font-bold text-[#666666] text-[11px] uppercase tracking-wider">
                     Unit Level Hierarchy (Floor & Status)
                   </div>
                   <div className="space-y-2">
                     {prop.units.map(unit => (
                       <div
                         key={unit.id}
-                        className="p-3 rounded-xl bg-white border border-[#e3e1d8] flex items-center justify-between text-xs shadow-sm"
+                        className="p-3 rounded-xl bg-white border border-[#D2DDD7] flex items-center justify-between text-xs shadow-sm"
                       >
                         <div>
-                          <div className="font-bold text-[#19251f] flex items-center gap-2">
+                          <div className="font-bold text-[#171717] flex items-center gap-2">
                             <span>Unit {unit.unitNumber}</span>
-                            <span className="text-[10px] text-[#6e7972]">({unit.type} • Floor {unit.floor})</span>
+                            <span className="text-[10px] text-[#666666]">({unit.type} • Floor {unit.floor})</span>
                           </div>
-                          <div className="text-[11px] text-[#6e7972] mt-0.5">
+                          <div className="text-[11px] text-[#666666] mt-0.5">
                             {unit.currentTenantName ? `Resident: ${unit.currentTenantName}` : 'No active tenant'}
                           </div>
                         </div>
@@ -223,7 +300,7 @@ export default function PropertyList() {
                           }`}>
                             {unit.status}
                           </span>
-                          <div className="text-[11px] font-tabular font-black text-[#19251f] mt-1">
+                          <div className="text-[11px] font-tabular font-black text-[#171717] mt-1">
                             ₹{unit.rentAmount.toLocaleString('en-IN')}/mo
                           </div>
                         </div>

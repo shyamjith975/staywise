@@ -1,0 +1,69 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '../../../../lib/db';
+
+export async function POST(req: NextRequest) {
+  try {
+    const apiKey = 
+      req.headers.get('x-api-key') || 
+      req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ||
+      req.headers.get('x-staywise-client-key');
+
+    const body = await req.json();
+    if (!body.name || !body.email || !body.propertyId || !body.unitNumber) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Missing required onboarding fields: name, email, propertyId, unitNumber' 
+        },
+        { status: 400 }
+      );
+    }
+
+    // Verify property exists before allowing onboarding
+    const targetProperty = await db.properties.findById(body.propertyId);
+    if (!targetProperty) {
+      return NextResponse.json(
+        { success: false, error: 'You must add at least one property before onboarding a tenant.' },
+        { status: 400 }
+      );
+    }
+
+    const onboardResult = await db.tenants.onboard({
+      name: body.name,
+      phone: body.phone || '+91 98000 00000',
+      email: body.email,
+      propertyId: body.propertyId,
+      unitNumber: body.unitNumber,
+      monthlyRent: Number(body.monthlyRent) || 25000,
+      deposit: Number(body.deposit) || 50000,
+      leaseStart: body.leaseStart || new Date().toISOString().split('T')[0],
+      leaseEnd: body.leaseEnd || '2027-09-30',
+      rentDueDate: Number(body.rentDueDate) || 5,
+      password: body.password || 'Tenant@123',
+      tenancyType: body.tenancyType || 'Residential',
+      hasFood: body.hasFood ?? false,
+      roomSharing: body.roomSharing || 'Single',
+      coTenant: body.coTenant,
+      aadhaarNumber: body.aadhaarNumber,
+      panNumber: body.panNumber,
+      documents: body.documents
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `Tenant ${body.name} successfully onboarded into SQLite database.`,
+      data: onboardResult
+    }, { 
+      status: 201,
+      headers: {
+        'x-api-authenticated': apiKey ? 'true' : 'false'
+      }
+    });
+  } catch (error) {
+    console.error('[API /api/tenants/onboard] Error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to onboard tenant into SQLite database' },
+      { status: 500 }
+    );
+  }
+}

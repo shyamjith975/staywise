@@ -104,6 +104,18 @@ export type PropertyType =
   | 'Business Park' 
   | 'Logistics Park';
 
+export type TenancyType = 
+  | 'PG' 
+  | 'Flat' 
+  | 'Residential' 
+  | 'Warehouse' 
+  | 'Industrial' 
+  | 'Office' 
+  | 'Commercial' 
+  | 'Villa' 
+  | 'Estate'
+  | PropertyType;
+
 export interface PropertyUnit {
   id: string;
   propertyId: string;
@@ -123,6 +135,7 @@ export interface PropertyUnit {
 
 export interface Property {
   id: string;
+  ownerId?: string;
   name: string;
   type: PropertyType;
   portfolio: string;
@@ -142,10 +155,16 @@ export interface Property {
   amenities: string[];
   verificationStatus?: 'APPROVED' | 'PENDING' | 'REJECTED';
   submittedDocs?: string[];
+  electricityDiscom?: string;
+  electricityTariffPerUnit?: number;
+  electricityBillingMode?: 'Sub-meter OCR' | 'Equal Split' | 'Included in Rent' | 'Direct DISCOM Pass-through';
+  dgBackupRatePerUnit?: number;
+  consumerNumber?: string;
 }
 
 export interface Tenant {
   id: string;
+  userId?: string;
   name: string;
   email: string;
   phone: string;
@@ -163,6 +182,20 @@ export interface Tenant {
   kycVerified: boolean;
   rewardsBalance: number;
   emergencyContact: string;
+  status?: 'Active' | 'Pending' | 'Moved Out' | 'Notice';
+  tenancyType?: TenancyType;
+  hasFood?: boolean;
+  depositScheme?: 'ZERO_DEPOSIT_PROTECT' | 'STANDARD_ADVANCE';
+  vacatedAt?: string;
+  roomSharing?: 'Single' | '2_Sharing' | '3_Sharing';
+  coTenantId?: string;
+  coTenantName?: string;
+  coTenantPhone?: string;
+  coTenantEmail?: string;
+  rentSharePercentage?: number;
+  aadhaarNumber?: string;
+  panNumber?: string;
+  documents?: { id: string; name: string; size?: string; date: string; type?: string; url?: string }[];
 }
 
 export type RentStatus = 
@@ -190,7 +223,7 @@ export interface RentInvoice {
   paidAmount: number;
   dueDate: string;
   status: RentStatus;
-  paymentMethod?: 'UPI' | 'Bank Transfer' | 'Card' | 'Autopay' | 'FlexPay';
+  paymentMethod?: 'UPI' | 'Bank Transfer' | 'Card' | 'Autopay' | 'FlexPay' | 'Security Deposit Deduction';
   paidDate?: string;
   transactionId?: string;
 }
@@ -280,11 +313,11 @@ export interface EstateAsset {
 export interface StaffMember {
   id: string;
   name: string;
-  role: 'Security' | 'Caretaker' | 'Gardener' | 'Housekeeping' | 'Electrician' | 'Manager';
+  role: 'Security' | 'Caretaker' | 'Gardener' | 'Housekeeping' | 'Electrician' | 'Manager' | string;
   estateName: string;
   phone: string;
-  shift: 'Morning' | 'Evening' | 'Night' | 'Full-time';
-  attendanceStatus: 'Present' | 'On Leave' | 'Off Duty';
+  shift: 'Morning' | 'Evening' | 'Night' | 'Full-time' | string;
+  attendanceStatus: 'Present' | 'On Leave' | 'Off Duty' | string;
   monthlySalary: number;
 }
 
@@ -351,13 +384,16 @@ export interface Roommate {
 
 export interface AuthorizedDelegate {
   id: string;
+  ownerId?: string;
   name: string;
   email: string;
   phone: string;
   role: 'Accountant' | 'Property Manager' | 'Tax Auditor';
   permissions: string[];
-  addedDate: string;
+  addedDate?: string;
+  invitedAt?: string;
   status: 'Active' | 'Invited' | 'Suspended';
+  canWithdrawFunds?: boolean; // STRICT RULE: Must be false for delegates (only verified property owner can withdraw funds)
 }
 
 // ----------------------------------------------------
@@ -456,6 +492,15 @@ export interface CommercialVisitor {
   checkOutTime?: string;
   passCode: string;
   status: 'Checked In' | 'Checked Out';
+}
+
+export interface CommercialParkingSlot {
+  id: string;
+  slotNumber: string;
+  assignedTenant: string;
+  vehicleNumber?: string;
+  monthlyFee: number;
+  status: 'Allocated' | 'Vacant';
 }
 
 // ----------------------------------------------------
@@ -557,5 +602,363 @@ export interface InfluencerOffer {
   status: 'ACTIVE' | 'PAUSED' | 'EXPIRED';
   createdAt: string;
 }
+
+// ----------------------------------------------------
+// OWNER SUBSCRIPTION & ANTI-TAMPER SECURITY (Sections 47-50)
+// ----------------------------------------------------
+export type SubscriptionTierId = 'starter' | 'growth_pro' | 'enterprise';
+
+export interface SubscriptionPlan {
+  id: SubscriptionTierId;
+  name: string;
+  tagline: string;
+  monthlyPrice: number;
+  annualPrice: number;
+  maxUnits: number;
+  badge?: string;
+  popular?: boolean;
+  features: string[];
+}
+
+export interface SubscriptionInvoice {
+  invoiceId: string;
+  date: string;
+  amount: number;
+  currency: string;
+  planId: SubscriptionTierId;
+  planName: string;
+  billingCycle: 'monthly' | 'annual';
+  txnId: string;
+  paymentMethod: string;
+  status: 'PAID' | 'PENDING' | 'FAILED';
+  gstin?: string;
+  taxAmount: number;
+  downloadUrl?: string;
+}
+
+export interface OwnerSubscription {
+  id: string;
+  userId: string;
+  ownerName: string;
+  entityName: string;
+  planId: SubscriptionTierId;
+  planName: string;
+  status: 'ACTIVE' | 'EXPIRED' | 'TRIAL' | 'PAST_DUE' | 'CANCELLED';
+  billingCycle: 'monthly' | 'annual';
+  startDate: string;        // e.g. "2026-10-01"
+  endDate: string;          // e.g. "2027-10-01"
+  daysRemaining: number;
+  amount: number;
+  currency: string;
+  maxUnits: number;
+  currentUnits: number;
+  paymentMethod: string;
+  lastPaymentTxnId: string;
+  lastPaymentDate: string;
+  autoRenew: boolean;
+  gstin?: string;
+  tamperProofHash: string;  // SHA256 of immutable subscription parameters to prevent DB manipulation
+  history: SubscriptionInvoice[];
+  // 7-Day Free Trial & Autopay Fields
+  isTrial?: boolean;
+  trialDaysRemaining?: number;
+  trialEndsAt?: string;
+  canCancelBefore?: string;
+  autopayConnected?: boolean;
+  autopayMethod?: 'CARD' | 'BANK_MANDATE';
+  autopayMaskedDetails?: string;
+  firstChargeAmount?: number;
+  firstChargeDate?: string;
+}
+
+export interface SignedCheckoutSession {
+  sessionId: string;
+  sessionToken: string;
+  userId: string;
+  planId: SubscriptionTierId;
+  planName: string;
+  billingCycle: 'monthly' | 'annual';
+  authoritativeAmount: number;
+  currency: string;
+  nonce: string;
+  createdAt: number;
+  expiresAt: number;
+  signature: string;
+}
+
+export interface TrialSignupPayload {
+  name: string;
+  email: string;
+  password: string;
+  phone: string;
+  role: 'owner' | 'estate_manager';
+  portfolioName: string;
+  city: string;
+  planId: SubscriptionTierId;
+  billingCycle: 'monthly' | 'annual';
+  autopayMethod: 'CARD' | 'BANK_MANDATE';
+  cardDetails?: {
+    holderName: string;
+    cardNumberMasked: string;
+    expiry: string;
+    cardBrand?: string;
+  };
+  bankDetails?: {
+    accountHolder: string;
+    bankName: string;
+    accountNumberMasked: string;
+    ifsc: string;
+    mandateType?: 'E_NACH' | 'UPI_MANDATE';
+  };
+}
+
+export interface TenantConnectionRequest {
+  id: string;
+  tenantUserId: string;
+  tenantName: string;
+  tenantEmail: string;
+  tenantPhone: string;
+  ownerId?: string;
+  ownerCode?: string;
+  ownerEmail?: string;
+  ownerPhone?: string;
+  propertyId?: string;
+  propertyName?: string;
+  unitNumber: string;
+  monthlyRent: number;
+  depositAmount: number;
+  leaseStartDate: string;
+  status: 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'MOVE_OUT_PENDING' | 'MOVED_OUT';
+  createdAt: string;
+  moveOutDate?: string;
+  moveOutReason?: string;
+  inspectionNotes?: string;
+  depositSettledAmount?: number;
+  tenancyType?: TenancyType;
+  depositScheme?: 'ZERO_DEPOSIT_PROTECT' | 'STANDARD_ADVANCE';
+  includeFoodPlan?: boolean;
+  hasFood?: boolean;
+  aadhaarNumber?: string;
+  panNumber?: string;
+  ekycVerified?: boolean;
+  documents?: { id: string; name: string; size?: string; date: string; type?: string; url?: string }[];
+  agreementUrl?: string;
+  roomSharing?: 'Single' | '2_Sharing' | '3_Sharing';
+  coTenantName?: string;
+  coTenantPhone?: string;
+  coTenantEmail?: string;
+}
+
+export interface FoodMenuItem {
+  id: string;
+  propertyId?: string;
+  category?: string;
+  dayOfWeek?: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday' | 'Daily';
+  mealType: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snacks';
+  menu?: string;
+  name?: string;
+  dietaryType?: 'Veg' | 'Non-Veg' | 'Jain' | 'Vegan';
+  dietaryTag?: string;
+  costPerMeal?: number;
+  price?: number;
+  vendor?: string;
+  availableTimings?: string;
+  description?: string;
+}
+
+// ----------------------------------------------------
+// STAYWISE REWARDS (WISEPOINTS) — SECTIONS 51-54
+// ----------------------------------------------------
+export type RewardTier = 'SILVER' | 'GOLD' | 'PLATINUM';
+
+export interface RewardsAccount {
+  userId: string;
+  userName?: string;
+  userRole?: UserRole;
+  totalEarned: number;
+  totalRedeemed: number;
+  currentBalance: number;
+  pendingPoints: number;
+  currentStreak: number;
+  tier: RewardTier;
+  updatedAt: string;
+}
+
+export type RewardActionType = 
+  | 'RENT_PAID_ON_TIME'
+  | 'MOVE_IN_INSPECTION_COMPLETED'
+  | 'LEASE_RENEWAL'
+  | 'REFERRAL_COMPLETED'
+  | 'ANNUAL_STREAK_BONUS'
+  | 'MERCHANT_PURCHASE'
+  | 'DEPOSIT_PROTECT_BONUS'
+  | 'REDEMPTION_RENT_CREDIT'
+  | 'REDEMPTION_HOME_SERVICE'
+  | 'REDEMPTION_MERCHANT_VOUCHER'
+  | 'REDEMPTION_DEPOSIT_PROTECT_FEE'
+  | 'POINTS_REVERSED'
+  | 'POINTS_EXPIRED';
+
+export interface RewardsLedgerEntry {
+  id: string;
+  userId: string;
+  actionType: RewardActionType;
+  points: number; // Positive for earned, negative for redeemed
+  pointsType: 'EARNED' | 'REDEEMED' | 'REVERSED' | 'PENDING';
+  referenceId?: string; // invoiceId, contractId, referralId, etc.
+  referenceType?: 'INVOICE' | 'INSPECTION' | 'LEASE' | 'REFERRAL' | 'VOUCHER' | 'CLAIM';
+  description: string;
+  financialCost: number; // Cost in INR to platform/merchant
+  createdAt: string;
+}
+
+export interface RewardRule {
+  id: string;
+  ruleCode: string;
+  name: string;
+  description: string;
+  pointsAwarded: number;
+  isActive: boolean;
+  category: 'RENT' | 'TENANCY' | 'COMMUNITY' | 'MERCHANT' | 'LOYALTY';
+  monthlyCap: number;
+  partnerFunded: boolean;
+}
+
+export interface MerchantOffer {
+  id: string;
+  partnerName: string;
+  category: 'Dining' | 'Fitness' | 'Home Services' | 'Groceries' | 'Furnishing' | 'Lifestyle';
+  offerTitle: string;
+  discountDescription: string;
+  pointsRequired: number;
+  voucherCode: string;
+  imageUrl?: string;
+  terms: string;
+  isActive: boolean;
+  expiryDate?: string;
+}
+
+// ----------------------------------------------------
+// STAYWISE DEPOSIT PROTECT (ZERO-DEPOSIT) — SECTIONS 55-60
+// ----------------------------------------------------
+export type ProtectionApplicationStatus = 
+  | 'PENDING_ASSESSMENT' 
+  | 'APPROVED' 
+  | 'REJECTED' 
+  | 'CONSENTED' 
+  | 'ACTIVE';
+
+export type ProtectionContractStatus = 
+  | 'PENDING_CONSENT'
+  | 'ACTIVE'
+  | 'EXPIRED'
+  | 'CLAIM_PENDING'
+  | 'SETTLED'
+  | 'CANCELLED';
+
+export interface DepositProtectionApplication {
+  id: string;
+  tenantId: string;
+  tenantName: string;
+  tenantEmail?: string;
+  tenantPhone?: string;
+  ownerId: string;
+  ownerName?: string;
+  propertyId: string;
+  propertyName: string;
+  unitNumber: string;
+  monthlyRent: number;
+  traditionalDepositAmount: number; // e.g. ₹60,000
+  monthlyFee: number; // e.g. ₹750/mo
+  coverageLimit: number; // e.g. ₹1,00,000
+  riskScore: number; // 0-100 (e.g. 88)
+  eligibilityStatus: 'ELIGIBLE' | 'REQUIRES_CO_SIGNER' | 'INELIGIBLE';
+  status: ProtectionApplicationStatus;
+  disclosuresAccepted: boolean;
+  partnerProvider: string; // e.g. 'Staywise Partner Guarantee / Institutional Underwriter'
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProtectionContract {
+  id: string;
+  applicationId: string;
+  policyNumber: string;
+  tenantId: string;
+  tenantName: string;
+  ownerId: string;
+  ownerName: string;
+  propertyId: string;
+  propertyName: string;
+  unitNumber: string;
+  coverageLimit: number; // e.g. ₹1,00,000
+  monthlyFee: number; // e.g. ₹750/mo
+  startDate: string;
+  endDate: string;
+  status: ProtectionContractStatus;
+  partnerName: string;
+  certificateUrl?: string;
+  coveredRisks: string[];
+  exclusions: string[];
+  createdAt: string;
+}
+
+export interface ConditionReportItem {
+  id: string;
+  area: string; // 'Living Room', 'Kitchen', 'Master Bedroom', 'Bathroom', 'Balcony'
+  item: string; // 'Walls & Paint', 'Fixtures & Switches', 'Flooring & Tiles', 'Air Conditioner', 'Windows & Glass'
+  condition: 'EXCELLENT' | 'GOOD' | 'FAIR' | 'DAMAGED';
+  notes: string;
+  photoUrl?: string;
+}
+
+export interface PropertyConditionReport {
+  id: string;
+  contractId?: string;
+  propertyId: string;
+  propertyName: string;
+  unitNumber: string;
+  tenantId: string;
+  tenantName: string;
+  reportType: 'MOVE_IN' | 'MOVE_OUT';
+  inspectionDate: string;
+  overallCondition: 'Pristine' | 'Satisfactory' | 'Needs Attention' | 'Severe Damage';
+  items: ConditionReportItem[];
+  photos: string[];
+  notes: string;
+  verifiedBy: string;
+  status: 'SUBMITTED' | 'VERIFIED' | 'DISPUTED';
+  createdAt: string;
+}
+
+export type ClaimType = 'UNPAID_RENT' | 'TENANT_DAMAGE' | 'PAINTING_CLEANING' | 'COMBINED';
+export type ClaimStatus = 'FILED' | 'UNDER_REVIEW' | 'TENANT_REVIEW' | 'APPROVED' | 'DISPUTED' | 'SETTLED' | 'REJECTED';
+
+export interface ProtectionClaim {
+  id: string;
+  contractId: string;
+  policyNumber: string;
+  propertyId: string;
+  propertyName: string;
+  unitNumber: string;
+  ownerId: string;
+  ownerName: string;
+  tenantId: string;
+  tenantName: string;
+  claimType: ClaimType;
+  claimedAmount: number;
+  approvedAmount?: number;
+  deductible: number;
+  description: string;
+  evidenceUrls: string[];
+  status: ClaimStatus;
+  disputeReason?: string;
+  settlementDate?: string;
+  settlementTxnId?: string;
+  createdAt: string;
+}
+
+
+
 
 
