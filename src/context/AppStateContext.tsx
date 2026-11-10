@@ -362,6 +362,10 @@ interface AppStateContextType {
   addNotification: (title: string, message: string, type: NotificationItem['type']) => void;
   updatePGBedStatus: (bedId: string, newStatus: PGBedStatus) => void;
   addCommercialVisitor: (visitor: Omit<CommercialVisitor, 'id' | 'passCode' | 'status'>) => void;
+  checkoutCommercialVisitor: (id: string) => void;
+  deleteCommercialVisitor: (id: string) => void;
+  addCamExpense: (expense: Omit<CAMExpenseItem, 'id'>) => void;
+  deleteCamExpense: (id: string) => void;
   toggleMoveFlowTask: (taskId: string) => void;
   resolveDepositDispute: (disputeId: string, status: DepositSettlementDispute['status']) => void;
   addReferral: (referral: Omit<TenantReferralItem, 'id' | 'date'>) => void;
@@ -377,7 +381,7 @@ interface AppStateContextType {
   rejectTenantConnectionRequest: (id: string) => void;
   requestTenantMoveOut: (requestId: string, details: { moveOutDate: string; moveOutReason: string }) => void;
   verifyAndSettleMoveOut: (requestId: string, details: { inspectionNotes?: string; depositSettledAmount?: number }) => void;
-  disconnectTenant: (tenantId: string, reason?: string) => Promise<void>;
+  disconnectTenant: (tenantId: string, reason?: string, settlementDetails?: { depositHeld: number; lastMonthRentDeducted: number; refundAmount: number; deductionNotes?: string }) => Promise<void>;
 
   // Authorized Delegates (Manager & CA with strict withdrawal restrictions)
   delegates: AuthorizedDelegate[];
@@ -1769,6 +1773,38 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const checkoutCommercialVisitor = (id: string) => {
+    setCommercialVisitors(prev => prev.map(v => v.id === id ? { ...v, status: 'Checked Out', checkOutTime: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) } : v));
+    addNotification('Visitor Checked Out', 'Visitor pass has been marked as checked out.', 'SYSTEM');
+  };
+
+  const deleteCommercialVisitor = (id: string) => {
+    setCommercialVisitors(prev => prev.filter(v => v.id !== id));
+    addNotification('Visitor Pass Removed', 'Visitor record deleted.', 'SYSTEM');
+  };
+
+  const addCamExpense = (expenseData: Omit<CAMExpenseItem, 'id'>) => {
+    const newExp: CAMExpenseItem = {
+      ...expenseData,
+      id: `cam-${Date.now()}`
+    };
+    setCamExpenses(prev => {
+      const updated = [newExp, ...prev];
+      try { localStorage.setItem('staywise_cam_expenses', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    addNotification('CAM Expense Added', `${expenseData.category} (₹${expenseData.monthlyCost.toLocaleString('en-IN')}) added to CAM pool.`, 'SYSTEM');
+  };
+
+  const deleteCamExpense = (id: string) => {
+    setCamExpenses(prev => {
+      const updated = prev.filter(e => e.id !== id);
+      try { localStorage.setItem('staywise_cam_expenses', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    addNotification('CAM Expense Removed', 'CAM pool cost allocation updated.', 'SYSTEM');
+  };
+
   const toggleMoveFlowTask = async (taskId: string) => {
     setMoveFlowChecklist(prev => prev.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t));
 
@@ -2084,7 +2120,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {}
   };
 
-  const disconnectTenant = async (tenantId: string, reason: string = 'Moved Out / Lease Completed') => {
+  const disconnectTenant = async (
+    tenantId: string, 
+    reason: string = 'Moved Out / Lease Completed',
+    settlementDetails?: { depositHeld: number; lastMonthRentDeducted: number; refundAmount: number; deductionNotes?: string }
+  ) => {
     const today = new Date().toISOString().split('T')[0];
     const target = tenants.find(t => t.id === tenantId);
     const tenantName = target?.name || 'Resident';
@@ -2101,39 +2141,66 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       return t;
     }));
 
-    // Update property occupied units automatically
+    // Update property occupied units automatically and free up the unit
     if (target?.propertyId) {
       setProperties(prev => prev.map(p => {
         if (p.id === target.propertyId) {
           return {
             ...p,
-            occupiedUnits: Math.max(0, p.occupiedUnits - 1)
+            occupiedUnits: Math.max(0, p.occupiedUnits - 1),
+            units: p.units.map(u => {
+              if (u.unitNumber === target.unitNumber || u.currentTenantId === tenantId) {
+                return {
+                  ...u,
+                  status: 'VACANT' as const,
+                  currentTenantId: undefined,
+                  currentTenantName: undefined,
+                  leaseEnd: undefined
+                };
+              }
+              return u;
+            })
           };
         }
         return p;
       }));
     }
 
-    // Cancel pending unpaid invoices for this vacated lease
+    // Settle pending unpaid invoices via Security Deposit Advance Deduction!
     setInvoices(prev => prev.map(inv => {
       if (inv.tenantId === tenantId && inv.status !== 'Paid') {
         return {
           ...inv,
-          status: 'Cancelled' as any
+          status: 'Paid',
+          paymentMethod: 'Security Deposit Deduction',
+          paidAt: today,
+          paymentReference: `ADV-SETTLE-${Date.now().toString().slice(-4)}`
         };
       }
       return inv;
     }));
 
-    // Update any matching connection request
+    const depositHeld = settlementDetails?.depositHeld ?? (target?.depositPaid || (target?.monthlyRent ? target.monthlyRent * 2 : 20000));
+    const lastRent = settlementDetails?.lastMonthRentDeducted ?? (target?.monthlyRent || 10000);
+    const refundBal = settlementDetails?.refundAmount ?? Math.max(0, depositHeld - lastRent);
+
+    // Update matching connection request with full settlement breakdown
+    const matchingConn = tenantConnectionRequests.find(r => 
+      (target?.email && r.tenantEmail?.toLowerCase() === target.email.toLowerCase()) || 
+      (target?.userId && r.tenantUserId === target.userId) ||
+      (r.propertyId === target?.propertyId && r.unitNumber === target?.unitNumber)
+    );
+
     setTenantConnectionRequests(prev => {
       const updated = prev.map(r => {
-        if ((target?.email && r.tenantEmail?.toLowerCase() === target.email.toLowerCase()) || (target?.userId && r.tenantUserId === target.userId)) {
+        if ((target?.email && r.tenantEmail?.toLowerCase() === target.email.toLowerCase()) || (target?.userId && r.tenantUserId === target.userId) || (r.propertyId === target?.propertyId && r.unitNumber === target?.unitNumber)) {
           return {
             ...r,
             status: 'MOVED_OUT' as const,
             moveOutDate: today,
-            moveOutReason: reason
+            moveOutReason: reason,
+            depositSettledAmount: refundBal,
+            inspectionNotes: `Last month rent (₹${lastRent.toLocaleString('en-IN')}) deducted from advance deposit. Balance of ₹${refundBal.toLocaleString('en-IN')} refunded to resident bank.`
           };
         }
         return r;
@@ -2143,8 +2210,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     });
 
     addNotification(
-      'Tenant Disconnected / Moved Out',
-      `${tenantName} has been disconnected and archived under Past Tenants.`,
+      'Tenant Vacated & Advance Reconciled',
+      `${tenantName} moved out. Last month rent settled via deposit. Net ₹${refundBal.toLocaleString('en-IN')} refunded to resident bank.`,
       'SYSTEM'
     );
 
@@ -2163,6 +2230,25 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           moveOutReason: reason
         })
       });
+
+      if (matchingConn) {
+        await fetch('/api/tenant-connections', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(effectiveToken ? { 'Authorization': `Bearer ${effectiveToken}` } : {})
+          },
+          body: JSON.stringify({
+            id: matchingConn.id,
+            status: 'MOVED_OUT',
+            moveOutDate: today,
+            moveOutReason: reason,
+            depositSettledAmount: refundBal,
+            inspectionNotes: `Last month rent (₹${lastRent.toLocaleString('en-IN')}) deducted from advance deposit. Balance of ₹${refundBal.toLocaleString('en-IN')} refunded to resident bank.`
+          })
+        });
+      }
+
       broadcastSync('TENANT_VACATED', { tenantId, propertyId: target?.propertyId });
       await loadDatabaseData(undefined, true);
     } catch (e) {}
@@ -2708,6 +2794,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       addNotification,
       updatePGBedStatus,
       addCommercialVisitor,
+      checkoutCommercialVisitor,
+      deleteCommercialVisitor,
+      addCamExpense,
+      deleteCamExpense,
       toggleMoveFlowTask,
       resolveDepositDispute,
       addReferral,

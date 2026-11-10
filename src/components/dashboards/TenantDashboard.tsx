@@ -128,7 +128,7 @@ export default function TenantDashboard() {
 
   // Strict tenant scoping: demo account maps to Shyam Sundar, new accounts ONLY match their own records
   const currentTenant = isDemoTenant
-    ? (tenants.find(t => t.id === 't-shyam') || tenants[0])
+    ? tenants.find(t => (t.id === 'tenant-shyam' || t.id === 't-shyam' || t.email?.toLowerCase() === 'tenant@staywise.com' || t.userId === currentUser?.id) && t.status !== 'Moved Out')
     : tenants.find(t => 
         ((currentUser?.email && t.email.toLowerCase() === currentUser.email.toLowerCase()) ||
         (currentUser?.id && (t.userId === currentUser.id || t.id === currentUser.id))) &&
@@ -136,10 +136,14 @@ export default function TenantDashboard() {
       );
 
   const pastTenant = !currentTenant
-    ? tenants.find(t => 
-        ((currentUser?.email && t.email.toLowerCase() === currentUser.email.toLowerCase()) ||
-        (currentUser?.id && (t.userId === currentUser.id || t.id === currentUser.id))) &&
-        t.status === 'Moved Out'
+    ? (isDemoTenant
+        ? (tenants.find(t => (t.id === 'tenant-shyam' || t.id === 't-shyam' || t.email?.toLowerCase() === 'tenant@staywise.com' || t.userId === currentUser?.id) && t.status === 'Moved Out') ||
+           tenants.find(t => (t.id === 'tenant-shyam' || t.id === 't-shyam') && t.status === 'Moved Out'))
+        : tenants.find(t => 
+            ((currentUser?.email && t.email.toLowerCase() === currentUser.email.toLowerCase()) ||
+            (currentUser?.id && (t.userId === currentUser.id || t.id === currentUser.id))) &&
+            t.status === 'Moved Out'
+          )
       )
     : null;
 
@@ -149,7 +153,7 @@ export default function TenantDashboard() {
         status: 'MOVED_OUT' as const, 
         propertyName: rawUserConnection.propertyName || pastTenant.propertyName, 
         unitNumber: rawUserConnection.unitNumber || pastTenant.unitNumber,
-        depositSettledAmount: rawUserConnection.depositSettledAmount ?? pastTenant.depositPaid
+        depositSettledAmount: rawUserConnection.depositSettledAmount ?? (pastTenant.depositPaid ? Math.max(0, pastTenant.depositPaid - pastTenant.monthlyRent) : 10000)
       }
     : rawUserConnection;
 
@@ -525,6 +529,44 @@ export default function TenantDashboard() {
       }));
     };
 
+    const handleInviteInputChange = (input: string) => {
+      setConnectForm(prev => ({ ...prev, ownerIdentifier: input }));
+      try {
+        if (input.includes('?') || input.includes('invite')) {
+          const urlStr = input.startsWith('http') ? input : `http://localhost/${input.replace(/^\/?/, '')}`;
+          const url = new URL(urlStr);
+          const params = url.searchParams;
+
+          const pId = params.get('propertyId') || '';
+          const pName = params.get('propertyName') || '';
+          const uNum = params.get('unitNumber') || '';
+          const rent = Number(params.get('rent')) || 0;
+          const dep = Number(params.get('deposit')) || 0;
+          const type = (params.get('type') as TenancyType) || 'Residential';
+          const oId = params.get('ownerId') || '';
+          const oEmail = params.get('ownerEmail') || '';
+          const hasFood = params.get('includeFoodPlan') === 'true' || type === 'PG';
+
+          if (pName || pId || rent > 0) {
+            setConnectForm(prev => ({
+              ...prev,
+              propertyId: pId || prev.propertyId,
+              propertyName: pName || prev.propertyName,
+              unitNumber: uNum || prev.unitNumber,
+              monthlyRent: rent > 0 ? rent : prev.monthlyRent,
+              depositAmount: dep > 0 ? dep : (rent > 0 ? rent * 2 : prev.depositAmount),
+              tenancyType: type,
+              includeFoodPlan: hasFood,
+              ownerEmail: oEmail || prev.ownerEmail,
+              ownerIdentifier: oEmail || oId || prev.ownerIdentifier
+            }));
+            if (pName) setPropertySearchQuery(pName);
+            setActiveTenancyType(type);
+          }
+        }
+      } catch (e) {}
+    };
+
     const handleConnectSubmit = (e: React.FormEvent) => {
       e.preventDefault();
       setConnectValidationError('');
@@ -620,23 +662,43 @@ export default function TenantDashboard() {
           )}
 
           <form onSubmit={handleConnectSubmit} className="space-y-4 text-xs">
-            {/* Landlord Identification */}
+            {/* Landlord Invite Link or Code (Owner Initiated) */}
             <div>
               <label className="block text-[#171717] font-bold mb-1">
-                Owner Phone Number, Owner ID, or Email <span className="text-rose-500">*</span>
+                Landlord Invite Link / Code / Owner ID <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
-                placeholder="e.g. +91 98450 11928, user-owner-vikram, or owner@staywise.com"
+                placeholder="Paste landlord invite link (e.g. /invite?propertyId=...) or enter owner email"
                 value={connectForm.ownerIdentifier}
-                onChange={(e) => setConnectForm({ ...connectForm, ownerIdentifier: e.target.value })}
+                onChange={(e) => handleInviteInputChange(e.target.value)}
                 required
                 className="w-full px-3.5 py-2.5 rounded-xl border border-[#D2DDD7] bg-white text-[#171717] font-medium"
               />
               <span className="text-[10px] text-[#546E7A] mt-0.5 block">
-                Enter your landlord&apos;s registered mobile number, email, or unique Owner ID.
+                Paste the invite link shared by your property owner via WhatsApp/SMS to auto-lock the authorized rent and unit.
               </span>
             </div>
+
+            {/* Verified Invitation Terms Card if Property or Rent Detected */}
+            {connectForm.propertyName && (
+              <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-300 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-900 bg-emerald-200/60 px-2 py-0.5 rounded-md">
+                    ✓ Landlord-Authorized Lease Terms
+                  </span>
+                  <span className="text-[10px] font-bold text-emerald-800">Verified by Owner</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-800">
+                  <div>Property: <b className="text-slate-900">{connectForm.propertyName}</b></div>
+                  <div>Unit / Bed: <b className="text-slate-900">{connectForm.unitNumber || 'Assigned by Landlord'}</b></div>
+                  <div>Monthly Rent: <b className="text-emerald-900">₹{connectForm.monthlyRent.toLocaleString('en-IN')}</b></div>
+                  <div>Advance Deposit: <b className="text-slate-900">₹{connectForm.depositAmount.toLocaleString('en-IN')}</b></div>
+                  <div>Category: <b className="text-slate-900">{connectForm.tenancyType}</b></div>
+                  <div>Mess/Food: <b className="text-slate-900">{connectForm.includeFoodPlan ? 'Included' : 'Not Included'}</b></div>
+                </div>
+              </div>
+            )}
 
             {/* Property Search & Selection (Search text field only, no hardcoded demo select dropdown) */}
             <div>
@@ -1086,53 +1148,86 @@ export default function TenantDashboard() {
               </div>
             </div>
           </div>
-        ) : userConnection?.status === 'MOVED_OUT' ? (
-          <div className="rounded-3xl bg-white border border-[#D2DDD7] p-6 sm:p-8 shadow-sm">
-            <div className="max-w-2xl space-y-4">
-              <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center">
-                <CheckCircle2 className="h-6 w-6" />
-              </div>
-              <div>
-                <h2 className="text-lg font-black text-[#171717]">Previous Tenancy Completed &amp; Settled</h2>
-                <p className="text-xs text-[#546E7A] mt-1.5 leading-relaxed">
-                  Your move-out from {userConnection.propertyName} Unit {userConnection.unitNumber} was verified by the owner. Security deposit escrow of ₹{userConnection.depositSettledAmount?.toLocaleString('en-IN')} has been settled.
+        ) : ((userConnection?.status === 'MOVED_OUT') || pastTenant) ? (
+          <div className="rounded-3xl bg-white border border-[#D2DDD7] p-6 sm:p-8 shadow-sm space-y-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded-full inline-block">
+                  ✓ Tenancy Concluded &amp; Ledger Settled
+                </span>
+                <h2 className="text-xl font-black text-[#171717]">
+                  Lease Vacated: {pastTenant?.propertyName || userConnection?.propertyName || 'Staywise Property'} • Unit {pastTenant?.unitNumber || userConnection?.unitNumber || '101'}
+                </h2>
+                <p className="text-xs text-[#546E7A]">
+                  Your landlord finalized the tenancy move-out. Last month rent was settled directly from your security deposit held in escrow.
                 </p>
               </div>
-
-              <div className="pt-2">
-                {ekycStatus === 'Verified' ? (
-                  <button
-                    onClick={() => setIsConnectModalOpen(true)}
-                    className="px-6 py-3 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
-                  >
-                    <Home className="h-4 w-4 text-emerald-400" />
-                    <span>+ Connect to Next Property / Landlord</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      addNotification('eKYC Required', 'Please complete your resident digital eKYC before connecting with a landlord.', 'SYSTEM');
-                      setIsEKYCModalOpen(true);
-                    }}
-                    className="px-6 py-3 rounded-full bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
-                  >
-                    <Lock className="h-4 w-4 text-amber-400" />
-                    <span>Complete eKYC to Connect Landlord</span>
-                  </button>
-                )}
+              <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="h-6 w-6" />
               </div>
+            </div>
+
+            {/* Advance Reconciliation Ledger */}
+            {(() => {
+              const depositHeld = pastTenant?.depositPaid || (pastTenant?.monthlyRent ? pastTenant.monthlyRent * 2 : 20000);
+              const lastRent = pastTenant?.monthlyRent || 10000;
+              const refundAmount = userConnection?.depositSettledAmount ?? Math.max(0, depositHeld - lastRent);
+
+              return (
+                <div className="p-4 rounded-2xl bg-[#F7F8F6] border border-[#D2DDD7] space-y-3 text-xs">
+                  <div className="flex items-center justify-between font-bold text-slate-700">
+                    <span>1. Security Deposit / Advance Held:</span>
+                    <span className="font-black text-slate-900">₹{depositHeld.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex items-center justify-between font-bold text-slate-700">
+                    <span>2. Deduct Last Month Rent (Auto-Settled):</span>
+                    <span className="font-black text-rose-600">- ₹{lastRent.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="pt-2 border-t border-[#D2DDD7] flex items-center justify-between font-black text-sm">
+                    <span className="text-emerald-800">3. Net Refund Dispatched to Resident Bank:</span>
+                    <span className="text-emerald-800 text-base font-black">₹{refundAmount.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="pt-1 flex items-center justify-between font-bold text-[11px] text-slate-500">
+                    <span>Outstanding Rent Balance:</span>
+                    <span className="text-emerald-700 font-black">₹0.00 (All dues cleared — No rent payable)</span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div className="pt-2 flex flex-wrap items-center gap-3">
+              {ekycStatus === 'Verified' ? (
+                <button
+                  onClick={() => setIsConnectModalOpen(true)}
+                  className="px-6 py-3 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
+                >
+                  <Home className="h-4 w-4 text-emerald-400" />
+                  <span>+ Connect via Landlord Invite Link</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    addNotification('eKYC Required', 'Please complete your resident digital eKYC before connecting with a landlord.', 'SYSTEM');
+                    setIsEKYCModalOpen(true);
+                  }}
+                  className="px-6 py-3 rounded-full bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
+                >
+                  <Lock className="h-4 w-4 text-amber-400" />
+                  <span>Complete eKYC to Connect Landlord</span>
+                </button>
+              )}
             </div>
           </div>
         ) : (
           <div className="rounded-3xl bg-white border border-[#D2DDD7] p-6 sm:p-8 shadow-sm">
             <div className="max-w-2xl space-y-4">
-              <div className="h-12 w-12 rounded-2xl bg-[#fbebeb] text-[#7a1413] border border-[#f5c2c2] flex items-center justify-center">
+              <div className="h-12 w-12 rounded-2xl bg-[#E8F0EC] text-[#06110c] border border-[#06110c]/20 flex items-center justify-center">
                 <Home className="h-6 w-6" />
               </div>
               <div>
-                <h2 className="text-lg font-black text-[#171717]">Connect to Your Property (Residential, PG, or Commercial)</h2>
+                <h2 className="text-lg font-black text-[#171717]">Connect with Your Landlord (Invite-Only)</h2>
                 <p className="text-xs text-[#546E7A] mt-1.5 leading-relaxed">
-                  Connect your tenant account directly to your property owner to view your lease agreement, upcoming rent dues, roommate splits, electricity bills, and service requests.
+                  In Staywise, leases are initiated by property owners to ensure guaranteed rent accuracy, exact unit allocation, and verified legal security. Ask your landlord to share their Staywise Invite Link or Code with you.
                 </p>
               </div>
 
@@ -1143,7 +1238,7 @@ export default function TenantDashboard() {
                     className="px-6 py-3 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center gap-2"
                   >
                     <Home className="h-4 w-4 text-emerald-400" />
-                    <span>+ Connect with Property Owner</span>
+                    <span>+ Enter Landlord Invite Link / Code</span>
                   </button>
                 ) : (
                   <button

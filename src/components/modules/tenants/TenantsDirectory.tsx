@@ -42,7 +42,8 @@ export default function TenantsDirectory() {
     approveTenantConnectionRequest,
     rejectTenantConnectionRequest,
     verifyAndSettleMoveOut,
-    disconnectTenant
+    disconnectTenant,
+    setIsExistingTenantWizardOpen
   } = useAppState();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -50,6 +51,7 @@ export default function TenantsDirectory() {
   const [selectedTenantForDetails, setSelectedTenantForDetails] = useState<Tenant | null>(null);
   const [isDisconnectConfirmOpen, setIsDisconnectConfirmOpen] = useState(false);
   const [disconnectReason, setDisconnectReason] = useState('Tenure completed / Move out requested');
+  const [moveOutDeductions, setMoveOutDeductions] = useState<number | string>(0);
 
   // Role-scoped tenants: Owners only see residents in their properties or approved by them.
   // Admin has statutory surveillance to see all platform tenants.
@@ -128,8 +130,8 @@ export default function TenantsDirectory() {
     addNotification('WhatsApp Reminder Sent', `Direct WhatsApp rent ping with UPI payment link dispatched to ${name} (${phone}).`, 'RENT');
   };
 
-  const handleDisconnect = async (tenantId: string) => {
-    await disconnectTenant(tenantId, disconnectReason);
+  const handleDisconnect = async (tenantId: string, settlement?: { depositHeld: number; lastMonthRentDeducted: number; refundAmount: number; deductionNotes?: string }) => {
+    await disconnectTenant(tenantId, disconnectReason, settlement);
     setIsDisconnectConfirmOpen(false);
     if (selectedTenantForDetails?.id === tenantId) {
       setSelectedTenantForDetails(prev => prev ? { ...prev, status: 'Moved Out', vacatedAt: new Date().toISOString().split('T')[0] } : null);
@@ -143,7 +145,7 @@ export default function TenantsDirectory() {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-[#171717]">
-              Tenants & Digital Leases
+              Tenants &amp; Digital Leases
             </h1>
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E8F0EC] text-[#171717] font-bold border border-[#171717]/20">
               {scopedTenants.length} Active Leases
@@ -153,6 +155,17 @@ export default function TenantsDirectory() {
             Verified resident and multi-tenant directory with escrow security deposits and Aadhaar KYC
           </p>
         </div>
+
+        {activeRole === 'owner' && (
+          <button
+            type="button"
+            onClick={() => setIsExistingTenantWizardOpen(true)}
+            className="px-5 py-2.5 rounded-full bg-[#06110c] hover:bg-[#171717] text-white text-xs font-black shadow-sm transition flex items-center gap-2 cursor-pointer shrink-0 self-start sm:self-auto"
+          >
+            <Users className="h-4 w-4" />
+            <span>+ Invite Resident / Share Link</span>
+          </button>
+        )}
       </div>
 
       {/* 4 Stat Overview Cards */}
@@ -597,41 +610,93 @@ This agreement is legally binding and digitally registered in the Staywise Escro
               </button>
             </div>
 
-            {/* Disconnect Confirmation Prompt if triggered */}
+            {/* Disconnect & Advance Rent Reconciliation Prompt */}
             {isDisconnectConfirmOpen && (
-              <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs space-y-3 animate-in fade-in">
-                <div className="flex items-center gap-2 font-black text-rose-800 text-sm">
-                  <AlertTriangle className="h-4 w-4 shrink-0 text-rose-600" />
-                  <span>Confirm Move-Out / Disconnection</span>
-                </div>
-                <p className="text-[#546E7A] leading-relaxed text-[11px]">
-                  This will mark <b>{selectedTenantForDetails.name}</b> as vacated and archive them under <b>Past Residents / Alumni</b>. The unit will be freed up for new tenant onboarding.
-                </p>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-600 mb-1">Reason for Move-Out / Vacating</label>
-                  <input
-                    type="text"
-                    value={disconnectReason}
-                    onChange={(e) => setDisconnectReason(e.target.value)}
-                    placeholder="e.g. Tenancy term completed, job relocation, rent default"
-                    className="w-full px-3 py-2 rounded-xl border border-rose-200 bg-white text-xs font-medium"
-                  />
-                </div>
-                <div className="flex items-center gap-2 pt-1">
-                  <button
-                    onClick={() => handleDisconnect(selectedTenantForDetails.id)}
-                    className="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition cursor-pointer text-center"
-                  >
-                    ✓ Confirm Disconnect &amp; Move Out
-                  </button>
-                  <button
-                    onClick={() => setIsDisconnectConfirmOpen(false)}
-                    className="px-4 py-2 rounded-xl bg-white border border-[#D2DDD7] text-[#171717] font-bold text-xs hover:bg-[#F7F8F6] cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
+              (() => {
+                const depositHeld = selectedTenantForDetails.depositPaid || (selectedTenantForDetails.monthlyRent ? selectedTenantForDetails.monthlyRent * 2 : 20000);
+                const lastMonthRent = selectedTenantForDetails.monthlyRent || 10000;
+                const additionalDeductions = Math.max(0, Number(moveOutDeductions) || 0);
+                const totalDeductions = lastMonthRent + additionalDeductions;
+                const netRefund = Math.max(0, depositHeld - totalDeductions);
+                const remainingDue = totalDeductions > depositHeld ? (totalDeductions - depositHeld) : 0;
+
+                return (
+                  <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs space-y-3 animate-in fade-in">
+                    <div className="flex items-center gap-2 font-black text-rose-800 text-sm">
+                      <AlertTriangle className="h-4 w-4 shrink-0 text-rose-600" />
+                      <span>Confirm Move-Out &amp; Final Advance Settlement</span>
+                    </div>
+                    <p className="text-[#546E7A] leading-relaxed text-[11px]">
+                      This will settle the tenancy for <b>{selectedTenantForDetails.name}</b>. The pending last month rent will be automatically deducted from the security deposit/advance held. Any remaining balance will be marked for bank refund.
+                    </p>
+
+                    {/* Advance Reconciliation Breakdown */}
+                    <div className="p-3 bg-white rounded-xl border border-rose-200/80 space-y-2 text-[11px]">
+                      <div className="flex items-center justify-between font-bold text-slate-700">
+                        <span>Security Deposit / Advance Held:</span>
+                        <span className="text-emerald-700 font-black">₹{depositHeld.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="flex items-center justify-between font-bold text-slate-700">
+                        <span>Less: Last Month Rent (Auto-Deducted):</span>
+                        <span className="text-rose-600 font-black">- ₹{lastMonthRent.toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="flex items-center justify-between font-bold text-slate-700">
+                        <span>Less: Repair / Utility / Dues:</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-slate-400">- ₹</span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={moveOutDeductions}
+                            onChange={(e) => setMoveOutDeductions(e.target.value)}
+                            placeholder="0"
+                            className="w-20 px-2 py-0.5 rounded border border-slate-300 text-right font-bold text-rose-600 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <div className="pt-2 border-t border-dashed border-rose-200 flex items-center justify-between font-black text-xs">
+                        <span>Net Security Refund Payable to Resident:</span>
+                        <span className="text-emerald-700 text-sm font-black">₹{netRefund.toLocaleString('en-IN')}</span>
+                      </div>
+                      {remainingDue > 0 && (
+                        <p className="text-[10px] text-rose-600 font-bold">
+                          * Note: Deductions exceed advance by ₹{remainingDue.toLocaleString('en-IN')}. Resident will be invoiced for this balance.
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-600 mb-1">Reason for Move-Out / Vacating</label>
+                      <input
+                        type="text"
+                        value={disconnectReason}
+                        onChange={(e) => setDisconnectReason(e.target.value)}
+                        placeholder="e.g. Tenancy term completed, job relocation, rent default"
+                        className="w-full px-3 py-2 rounded-xl border border-rose-200 bg-white text-xs font-medium"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        onClick={() => handleDisconnect(selectedTenantForDetails.id, {
+                          depositHeld,
+                          lastMonthRentDeducted: lastMonthRent,
+                          refundAmount: netRefund,
+                          deductionNotes: disconnectReason || 'Tenancy term completed'
+                        })}
+                        className="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition cursor-pointer text-center"
+                      >
+                        ✓ Settle from Advance &amp; Move Out
+                      </button>
+                      <button
+                        onClick={() => setIsDisconnectConfirmOpen(false)}
+                        className="px-4 py-2 rounded-xl bg-white border border-[#D2DDD7] text-[#171717] font-bold text-xs hover:bg-[#F7F8F6] cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()
             )}
 
             {/* Contact & Tenancy Category Card */}

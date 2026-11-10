@@ -513,6 +513,20 @@ export default function OwnerDashboard() {
   const totalCollectedRent = Math.max(0, totalRentExpected - totalPendingRent);
   const occupancyPercentage = totalUnitsCount > 0 ? ((occupiedUnitsCount / totalUnitsCount) * 100).toFixed(1) : '0.0';
 
+  const formatCompactINR = (amount: number) => {
+    if (amount >= 10000000) {
+      return `₹${(amount / 10000000).toLocaleString('en-IN', { maximumFractionDigits: 2 })} Cr`;
+    }
+    if (amount >= 100000) {
+      return `₹${(amount / 100000).toLocaleString('en-IN', { maximumFractionDigits: 1 })} L`;
+    }
+    return `₹${amount.toLocaleString('en-IN')}`;
+  };
+
+  const todayFormatted = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  const currentMonthYear = new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  const prevMonthYear = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
   const filteredProperties = activeProperties.filter((prop) => {
     const occRatio = prop.totalUnits > 0 ? prop.occupiedUnits / prop.totalUnits : 0;
     if (heatmapFilter === 'ALL') return true;
@@ -883,7 +897,7 @@ export default function OwnerDashboard() {
                   <ArrowUpRight className="h-3 w-3" />
                 </button>
                 <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717] shadow-2xs shrink-0">
-                  <span>16 May, 2026</span>
+                  <span>{todayFormatted}</span>
                   <CalendarIcon className="h-3.5 w-3.5 text-[#06110c]" />
                 </div>
               </div>
@@ -964,17 +978,20 @@ export default function OwnerDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               
               {/* Card 1: Total Revenue & Inflow */}
-              <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#666666]">Hospitality &amp; Rent Inflow</span>
-                  <span className="text-[10px] font-bold text-[#171717] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#171717]/10">
+              <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow min-w-0 overflow-hidden">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="text-xs font-semibold text-[#666666] truncate">Hospitality &amp; Rent Inflow</span>
+                  <span className="text-[10px] font-bold text-[#171717] bg-[#E8F0EC] px-2 py-0.5 rounded-full border border-[#171717]/10 shrink-0">
                     {activeProperties.length > 0 ? '+24% YoY' : '0%'}
                   </span>
                 </div>
-                <div className="text-2xl sm:text-3xl font-black text-[#171717] font-tabular mt-2 tracking-tight">
-                  ₹{totalCollectedRent.toLocaleString('en-IN')}
+                <div 
+                  className="text-xl sm:text-2xl font-black text-[#171717] font-tabular mt-2 tracking-tight truncate"
+                  title={`₹${totalCollectedRent.toLocaleString('en-IN')}`}
+                >
+                  {formatCompactINR(totalCollectedRent)}
                 </div>
-                <span className="text-[11px] text-[#666666] mt-1 block">
+                <span className="text-[11px] text-[#666666] mt-1 block truncate">
                   {activeProperties.length > 0 
                     ? `₹${(totalRentExpected / 100000).toFixed(1)}L Expected • ${totalRentExpected > 0 ? Math.round((totalCollectedRent / totalRentExpected) * 100) : 0}% Collection Rate`
                     : '₹0 Expected • 0% Collection Rate'
@@ -983,49 +1000,52 @@ export default function OwnerDashboard() {
               </div>
 
               {/* Card 2: Unit & Bed Occupancy */}
-              <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#666666]">Portfolio Unit Occupancy</span>
-                  <span className="text-[10px] font-bold text-[#171717] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#171717]/10">
+              <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow min-w-0 overflow-hidden">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="text-xs font-semibold text-[#666666] truncate">Portfolio Unit Occupancy</span>
+                  <span className="text-[10px] font-bold text-[#171717] bg-[#E8F0EC] px-2 py-0.5 rounded-full border border-[#171717]/10 shrink-0">
                     {activeProperties.length > 0 ? 'Active' : 'No Units'}
                   </span>
                 </div>
-                <div className="text-2xl sm:text-3xl font-black text-[#171717] font-tabular mt-2 tracking-tight">
+                <div className="text-xl sm:text-2xl font-black text-[#171717] font-tabular mt-2 tracking-tight truncate">
                   {occupancyPercentage}%
                 </div>
-                <span className="text-[11px] text-[#666666] mt-1 block">
+                <span className="text-[11px] text-[#666666] mt-1 block truncate">
                   {occupiedUnitsCount}/{totalUnitsCount} Units • {activeProperties.filter(p => p.type === 'PG' || p.type === 'Hostel').reduce((acc, p) => acc + p.totalUnits, 0)} PG Beds Active
                 </span>
               </div>
 
               {/* Card 3: Active Stays & Leases */}
-              <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#666666]">Active Stays &amp; Leases</span>
-                  <span className="text-[10px] font-bold text-[#171717] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#171717]/10">
+              <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow min-w-0 overflow-hidden">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="text-xs font-semibold text-[#666666] truncate">Active Stays &amp; Leases</span>
+                  <span className="text-[10px] font-bold text-[#171717] bg-[#E8F0EC] px-2 py-0.5 rounded-full border border-[#171717]/10 shrink-0">
                     {occupiedUnitsCount} Leases
                   </span>
                 </div>
-                <div className="text-2xl sm:text-3xl font-black text-[#171717] font-tabular mt-2 tracking-tight">
+                <div className="text-xl sm:text-2xl font-black text-[#171717] font-tabular mt-2 tracking-tight truncate">
                   {occupiedUnitsCount} Stays Live
                 </div>
-                <span className="text-[11px] text-[#666666] mt-1 block">
+                <span className="text-[11px] text-[#666666] mt-1 block truncate">
                   {activeProperties.length} Properties Configured
                 </span>
               </div>
 
               {/* Card 4: Net Operating Cashflow (NOI) */}
-              <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#666666]">Net Operating Cashflow</span>
-                  <span className="text-[10px] font-bold text-[#171717] bg-[#E8F0EC] px-2.5 py-0.5 rounded-full border border-[#171717]/10">
+              <div className="bg-white rounded-3xl p-5 border border-[#D2DDD7] shadow-xs hover:shadow-md transition-shadow min-w-0 overflow-hidden">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="text-xs font-semibold text-[#666666] truncate">Net Operating Cashflow</span>
+                  <span className="text-[10px] font-bold text-[#171717] bg-[#E8F0EC] px-2 py-0.5 rounded-full border border-[#171717]/10 shrink-0">
                     {activeProperties.length > 0 ? 'Net Surplus' : 'No Inflow'}
                   </span>
                 </div>
-                <div className="text-2xl sm:text-3xl font-black text-[#171717] font-tabular mt-2 tracking-tight">
-                  +₹{Math.round(totalCollectedRent * 0.844).toLocaleString('en-IN')}
+                <div 
+                  className="text-xl sm:text-2xl font-black text-[#171717] font-tabular mt-2 tracking-tight truncate"
+                  title={`+₹${Math.round(totalCollectedRent * 0.844).toLocaleString('en-IN')}`}
+                >
+                  +{formatCompactINR(Math.round(totalCollectedRent * 0.844))}
                 </div>
-                <span className="text-[11px] text-[#666666] mt-1 block">
+                <span className="text-[11px] text-[#666666] mt-1 block truncate">
                   {activeProperties.length > 0 ? '+84.4% Margin • In Flow' : '0% Margin • Clean Workspace'}
                 </span>
               </div>
@@ -1090,11 +1110,11 @@ export default function OwnerDashboard() {
                   <div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-[#E8F0EC] border border-[#D2DDD7]">
                     <span className="flex items-center gap-1.5 text-xs font-bold text-[#171717]">
                       <span className="w-2.5 h-2.5 rounded-full bg-[#171717] shrink-0" />
-                      <span>May 2026 (Active)</span>
+                      <span>{currentMonthYear} (Active)</span>
                     </span>
                     <span className="flex items-center gap-1.5 text-xs font-semibold text-[#666666]">
                       <span className="w-2.5 h-2.5 rounded-full bg-[#06110c]/40 border border-[#06110c] shrink-0" />
-                      <span>Apr 2026</span>
+                      <span>{prevMonthYear}</span>
                     </span>
                   </div>
 

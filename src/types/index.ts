@@ -223,7 +223,7 @@ export interface RentInvoice {
   paidAmount: number;
   dueDate: string;
   status: RentStatus;
-  paymentMethod?: 'UPI' | 'Bank Transfer' | 'Card' | 'Autopay' | 'FlexPay';
+  paymentMethod?: 'UPI' | 'Bank Transfer' | 'Card' | 'Autopay' | 'FlexPay' | 'Security Deposit Deduction';
   paidDate?: string;
   transactionId?: string;
 }
@@ -492,6 +492,15 @@ export interface CommercialVisitor {
   checkOutTime?: string;
   passCode: string;
   status: 'Checked In' | 'Checked Out';
+}
+
+export interface CommercialParkingSlot {
+  id: string;
+  slotNumber: string;
+  assignedTenant: string;
+  vehicleNumber?: string;
+  monthlyFee: number;
+  status: 'Allocated' | 'Vacant';
 }
 
 // ----------------------------------------------------

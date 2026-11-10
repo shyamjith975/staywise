@@ -27,7 +27,8 @@ import {
   Save,
   CheckCircle2,
   Zap,
-  Trees
+  Trees,
+  FileText
 } from 'lucide-react';
 
 interface AssetTypeOption {
@@ -218,11 +219,16 @@ export default function AddPropertyModal() {
   const [villaMaxGuests, setVillaMaxGuests] = useState<string | number>('');
   const [villaQuietHours, setVillaQuietHours] = useState('');
 
-  // STEP 6: PREVIEW & PUBLISH / AADHAAR KYC
+  // STEP 6: PREVIEW & PUBLISH / AADHAAR KYC & MANDATORY PROPERTY PROOF
   const [isKycVerified, setIsKycVerified] = useState(false);
   const [kycMethod, setKycMethod] = useState<'digilocker' | 'manual' | null>(null);
   const [isVerifyingDigiLocker, setIsVerifyingDigiLocker] = useState(false);
   const [expandedSection, setExpandedSection] = useState<'basics' | 'inventory' | 'amenities' | 'rules' | null>('basics');
+
+  // Mandatory Property Proof Document State
+  const [propertyProofFile, setPropertyProofFile] = useState<File | null>(null);
+  const [propertyProofType, setPropertyProofType] = useState('Electricity Bill / Discom Sanction');
+  const [propertyProofName, setPropertyProofName] = useState('');
 
   // Reset all fields back to completely clean initial state (NO DEFAULT MOCK NUMBERS)
   const resetToInitialDefaults = () => {
@@ -234,6 +240,9 @@ export default function AddPropertyModal() {
     setState('');
     setPincode('');
     setAddressProofFile1(null);
+    setPropertyProofFile(null);
+    setPropertyProofType('Electricity Bill / Discom Sanction');
+    setPropertyProofName('');
     setMapPinCoords({ x: 50, y: 46 });
     setPropElectricityDiscom('BESCOM Bangalore');
     setPropElectricityTariff('8.5');
@@ -628,6 +637,10 @@ export default function AddPropertyModal() {
       ? activePortfolio
       : (currentUser.name && currentUser.name !== 'Member' ? `${currentUser.name}'s Portfolio` : `${finalCity} Central`);
 
+    const finalProofDoc = propertyProofName 
+      ? `${propertyProofType.replace(/[^a-zA-Z0-9]/g, '_')}_${propertyProofName}`
+      : 'Property_Tax_Receipt_FY2526.pdf';
+
     addProperty({
       ownerId: currentUser.id || 'user-owner-vikram',
       name: finalPropertyName,
@@ -640,6 +653,12 @@ export default function AddPropertyModal() {
       totalUnits,
       expectedMonthlyRent: expectedRent,
       amenities: amenitiesMap[selectedAsset.type] || ['24/7 Security', 'Elevator', 'Power Backup'],
+      submittedDocs: [
+        finalProofDoc,
+        'UIDAI_DigiLocker_eKYC_Verified.pdf',
+        'Fire_Safety_NOC.pdf',
+        'Municipal_Building_Permit_2026.pdf'
+      ],
       imageUrl: selectedAsset.type === 'PG' || selectedAsset.type === 'Hostel'
         ? '/images/properties/beach-road.jpg'
         : selectedAsset.type === 'Warehouse' || selectedAsset.type === 'Commercial' || selectedAsset.type === 'Office'
@@ -1831,8 +1850,8 @@ export default function AddPropertyModal() {
                 </div>
               )}
 
-              {/* VILLA ONLY */}
-              {selectedAsset.type === 'Independent House' && (
+              {/* VILLA / FARMHOUSE ONLY */}
+              {(selectedAsset.type === 'Independent House' || selectedAsset.type === 'Farmhouse' || selectedAsset.type === 'Villa') && (
                 <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#D2DDD7] space-y-4 shadow-2xs">
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1">
@@ -2405,8 +2424,8 @@ export default function AddPropertyModal() {
                 </div>
               )}
 
-              {/* VILLA ONLY */}
-              {selectedAsset.type === 'Independent House' && (
+              {/* VILLA / FARMHOUSE ONLY */}
+              {(selectedAsset.type === 'Independent House' || selectedAsset.type === 'Farmhouse' || selectedAsset.type === 'Villa') && (
                 <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#D2DDD7] space-y-4 shadow-2xs">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
@@ -2540,7 +2559,7 @@ export default function AddPropertyModal() {
                   <AlertCircle className="h-4 w-4 shrink-0 text-amber-700" />
                   <div>
                     <span className="font-bold block">Building launch locked</span>
-                    <span className="text-[11px] text-amber-800">Complete Aadhaar KYC above to enable the "Create Building & Go Live" button.</span>
+                    <span className="text-[11px] text-amber-800">Complete Aadhaar KYC above to enable listing activation.</span>
                   </div>
                 </div>
               ) : (
@@ -2548,10 +2567,93 @@ export default function AddPropertyModal() {
                   <CheckCircle className="h-4 w-4 text-[#171717] shrink-0" />
                   <div>
                     <span className="font-bold block">Identity Verified via UIDAI DigiLocker</span>
-                    <span className="text-[11px] text-[#171717]">Shyam J • Aadhaar XXXX-XXXX-8832 • Ready to launch building!</span>
+                    <span className="text-[11px] text-[#171717]">Aadhaar Verified • Ready to link property proof</span>
                   </div>
                 </div>
               )}
+
+              {/* MANDATORY PROPERTY PROOF & STATUTORY OWNERSHIP CARD */}
+              <div className={`p-4 sm:p-5 rounded-2xl border space-y-3.5 shadow-xs transition ${
+                (propertyProofFile || propertyProofName) 
+                  ? 'bg-emerald-50/70 border-emerald-300' 
+                  : 'bg-white border-amber-300'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-8 w-8 rounded-full bg-[#E8F0EC] text-[#171717] flex items-center justify-center shrink-0">
+                      <FileText className="h-4.5 w-4.5" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-bold text-[#171717] flex items-center gap-1.5">
+                        <span>Mandatory Property Proof &amp; Sanction</span>
+                        <span className="px-2 py-0.5 rounded bg-rose-100 text-rose-700 text-[9px] font-black uppercase">
+                          Required
+                        </span>
+                      </h3>
+                      <p className="text-[11px] text-[#666666]">
+                        Upload ownership proof, electricity sanction, or tax receipt to submit property to Admin.
+                      </p>
+                    </div>
+                  </div>
+                  {(propertyProofFile || propertyProofName) && (
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center gap-1">
+                      <Check className="h-3 w-3" />
+                      <span>Proof Attached</span>
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="text-[11px] font-bold text-[#171717] block mb-1">Document Type</label>
+                    <select
+                      value={propertyProofType}
+                      onChange={(e) => setPropertyProofType(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-[#E8F0EC] border border-[#D2DDD7] text-xs font-bold text-[#171717]"
+                    >
+                      <option value="Electricity Bill / Discom Sanction">Electricity Bill / Tariff Sanction</option>
+                      <option value="Registered Title Deed / Sale Deed">Registered Title Deed / Sale Deed</option>
+                      <option value="Property Tax Assessment Receipt">Property Tax Assessment Receipt (FY 25-26)</option>
+                      <option value="Municipal Building Sanction NOC">Municipal Building Sanction NOC</option>
+                      <option value="Commercial / Warehouse Master Lease">Commercial / Warehouse Master Lease</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-[#171717] block mb-1">Upload Document File (PDF, PNG, JPG)</label>
+                    <label className="flex items-center justify-between px-3 py-2 rounded-xl border-2 border-dashed border-[#D2DDD7] hover:border-[#171717] bg-[#F8FAFC] cursor-pointer transition">
+                      <input
+                        type="file"
+                        accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setPropertyProofFile(file);
+                            setPropertyProofName(file.name);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                      <div className="flex items-center gap-2 truncate">
+                        <Upload className="h-4 w-4 text-[#666666] shrink-0" />
+                        <span className="text-xs font-bold text-[#171717] truncate">
+                          {propertyProofName || 'Attach property proof file...'}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold text-[#666666] bg-white px-2 py-0.5 rounded border border-[#D2DDD7] shrink-0">
+                        Browse
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {!(propertyProofFile || propertyProofName) && (
+                  <div className="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-xl border border-amber-200 flex items-center gap-1.5">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+                    <span>Upload proof of ownership or electricity sanction to enable building publishing.</span>
+                  </div>
+                )}
+              </div>
 
               {/* Live Preview Card */}
               <div className="space-y-2">
@@ -2685,10 +2787,10 @@ export default function AddPropertyModal() {
             ) : (
               <button
                 type="button"
-                disabled={!isKycVerified}
+                disabled={!isKycVerified || (!propertyProofFile && !propertyProofName)}
                 onClick={handlePublishProperty}
                 className={`px-6 py-2 rounded-full font-bold text-xs transition flex items-center gap-2 shadow-md cursor-pointer ${
-                  isKycVerified
+                  (isKycVerified && (propertyProofFile || propertyProofName))
                     ? 'bg-[#171717] hover:bg-[#171717] text-white'
                     : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                 }`}
@@ -2697,6 +2799,11 @@ export default function AddPropertyModal() {
                   <>
                     <Lock className="h-3.5 w-3.5" />
                     <span>Verify Aadhaar to Launch</span>
+                  </>
+                ) : !propertyProofFile && !propertyProofName ? (
+                  <>
+                    <Lock className="h-3.5 w-3.5" />
+                    <span>Attach Property Proof to Launch</span>
                   </>
                 ) : (
                   <>

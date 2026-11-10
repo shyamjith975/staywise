@@ -343,7 +343,7 @@ export function validatePropertyPayload(body: any): ValidationResult<any> {
 
   const rawRent = Number(body.expectedMonthlyRent);
   const safeRent = (isNaN(rawRent) || rawRent < 0) ? 0 : rawRent;
-  const rentVal = validatePositiveNumber(safeRent, 'Expected Monthly Rent', 0, 10000000);
+  const rentVal = validatePositiveNumber(safeRent, 'Expected Monthly Rent', 0, 1000000000);
   if (!rentVal.isValid) {
     errors.push({ field: 'expectedMonthlyRent', message: rentVal.message! });
   }

@@ -22,7 +22,10 @@ import {
   ArrowUpRight, 
   Sparkles,
   Zap,
-  Printer
+  Printer,
+  Trash2,
+  LogOut,
+  Check
 } from 'lucide-react';
 
 export default function CommercialCAMView() {
@@ -31,6 +34,10 @@ export default function CommercialCAMView() {
     camExpenses, 
     commercialVisitors, 
     addCommercialVisitor,
+    checkoutCommercialVisitor,
+    deleteCommercialVisitor,
+    addCamExpense,
+    deleteCamExpense,
     addNotification,
     currentUser,
     activeRole,
@@ -48,6 +55,36 @@ export default function CommercialCAMView() {
   const [hostCompany, setHostCompany] = useState('');
   const [purpose, setPurpose] = useState('Business Consultation');
   const [vehicleNumber, setVehicleNumber] = useState('KL-07-');
+
+  // CAM Expense Modal State
+  const [isAddExpenseModalOpen, setIsAddExpenseModalOpen] = useState(false);
+  const [newExpCategory, setNewExpCategory] = useState<CAMExpenseItem['category']>('Common Electricity');
+  const [newExpVendor, setNewExpVendor] = useState('');
+  const [newExpMonthlyCost, setNewExpMonthlyCost] = useState('');
+  const [newExpAllocationMethod, setNewExpAllocationMethod] = useState<CAMExpenseItem['allocationMethod']>('Area-based');
+
+  // Commercial Parking & Bay State
+  const [parkingSlots, setParkingSlots] = useState<Array<{
+    id: string;
+    slotNumber: string;
+    type: string;
+    unitNumber: string;
+    tenantName: string;
+    monthlyFee: number;
+    status: 'Occupied' | 'Vacant';
+  }>>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const saved = localStorage.getItem('staywise_commercial_parking');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
+  const [isParkingModalOpen, setIsParkingModalOpen] = useState(false);
+  const [newSlotNumber, setNewSlotNumber] = useState('');
+  const [newSlotType, setNewSlotType] = useState('4-Wheeler Reserved');
+  const [newSlotUnit, setNewSlotUnit] = useState('');
+  const [newSlotFee, setNewSlotFee] = useState('3000');
 
   const isDemoAccount = activeRole === 'admin';
 
@@ -102,17 +139,8 @@ export default function CommercialCAMView() {
 
   const effectiveCommercialUnits = activeCommercialUnits.length > 0 ? activeCommercialUnits : synthesizedCommUnits;
 
-  const baselineCamExpenses: CAMExpenseItem[] = React.useMemo(() => [
-    { id: 'cam-exp-1', category: 'Common Electricity', allocationMethod: 'Area-based', monthlyCost: 45000, vendorName: 'BlueStar Engineering Ltd' },
-    { id: 'cam-exp-2', category: 'Lift AMC', allocationMethod: 'Area-based', monthlyCost: 32000, vendorName: 'Otis Elevator Company' },
-    { id: 'cam-exp-3', category: 'Generator Diesel', allocationMethod: 'Area-based', monthlyCost: 65000, vendorName: 'State DISCOM & Cummins DG' },
-    { id: 'cam-exp-4', category: 'Security', allocationMethod: 'Area-based', monthlyCost: 55000, vendorName: 'SIS Security India' },
-    { id: 'cam-exp-5', category: 'Housekeeping', allocationMethod: 'Area-based', monthlyCost: 28000, vendorName: 'CleanPro Facility Management' }
-  ], []);
-
-  const activeCamExpenses = (activeRole === 'admin')
-    ? camExpenses 
-    : (effectiveCommercialUnits.length > 0 ? (camExpenses.length > 0 ? camExpenses : baselineCamExpenses) : []);
+  // Real authoritative CAM expenses only - no unapproved fake mock baseline
+  const activeCamExpenses = camExpenses;
 
   const activeCommercialVisitors = (activeRole === 'admin')
     ? commercialVisitors 
@@ -140,6 +168,51 @@ export default function CommercialCAMView() {
     });
     setVisitorName('');
     setIsVisitorModalOpen(false);
+  };
+
+  const handleAddCamExpense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newExpCategory || !newExpMonthlyCost) return;
+    await addCamExpense({
+      category: newExpCategory,
+      vendorName: newExpVendor || 'Verified Facility Contractor',
+      monthlyCost: Number(newExpMonthlyCost) || 0,
+      allocationMethod: newExpAllocationMethod
+    });
+    setIsAddExpenseModalOpen(false);
+    setNewExpVendor('');
+    setNewExpMonthlyCost('');
+  };
+
+  const handleAddParkingSlot = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSlotNumber.trim()) return;
+    const newSlot = {
+      id: `slot-${Date.now()}`,
+      slotNumber: newSlotNumber.trim(),
+      type: newSlotType,
+      unitNumber: newSlotUnit.trim() || 'General Pool',
+      tenantName: newSlotUnit.trim() ? (effectiveCommercialUnits.find(u => u.unitNumber === newSlotUnit.trim())?.businessName || 'Assigned Tenant') : 'Unassigned',
+      monthlyFee: Number(newSlotFee) || 0,
+      status: (newSlotUnit.trim() ? 'Occupied' : 'Vacant') as 'Occupied' | 'Vacant'
+    };
+    setParkingSlots(prev => {
+      const updated = [newSlot, ...prev];
+      try { localStorage.setItem('staywise_commercial_parking', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    setIsParkingModalOpen(false);
+    setNewSlotNumber('');
+    addNotification('Parking Bay Allocated', `Slot ${newSlot.slotNumber} (${newSlot.type}) registered.`, 'SYSTEM');
+  };
+
+  const handleRemoveParkingSlot = (id: string) => {
+    setParkingSlots(prev => {
+      const updated = prev.filter(s => s.id !== id);
+      try { localStorage.setItem('staywise_commercial_parking', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    addNotification('Parking Slot Released', 'Parking allocation removed.', 'SYSTEM');
   };
 
   return (
@@ -334,14 +407,24 @@ export default function CommercialCAMView() {
       {activeTab === 'CAM_POOL' && (
         <div className="space-y-4">
           <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[#D2DDD7] space-y-5">
-            <div>
-              <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider bg-amber-50 px-2.5 py-0.5 rounded-full">
-                CAM Allocation Engine
-              </span>
-              <h2 className="text-base font-extrabold text-slate-900 mt-1">Common Area Maintenance (CAM) Pool</h2>
-              <p className="text-xs text-slate-500">
-                Track facility expenses (Security, Housekeeping, Lift AMC, Generator Diesel, Common Power) and allocate precisely by leasable area formula.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider bg-amber-50 px-2.5 py-0.5 rounded-full">
+                  CAM Allocation Engine
+                </span>
+                <h2 className="text-base font-extrabold text-slate-900 mt-1">Common Area Maintenance (CAM) Pool</h2>
+                <p className="text-xs text-slate-500">
+                  Track facility expenses (Security, Housekeeping, Lift AMC, Generator Diesel, Common Power) and allocate precisely by leasable area formula.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddExpenseModalOpen(true)}
+                className="px-4 py-2 rounded-2xl bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+              >
+                <Plus className="h-4 w-4" />
+                <span>+ Add CAM Expense</span>
+              </button>
             </div>
 
             {/* Formula allocation explanation */}
@@ -373,15 +456,16 @@ export default function CommercialCAMView() {
                     <th className="py-2.5">Monthly Cost</th>
                     <th className="py-2.5">Allocation Method</th>
                     <th className="py-2.5">Audit Status</th>
+                    <th className="py-2.5 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {activeCamExpenses.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-slate-400">
+                      <td colSpan={6} className="py-12 text-center text-slate-400">
                         <Layers className="h-8 w-8 text-[#D2DDD7] mx-auto mb-2 opacity-50" />
                         <p className="text-xs font-bold text-[#666666]">No CAM expenses logged</p>
-                        <p className="text-[11px] text-[#999999] mt-0.5">Facility maintenance expenses will appear once commercial assets are configured.</p>
+                        <p className="text-[11px] text-[#999999] mt-0.5">Click &ldquo;+ Add CAM Expense&rdquo; to log facility maintenance line items approved by the owner.</p>
                       </td>
                     </tr>
                   ) : (
@@ -404,6 +488,16 @@ export default function CommercialCAMView() {
                           <ShieldCheck className="h-3.5 w-3.5" />
                           <span>Verified AMC</span>
                         </td>
+                        <td className="py-3 text-right">
+                          <button
+                            type="button"
+                            onClick={() => deleteCamExpense(exp.id)}
+                            className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                            title="Delete Expense"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -411,6 +505,101 @@ export default function CommercialCAMView() {
               </table>
             </div>
           </div>
+
+          {/* Add CAM Expense Modal */}
+          {isAddExpenseModalOpen && (
+            <div 
+              className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+              onClick={(e) => { if (e.target === e.currentTarget) setIsAddExpenseModalOpen(false); }}
+            >
+              <div className="w-full max-w-md bg-white rounded-3xl p-6 border border-[#D2DDD7] shadow-2xl space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Layers className="h-5 w-5 text-amber-700" />
+                    <h3 className="font-extrabold text-base text-slate-900">Add CAM Facility Expense</h3>
+                  </div>
+                  <button onClick={() => setIsAddExpenseModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-800 cursor-pointer">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleAddCamExpense} className="space-y-3.5 text-xs">
+                  <div>
+                    <label className="block text-slate-800 font-bold mb-1">Expense Category</label>
+                    <select
+                      value={newExpCategory}
+                      onChange={(e) => setNewExpCategory(e.target.value as CAMExpenseItem['category'])}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold"
+                    >
+                      <option value="Common Electricity">Common Electricity &amp; High-Tension Meter</option>
+                      <option value="Lift AMC">Elevator &amp; Lift Annual Maintenance (AMC)</option>
+                      <option value="Generator Diesel">Backup Generator Diesel &amp; Fuel Run</option>
+                      <option value="Security">Security Personnel &amp; CCTV Monitoring</option>
+                      <option value="Housekeeping">Housekeeping, Deep Cleaning &amp; Waste Management</option>
+                      <option value="Fire Safety">Fire Hydrant &amp; Smoke Detection Certification</option>
+                      <option value="Water Tanker">Water Tanker &amp; Pumping Operations</option>
+                      <option value="Landscaping">Commercial Campus Landscaping &amp; Grounds</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-800 font-bold mb-1">Vendor / Contractor Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Otis Elevator Company, SIS Security India"
+                      value={newExpVendor}
+                      onChange={(e) => setNewExpVendor(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-800 font-bold mb-1">Monthly Cost (INR)</label>
+                    <input
+                      type="number"
+                      required
+                      min="100"
+                      placeholder="e.g. 35000"
+                      value={newExpMonthlyCost}
+                      onChange={(e) => setNewExpMonthlyCost(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-800 font-bold mb-1">CAM Allocation Method</label>
+                    <select
+                      value={newExpAllocationMethod}
+                      onChange={(e) => setNewExpAllocationMethod(e.target.value as CAMExpenseItem['allocationMethod'])}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold"
+                    >
+                      <option value="Area-based">Area-based Ratio (Per Leasable Sq. Ft.)</option>
+                      <option value="Fixed">Fixed Monthly Surcharge</option>
+                      <option value="Percentage">Proportional Percentage</option>
+                      <option value="Custom">Custom CAM Formula</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2">
+                    <button
+                      type="submit"
+                      className="flex-1 py-2.5 rounded-xl bg-[#06110c] hover:bg-[#171717] text-white font-bold text-xs transition cursor-pointer"
+                    >
+                      ✓ Save CAM Expense
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddExpenseModalOpen(false)}
+                      className="px-4 py-2.5 rounded-xl bg-white border border-[#D2DDD7] text-[#171717] font-bold text-xs hover:bg-[#F7F8F6] cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -533,6 +722,27 @@ export default function CommercialCAMView() {
                     </div>
                     <div>In: {vis.checkInTime}</div>
                   </div>
+
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                    {vis.status === 'Checked In' && (
+                      <button
+                        type="button"
+                        onClick={() => checkoutCommercialVisitor(vis.id)}
+                        className="flex-1 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-bold transition flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        <LogOut className="h-3.5 w-3.5" />
+                        <span>Check-Out</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => deleteCommercialVisitor(vis.id)}
+                      className="p-1.5 rounded-xl text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                      title="Revoke / Delete Pass"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))
             )}
@@ -550,7 +760,7 @@ export default function CommercialCAMView() {
                     <QrCode className="h-5 w-5 text-indigo-600" />
                     <h3 className="font-extrabold text-sm text-slate-900">Issue Corporate Visitor Pass</h3>
                   </div>
-                  <button onClick={() => setIsVisitorModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-800">
+                  <button onClick={() => setIsVisitorModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-800 cursor-pointer">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -618,7 +828,7 @@ export default function CommercialCAMView() {
 
                   <button
                     type="submit"
-                    className="w-full py-3 rounded-2xl bg-[#171717] hover:bg-[#171717] text-white font-bold transition flex items-center justify-center gap-1.5"
+                    className="w-full py-3 rounded-2xl bg-[#06110c] hover:bg-[#171717] text-white font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <Printer className="h-4 w-4" />
                     <span>Issue Instant QR Gate Pass</span>
@@ -630,83 +840,196 @@ export default function CommercialCAMView() {
         </div>
       )}
 
-      {/* TAB 5: PARKING & WAREHOUSE/INDUSTRIAL (Sections 18-21) */}
+      {/* TAB 5: PARKING & WAREHOUSE/INDUSTRIAL */}
       {activeTab === 'PARKING' && (
         <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[#D2DDD7] space-y-4">
-          <div>
-            <span className="text-[10px] font-bold text-sky-800 uppercase tracking-wider bg-sky-50 px-2.5 py-0.5 rounded-full">
-              Sections 18 - 21 Logistics Engine
-            </span>
-            <h2 className="text-base font-extrabold text-slate-900 mt-1">Parking Slots, EV Charging & Warehouse Logistics</h2>
-            <p className="text-xs text-slate-500">Commercial parking allocation, EV submeters, and warehouse loading bay tracking.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <span className="text-[10px] font-bold text-sky-800 uppercase tracking-wider bg-sky-50 px-2.5 py-0.5 rounded-full">
+                Parking &amp; Warehouse Loading Bays
+              </span>
+              <h2 className="text-base font-extrabold text-slate-900 mt-1">Commercial Parking &amp; Industrial Docks</h2>
+              <p className="text-xs text-slate-500">Reserved parking bays, EV chargers, and logistics loading docks configured for your estate.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsParkingModalOpen(true)}
+              className="px-4 py-2 rounded-2xl bg-[#06110c] hover:bg-[#171717] text-white text-xs font-bold transition flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              <span>+ Allocate Parking Bay / Dock</span>
+            </button>
           </div>
 
-          {!isDemoAccount && effectiveCommercialUnits.length === 0 ? (
-            <div className="p-12 text-center border border-dashed border-[#D2DDD7] rounded-2xl">
-              <Car className="h-10 w-10 text-[#D2DDD7] mx-auto mb-3 opacity-50" />
-              <h3 className="text-sm font-bold text-[#171717]">No commercial parking slots allocated</h3>
-              <p className="text-xs text-[#666666] max-w-sm mx-auto mt-1">
-                Reserved parking bays, EV charging submeters, and warehouse loading docks will display once commercial units are assigned.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-3">
-                <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-4 rounded-2xl border border-slate-200 bg-[#F7F8F6] space-y-3">
+              <div className="font-bold text-xs text-slate-900 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
                   <Car className="h-4 w-4 text-indigo-600" />
-                  <span>Commercial Reserved Parking Allocation</span>
+                  <span>Allocated Parking Bays ({parkingSlots.length})</span>
+                </span>
+                <span className="text-[10px] text-slate-500 font-normal">Active assignments</span>
+              </div>
+              <div className="space-y-2 text-xs">
+                {parkingSlots.length === 0 ? (
+                  <div className="p-6 text-center border border-dashed border-slate-200 rounded-xl bg-white space-y-1">
+                    <Car className="h-7 w-7 text-slate-300 mx-auto" />
+                    <p className="text-xs font-bold text-slate-600">No parking bays allocated yet</p>
+                    <p className="text-[10px] text-slate-400">Click &ldquo;+ Allocate Parking Bay / Dock&rdquo; above to assign reserved parking to tenants.</p>
+                  </div>
+                ) : (
+                  parkingSlots.map(slot => (
+                    <div key={slot.id} className="p-3 rounded-xl bg-white border border-slate-200 flex justify-between items-center">
+                      <div>
+                        <div className="font-bold text-slate-900 flex items-center gap-2">
+                          <span>{slot.slotNumber}</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold">{slot.type}</span>
+                        </div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">
+                          Assigned to: <b className="text-slate-700">{slot.tenantName}</b> ({slot.unitNumber})
+                          {slot.monthlyFee > 0 && ` • ₹${slot.monthlyFee.toLocaleString('en-IN')}/mo`}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveParkingSlot(slot.id)}
+                        className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                        title="Release Parking Slot"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl border border-slate-200 bg-[#F7F8F6] space-y-3">
+              <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                <Truck className="h-4 w-4 text-sky-600" />
+                <span>Warehouse Loading Bays &amp; Safety Compliance</span>
+              </div>
+              <div className="space-y-2 text-xs">
+                <div className="p-3 rounded-xl bg-white border border-slate-200 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-800">Clear Height &amp; Heavy Vehicle Access</span>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">Verified</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500">
+                    Hydraulic dock levelers, 40-ft container turn-radius, and fire safety clearance checked.
+                  </p>
                 </div>
-                <div className="space-y-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-slate-800">Slots A01 - A04 (Basement 1)</div>
-                      <div className="text-[10px] text-slate-500">Assigned to BlueFin Capital • 4 Vehicles</div>
-                    </div>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">Billed in Lease</span>
+                <div className="p-3 rounded-xl bg-white border border-slate-200 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-800">EV Fleet Sub-Metering</span>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">Active</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-slate-800">Slots B01 - B10 (Basement 2)</div>
-                      <div className="text-[10px] text-slate-500">Assigned to AeroSys Technologies • 10 Vehicles</div>
-                    </div>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">Billed in Lease</span>
-                  </div>
-                  <div className="p-2.5 rounded-xl bg-white border border-amber-200 flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-amber-900">Slots B12, B14, B15 (Vacant)</div>
-                      <div className="text-[10px] text-amber-700">Money Leak: ₹9,000/mo unleased parking revenue</div>
-                    </div>
-                    <button 
-                      onClick={() => addNotification('Offer Dispatched', 'Sent ₹3,000/mo parking add-on offer to tech tenants.', 'SYSTEM')}
-                      className="text-[10px] font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 px-2 py-1 rounded-lg"
-                    >
-                      Monetize
-                    </button>
-                  </div>
+                  <p className="text-[10px] text-slate-500">
+                    Industrial commercial 22kW AC/DC fast charger submeters linked with real-time tariff calculation.
+                  </p>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-3">
-                <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
-                  <Truck className="h-4 w-4 text-sky-600" />
-                  <span>Warehouse Loading Bays & Compliance (Sections 20 & 21)</span>
-                </div>
-                <div className="space-y-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-slate-800">Cochin Port Logistics Bay A & B</div>
-                      <div className="text-[10px] text-slate-500">12m Clear Height • FMCG Storage • Active Container Inflow</div>
-                    </div>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">Operational</span>
+          {/* Allocate Parking Slot Modal */}
+          {isParkingModalOpen && (
+            <div 
+              className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+              onClick={(e) => { if (e.target === e.currentTarget) setIsParkingModalOpen(false); }}
+            >
+              <div className="w-full max-w-md bg-white rounded-3xl p-6 border border-[#D2DDD7] shadow-2xl space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Car className="h-5 w-5 text-indigo-600" />
+                    <h3 className="font-extrabold text-base text-slate-900">Allocate Parking Bay / Loading Dock</h3>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex justify-between items-center">
-                    <div>
-                      <div className="font-bold text-slate-800">NFPA Fire Sprinkler & Safety Audit</div>
-                      <div className="text-[10px] text-slate-500">Certified by Fire Safety Directorate • Valid through 2027</div>
-                    </div>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">Compliant</span>
-                  </div>
+                  <button onClick={() => setIsParkingModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-800 cursor-pointer">
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
+
+                <form onSubmit={handleAddParkingSlot} className="space-y-3.5 text-xs">
+                  <div>
+                    <label className="block text-slate-800 font-bold mb-1">Slot Identifier / Bay Name</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Bay A-01 (Basement 1) or Loading Dock 2"
+                      value={newSlotNumber}
+                      onChange={(e) => setNewSlotNumber(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-800 font-bold mb-1">Bay Type</label>
+                    <select
+                      value={newSlotType}
+                      onChange={(e) => setNewSlotType(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold"
+                    >
+                      <option value="4-Wheeler Reserved">4-Wheeler Reserved (Sedan / SUV)</option>
+                      <option value="2-Wheeler Fleet">2-Wheeler Staff / Fleet Bay</option>
+                      <option value="EV Fast Charging">EV Fast Charging Station</option>
+                      <option value="Warehouse Loading Bay">Warehouse Heavy Container Loading Dock</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-800 font-bold mb-1">Assigned Commercial Unit / Tenant</label>
+                    {effectiveCommercialUnits.length > 0 ? (
+                      <select
+                        value={newSlotUnit}
+                        onChange={(e) => setNewSlotUnit(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs"
+                      >
+                        <option value="">General Property Pool (Unallocated)</option>
+                        {effectiveCommercialUnits.map(u => (
+                          <option key={u.id} value={u.unitNumber}>
+                            {u.unitNumber} • {u.businessName}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="e.g. Suite 301 or Logistics Client"
+                        value={newSlotUnit}
+                        onChange={(e) => setNewSlotUnit(e.target.value)}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs"
+                      />
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-800 font-bold mb-1">Monthly Parking Tariff (INR)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={newSlotFee}
+                      onChange={(e) => setNewSlotFee(e.target.value)}
+                      placeholder="0 if included in CAM"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2">
+                    <button
+                      type="submit"
+                      className="flex-1 py-2.5 rounded-xl bg-[#06110c] hover:bg-[#171717] text-white font-bold text-xs transition cursor-pointer"
+                    >
+                      ✓ Save Slot Allocation
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsParkingModalOpen(false)}
+                      className="px-4 py-2.5 rounded-xl bg-white border border-[#D2DDD7] text-[#171717] font-bold text-xs hover:bg-[#F7F8F6] cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           )}

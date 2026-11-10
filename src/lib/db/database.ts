@@ -1888,16 +1888,16 @@ class DatabaseEngine {
 
           for (let cIdx = 1; cIdx <= unitCount; cIdx++) {
             const floor = Math.ceil(cIdx / 2);
-            const unitNumber = `Suite ${floor}0${((cIdx - 1) % 2) + 1}`;
+            const unitNumber = payload.type === 'Warehouse' ? `Loading Bay ${cIdx}` : `Suite ${floor}0${((cIdx - 1) % 2) + 1}`;
             const commId = `comm-${id}-${cIdx}`;
-            const area = 2500;
-            const camRate = 18;
+            const area = payload.type === 'Warehouse' ? 5000 : 2500;
+            const camRate = payload.type === 'Warehouse' ? 12 : 18;
             insertComm.run(
               commId, id, unitNumber, floor,
-              `${payload.name} Suite ${cIdx}`,
+              `${payload.name} ${payload.type === 'Warehouse' ? 'Bay' : 'Suite'} ${cIdx}`,
               payload.type === 'Warehouse' ? 'Logistics / Supply Chain' : 'Corporate / Tech Office',
               area, rentPerUnit, camRate, area * camRate, 4,
-              24, 3, 5, 'Warm Shell Completed', 'Vacant'
+              24, 3, 5, 'Ready for Opening', 'Vacant'
             );
           }
         } catch (e) {
@@ -2483,6 +2483,49 @@ class DatabaseEngine {
           id
         );
       }
+
+      // Authoritative Move-Out Ledger & Unit Free Cascade
+      if (updates.status === 'Moved Out') {
+        try {
+          const today = new Date().toISOString().split('T')[0];
+          // 1. Free up unit in property_units
+          this.sqlite.prepare(`
+            UPDATE property_units SET
+              status = 'VACANT',
+              current_tenant_id = NULL,
+              current_tenant_name = NULL,
+              lease_end = NULL
+            WHERE current_tenant_id = ? OR (property_id = ? AND unit_number = ?)
+          `).run(id, existing.propertyId, existing.unitNumber);
+
+          // 2. Decrement property occupied_units count
+          this.sqlite.prepare(`
+            UPDATE properties SET
+              occupied_units = MAX(0, occupied_units - 1)
+            WHERE id = ?
+          `).run(existing.propertyId);
+
+          // 3. Mark unpaid invoices as settled via deposit deduction
+          this.sqlite.prepare(`
+            UPDATE invoices SET
+              status = 'Paid',
+              payment_method = 'Security Deposit Deduction',
+              paid_at = ?
+            WHERE tenant_id = ? AND status != 'Paid'
+          `).run(today, id);
+
+          // 4. Mark connection requests as MOVED_OUT
+          this.sqlite.prepare(`
+            UPDATE tenant_connection_requests SET
+              status = 'MOVED_OUT',
+              move_out_date = ?
+            WHERE tenant_user_id = ? OR tenant_email = ?
+          `).run(today, sb(existing.userId, id), existing.email);
+        } catch (cascadeErr) {
+          console.warn('[db.tenants.update] Move-out cascade warning:', cascadeErr);
+        }
+      }
+
       this.syncRootDb();
       return this.tenants.findById(id);
     }
